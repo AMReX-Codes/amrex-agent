@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class DummyConfigService:
+    llm_provider = "cborg"
     cborg_api_key = "test-key"
     cborg_base_url = "https://example.test"
     llm_model = "test-model"

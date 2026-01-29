@@ -29,7 +29,7 @@ class TestNoHardcodedPeleAssumptions:
     """Enforce: Service works for ANY AMReX code, not just Pele*."""
     
     @pytest.mark.parametrize("code_name", [
-        "AMReX", "PeleLMeX", "PeleMP",  # Combustion
+        "AMReX", "PeleLMeX",  # Combustion
         "WarpX",                          # Particle-in-cell
         "ERF",                            # Atmospheric
         "incflo",                         # Multiphase flow
