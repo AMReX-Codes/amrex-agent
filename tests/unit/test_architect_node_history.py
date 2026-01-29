@@ -1,0 +1,104 @@
+import importlib
+
+import pytest
+
+from src.services.plan import SimulationPlan
+
+
+architect_node_module = importlib.import_module("src.nodes.architect_node")
+embedding_factory_module = importlib.import_module("src.services.embedding_service_factory")
+
+
+class DummyConfig:
+    def __init__(self, repositories=None):
+        self.repositories = repositories or {}
+
+
+class DummyEmbeddingService:
+    def __init__(self):
+        self.embeddings = object()
+
+
+def _plan(selected_case="PeleC/Exec/RegTests/PMF", selected_solver="PeleC"):
+    return SimulationPlan(
+        selected_solver=selected_solver,
+        selected_case=selected_case,
+        modifications=[("amr.n_cell", "64 64 64"), ("pelec.cfl", "0.5")],
+        reasoning="Reasoning text",
+        baseline_confidence=0.92,
+        indexing_strategy="simple",
+        case_candidates=[],
+    )
+
+
+def test_appends_history_entry(monkeypatch, tmp_path):
+    call_state = {}
+
+    class FakeArchitectService:
+        def __init__(self, _config, embedding_service=None):
+            self.level0_searcher = object()
+
+        def execute_planning(self, **_kwargs):
+            call_state["called"] = True
+            return _plan()
+
+    repo_root = tmp_path / "pelec"
+    repo_root.mkdir()
+    config = DummyConfig(repositories={"PeleC": str(repo_root)})
+
+    monkeypatch.setattr(embedding_factory_module, "get_embedding_service", lambda _cfg: DummyEmbeddingService())
+    monkeypatch.setattr(architect_node_module, "ArchitectService", FakeArchitectService)
+
+    updates = architect_node_module.architect_node({"config": config, "prompt": "test", "workflow_history": []})
+
+    entry = updates["workflow_history"][-1]
+    assert entry["node"] == "architect"
+    assert entry["action"] == "plan_created"
+    assert "timestamp" in entry
+    assert entry["details"]["selected_case"] == "PeleC/Exec/RegTests/PMF"
+    assert entry["details"]["modifications"]
+    assert entry["details"]["baseline"]["local_path"] == str(repo_root / "PeleC/Exec/RegTests/PMF")
+
+
+def test_history_grows_across_calls(monkeypatch):
+    class FakeArchitectService:
+        def __init__(self, _config, embedding_service=None):
+            self.level0_searcher = object()
+
+        def execute_planning(self, **_kwargs):
+            return _plan()
+
+    monkeypatch.setattr(embedding_factory_module, "get_embedding_service", lambda _cfg: DummyEmbeddingService())
+    monkeypatch.setattr(architect_node_module, "ArchitectService", FakeArchitectService)
+
+    state = {"config": DummyConfig(), "prompt": "test", "workflow_history": []}
+    updates_1 = architect_node_module.architect_node(state)
+    updates_2 = architect_node_module.architect_node({**state, **updates_1})
+
+    assert len(updates_2["workflow_history"]) == 2
+
+
+def test_retry_action_label(monkeypatch):
+    class FakeArchitectService:
+        def __init__(self, _config, embedding_service=None):
+            self.level0_searcher = object()
+
+        def execute_planning(self, **_kwargs):
+            return _plan()
+
+    monkeypatch.setattr(embedding_factory_module, "get_embedding_service", lambda _cfg: DummyEmbeddingService())
+    monkeypatch.setattr(architect_node_module, "ArchitectService", FakeArchitectService)
+
+    state = {
+        "config": DummyConfig(),
+        "prompt": "test",
+        "mode": "retry",
+        "retry_count": 1,
+        "errors_active": ["Bad input"],
+        "selected_case": "Bad/Case",
+        "workflow_history": [],
+    }
+    updates = architect_node_module.architect_node(state)
+
+    entry = updates["workflow_history"][-1]
+    assert entry["action"] == "plan_created_retry"

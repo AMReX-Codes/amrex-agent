@@ -1,0 +1,706 @@
+"""Configuration for AMReXAgent."""
+
+import os
+from pathlib import Path
+from typing import Optional, Dict, Literal, List, Any
+from pydantic import BaseModel, Field, ConfigDict
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def detect_environment(env: dict = None) -> str:
+    """Detect if running on Perlmutter, locally, or as MCP.
+    
+    Args:
+        env: Environment variables dict. If None, uses os.environ.
+             Allows dependency injection for testing.
+    
+    Returns:
+        'perlmutter', 'mcp', or 'local'
+    
+    Examples:
+        >>> detect_environment()  # Uses os.environ
+        'local'
+        >>> detect_environment({'NERSC_HOST': 'perlmutter'})
+        'perlmutter'
+    """
+    if env is None:
+        env = dict(os.environ)
+    
+    if env.get('NERSC_HOST'):
+        return 'perlmutter'
+    elif env.get('MCP_SERVER'):
+        return 'mcp'
+    else:
+        return 'local'
+
+
+def resolve_database_path(relative_path: str) -> Path:
+    """Resolve database paths for different environments.
+
+    Enables flexible deployment across Perlmutter, local development, and MCP server.
+    Pattern inspired by foam-agent's multi-environment support.
+
+    Priority:
+    1. Environment variable override (AMREX_DATABASE_PATH, fallback PELE_DATABASE_PATH)
+    2. Perlmutter: Absolute path to CFS directory
+    3. Local: Relative to repo root (./database)
+    4. MCP: User's home directory (~/.amrex_agent/database)
+
+    Args:
+        relative_path: Path relative to database root (e.g., 'faiss', 'reports')
+
+    Returns:
+        Resolved absolute Path
+
+    Example:
+        >>> resolve_database_path('faiss')  # Local
+        PosixPath('/home/user/amrex_agent/database/faiss')
+
+        >>> os.environ['AMREX_DATABASE_PATH'] = '/custom/path/database'
+        >>> resolve_database_path('reports')
+        PosixPath('/custom/path/database/reports')
+    """
+    # Priority 1: Allow override
+    if override := os.getenv('AMREX_DATABASE_PATH') or os.getenv('PELE_DATABASE_PATH'):
+        return Path(override) / relative_path
+
+    env = detect_environment()
+
+    if env == 'perlmutter':
+        # Perlmutter-specific path (CFS filesystem)
+        base = Path('/global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/amrex_agent/database')
+        return base / relative_path
+
+    elif env == 'mcp':
+        # MCP: Use user's home directory
+        return Path.home() / '.amrex_agent' / 'database' / relative_path
+
+    else:  # local
+        # Local development: relative to repo root
+        repo_root = Path(__file__).parent.parent
+        return repo_root / 'database' / relative_path
+
+
+
+ALCF_SOPHIA_BASE_URL = "https://inference-api.alcf.anl.gov/resource_server/sophia/vllm/v1"
+ALCF_METIS_BASE_URL = "https://inference-api.alcf.anl.gov/resource_server/metis/api/v1"
+
+def _resolve_alcf_base_url(cluster: Optional[str], explicit_base_url: Optional[str]) -> str:
+    """Resolve ALCF base URL from explicit override or cluster selection."""
+    if explicit_base_url:
+        return explicit_base_url
+    cluster_value = (cluster or os.getenv("ALCF_CLUSTER") or "").strip().lower()
+    if cluster_value in {"metis", "meti"}:
+        return ALCF_METIS_BASE_URL
+    return ALCF_SOPHIA_BASE_URL
+
+def _default_repo_root() -> Path:
+    """Get default repository root for repo path defaults."""
+    return Path(__file__).parent.parent.parent
+
+
+def _repo_path_from_env(env_var: str, repo_name: str) -> Path:
+    """Resolve repo path from env var with default fallback."""
+    if env_var == "AMREX_REPO_PATH":
+        env_value = (
+            os.getenv(env_var)
+            or os.getenv("AMReX_HOME")
+            or os.getenv("AMREX_HOME")
+        )
+    else:
+        env_value = os.getenv(env_var)
+    default_path = str(_default_repo_root() / repo_name)
+    return Path(env_value or default_path)
+
+class AMReXAgentConfig(BaseModel):
+    """Central configuration for AMReXAgent.
+
+    Manages AMReX solver paths, CBORG API, and Superfacility API.
+    """
+    
+    # === LLM Configuration ===
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic"] = Field(
+        default="cborg",
+        description="LLM provider to use"
+    )
+    llm_model: Optional[str] = Field(
+        default=None,
+        description="Model name (auto-detected for CBORG)"
+    )
+    llm_fast_onprem_model: Optional[str] = Field(
+        default="lbl/cborg-mini",
+        description="Model name (auto-detected for CBORG)"
+    )
+    llm_fast_model: Optional[str] = Field(
+        default="gcp/gpt-oss-120b-high",
+        description="Model name (auto-detected for CBORG)"
+    )
+    llm_thinking_model: Optional[str] = Field(
+        default="claude-sonnet-4-5",
+        description="Model name (auto-detected for CBORG)"
+    )
+    llm_temperature: float = Field(
+        default=0.1,
+        description="Temperature for LLM generation"
+    )
+    llm_max_tokens: int = Field(
+        default=4000,
+        description="Max tokens for LLM responses"
+    )
+    
+    # === CBORG API (LBL's LLM endpoint) ===
+    cborg_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("CBORG_API_KEY"),
+        description="CBORG API key (from env or ~/.nersc/cborg_api_key.txt)"
+    )
+    cborg_base_url: str = Field(
+        default="https://api.cborg.lbl.gov/v1",
+        description="CBORG API base URL"
+    )
+
+    # === ALCF Inference Endpoints (OpenAI-compatible) ===
+    alcf_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("ALCF_API_KEY"),
+        description="ALCF access token (from env or inference_auth_token helper)"
+    )
+    alcf_cluster: Optional[str] = Field(
+        default_factory=lambda: os.getenv("ALCF_CLUSTER"),
+        description="ALCF cluster selector (sophia or metis)"
+    )
+    alcf_base_url: Optional[str] = Field(
+        default_factory=lambda: os.getenv("ALCF_BASE_URL"),
+        description="ALCF API base URL override (optional; defaults by cluster)"
+    )
+    
+    # === OpenAI/Anthropic API (fallback) ===
+    openai_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("OPENAI_API_KEY"),
+        description="OpenAI API key"
+    )
+    anthropic_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"),
+        description="Anthropic API key"
+    )
+    
+    pelec_executable: Optional[Path] = Field(
+        default_factory=lambda: Path(os.getenv("PELEC_EXECUTABLE", "")),
+        description="Path to PeleC executable"
+    )
+
+    # === AMReX Code Paths (priority codes with well-documented inputs) ===
+
+    # Combustion (primary)
+    pelec_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("PELEC_REPO_PATH", "PeleC"),
+        description="Path to PeleC repository"
+    )
+    pelelmex_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("PELELMEX_REPO_PATH", "PeleLMeX"),
+        description="Path to PeleLMeX repository"
+    )
+    # Atmospheric (excellent docs)
+    erf_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("ERF_REPO_PATH", "ERF"),
+        description="Path to ERF repository (Energy Research and Forecasting)"
+    )
+
+    # Plasma/Accelerator (very well documented)
+    warpx_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("WARPX_REPO_PATH", "warpx"),
+        description="Path to WarpX repository (laser-plasma accelerator)"
+    )
+
+    # Fluids (clean inputs)
+    incflo_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("INCFLO_REPO_PATH", "incflo"),
+        description="Path to incflo repository (incompressible flow)"
+    )
+
+    # Tutorials (best for learning)
+    amrex_tutorials_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("AMREX_TUTORIALS_REPO_PATH", "amrex-tutorials"),
+        description="Path to amrex-tutorials repository"
+    )
+
+    # AMReX Core (for native tools - Phase 5)
+    amrex_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("AMREX_REPO_PATH", "amrex"),
+        description="Path to AMReX core repository (for native tools like fextract, fextrema, fsnapshot)"
+    )
+
+
+    # Generic repository map (AMReX generalization)
+    repositories: Dict[str, Path] = Field(default_factory=dict)
+
+    # === Knowledge Base ===
+    knowledge_base_path: Path = Field(
+        default_factory=lambda: resolve_database_path('reports'),
+        description="Path to knowledge base (reports directory) - environment-aware"
+    )
+
+    pele_tools_path: Path = Field(
+        default=Path("./utils/pele_tools.py"),
+        description="Path to Pele-specific tools module"
+    )
+
+    # === FAISS Embeddings Configuration ===
+    faiss_db_path: Path = Field(
+        default_factory=lambda: resolve_database_path('faiss'),
+        description="Path to FAISS vector indices directory - environment-aware"
+    )
+
+    environment: str = Field(
+        default_factory=detect_environment,
+        description="Deployment environment (perlmutter, local, mcp)"
+    )
+
+    embedding_provider: str = Field(
+        default="cborg",
+        description="Embedding model provider (cborg, alcf, openai, huggingface)"
+    )
+
+    vector_store_backend: Literal["auto", "faiss_local", "faiss_download", "openai"] = Field(
+        default="auto",
+        description="Vector store backend for retrieval: auto (prefer hosted if configured), "
+                    "faiss_local (local indices), faiss_download (download published FAISS artifacts), "
+                    "openai (hosted vector store)."
+    )
+
+    faiss_embedding_model: str = Field(
+        default="text-embedding-3-small",
+        description="Embedding model name (for OpenAI fallback if CBORG unavailable)"
+    )
+
+    alcf_embedding_model: Optional[str] = Field(
+        default_factory=lambda: os.getenv("ALCF_EMBEDDING_MODEL"),
+        description="Embedding model name for ALCF (optional override)"
+    )
+
+    openai_vector_store_id: Optional[str] = Field(
+        default_factory=lambda: os.getenv("OPENAI_VECTOR_STORE_ID"),
+        description="OpenAI hosted vector store ID (single-store mode)"
+    )
+
+    openai_vector_store_ids: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Per-index OpenAI vector store IDs (index_name -> vector store ID)"
+    )
+
+    openai_base_url: Optional[str] = Field(
+        default_factory=lambda: os.getenv("OPENAI_BASE_URL") or os.getenv("OPENAI_API_BASE"),
+        description="OpenAI API base URL override (optional)"
+    )
+
+    vector_store_base_url: Optional[str] = Field(
+        default=None,
+        description="Base URL for published FAISS artifacts (used with faiss_download)"
+    )
+
+    vector_store_manifest_url: Optional[str] = Field(
+        default=None,
+        description="Manifest URL for published FAISS artifacts (overrides base URL)"
+    )
+
+    faiss_topk: int = Field(
+        default=3,
+        ge=1,
+        le=20,
+        description="Number of top results to retrieve from FAISS"
+    )
+
+    faiss_cache_enabled: bool = Field(
+        default=True,
+        description="Cache loaded FAISS indices in memory (foam-agent pattern)"
+    )
+
+    faiss_fallback_to_llm: bool = Field(
+        default=True,
+        description="Fall back to LLM queries if FAISS indices unavailable (hybrid approach). "
+                    "NOTE: With FAISS-first architecture, LLM reports are optional enhancement. "
+                    "Set to False to require FAISS indices (fail if unavailable)."
+    )
+
+    faiss_semantic_weight: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Weight for FAISS semantic scoring in architect service (co-primary with metrics). "
+                    "Was 0.20 (hybrid), now 0.5 (FAISS-first architecture)."
+    )
+
+    # === Indexing Strategy Configuration ===
+    indexing_strategy: Literal["simple", "hierarchical", "override_static"] = Field(
+        default="simple",
+        description="Indexing strategy for baseline selection. "
+                    "'simple' uses development's working single FAISS search (proven e2e). "
+                    "'hierarchical' uses integration_ladder's L0/L1/L2 multi-index approach (experimental). "
+                    "'override_static' skips L0/L1/L2 and uses raw docs/inputs (requires baseline_override)."
+    )
+    
+    inputs_file_strategy: Literal["oldest", "newest", "smallest", "llm_compare", "override"] = Field(
+        default="newest",
+        description="Inputs file selection strategy. "
+                    "'oldest' selects most mature file (by git age). "
+                    "'newest' selects latest file (most up-to-date). "
+                    "'smallest' selects simplest file (by file size). "
+                    "'llm_compare' asks the LLM to choose between candidates. "
+                    "'override' uses inputs_file_override or falls back to 'inputs' if present."
+    )
+
+    remap_strategy: Literal["last_write", "append"] = Field(
+        default="last_write",
+        description="Duplicate array merge strategy during parameter remap/apply. "
+                    "'last_write' keeps the latest value (default). "
+                    "'append' concatenates array values when duplicates appear."
+    )
+
+    inputs_file_override: Optional[str] = Field(
+        default=None,
+        description="Explicit inputs file to use (absolute path or relative to case directory). "
+                    "When set, bypasses inputs file selection."
+    )
+
+    inputs_default_precedence: Literal["default_first", "strategy_first"] = Field(
+        default="default_first",
+        description="Precedence between config default inputs and strategy selection. "
+                    "'default_first' uses default_inputs_path before strategy selection; "
+                    "'strategy_first' tries strategy first and only falls back to defaults."
+    )
+
+    retry_guidance_use_llm: bool = Field(
+        default=False,
+        description="If True, use LLM assistance to refine retry guidance for inputs/baseline switching."
+    )
+
+    baseline_switch_after_retries: int = Field(
+        default=3,
+        ge=1,
+        description="Number of retry cycles to attempt fixing inputs/mods before switching baseline directory."
+    )
+    
+    baseline_override: Optional[str] = Field(
+        default=None,
+        description="Force specific baseline case (overrides automatic selection). "
+                    "Format: 'Code/Exec/Path/Case' or 'Exec/Path/Case'. "
+                    "Example: 'PeleLMeX/Exec/RegTests/JetInCrossFlow' or 'Exec/Production/JetFlame'. "
+                    "When set, skips L2 baseline selection and uses this case directly."
+    )
+
+    dry_run: bool = Field(
+        default=False,
+        description="If True, generate scripts without executing external runs."
+    )
+
+    # === Phase 4: Container and Analysis Configuration ===
+    container_mode: bool = Field(
+        default_factory=lambda: bool(os.getenv('PODMAN_HPC') or os.getenv('SHIFTER')),
+        description="Enable container-aware mode for headless extraction/rendering split. "
+                    "Auto-detected from PODMAN_HPC or SHIFTER env variables. "
+                    "When True, visualization uses extraction (headless) + rendering (local) workflow."
+    )
+
+    analysis_always_enabled: bool = Field(
+        default=True,
+        description="Always run analysis after simulation completion (Phase 4 user decision). "
+                    "Analysis detects CFL violations, NaN, convergence issues."
+    )
+    allow_make_introspection: bool = Field(
+        default=False,
+        description="Allow running make commands to extract build variables for analysis heuristics."
+    )
+    make_introspection_command: Optional[List[str]] = Field(
+        default=None,
+        description="Optional command (argv) to run for make introspection. "
+                    "When None, analysis falls back to 'make help' with inferred flags."
+    )
+
+    visualization_backend: str = Field(
+        default='auto',
+        description="Visualization backend: 'auto' (Phase 5: AMReX tools → pyamrex → yt), "
+                    "'amrex_tools', 'pyamrex', 'yt'. "
+                    "Phase 4: yt-only. Phase 5: Multi-backend with auto-selection."
+    )
+
+    amrex_tools_path: Optional[Path] = Field(
+        default=None,
+        description="Path to AMReX tools directory (overrides auto-detection from amrex_repo_path). "
+                    "When None, tools are auto-detected from config.amrex_repo_path/Tools/Plotfile."
+    )
+
+    # === Superfacility API ===
+    # Superfacility
+    superfacility_account: str = "mp111_g"  # Default NERSC account
+    
+    superfacility_client_id: Optional[str] = Field(
+        default_factory=lambda: os.getenv("SUPERFACILITY_CLIENT_ID"),
+        description="NERSC Superfacility API client ID"
+    )
+    superfacility_secret: Optional[str] = Field(
+        default_factory=lambda: os.getenv("SUPERFACILITY_SECRET"),
+        description="NERSC Superfacility API secret"
+    )
+    superfacility_endpoint: str = Field(
+        default="https://api.nersc.gov/api/v1.2",
+        description="Superfacility API endpoint"
+    )
+    
+    # === Workflow Settings ===
+    max_iterations: int = Field(
+        default=3,
+        description="Max error correction iterations"
+    )
+    allow_local_run: bool = Field(
+        default=True,
+        description="Allow local execution if Superfacility unavailable"
+    )
+    use_mpi: bool = Field(
+        default=True,
+        description="Use MPI for local runs when available."
+    )
+    mpi_ranks: int = Field(
+        default=1,
+        ge=1,
+        description="Number of MPI ranks for local runs (mpirun -np)."
+    )
+    
+    # === Output Settings ===
+    output_dir: Path = Field(
+        default=Path("./output"),
+        description="Base output directory for simulations"
+    )
+    save_intermediate: bool = Field(
+        default=True,
+        description="Save intermediate results (plans, configs, etc.)"
+    )
+
+    # === Validator Configuration ===
+    disabled_validators: List[str] = Field(
+        default=[],
+        description="List of validator names to disable"
+    )
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    @property
+    def available_solvers(self) -> List[str]:
+        """Get list of all configured solver names from registry"""
+        from database.configs import discover_code_configs
+        return [c.code_name for c in discover_code_configs()]
+
+    @property
+    def default_solver(self) -> Optional[str]:
+        """First available solver (for fallback only - prefer explicit selection)"""
+        solvers = self.available_solvers
+        return solvers[0] if solvers else None
+
+    def get_code_registry(self) -> Dict[str, Any]:
+        """Get dict mapping code_name -> config class"""
+        from database.configs import discover_code_configs
+        return {c.code_name: c for c in discover_code_configs()}
+
+    @property
+    def amrex_agent_root(self) -> Path:
+        """Root directory of amrex_agent (where src/ is).
+        
+        Finds project root by looking for marker files (pyproject.toml, setup.py)
+        to be robust to file location changes.
+        """
+        current = Path(__file__).resolve()
+        # Look for project markers
+        for parent in [current.parent, current.parent.parent, current.parent.parent.parent]:
+            if (parent / 'pyproject.toml').exists() or (parent / 'setup.py').exists():
+                return parent
+        # Fallback: assume config.py is in src/
+        return Path(__file__).parent.parent
+
+    def model_post_init(self, __context):
+        """Populate repositories dict from individual paths."""
+        self.repositories = {
+            'PeleC': self.pelec_repo_path,
+            'PeleLMeX': self.pelelmex_repo_path,
+            'ERF': self.erf_repo_path,
+            'WarpX': self.warpx_repo_path,
+            'incflo': self.incflo_repo_path,
+            'amrex-tutorials': self.amrex_tutorials_repo_path,
+            'AMReX': self.amrex_repo_path,
+        }
+        # Remove None values
+        self.repositories = {k: v for k, v in self.repositories.items() if v}
+
+    def test_connection(self):
+        """DEPRECATED: Use ConfigService.initialize() instead.
+        
+        This method has side effects (mutates self, makes API calls, modifies os.environ).
+        It is maintained for backward compatibility only.
+        
+        New pattern:
+            from src.services.config_service import ConfigService
+            service = ConfigService()
+            config = service.initialize()
+        """
+        import warnings
+        warnings.warn(
+            "AMReXAgentConfig.test_connection() is deprecated. "
+            "Use ConfigService().initialize() instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        from src.services.config_service import ConfigService
+        service = ConfigService(verbose=True)
+        
+        # Mutate self (legacy behavior)
+        updated = service.load_api_keys(self)
+        self.cborg_api_key = updated.cborg_api_key
+        
+        updated = service.auto_detect_model(updated)
+        self.llm_model = updated.llm_model
+        
+        service.test_llm_connection(updated)
+    
+    def setup_environment(self):
+        """DEPRECATED: Use ConfigService.setup_environment_vars() instead.
+        
+        This method has side effects (modifies os.environ).
+        It is maintained for backward compatibility only.
+        
+        New pattern:
+            from src.services.config_service import ConfigService
+            service = ConfigService()
+            service.setup_environment_vars(config)
+        """
+        import warnings
+        warnings.warn(
+            "AMReXAgentConfig.setup_environment() is deprecated. "
+            "Use ConfigService().setup_environment_vars() instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        from src.services.config_service import ConfigService
+        service = ConfigService(verbose=True)
+        service.setup_environment_vars(self)
+    
+def load_config(config_path: Optional[Path] = None) -> AMReXAgentConfig:
+    """Load configuration with auto-detection and validation.
+    
+    DEPRECATED: Use ConfigService().initialize() instead.
+    
+    This function is maintained for backward compatibility but will be
+    removed in a future version. The new pattern separates config data
+    from initialization logic.
+    
+    Old pattern:
+        config = load_config()  # Side effects hidden
+    
+    New pattern:
+        from src.services.config_service import ConfigService
+        service = ConfigService()
+        config = service.initialize()  # Side effects explicit
+    
+    For tests (no side effects):
+        config = AMReXAgentConfig(cborg_api_key="test", llm_model="test")
+    
+    Config loading with CBORG auto-setup.
+    """
+    import warnings
+    warnings.warn(
+        "load_config() is deprecated. Use ConfigService().initialize() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
+    from src.services.config_service import ConfigService
+    service = ConfigService()
+    return service.initialize(config_path=config_path)
+
+def resolve_alcf_base_url(config: AMReXAgentConfig) -> str:
+    """Resolve ALCF base URL using config and environment."""
+    return _resolve_alcf_base_url(config.alcf_cluster, config.alcf_base_url)
+
+
+def get_llm_client(config: AMReXAgentConfig):
+    """Get LLM client based on config
+    
+    Returns OpenAI-compatible client (CBORG, ALCF, OpenAI, or Anthropic)
+    """
+    from openai import OpenAI
+    
+    if config.llm_provider == "cborg":
+        if not config.cborg_api_key:
+            raise ValueError("CBORG_API_KEY not set")
+        
+        client = OpenAI(
+            api_key=config.cborg_api_key,
+            base_url=config.cborg_base_url
+        )
+        
+        # Auto-detect model if not set
+        if not config.llm_model:
+            models = client.models.list()
+            available = [m.id for m in models]
+            
+            # Prefer LBL models > Llama > Claude > GPT
+            preferred = [
+                'lbl/Llama-4-Scout-17B-16E-Instruct',
+                'Llama-4-Scout-17B-16E-Instruct',
+                'lbl/llama',
+                'llama-3.1-70b-instruct',
+                'claude-sonnet-4',
+            ]
+            
+            for pref in preferred:
+                for avail in available:
+                    if pref.lower() in avail.lower():
+                        config.llm_model = avail
+                        logger.info(f" Auto-selected model: {avail}")
+                        break
+                if config.llm_model:
+                    break
+            
+            if not config.llm_model and available:
+                config.llm_model = available[0]
+                logger.info(f" Using first available model: {config.llm_model}")
+        
+        return client
+    
+    elif config.llm_provider == "alcf":
+        if not config.alcf_api_key:
+            raise ValueError("ALCF_API_KEY not set")
+        base_url = resolve_alcf_base_url(config)
+        return OpenAI(
+            api_key=config.alcf_api_key,
+            base_url=base_url
+        )
+
+    elif config.llm_provider == "openai":
+        if not config.openai_api_key:
+            raise ValueError("OPENAI_API_KEY not set")
+        return OpenAI(api_key=config.openai_api_key)
+    
+    elif config.llm_provider == "anthropic":
+        # TODO: Implement Anthropic client wrapper
+        raise NotImplementedError("Anthropic provider not yet implemented")
+    
+    else:
+        raise ValueError(f"Unknown LLM provider: {config.llm_provider}")
+
+
+# Example usage
+if __name__ == "__main__":
+    import sys
+
+    # Ensure "src" is importable when running this file directly.
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    config = load_config()
+    print(config.model_dump_json(indent=2))
+    
+    # Test LLM client
+    try:
+        client = get_llm_client(config)
+        logger.debug(f"\n[OK] LLM client initialized: {config.llm_provider}/{config.llm_model}")
+    except Exception as e:
+        logger.debug(f"\n[ERROR] Failed to initialize LLM client: {e}")

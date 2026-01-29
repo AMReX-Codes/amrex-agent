@@ -1,0 +1,23 @@
+=== Perlmutter GPU Build Guide ===
+
+
+GPU Build on Perlmutter (as of 2025):
+
+To compile PeleC with GPU support on NERSC Perlmutter:
+
+1. Load modules:
+   module load PrgEnv-gnu
+   module load cudatoolkit
+   module load cmake
+
+2. Build with GPU:
+   cd PeleC/Exec/RegTests/Sedov
+   make TPL USE_CUDA=TRUE
+   make USE_CUDA=TRUE -j
+
+3. GPU-aware MPI (optional):
+   Set: amrex.use_gpu_aware_mpi=1 in inputs file
+   Note: Requires MPICH >= 4.0 (default on Perlmutter)
+
+Reference: Personal experience + PeleC README
+

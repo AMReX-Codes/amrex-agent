@@ -1,0 +1,372 @@
+A Guide to Pele Simulation Setup: Patterns, Heuristics, and Best Practices
+
+1.0 Introduction: Purpose and Scope
+
+This document serves as an expert guide for computational scientists and engineers using the Pele software suite for combustion simulation. The following sections distill practical, actionable patterns and decision-making heuristics from a curated set of peer-reviewed papers, tutorials, and technical reports. By providing validated starting points, common parameter ranges, and troubleshooting advice, we aim to reduce the trial-and-error often associated with complex reacting flow problems, thereby accelerating the setup of robust, physically accurate simulations. We begin with the most fundamental decision a user must make: selecting the right Pele solver for the problem at hand.
+
+2.0 Pele Solver Selection: A Decision Framework
+
+A foundational step in any Pele simulation campaign is the strategic selection of the primary solver: PeleC for compressible flows or PeleLMeX for low-Mach number flows. This choice fundamentally dictates the range of physical phenomena that can be accurately captured, the numerical methods employed, and the overall computational efficiency of the simulation. This section provides a decision framework based on a series of guiding questions to help users make an informed selection.
+
+2.1 Guiding Question 1: What is the compressibility regime?
+
+The primary determinant for solver selection is the flow's compressibility, characterized by the Mach number (M). PeleLMeX, based on a low-Mach number formulation, is highly efficient for flows where acoustic effects are negligible. In contrast, PeleC solves the full compressible Navier-Stokes equations, enabling it to capture phenomena such as shock waves, acoustic-chemistry interactions, and compressive heating. A direct comparison of the two solvers on an engine simulation highlights that PeleC captures compressive heating from pressure fluctuations, while these are filtered out in the PeleLMeX formulation for computational efficiency (pdf_11.pdf). The established threshold for this decision is a Mach number of approximately 0.3 (pdf_16.pdf).
+
+IF the maximum Mach number is expected to remain below ~0.3 and acoustic effects are not of primary interest, THEN select PeleLMeX for computational efficiency.
+
+ELSE, for flows with significant compressibility (M > 0.3), shocks, or important acoustic phenomena, select PeleC.
+
+2.2 Guiding Question 2: How complex is the geometry?
+
+For simulations involving intricate or non-Cartesian geometries, such as engine piston-bowls (pdf_11.pdf, pdf_8.pdf), wedges (pdf_15.pdf), or cylindrically expanding flames (pdf_12.pdf), the Pele suite relies on a consistent and powerful technique.
+
+Heuristic: For simulations involving non-Cartesian or complex geometries, the Embedded Boundary (EB) method is the standard, validated approach within the Pele suite.
+
+The EB method simplifies mesh generation by using a background Cartesian grid and defining the geometry implicitly where it 'cuts' through the grid cells. This approach has been successfully applied across a wide range of problems and is the go-to strategy for handling geometric complexity in both PeleC and PeleLMeX.
+
+2.3 Guiding Question 3: What additional physics are required?
+
+Many practical combustion problems involve physics beyond single-phase, gaseous reacting flow. These multiphysics phenomena require specialized models that are integrated into the core Pele solvers.
+
+IF the simulation involves liquid fuel injection, soot formation, or significant radiative heat transfer, THEN the PeleMP multiphysics library must be utilized.
+
+PeleMP (pdf_6.pdf) provides a suite of validated models to handle these effects, including:
+
+* Spray: A Lagrangian spray model for liquid fuel droplets.
+* Soot: The Hybrid Method of Moments (HMOM) for tracking soot formation and evolution.
+* Radiation: The P1 model for calculating radiative heat transfer.
+
+2.4 Guiding Question 4: Is a 2D simulation sufficient?
+
+The choice between a two-dimensional (2D) and three-dimensional (3D) simulation domain is a critical trade-off between computational cost and physical fidelity. Analysis of the source documents reveals distinct use cases for each.
+
+Principle: A 2D simulation is a valid and cost-effective choice for foundational physics studies, problems with inherent spanwise symmetry, or when computational resources are the primary constraint. However, simulations of complex turbulence, realistic engine geometries, and spray combustion typically require a 3D domain to capture the relevant physical phenomena.
+
+* 2D Use Cases: Foundational studies of flame instabilities (pdf_18.pdf), detonation diffraction (pdf_28.pdf), and initial investigations of high-pressure mixing to reduce computational cost (pdf_16.pdf).
+* 3D Use Cases: Simulations of realistic engine geometries (pdf_11.pdf), complex turbulent flows in combustors (pdf_2.pdf), and spray combustion (pdf_34.pdf).
+
+With the high-level code selections made, the next step is to configure the detailed input parameters that govern the simulation's execution.
+
+3.0 Input Parameter Pattern Library
+
+This section provides a library of common parameter patterns and value ranges extracted from successful simulations documented in the source materials. These patterns are not universal rules but serve as robust starting points for new simulation setups, significantly reducing the amount of trial-and-error required to achieve a stable and accurate solution.
+
+3.1 Grid and Adaptive Mesh Refinement (AMR)
+
+Adaptive Mesh Refinement (AMR) is a core feature of the Pele suite, allowing computational effort to be focused on regions of high physical interest.
+
+AMR Refinement Criteria Patterns
+
+Physical Quantity	Typical Threshold Value(s)	Problem Context
+Vorticity Magnitude	1.0e6 s⁻¹ (pdf_2.pdf); 5.0e3 s⁻¹ (pdf_15.pdf)	Resolving turbulent structures, shear layers
+Temperature Gradient	500 K (pdf_2.pdf); 10 K (pdf_15.pdf)	Capturing flame fronts and shock waves
+Temperature	1300 K (pdf_2.pdf)	Resolving high-temperature reaction zones
+Density Difference	3.0e-5 g/cm³ (pdf_2.pdf)	Capturing shocks and contact discontinuities
+Species Mass Fraction	Y_HO2 > 0.3 * max(Y_HO2_1D) (pdf_18.pdf)	Targeting specific reaction zone indicators
+Key Species	HCO, HCCO, CH2, CH2OH (pdf_22.pdf)	Resolving thin flame structures
+
+A refinement ratio of 2 between AMR levels is standard practice. Simulations commonly employ 3 or more levels of refinement (pdf_2.pdf, pdf_15.pdf), with some fundamental studies using up to eight levels to resolve micrometer-scale features in reaction zones (pdf_12.pdf).
+
+Example Base Grid Resolutions
+
+Case	Domain Size	Base Grid	Base Resolution	Reference
+RCCI Engine	2.8 x 2.8 x 0.7 cm	512 x 512 x 128	~55 µm	pdf_11.pdf
+Supersonic Cavity	~7.2 x 1.8 x 0.45 cm	512 x 128 x 32	140 µm	pdf_2.pdf
+Oblique Detonation	1.0 x 0.75 cm	1600 x 1200	6.25 µm	pdf_15.pdf
+
+3.2 Time Advancement
+
+The Courant-Friedrichs-Lewy (CFL) number controls the size of the time step. Across the reviewed documents, a consistent pattern emerges for the primary flow solver.
+
+* Flow Solver CFL: Typical values range from 0.1 to 0.2 (pdf_29.pdf, pdf_26.pdf).
+* Special Considerations: For PeleC simulations involving Lagrangian spray particles, the spray CFL must be constrained to CFLspray <= 0.5 due to the subcycling algorithm used for time advancement (pdf_6.pdf).
+
+3.3 Chemistry and Transport Models
+
+The choice of chemical kinetics and transport models is highly problem-dependent and represents a trade-off between fidelity and computational cost.
+
+* Chemical Mechanisms: Selection is dictated by the fuel and conditions. Examples include:
+  * "the 9-species, 21-reaction mechanism by Li et al. for hydrogen-air combustion" (pdf_2.pdf).
+  * "a 53-species n-dodecane skeletal mechanism reduced via QSSA for diesel surrogates" (pdf_5.pdf).
+* Transport Models:
+  * The mixture-averaged diffusion model is the most common and robust choice for a wide range of problems (pdf_2.pdf, pdf_20.pdf, pdf_3.pdf).
+  * For specific physical phenomena, this can be augmented. For example, to capture thermodiffusive instabilities in lean hydrogen flames, the mixture-averaged model can be modified with rescaling factors to approximate multicomponent effects like Soret diffusion at a lower cost than a full multicomponent model (pdf_18.pdf).
+* Reduced Mechanisms:
+  * The Quasi-Steady State Approximation (QSSA) is a common technique to reduce the size and stiffness of a detailed chemical mechanism (pdf_5.pdf).
+  * Heuristic: When using a QSSA-reduced mechanism in a low-Mach solver (PeleLMeX), it is often necessary to use a full analytical Jacobian for the chemistry integrator to ensure stable time integration (pdf_5.pdf).
+
+3.4 Boundary and Initial Conditions
+
+Properly defining boundary and initial conditions is crucial for a physically meaningful simulation.
+
+* Common Boundary Conditions:
+  * subsonic inflow: Used for fuel jets (pdf_2.pdf).
+  * supersonic inflow: Used for high-speed main flows (pdf_2.pdf, pdf_15.pdf).
+  * adiabatic no-slip: Standard for solid walls (pdf_13.pdf).
+  * FOExtrap (First-Order Extrapolation): A common, simple outflow condition (pdf_16.pdf).
+* Initialization Strategies:
+  1. From 1D Profiles: Initialize the domain from a 1D flame solution (e.g., from Cantera) and add small perturbations to trigger instabilities (pdf_18.pdf).
+  2. From Analytical Profiles: For problems like mixing layers, initialize the flow with analytical functions (e.g., erf profiles) and superimpose a turbulent velocity field (pdf_16.pdf).
+  3. From a Non-Reacting Solution: For complex turbulent flows, first run the simulation without chemistry until the flow field reaches a statistically stationary state. Then, introduce the fuel and enable reactions (pdf_2.pdf).
+
+While the parameters above are set at runtime, some fundamental model choices must be made before the code is even compiled.
+
+4.0 Build System Configuration Patterns
+
+Several core physics models and numerical configurations in the Pele suite are selected at compile time via build flags. This section details the decision patterns for these critical flags, based on their application in the source documents. Making the correct choice here is essential, as changing these options requires recompiling the executable.
+
+* Equation of State (EoS): The choice of Eos_Model determines how fluid properties are calculated.
+  * The ideal gas EoS is the standard choice for a majority of combustion simulations (pdf_2.pdf, pdf_5.pdf).
+  * Decision Rule: For simulations in high-pressure or supercritical regimes, where real gas effects become significant, a more complex EoS like Soave–Redlich–Kwong (SRK) is necessary (pdf_16.pdf).
+* Parallelization Strategy: Pele is designed for massively parallel high-performance computing (HPC) platforms. The standard parallelization model leverages both MPI for distributed memory parallelism across nodes and GPU offloading (via CUDA/HIP) for high-performance computation within each node (pdf_5.pdf).
+* Precision and Dimensionality: The choice of dimensionality (DIM=2 or DIM=3) is a critical, problem-dependent build-time decision that defines the fundamental structure of the simulation, as analyzed in Section 2.4.
+
+The following section synthesizes these choices into complete setup templates for several common combustion problems.
+
+5.0 Canonical Case Setup Templates
+
+This section provides archetypal setup templates for several canonical combustion problems. Each template summarizes the key parameters and model choices from a specific, validated reference simulation found in the source documents. These templates serve as complete and reliable starting points for users looking to set up a new, similar problem, providing a full blueprint from solver selection to detailed parameterization.
+
+5.1 Case: Premixed Flame (Lean Hydrogen)
+
+* Reference: Howarth et al. (pdf_18.pdf, pdf_19.pdf)
+* Problem: 2D freely-propagating, thermodiffusively-unstable lean premixed hydrogen flame.
+* Solver: PeleLMeX
+* Grid: 2D domain of 80 * l_F x 640 * l_F with a base resolution of 128 x 1024.
+* AMR: 3 levels, refinement ratio of 2. Refinement criterion is Y_HO2 > 0.3 * max(Y_HO2_1D).
+* Time: CFL not specified.
+* Chemistry: Li et al. H2 mechanism.
+* Transport: Mixture-averaged with rescaling for Soret effect.
+* BCs: Periodic in propagating direction.
+* ICs: Initialized from a 1D Cantera flame profile with a random sinusoidal perturbation.
+* Build: 2D, Mixture-Averaged Transport.
+
+# --- Annotated Pseudo-Input File: Lean H2 Premixed Flame ---
+
+# Solver Selection (Build Time)
+pele.solver = PeleLMeX
+pele.dimension = 2
+
+# Domain and Grid
+geometry.is_periodic = 1 0         # Periodic in x, non-periodic in y
+geometry.prob_lo = 0.0 ...
+geometry.prob_hi = ...             # Scaled by thermal thickness l_F
+amr.n_cell = 128 1024              # Base grid resolution
+
+# AMR Configuration
+amr.max_level = 2                  # 3 levels total (0, 1, 2)
+amr.ref_ratio = 2                  # Refinement ratio between levels
+amr.refinement_indicators = h2o2_y
+amr.h2o2_y.max_level = 2
+amr.h2o2_y.value_greater = ...     # Threshold based on 1D max Y_HO2
+
+# Chemistry and Transport
+pele.chem_integrator = "Reactor"
+pele.transport_model = "MixtureAveraged"
+pele.use_soret_rescaling = 1         # Enable rescaling for Soret effect
+
+# Initial Conditions
+pele.init_type = "1DProfile"
+pele.init_profile_name = "cantera_h2_flame.dat"
+pele.init_perturb_amplitude = 0.01   # Small sinusoidal perturbation
+
+
+5.2 Case: Autoignition (RCCI Engine)
+
+* Reference: Wimer et al. (pdf_11.pdf)
+* Problem: 3D simulation of Reactivity-Controlled Compression Ignition (RCCI) in a scaled engine cylinder.
+* Solver: Comparison between PeleC and PeleLMeX.
+* Grid: 3D domain of 2.8 x 2.8 x 0.7 cm with a 512 x 512 x 128 Cartesian grid.
+* AMR: Not used for this setup; geometry is handled by Embedded Boundaries (EB).
+* Time: CFL not specified.
+* Chemistry: Methane and dodecane (surrogate for diesel).
+* Transport: Mixture-averaged (implied standard).
+* BCs: Enclosed piston-bowl geometry defined by EB.
+* ICs: Homogeneous methane/air mixture at 900 K and 60 atm, with a low-level turbulent intensity velocity field.
+* Build: 3D, EB enabled, Ideal Gas EoS.
+
+# --- Annotated Pseudo-Input File: RCCI Engine Autoignition ---
+
+# Solver Selection (Build Time)
+pele.solver = PeleC                # Or PeleLMeX for comparison
+pele.dimension = 3
+pele.use_eb = 1
+
+# Domain and Grid
+geometry.is_periodic = 0 0 0
+geometry.prob_lo = 0.0 0.0 0.0
+geometry.prob_hi = 2.8 2.8 0.7       # In cm
+amr.n_cell = 512 512 128
+amr.max_level = 0                  # No AMR, single level grid
+
+# Geometry (EB)
+eb2.geom_type = "stl_file"
+eb2.stl_file = "piston_bowl.stl"
+
+# Chemistry and Transport
+pele.chem_integrator = "Reactor"
+pele.transport_model = "MixtureAveraged"
+
+# Initial Conditions
+pele.init_type = "Homogeneous"
+pele.init_temp = 900.0             # K
+pele.init_pressure = 60.0          # atm
+pele.init_species = "CH4:..."      # Premixed methane/air
+pele.init_turbulence_intensity = 0.05
+
+
+5.3 Case: Detonation (Oblique Detonation Wave)
+
+* Reference: Ramachandran and Yang (pdf_15.pdf)
+* Problem: 2D simulation of a wedge-induced Oblique Detonation Wave (ODW).
+* Solver: PeleC
+* Grid: 2D domain of 1.0 x 0.75 cm with a base mesh of 1600 x 1200.
+* AMR: 3 levels, refinement ratio of 2, for a finest resolution of 0.78 um. Refinement criteria are temperature gradient and vorticity magnitude.
+* Time: CFL not specified.
+* Chemistry: 9-species, 21-reaction H2-air mechanism.
+* Transport: Full compressible Navier-Stokes.
+* BCs: Supersonic inflow, adiabatic no-slip wedge wall, outflow.
+* ICs: Uniform supersonic inflow conditions.
+* Build: 2D, PeleC, EB enabled.
+
+# --- Annotated Pseudo-Input File: Oblique Detonation Wave ---
+
+# Solver Selection (Build Time)
+pele.solver = PeleC
+pele.dimension = 2
+pele.use_eb = 1
+
+# Domain and Grid
+geometry.prob_lo = 0.0 0.0
+geometry.prob_hi = 1.0 0.75        # In cm
+amr.n_cell = 1600 1200
+amr.max_level = 2                  # 3 levels total (0, 1, 2)
+amr.ref_ratio = 2 2
+
+# AMR Configuration
+amr.refinement_indicators = temp_grad vorticity
+amr.temp_grad.max_level = 2
+amr.temp_grad.value_greater = 10.0   # K
+amr.vorticity.max_level = 2
+amr.vorticity.value_greater = 5.0e3  # s⁻¹
+
+# Boundary Conditions
+pele.lo_bc = "SupersonicInflow"
+pele.hi_bc = "FOExtrap" "FOExtrap"
+# Wedge defined via EB file with adiabatic no-slip wall
+
+# Initial Conditions
+pele.init_type = "Uniform"
+pele.init_mach = 10.0
+pele.init_temp = 929.8             # K
+pele.init_pressure = 5.43          # atm (converted from 549.8 kPa)
+
+
+5.4 Case: Turbulent Combustion (Supersonic Cavity)
+
+* Reference: Sitaraman et al. (pdf_2.pdf, pdf_3.pdf)
+* Problem: 3D DNS/LES of a cavity-stabilized hydrogen flame in supersonic crossflow.
+* Solver: PeleC
+* Grid: 3D domain with a base grid of 512 x 128 x 32 (140 um resolution).
+* AMR: 3 levels, refinement ratio of 2, for a finest resolution of 35 um. Refinement criteria are density difference, temperature, temperature gradient, and vorticity magnitude.
+* Time: CFL not specified.
+* Chemistry: 9-species, 21-reaction H2-air mechanism (Li et al.).
+* Transport: Mixture-averaged diffusion.
+* BCs: Supersonic air inflow, subsonic H2 fuel injection, adiabatic walls.
+* ICs: Initialized from a statistically stationary non-reacting flow field.
+* Build: 3D, PeleC, EB enabled, Ideal Gas EoS.
+
+# --- Annotated Pseudo-Input File: Supersonic Cavity Flame ---
+
+# Solver Selection (Build Time)
+pele.solver = PeleC
+pele.dimension = 3
+pele.use_eb = 1
+
+# Domain and Grid
+geometry.prob_hi = 7.168 1.792 0.448  # In cm, calculated from resolution
+amr.n_cell = 512 128 32
+amr.max_level = 2                  # 3 levels total
+amr.ref_ratio = 2 2
+
+# AMR Configuration
+amr.refinement_indicators = density_diff temp temp_grad vorticity
+amr.density_diff.value_greater = 3.0e-5
+amr.temp.value_greater = 1300.0
+amr.temp_grad.value_greater = 500.0
+amr.vorticity.value_greater = 1.0e6
+
+# Boundary Conditions
+pele.lo_bc = "SupersonicInflow"      # Main air inflow
+# Subsonic H2 fuel jet defined as separate inflow patch
+# Cavity walls defined via EB with adiabatic conditions
+
+# Initial Conditions
+pele.init_type = "Restart"
+pele.restart_file = "non_reacting_chkpoint" # From converged non-reacting case
+
+
+Once the simulation is correctly configured, the focus shifts to the practical steps of running the simulation and analyzing the resulting data.
+
+6.0 Simulation Workflow and Execution Patterns
+
+A successful simulation campaign involves more than just a correct input file. It requires a systematic workflow covering pre-processing, execution, and post-processing. This section outlines such a workflow, drawing from the practices demonstrated across the source documents to ensure robust and credible results.
+
+6.1 Pre-Simulation Checklist
+
+* [ ] Perform Mesh Convergence Study: Before committing to a large-scale simulation, it is crucial to ensure the results are not sensitive to the grid resolution. Analyze the impact of refining the base grid or adding AMR levels on key outputs, such as conditional mean temperature or scalar dissipation rate, to demonstrate grid independence. The methodology detailed in Appendix A of pdf_2.pdf provides a template for this analysis.
+* [ ] Validate Chemical Mechanism: For reduced mechanisms (e.g., QSSA), perform 0D constant pressure reactor studies to compare metrics like ignition delay time against a detailed mechanism or experimental data (pdf_16.pdf). This verifies that the reduced model captures the essential kinetics for the problem at hand.
+* [ ] Verify Initial and Boundary Conditions: For complex turbulent flows, it is a common and highly recommended practice to first run a non-reacting case to a statistically stationary state. This ensures that the flow field is physically realistic and well-developed before the complexities of chemistry are introduced (pdf_2.pdf).
+
+6.2 Execution and Monitoring
+
+Pele simulations are computationally intensive and designed for high-performance computing (HPC) systems.
+
+* Resource Allocation: The computational cost can be significant. Examples from the literature provide a sense of scale:
+  * A 3D AMR simulation of a supersonic cavity required "2 days on 1080 processors for 0.1 ms of simulation time" (pdf_2.pdf).
+  * A 3D AMR simulation of multipulse ignition used between "8 to 30 GPU nodes" (pdf_5.pdf).
+* Execution Strategy: For simulations running for long physical times or on large machine allocations, using a restart strategy is standard practice. This involves periodically saving checkpoint files from which the simulation can be resumed, guarding against machine failures or job time limits (pdf_2.pdf).
+* Runtime Monitoring: Monitor key integrated quantities to track simulation progress and stability. Common diagnostics include volume-averaged temperature and the mass fractions of key products like H₂O (pdf_2.pdf).
+
+6.3 Post-Processing and Analysis
+
+Extracting physical insights from the vast datasets produced by high-fidelity simulations requires a range of analysis techniques.
+
+* Standard Techniques:
+  * Time-averaging and Favre-averaging of flow fields to analyze mean behavior.
+  * Conditional statistics based on conserved scalars like mixture fraction or reaction progress variables.
+  * Lagrangian particle tracking to analyze the history of fluid parcels as they traverse the domain (pdf_2.pdf).
+  * Reaction pathway analysis to understand the dominant chemical kinetic pathways (pdf_36.pdf).
+* Data Management for Exascale Simulations: The data output from large-scale simulations can exceed storage capacity. In situ analysis is an emerging strategy to mitigate this. It involves processing data during runtime to generate smaller, derived data products (such as anomaly metrics) instead of saving the full raw data at high frequency (pdf_37.pdf).
+
+Even with careful setup, simulations can encounter issues. The next section provides guidance on diagnosing and resolving common problems.
+
+7.0 Troubleshooting Guide
+
+This section provides a diagnostic guide for common issues encountered during the build and execution phases of Pele simulations. The table below maps symptoms to potential causes and recommended actions, based on insights from the source documents.
+
+Troubleshooting Decision Tree
+
+Symptom	Potential Cause	Recommended Action
+Build Failure	Malformed chemical mechanism file (e.g., CHEMKIN/Cantera format).	Verify the syntax and consistency of the mechanism and thermodynamics files used as input to the code generator (pdf_5.pdf).
+Runtime Failure: Chemistry integration fails to converge	ODE solver tolerances are too loose for the stiffness of the system.	Decrease the absolute and relative tolerances for the chemistry integrator (e.g., CVODE), as noted in pdf_5.pdf.
+Runtime Failure: Chemistry integration fails to converge	Timestep is too large for the chosen Jacobian approximation (e.g., simplified AJ or iterative method).	Reduce the simulation timestep (CFL number). For low-Mach solvers, ensure a full analytical Jacobian is used for QSSA mechanisms (pdf_5.pdf).
+Unphysical Results: Results differ significantly from validation data or theory.	Grid resolution is insufficient to capture key phenomena (e.g., flame structure, turbulence).	Perform a grid convergence study as outlined in Section 6.1. Increase base resolution or add AMR levels (pdf_2.pdf).
+Unphysical Results: Instability behavior does not match expectations.	Transport model may be oversimplified.	For lean H2 flames, ensure Soret diffusion effects are included, either with a multicomponent model or a rescaled mixture-averaged model (pdf_18.pdf).
+
+8.0 Synthesis of Heuristic Rules
+
+This final section synthesizes the key findings from the preceding analysis into a concise set of "if-then" heuristic rules. These rules are intended to serve as a quick-reference guide to accelerate decision-making during the simulation setup process.
+
+Appendix: Case Similarity Matrix
+
+This appendix provides a matrix to help users quickly identify the most relevant reference simulation in the source documents for a new problem. By matching the problem archetype and key physics, users can locate a well-documented starting point for their own simulation setup.
+
+Problem Archetype	Key Physics	Fuel(s)	Geometry	Primary Reference Document
+Premixed Flame	Thermodiffusive Instability	H₂	2D Planar	pdf_18.pdf, pdf_19.pdf
+Autoignition	Compression Ignition, Turbulence	CH₄, n-C₁₂H₂₆	3D Engine Piston-Bowl (EB)	pdf_11.pdf
+Detonation	Shock-Combustion Coupling	H₂	2D Wedge (EB)	pdf_15.pdf
+Turbulent Jet Flame	Jet in Supersonic Crossflow	H₂	3D Cavity (EB)	pdf_2.pdf, pdf_3.pdf
+High-Pressure Mixing	Supercritical Fluids, LTC	DME	2D Temporal Mixing Layer	pdf_16.pdf
+Spray Combustion	Lagrangian Droplets	Kerosene	3D Jet in Crossflow	pdf_34.pdf
+Rotating Detonation	Self-Sustaining Detonation	H₂	2D Unwrapped Annulus	pdf_26.pdf

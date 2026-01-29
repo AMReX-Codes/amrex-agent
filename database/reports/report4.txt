@@ -1,0 +1,307 @@
+Report: A Framework for Problem Classification and Reference Case Matching in Combustion Simulation
+
+As high-fidelity combustion simulations become increasingly accessible through advanced computational codes like the Pele Suite, it is strategically imperative to establish a new standard operating procedure for leveraging prior work. This report establishes such a framework—a systematic method to classify new simulation problems, match them to well-understood and validated reference cases, and thereby de-risk and accelerate future simulations. This methodology, grounded in a clear problem taxonomy and dimensionless analysis, enables practitioners to rapidly identify the most relevant numerical methods and physical models by analogy to a known, peer-reviewed case. By leveraging a curated library of established simulations, this framework enhances confidence in results and allows for the proactive identification of physics-based risks. This document provides the complete methodology and the corresponding library of reference cases derived from recent computational studies.
+
+
+--------------------------------------------------------------------------------
+
+
+1.0 Problem Taxonomy for Combustion Simulations
+
+A structured problem taxonomy is the critical first step in the case matching workflow. This classification system enables a user to rapidly narrow the field of relevant reference cases by defining a problem's fundamental physical and numerical characteristics. Each category within the taxonomy represents a key axis of physics that dictates the choice of numerical methods, mesh resolution requirements, and even the appropriate set of governing equations. By systematically categorizing a new simulation problem, one can efficiently filter a library of reference cases to identify a small subset of highly relevant candidates for deeper comparison.
+
+1.1 Flow Regime
+
+The flow regime defines the fundamental nature of the fluid dynamics, distinguishing between compressible and incompressible behavior and between ordered and chaotic motion. This classification is the primary determinant for choosing between a low-Mach number solver (like PeleLMeX) and a fully compressible solver (like PeleC), thereby preventing wasted computational resources on an inappropriate code.
+
+* Subsonic/Low-Mach (Ma < 0.3): This regime is characterized by flow velocities significantly lower than the speed of sound, where fluid compressibility effects are negligible. This allows for the use of more computationally efficient low-Mach number solvers, such as PeleLMeX, which are formulated to filter out acoustics by design. The study of Reactivity-Controlled Compression Ignition (RCCI) engines provides a direct comparison, noting that the low-Mach formulation removes pressure-wave-driven compressive heating effects that are present in a fully compressible solution because all pressure waves are removed from the simulation [Wimer et al., 2023].
+* Supersonic/Hypersonic (Ma > 1): In this regime, compressibility effects are dominant. Physical phenomena such as shock waves, shock-boundary layer interactions, and detonations are central features. These problems require a fully compressible solver, like PeleC, to capture the physics accurately. Key examples include simulations of Oblique Detonation Waves (ODW) with an inflow Mach number of 10 [Ramachandran & Yang, 2024] and studies of supersonic cavity flame-holders for scramjet applications [Sitaraman et al., 2021].
+* Laminar vs. Turbulent (Reynolds Number): The Reynolds number (Re) distinguishes between highly ordered laminar flows and chaotic, multiscale turbulent flows. While laminar flames can develop hydrodynamic instabilities [Confined Spherical Flames Study], they lack the broad spectrum of interacting scales characteristic of turbulence. In contrast, high-Reynolds-number turbulent flows, like the Supersonic Cavity Flame-Holder case at Re ≈ 80,000 [Sitaraman et al., 2021], require sufficient grid resolution to capture the cascade of energy from large eddies down to the dissipative scales (e.g., resolving the Taylor microscale).
+
+1.2 Combustion Mode
+
+The combustion mode is distinguished by the state of fuel-oxidizer mixing prior to reaction and the mechanism by which the flame propagates.
+
+* Premixed: Fuel and oxidizer are mixed at a molecular level before entering the reaction zone. This mode includes:
+  * Deflagration: A subsonic flame front that propagates through thermal diffusion and chemical reaction, as seen in studies of lean premixed hydrogen flames [Howarth et al., 2024a].
+  * Detonation: A supersonic combustion wave driven by a leading shock wave that compresses and heats the mixture to autoignition, as exemplified by the Oblique Detonation Wave (ODW) case [Ramachandran & Yang, 2024].
+* Non-Premixed (Diffusion): Fuel and oxidizer are initially separate and react as they mix. The reaction rate is controlled by the diffusion rate of the reactants. Examples include hydrogen injection into a supersonic cavity flame-holder [Sitaraman et al., 2021] and methane pool fires [Meehan et al., 2024].
+* Partially-Premixed / Stratified: A hybrid mode common in practical devices, where a premixed charge is supplemented by direct injection, creating a stratified mixture with varying equivalence ratios. The RCCI Engine simulation [Wimer et al., 2023], which uses a pre-filled methane-air mixture with direct injection of dodecane, is a prime example. The Micromix Combustor [Howarth et al., 2024b] is also described as an "essentially-lean inhomogeneously-premixed" lifted flame.
+* Autoignition: A mixture ignites spontaneously when it reaches a critical temperature and pressure, without an external ignition source like a spark. This is the dominant ignition mechanism in compression-ignition engines, as studied in the RCCI [Wimer et al., 2023] and Engine Knock [Knocking Study, 2023] cases.
+
+1.3 Geometry and Boundary Conditions
+
+The geometric configuration and boundary conditions determine the influence of confinement, dimensionality, and wall interactions on the flow and flame.
+
+* Open vs. Confined: This distinguishes between unconfined domains, such as freely-propagating flames [Howarth et al., 2024a], and confined domains where flame-wall and acoustic interactions are critical. Examples of confined systems include the Supersonic Cavity [Sitaraman et al., 2021] and Rotating Detonation Engines (RDEs). The RDE study by Valencia et al. [2024] uses a 2D "unrolled" representation of the annular channel with periodic boundary conditions to simulate rotation.
+* Simple Cartesian vs. Embedded Boundary (EB): Simulations may use simple, body-aligned Cartesian domains or require an Embedded Boundary (EB) method to represent complex, non-Cartesian geometries within a structured grid. The EB method is essential for modeling realistic devices like the RCCI piston-bowl [Wimer et al., 2023], the Micromix Combustor [Howarth et al., 2024b], and the vessel in the Confined Spherical Flames study [Confined Spherical Flames Study].
+* Dimensionality (2D vs. 3D): The choice between a two-dimensional or three-dimensional simulation has major implications for the physical phenomena that can be captured. Many foundational studies, such as those on ODWs [Ramachandran & Yang, 2024] and lean premixed hydrogen flames [Howarth et al., 2024a], are conducted in 2D to reduce computational cost. However, complex turbulent interactions, vortex dynamics, and flame topologies often necessitate fully 3D simulations, as demonstrated in the Micromix Combustor [Howarth et al., 2024b] and Supersonic Cavity [Sitaraman et al., 2021] studies.
+
+1.4 Chemistry and Multiphysics
+
+The complexity of the chemical kinetics and the inclusion of additional physical models are key differentiators for simulation setup.
+
+* Chemistry Complexity: Chemical mechanisms can range from globally Reduced models (e.g., the 58-species n-heptane model used in a compression ignition study [Salinas et al., 2025]) to Detailed mechanisms that include a comprehensive set of elementary reactions (e.g., the 9-species, 21-reaction H2-air model used in the Supersonic Cavity case [Sitaraman et al., 2021]).
+* Multiphysics Couplings: Simulations can be coupled with other physical models, including:
+  * Spray: Modeling the injection, atomization, and evaporation of liquid fuel droplets, as seen in the RCCI Engine with dodecane jets [Wimer et al., 2023] and in studies of Spray Jet Flames [Meng et al., 2025].
+  * Soot/Radiation: Modeling the formation of soot particles and the transport of thermal radiation, which is critical in sooting flames [Wimer et al., 2024].
+  * Real Gas Effects: Accounting for non-ideal gas behavior at high pressures using equations of state like the Soave–Redlich–Kwong (SRK) model, which was compared against the ideal gas law in a high-pressure DME mixing layer study [Ramachandran et al., 2023].
+  * Soret Effect (Thermal Diffusion): Including the diffusion of species due to temperature gradients, which was explicitly investigated for its impact on lean premixed hydrogen flames [Howarth et al., 2024a].
+
+These taxonomic categories are quantitatively defined by a set of critical dimensionless numbers that dictate the dominant physical processes.
+
+2.0 Dimensionless Number Decision Boundaries
+
+Dimensionless numbers provide a quantitative method for classifying flow and combustion regimes, moving beyond the qualitative taxonomy to establish clear decision boundaries. The specific values of these numbers dictate the dominant physical phenomena, determine the stability of the system, and impose strict requirements on numerical resolution and solver selection. They are essential for accurately comparing a new problem to a reference case.
+
+2.1 Mach Number (Ma)
+
+The Mach number (Ma), the ratio of the flow speed to the speed of sound, dictates the importance of fluid compressibility.
+
+* Threshold: For Ma < 0.3, the flow can be treated as effectively incompressible. This threshold validates the use of computationally efficient low-Mach number solvers like PeleLMeX. The RCCI engine study [Wimer et al., 2023] provides a direct comparison of low-Mach (PeleLMeX) and compressible (PeleC) solvers, confirming this boundary.
+* Implication: For Ma > 0.3, compressibility effects such as pressure waves, shock formation, and significant density variations become physically important. These phenomena necessitate a fully compressible solver like PeleC. High-Mach simulations of oblique detonation waves [Ramachandran & Yang, 2024] and scramjet combustors [Jin et al., 2024] are clear examples where compressibility is the dominant feature.
+
+2.2 Reynolds Number (Re)
+
+The Reynolds number (Re) characterizes the ratio of inertial forces to viscous forces and determines whether the flow is laminar, transitional, or turbulent.
+
+* Threshold: The state of the flow transitions from laminar to transitional and finally to fully turbulent as Re increases. The Methane Pool Fire study [Meehan et al., 2024] provides a clear example, presenting three distinct cases explicitly defined as laminar (Re_f = 335), transitional (Re_f = 671), and turbulent (Re_f = 1342).
+* Implication: High Re flows, such as the supersonic cavity at Re ≈ 80,000 [Sitaraman et al., 2021], are characterized by a wide range of turbulent scales that must be resolved or modeled. Direct Numerical Simulation (DNS) aims to resolve all scales down to the dissipative Kolmogorov scale, which imposes extreme resolution requirements. Large Eddy Simulation (LES) or Reynolds-Averaged Navier-Stokes (RANS) methods use models for the smaller, unresolved scales.
+
+2.3 Damköhler (Da) and Karlovitz (Ka) Numbers
+
+The Damköhler and Karlovitz numbers relate the characteristic timescales of turbulence to the timescales of chemical reaction, thereby defining the turbulent combustion regime. The Karlovitz number (Ka), specifically, compares the chemical timescale of the flame to the Kolmogorov time—the characteristic timescale of the smallest, most dissipative turbulent eddies.
+
+* Threshold: A very low Karlovitz number, such as Ka ≈ 10⁻³, corresponds to the laminar flamelet regime. In this regime, the flame is a thin, internally structured layer that is wrinkled by turbulence but not fundamentally altered [Confined Spherical Flames Study].
+* Implication: As Ka increases, turbulent eddies become small and fast enough to penetrate the flame's preheat zone, broadening the reaction layers. A low-Ka flamelet is computationally "cheaper" to resolve relative to its thickness, whereas a high-Ka distributed flame requires resolving extremely fine turbulent scales that are actively disrupting the flame structure, imposing a much greater computational burden. The Micromix Combustor study [Howarth et al., 2024b] identifies a core flame operating in the thin reaction zone regime and a peripheral flame in the distributed burning regime, demonstrating that a single simulation can span multiple regimes depending on local turbulence intensity.
+
+The following section catalogs a library of validated reference simulations, each classified according to this taxonomy and its defining dimensionless parameters.
+
+3.0 Validated Case Library
+
+This section forms the core of the reference framework, presenting a curated library of well-documented, validated simulation cases extracted from recent high-impact scientific publications. Each entry is cataloged using a standardized template to facilitate direct comparison and matching between a new problem and an existing, well-understood simulation. The data provided for each case is grounded exclusively in the source context and serves as the foundation for the similarity analysis workflow.
+
+3.1 Case: Reactivity-Controlled Compression Ignition (RCCI) Engine
+
+* CASE: RCCI Engine | SOURCE: Wimer et al., NREL/CP-2C00-84700 | CODE: PeleC / PeleLMeX
+* REGIME:
+  * Re: Turbulent | Ma: Low-Mach (<0.3) vs. Compressible compared | Da/Ka: Autoignition regime
+  * Flow: Turbulent | Chemistry: Methane/Dodecane mechanism
+  * Geometry: 3D, Confined, EB
+* SCALES:
+  * Domain: 2.8 x 2.8 x 0.7 cm | Resolution: Base 512x512x128 (~55 µm)
+  * Flame thickness: N/A (Autoignition) | Kolmogorov: N/A
+* CONDITIONS:
+  * P: 60 atm | T: 900 K | Fuel: CH4/Air + C12H24 | φ: 0.5 (premixed)
+* VALIDATED FOR:
+  * Comparing ignition delay and compressive heating effects between low-Mach and compressible solvers.
+* KNOWN LIMITS:
+  * Low-Mach solution auto-ignites sooner than the compressible solution in this configuration.
+
+3.2 Case: Oblique Detonation Wave (ODW)
+
+* CASE: Wedge-Induced ODW | SOURCE: Ramachandran & Yang, Combust. Flame 265 (2024) 113506 | CODE: PeleC
+* REGIME:
+  * Re: High (shock-driven) | Ma: 10.0 | Da/Ka: Detonation regime
+  * Flow: Supersonic/Turbulent | Chemistry: H2-air (9-species, 21-reaction)
+  * Geometry: 2D, Confined (wedge)
+* SCALES:
+  * Domain: 1.0 x 0.75 cm | Resolution: Base 1600x1200, finest 0.78 µm (3 AMR levels)
+  * Flame thickness: N/A (Detonation) | Reaction Zone Exothermic Length: 21.7 µm [Desai et al., 2023]
+* CONDITIONS:
+  * P: 549.8 kPa (inlet) | T: 929.8 K (inlet) | Fuel: H2-air | φ: 1.0
+* VALIDATED FOR:
+  * Resolving the multi-zonal structure of an ODW, including pseudo-cellular and cellular zones, and the micro-jetting stabilization phenomenon.
+* KNOWN LIMITS:
+  * 2D simulation; 3D effects may alter stability.
+
+3.3 Case: Supersonic Cavity Flame-Holder
+
+* CASE: H2 Injection in Supersonic Cavity | SOURCE: Sitaraman et al., Combust. Flame 232 (2021) 111531 | CODE: PeleC
+* REGIME:
+  * Re: ~80,000 | Ma: Supersonic | Da/Ka: Non-premixed flame regime
+  * Flow: Turbulent | Chemistry: H2-air (9-species, 21-reaction)
+  * Geometry: 3D, Confined, EB
+* SCALES:
+  * Domain: Jet diameter 0.1 cm | Resolution: Base 512x128x32 (140 µm), finest 35 µm (3 AMR levels)
+  * Flame thickness: Laminar flame thickness ~350 µm | Kolmogorov: Inflow η ~ 20 µm
+* CONDITIONS:
+  * P: Not specified | T: Stagnation T=1450K, H2 inlet T=300K | Fuel: H2-air | φ: N/A (non-premixed)
+* VALIDATED FOR:
+  * Analyzing the effect of direct fuel injection location (upstream vs. near-ramp) on mixing, flame structure, and stability.
+* KNOWN LIMITS:
+  * Adiabatic walls and uniform inflow are simplifying assumptions.
+
+3.4 Case: Micromix Combustor
+
+* CASE: High-Pressure H2 Micromix | SOURCE: Howarth et al., Combust. Flame 265 (2024) 113504 | CODE: PeleLMeX
+* REGIME:
+  * Re: High (jet-in-crossflow) | Ma: Low-Mach | Da/Ka: Thin reaction zone (core) & Distributed burning (periphery)
+  * Flow: Turbulent | Chemistry: H2/O2 detailed model
+  * Geometry: 3D, Confined, Periodic
+* SCALES:
+  * Domain: Jet diameter dj = 0.7 cm | Resolution: Not specified
+  * Flame brush thickness: Lfb = 1.2 cm | Kolmogorov: N/A
+* CONDITIONS:
+  * P: 24 atm | T: 732 K (inflow) | Fuel: H2-air | φ: 0.46 (mean)
+* VALIDATED FOR:
+  * Identifying stabilization mechanisms (autoignition driven by turbulent mixing) in an inhomogeneously-premixed lifted flame.
+* KNOWN LIMITS:
+  * Soret effect is neglected. Periodic boundaries mimic an infinite array, not a finite one.
+
+3.5 Case: Lean Premixed Hydrogen Flames
+
+* CASE: Freely-Propagating H2/CH4 Blends | SOURCE: Howarth et al., Proc. Combust. Inst. 40 (2024) 105429 | CODE: DNS (unspecified)
+* REGIME:
+  * Re: Laminar with instabilities | Ma: Low-Mach | Da/Ka: Premixed deflagration
+  * Flow: Laminar | Chemistry: H2-air, H2/CH4-air
+  * Geometry: 2D, Unconfined
+* SCALES:
+  * Domain: 80lf x 640lf | Resolution: Base 128x1024, 3 AMR levels
+  * Flame thickness: (lf) is a key parameter | Kolmogorov: N/A
+* CONDITIONS:
+  * P: 1–32 atm | T: 300 K | Fuel: H2, H2/CH4 | φ: 0.3–0.65
+* VALIDATED FOR:
+  * Quantifying thermodiffusive instability and effects of fuel blending, EGR, and Soret effect on flame speed.
+* KNOWN LIMITS:
+  * 2D analysis, neglects 3D flame topology. Radiation is neglected.
+
+This library provides the ground truth for the matching workflow and similarity analysis that will now be detailed.
+
+4.0 Similarity Metrics and Matching Logic
+
+A perfect one-to-one match between a new simulation problem and a reference case is rare. Therefore, a quantitative framework is required to assess the "closeness" of a new problem to an existing case and to understand the implications of any differences. This tiered parameter system is designed to create a "physics-based distance metric" between a new problem and the library cases, based on categorizing parameters by their physical importance and using known scaling laws to bridge acceptable gaps.
+
+4.1 Critical Parameters
+
+These are non-negotiable parameters that define the core physics of the problem. A significant mismatch in any of these parameters suggests the reference case is likely inappropriate, and any comparison would be physically inconsistent.
+
+* Flow Compressibility (Ma): The Mach number regime (subsonic/low-Mach vs. supersonic) must match. This ensures that the fundamental governing equations being solved are comparable. A low-Mach autoignition problem, for example, should not be directly compared to a supersonic Oblique Detonation Wave case, as the underlying physics of pressure wave dynamics are fundamentally different.
+* Combustion Regime (Da/Ka): The fundamental mode of burning must be the same. A premixed deflagration (flamelet) cannot be reasonably compared to a non-premixed autoignition event or a supersonic detonation. The relationship between chemical and turbulent timescales dictates the flame structure and stabilization mechanism.
+* Turbulence State (Re): The order of magnitude of the Reynolds number should be similar. This ensures that the flow is in a comparable state—laminar, transitional, or fully turbulent—which governs transport properties, mixing rates, and the required numerical resolution strategy.
+
+4.2 Important Parameters
+
+These are parameters that should ideally match to ensure high confidence in the comparison. However, some deviation may be acceptable, correctable via known scaling laws, or noted as a key difference in the analysis.
+
+* Pressure and Temperature: As absolute pressure and temperature strongly influence chemical reaction rates, transport properties, and fluid density, conditions should be within a reasonable factor. Large deviations may push the problem into a different chemical kinetic regime.
+* Geometry: The geometric classification (e.g., open vs. confined, 2D vs. 3D) should be consistent. Confinement introduces flame-wall interactions and acoustic effects, while dimensionality fundamentally alters turbulent structures and flame topology.
+* Chemistry: The fuel type and the complexity of the chemical mechanism should be similar. Comparing a simple hydrogen mechanism to a large hydrocarbon mechanism introduces significant differences in chemical pathways, timescales, and species transport.
+
+4.3 Adaptation Rules and Scaling
+
+When important (but not critical) parameters do not match exactly, known scaling relationships can be used to adapt a reference case or extrapolate its findings. These rules provide a physics-based method for bridging the gap between cases.
+
+* Example: H2/CH4 Fuel Blend Flame Speed Model A study on lean premixed flames of hydrogen-methane blends [Howarth et al., 2024a] provides a direct example of an adaptation rule. An existing model for the flame speed enhancement factor (I₀) in pure hydrogen flames was adapted to account for the presence of methane. The adapted model is given by:
+* I₀ = \exp(\alpha \cdot \omega² \cdot f(\chi_{H₂}))
+* where f(χ_H₂) = χ_H₂^β with a best-fit value of β = 3.3. This formula adapts the original model (where α = 0.057) by introducing a function f(χ_H₂) that accounts for the reduced thermodiffusive response when blending hydrogen (mole fraction χ_H₂) with methane. This serves as a primary example of a physics-based adaptation that allows a model developed for one fuel to be applied to a related blend.
+
+This logic of parameter classification and adaptation is formalized in the step-by-step workflow presented in the next section.
+
+5.0 Case Matching Workflow
+
+This section formalizes the case-matching logic into a sequential workflow for matching a new problem to the case library. This workflow integrates the taxonomy, dimensionless numbers, and similarity metrics into a logical sequence designed to yield the most reliable match available and produce a clear assessment of associated risks and assumptions.
+
+1. Step 1: Primary Classification The first step is to filter the library to a subset of cases that share the same fundamental governing physics. Using the primary input parameters for the new problem (Mach number, Reynolds number, combustion mode, geometry, and fuel type), apply hard cuts to the library. For instance, if the new problem has a Mach number greater than 0.3, all low-Mach reference cases are filtered out. If the flow is expected to be fully turbulent, laminar cases are discarded. This initial step drastically reduces the number of candidate cases to a small, manageable subset.
+2. Step 2: Rank by Similarity Score This step involves the quantitative ranking of the remaining candidate cases from Step 1. A similarity score should be calculated for each candidate, representing its "closeness" to the new problem. This score can be formulated as a weighted sum of the normalized differences between the parameters of the new problem and the reference case. Critical parameters (Ma, Re, Da/Ka) must have the highest weights, ensuring that small deviations in these parameters are heavily penalized. Important parameters like pressure, temperature, and geometry would have moderate weights. The output of this step is a ranked list of the most promising reference cases.
+3. Step 3: Assess Adaptation Feasibility For the top-ranked case (or cases) from Step 2, this step involves a qualitative assessment of whether the identified mismatches in important parameters can be bridged using known physics. The user must determine if established scaling laws, such as the one for H2/CH4 blends described in Section 4.3, can be reasonably applied to account for differences in fuel composition, pressure, or other conditions. This step is crucial for identifying if a reference case can be reasonably extrapolated to provide meaningful insight for the new problem.
+4. Step 4: Flag Risks and Document Assumptions This is the culminating and most critical step: documenting the analysis outcome and associated uncertainties. The user must create a clear and concise summary that lists the selected best-match reference case and explicitly states the key differences between it and the new problem. All extrapolations or adaptations made in Step 3 must be documented as formal assumptions or risks. For example, applying a scaling law outside its validated pressure range or using a 2D reference case for a 3D problem should be flagged as a significant source of uncertainty that must be considered when interpreting the new simulation's results.
+
+To properly flag risks, an awareness of the physical boundaries between different combustion regimes is essential, as operating near these boundaries introduces unique challenges.
+
+6.0 Key Regime Boundaries and Transitions
+
+Operating near the boundaries that separate distinct physical regimes introduces significant risk and complexity. These transitional regions often exhibit highly unsteady, multi-modal behavior that may not be fully captured by a single reference case deep within a specific regime. Special care is required in simulation setup, resolution, and interpretation when a problem is expected to exist near or cross one of these boundaries.
+
+* Autoignition to Propagating Flame: The transition from distributed autoignition to a coherent, propagating flame is a key process in many engines. The RCCI engine study [Wimer et al., 2023] describes this transition as the formation of small, distributed ignition kernels that subsequently coalesce and spread to consume the remaining unburned mixture. This signals the onset of a full, propagating flame front from an initial autoignition event.
+* Oblique Shock Wave (OSW) to Oblique Detonation Wave (ODW): This transition is fundamental to shock-induced combustion systems. Studies of ODWs [Desai et al., 2023; Ramachandran & Yang, 2024] detail the process where a supersonic combustible mixture passing over a wedge first forms a non-reactive oblique shock. The high temperature behind this shock then triggers combustion, which subsequently couples with the shock front to establish a stable, propagating oblique detonation wave.
+* Explosive Transition of Deflagration: Under conditions of rapidly increasing temperature and pressure, such as those that cause engine knock, a stable laminar flame structure may no longer be sustainable. The "explosive transition of deflagration" theory describes a boundary in pressure-temperature space where the flame structure becomes untenable, leading to an explosive autoignition event in the unburned gas ahead of the flame. Crossing this boundary marks a catastrophic transition from controlled to uncontrolled combustion [Knocking Study, 2023].
+
+Understanding the relationships between different reference cases can also help in navigating these complex transitional phenomena by providing a logical progression from simpler to more complex physics.
+
+7.0 Cross-Referencing and Case Progression
+
+There is immense value in understanding the relationships between the reference cases themselves. The scientific literature often represents a continuum of research, with studies building upon previous work. This creates sequences and families of simulations that can guide a user from simple, canonical problems toward more complex, realistic ones, building confidence and validating methods at each step.
+
+7.1 Related Cases
+
+This category refers to explicit links made in publications where one study directly builds upon or compares against another. For example, the ODW study by Ramachandran & Yang [2024] explicitly references and builds upon the foundational work by Desai et al. [2023]. These related studies investigate similar ODW physics but explore the impact of different model fidelities, such as the effect of including viscous wall effects versus assuming an inviscid wedge surface. Matching a problem to such a family of cases provides a much richer context than matching to a single, isolated simulation.
+
+7.2 Validation Pathways (Simple → Complex)
+
+This describes a logical path for building simulation capability and validating results by progressing from simple, canonical configurations to more complex, application-relevant ones. This creates a validation chain where confidence in the numerical methods, physical models, and simulation setup is established on simpler, well-understood problems before attempting more challenging ones. For example, a user planning to simulate a complex hydrogen combustor could follow this progression:
+
+1. Start with a 2D freely-propagating laminar H₂ flame (similar to [Howarth et al., 2024a]) to validate the basic chemical kinetics, transport properties, and Soret effect implementation.
+2. Progress to a 3D confined turbulent H₂ flame in a Micromix combustor (similar to [Howarth et al., 2024b]) to validate the models for turbulence-chemistry interaction and flame stabilization mechanisms in a complex, confined geometry.
+
+Following such a sequence ensures that each layer of physical complexity is added from a well-validated baseline, minimizing sources of error and increasing overall confidence in the final, complex simulation.
+
+8.0 Quick Reference and Decision Aids
+
+This final section provides summary tools designed to aid in the practical application of the classification framework. These aids distill the detailed methodology into quick-reference tables and conceptual maps for day-to-day use.
+
+8.1 Quick Reference Matrix
+
+The following matrix enables a user to map their problem's characteristics to the most relevant starting point in the case library and to identify key risks associated with the match.
+
+Problem-to-Case Matching Matrix
+
+Your Problem Has...	Closest Reference Case	Source	Adaptation / Key Risks
+Low-Mach, turbulent autoignition in complex 3D geometry	RCCI Engine	Wimer et al.	Must adapt from dual-fuel to single-fuel; check pressure sensitivity.
+Supersonic (High Ma), premixed H₂ detonation	Oblique Detonation Wave	Ramachandran & Yang	2D case, 3D instabilities are a risk; assumes wedge geometry.
+Lean H₂/CH₄ blend flame speed prediction	Lean Premixed H₂ Flames	Howarth et al.	Must apply the f(χ_H₂) scaling law for blends; 2D only.
+
+8.2 Regime Map Description
+
+A regime map, often plotted on logarithmic axes of Damköhler number (Da) versus Karlovitz number (Ka), is a standard tool for visualizing turbulent combustion regimes. Such a map shows distinct regions corresponding to different modes of burning, such as the flamelet regime (low Ka), the thin reaction zones regime, and the distributed combustion regime (high Ka). By placing a new problem on this map, one can immediately understand its expected combustion behavior relative to established theories and reference cases.
+
+Based on the curated case library:
+
+* The Confined Spherical Flames case is explicitly located in the laminar flamelet regime at Ka ≈ 10⁻³ [Confined Spherical Flames Study].
+* The Micromix Combustor is noted to span multiple regimes, with its core flame in the thin reaction zone and its peripheral flame in the distributed burning regime, highlighting the local nature of these parameters [Howarth et al., 2024b].
+
+A significant data gap exists, as the Da and Ka numbers are not explicitly provided in the source material for most of the cases in the library. Calculating these parameters would be a necessary step for a more complete quantitative matching process.
+
+8.3 Red Flags and Unvalidated Regions
+
+This final list summarizes key gaps and high-risk scenarios identified from a comprehensive analysis of the reference case library. A new problem falling into one of these categories should be treated with extra caution, as it resides in a largely unvalidated parameter space.
+
+* High-Pressure Methane Blends: The scaling model for H₂/CH₄ blends [Howarth et al., 2024a] is validated up to 32 atm. Its direct application to higher-pressure engine conditions, such as the 60 atm environment of the RCCI case [Wimer et al., 2023], represents a significant extrapolation and potential source of error.
+* 3D Detonation Stability: The high-fidelity ODW reference cases [Ramachandran & Yang, 2024] are two-dimensional. It is known that 3D effects can significantly alter detonation stability, cellular structure, and propagation mechanisms, representing a major physical risk when extrapolating from 2D results.
+* Combined Multiphysics: No single reference case within the provided library simultaneously combines multiple complex physics models, such as sprays, real gas effects, and detailed soot/radiation models. A problem requiring all of these physics would be in a largely unvalidated parameter space, demanding a careful, incremental approach to model integration and validation.
+
+
+--------------------------------------------------------------------------------
+
+
+References
+
+[Confined Spherical Flames Study] Based on details provided in the source context for pdf_12.pdf.
+
+[Desai et al., 2023] S. Desai, Y. Tao, R. Sivaramakrishnan et al. (2023). "Effects of non-thermal termolecular reactions on wedge-induced oblique detonation waves." Combustion and Flame, 257, 112681.
+
+[Howarth et al., 2024a] T.L. Howarth, M.S. Day, H. Pitsch, A.J. Aspden (2024). "Thermal diffusion, exhaust gas recirculation and blending effects on lean premixed hydrogen flames." Proceedings of the Combustion Institute, 40, 105429.
+
+[Howarth et al., 2024b] T.L. Howarth et al. (2024). "Direct numerical simulation of a high-pressure hydrogen micromix combustor to investigate flame structure and stabilisation mechanism." Combustion and Flame, 265, 113504.
+
+[Jin et al., 2024] K. Jin et al. (2024). "Mechanism of flow choking induced by heat release accompanied by large-scale flow separation in scramjet combustor." Combustion and Flame, 268, 113627.
+
+[Knocking Study, 2023] Based on details provided in the source context for pdf_14.pdf, published in Physics of Fluids, 35, 083604.
+
+[Meehan et al., 2024] M.A. Meehan et al. (2024). "A numerical study of the laminar to turbulent transition in methane pool fires." Proceedings of the Combustion Institute, 40, 105768.
+
+[Meng et al., 2025] Q. Meng et al. (2025). "Three-dimensional direct numerical simulation of spray jet flames in hot vitiated crossflow." Fuel, 389, 134543.
+
+[Ramachandran et al., 2023] S. Ramachandran, N. Srinivasan, T.S. Taneja et al. (2023). "A computational study of dual peak structured autoigniting DME mixing layers at high/supercritical pressures." Combustion and Flame, 249, 112626.
+
+[Ramachandran & Yang, 2024] S. Ramachandran and S. Yang (2024). "On the multi-zonal structure and micro-jetting phenomenon in oblique detonation waves." Combustion and Flame, 265, 113506.
+
+[Salinas et al., 2025] J.S. Salinas et al. (2025). "Unsupervised in situ analysis for identifying autoignition kernels in turbulent combustion simulations." Combustion and Flame, 279, 114273.
+
+[Sitaraman et al., 2021] H. Sitaraman, S. Yellapantula, M.T. Henry de Frahan et al. (2021). "Adaptive mesh based combustion simulations of direct fuel injection effects in a supersonic cavity flame-holder." Combustion and Flame, 232, 111531.
+
+[Valencia et al., 2024] S. Valencia et al. (2024). "Flow-field analysis and performance assessment of rotating detonation engines under different number of discrete inlet nozzles." Applications in Energy and Combustion Science, 20, 100296.
+
+[Wimer et al., 2023] N.T. Wimer et al. (2023). "Examination of a Methane/Diesel RCCI Engine using Pele." NREL Conference Paper NREL/CP-2C00-84700.
+
+[Wimer et al., 2024] N.T. Wimer et al. (2024). "PeleMP: The Multiphysics Solver for the Combustion Pele Adaptive Mesh Refinement Code Suite." Journal of Fluids Engineering, 146(4), 041103.

@@ -1,0 +1,5 @@
+llm_provider: cborg
+llm_model: claude-sonnet-4-5
+indexing_strategy: override_static
+baseline_override: PeleLMeX/Exec/Production/JetInCrossflow
+faiss_semantic_weight: 0.0

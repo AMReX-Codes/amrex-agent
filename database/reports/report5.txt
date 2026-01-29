@@ -1,0 +1,186 @@
+Pele Simulation Suite: A Comprehensive Guide to Input Parameter Customization
+
+This document is an essential guide for researchers and engineers utilizing the Pele software suite (PeleC, PeleLMeX, and PeleMP). It consolidates best practices, recommended parameter settings, and strategic workflows derived from a broad spectrum of validated, high-fidelity simulations. The objective is to empower users to configure robust, accurate, and efficient simulations by leveraging the collective knowledge encapsulated in published research.
+
+1. Parameter Catalog by Functional Group
+
+A systematic approach to parameter selection is fundamental to successful simulation. Simply adopting settings from a previous case without understanding their physical and numerical implications can lead to instability, inaccuracy, or excessive computational cost. This section provides a functional breakdown of key input parameters, offering typical values, valid ranges, and the underlying rationale for their use. Each recommendation is grounded in settings employed in validated, published simulation studies.
+
+1.1 Domain & Grid Setup (geometry, amr)
+
+Parameters in the geometry and amr namespaces define the computational domain and the Adaptive Mesh Refinement (AMR) strategy, which are foundational to the simulation's physical representation and computational cost.
+
+Parameter	Typical Values / Range	Units	Context and Rationale for Tuning
+geometry.prob_lo/prob_hi	Case-specific (e.g., 2.8 × 2.8 × 0.7, 22 × 22, 1 × 0.75)	cm	The computational domain must be large enough to contain all phenomena of interest without significant boundary interference. For instance, in simulations of Oblique Detonation Waves (ODW), a sufficiently large domain was critical to unveil the full multi-zonal structure, including the transition to a fully developed cellular pattern far downstream of the wedge tip (pdf_15).
+geometry.is_periodic	true or false in one or more dimensions	N/A	Periodic boundaries are essential for simulating a representative section of a much larger, repeating geometry. This is common for modeling a single injector in a large array (pdf_20) or a section of an annular combustor like a Rotating Detonation Engine (pdf_26, pdf_31). A domain can be periodic in some dimensions while having inflow/outflow conditions in others, such as in simulations of temporal mixing layers (pdf_16).
+amr.n_cell	512×512×128 (high-res), 512×128×32 (standard), 1600×1200 (2D high-res)	cells	Defines the base grid resolution. This coarse grid must be fine enough to resolve the largest relevant flow features before any adaptive refinement is applied. Examples include 512×512×128 for an RCCI engine (pdf_11), 512×128×32 for a supersonic cavity flame-holder (pdf_2), and a high-resolution 1600×1200 for a 2D ODW study (pdf_15).
+amr.max_level	2 to 8	levels	This parameter determines the finest possible mesh resolution. A value of 3 levels is common for many turbulent combustion problems (pdf_2, pdf_15), but more may be required for phenomena with a vast range of scales. For example, spherically expanding flames (pdf_12) reached eight levels of refinement to resolve micrometer-scale reaction zones, while exascale piston simulations (pdf_37) used six levels. Exceeding the necessary number of levels drastically increases computational cost.
+amr.refinement_indicators	vorticity, temp_gradient, density_gradient, species_mass_fraction	Various	These criteria trigger local mesh refinement when a threshold is met. A robust set of indicators ensures that all critical physical features are resolved. For example, a supersonic cavity simulation (pdf_2) successfully used vorticity magnitude (> 10⁶ s⁻¹), high temperature (> 1300 K), temperature gradients (> 500 K), and density gradients (> 3 × 10⁻⁵ g/cm³). This specific combination is effective because it ensures that all key flow features—from shocks (density gradients) and flame fronts (temperature gradients, key species) to turbulent structures (vorticity)—are dynamically resolved, which is essential for capturing the complex interactions in supersonic combustion. Additionally, refining on the mass fraction of key intermediate species like HCO or CH2OH is effective for resolving flame fronts (pdf_22).
+
+1.2 Time Stepping
+
+Time-stepping parameters govern the temporal advancement of the simulation, with direct implications for numerical stability and computational throughput.
+
+Parameter	Typical Values / Range	Units	Context and Rationale for Tuning
+cfl	0.1–0.5	N/A	The Courant-Friedrichs-Lewy (CFL) number directly controls the time step size for explicit advection schemes to ensure stability. Conservative values such as 0.1 (pdf_29) or 0.2 (pdf_26) are common starting points for complex reacting flows. For multiphysics simulations involving sprays, an additional constraint of cfl_spray <= 0.5 is often required (pdf_6).
+stop_time or max_step	Case-dependent (e.g., 3.5 ms, 1.8 × ignition_delay)	ms, steps	The simulation duration must be sufficient to achieve the scientific objective. This could mean running long enough to reach a statistically stationary state for turbulence analysis (pdf_2) or ensuring the full observation of phenomena like multi-stage ignition (pdf_11, pdf_16).
+
+1.3 Chemistry & Transport
+
+The choice of chemical integrator, transport model, and equation of state determines the fidelity and computational cost of the thermochemical calculations.
+
+Parameter	Selection	Context and Rationale for Selection
+chem_integrator	CVODE or DVODE	CVODE is a robust and scalable choice for integrating stiff chemical kinetics and has been used successfully in numerous studies (pdf_16, pdf_26). For compressible solver time steps, which are often very small, a Krylov-based iterative method may be acceptable if a full Jacobian matrix is not employed (pdf_5).
+ode.atol / ode.rtol	atol: 10⁻¹⁰ to 10⁻¹², rtol: ~10⁻⁶	These are the absolute and relative tolerances for the ODE solver. Low-Mach number solvers, which take larger time steps, often require very tight absolute tolerances (atol <= 10⁻¹²) for the implicit integrator to converge reliably (pdf_5).
+transport_type	MixtureAveraged	The mixture-averaged diffusion model is a computationally efficient and robust choice that provides sufficient accuracy for a wide range of combustion problems. It is the standard selection in the majority of the reviewed simulations (pdf_18, pdf_38, pdf_5).
+use_soret	true or false (default)	The Soret effect (thermal diffusion) is often neglected but becomes critical for accurately capturing thermodiffusive instabilities in certain regimes, particularly lean premixed hydrogen flames. It should be enabled for such cases. A rescaling model for H and H₂ has been shown to mimic multicomponent diffusion with low computational cost, making its inclusion more tractable (pdf_18).
+eos_type	IdealGas or SRK (Soave–Redlich–Kwong)	The IdealGas Equation of State (EoS) is suitable for most combustion applications at moderate pressures. However, for high-pressure (P > 50 atm) or supercritical conditions, a real gas model like SRK is necessary to capture the correct fluid properties, mixing behavior, and reaction rates, as demonstrated in studies of high-pressure Dimethyl Ether (DME) flames (pdf_16).
+
+1.4 Boundary and Initial Conditions
+
+These parameters define the physical interface of the domain with its surroundings and set the initial state from which the simulation evolves.
+
+Parameter	Common Options	Use Case Examples
+lo_bc/hi_bc	Inflow, Outflow, Periodic, NoSlipWall, SlipWall	Boundary conditions must accurately represent the physical problem. Common examples include SubsonicInflow for fuel jets (pdf_2), Adiabatic NoSlipWall for solid surfaces like wedges (pdf_13), FOExtrap (First-Order Extrapolation) for simple outflow (pdf_16), and Periodic for repeating geometries (pdf_26). Outlet conditions can be sophisticated, sometimes switching based on the local Mach number to handle both subsonic and supersonic outflow (pdf_26).
+EB.geom_type	Cylinder, STL file, etc.	Embedded Boundaries (EBs) are a powerful feature for representing complex, non-Cartesian geometries on the underlying grid. This approach is widely used for modeling engine cylinders (pdf_11) and profiled piston heads (pdf_7, pdf_8).
+init_type	Uniform, Restart, 1DProfile	The domain can be initialized in various ways. A Uniform mixture is common for compression ignition studies (pdf_11). For flame propagation studies, it is standard practice to seed the domain with a 1DProfile from a laminar flame calculation using a tool like Cantera to establish a stable initial flame front (pdf_18).
+Perturbations	turbulent_intensity, sinusoidal	In many cases, it is necessary to introduce small perturbations to the initial field to trigger physical instabilities or turbulence. This can be achieved by seeding low-level turbulent_intensity (pdf_11), imposing Homogeneous Isotropic Turbulent (HIT) fluctuations (pdf_16), or applying a random sinusoidal perturbation to a flame front (pdf_18).
+
+This catalog provides a solid foundation for selecting individual parameters, but the true challenge lies in understanding how these settings interact, a topic addressed by the decision rules and constraints detailed in Section 2.
+
+2. Analyzing Parameter Interdependencies and Constraints
+
+Parameters are not set in isolation; their validity is governed by a strict set of physical and numerical constraints. Selecting an invalid combination can lead to immediate simulation failure or, more insidiously, to physically incorrect results. This section uses a decision-tree format to illuminate the critical constraints and consistency rules that govern valid parameter combinations, helping to prevent common setup errors.
+
+2.1 Coupled Constraints
+
+The choice of one parameter often dictates the valid range or selection of another. These strong interdependencies are critical for simulation stability and physical accuracy.
+
+* IF the maximum Mach number is expected to exceed ~0.3, THEN use the compressible solver (PeleC), ELSE the low-Mach number solver (PeleLMeX) is appropriate. BECAUSE the low-Mach formulation fundamentally neglects acoustic pressure waves, it is invalid for compressible flow regimes where phenomena like pressure fluctuations and compressive heating are physically significant, as demonstrated by the premature auto-ignition predicted by PeleLMeX in the RCCI engine study (pdf_11).
+* IF using a low-Mach number solver (which implies larger time steps) with a Quasi-Steady State Approximation (QSSA) reduced chemical mechanism, THEN an analytic Jacobian is strongly recommended for the chemical integrator. BECAUSE implicit integrators may fail to converge with the larger chemical substeps or looser tolerances common in low-Mach simulations unless an accurate Jacobian is provided. The lack of an analytic Jacobian can lead to convergence failures that would not occur with a finite-difference Jacobian or smaller time steps (pdf_5).
+* IF Embedded Boundaries (EB) are used to represent geometry, THEN a stabilization method for small cut-cells is required. BECAUSE the intersection of the geometry with the Cartesian grid can create cut-cells that are arbitrarily small. For explicit methods, these cells would violate the CFL condition and destabilize the simulation. The State Redistribution (SRD) algorithm is the method implemented in the Pele suite to robustly address this challenge by effectively merging small cells with their larger neighbors (pdf_7, pdf_8).
+
+2.2 Consistency Rules
+
+These rules ensure that the chosen combination of models and boundary conditions is logically sound and self-consistent.
+
+* IF spray, soot, or radiation models are required for the simulation, THEN the PeleMP library must be used. BECAUSE PeleMP is the designated multiphysics solver for the Pele suite, containing the specific implementations for these physics modules, which are not present in the base PeleC or PeleLMeX solvers (pdf_6).
+* IF a simulation dimension is set to Periodic, THEN do not specify inflow or outflow boundary conditions for that dimension. BECAUSE periodicity enforces a solenoidal condition on the domain boundaries for that dimension, which is incompatible with net mass flux from inflow/outflow conditions. It is important to note that a simulation can be periodic in one dimension (e.g., the streamwise x-direction in a temporally evolving simulation) while having physical inflow/outflow boundaries in another (e.g., the transverse y-direction), as seen in temporal mixing layer simulations (pdf_16).
+
+Understanding these rules is the first step toward building a robust simulation. The next section provides practical workflows for applying this knowledge.
+
+3. Strategic Customization Workflows
+
+This section provides practical, step-by-step workflows for two common user tasks: adapting a reference case for a new problem and systematically tuning a new simulation for stability and performance.
+
+3.1 Adapting a Reference Simulation
+
+Modifying an existing, validated simulation setup is an efficient way to configure a new problem. This workflow ensures that critical parameters are revisited.
+
+1. Systematically identify Key Physical Differences. Identify the primary physical differences between the reference case and the new problem. Key aspects to consider include flow speed (subsonic vs. supersonic), fuel type (e.g., hydrogen vs. n-dodecane), pressure, and geometric complexity.
+2. Modify Boundary Conditions. Modify the lo_bc/hi_bc parameters to match the new flow regime. For instance, if adapting a subsonic case (Ma < 1) to a supersonic one (Ma > 1), the inflow and outflow boundary condition types must be updated to correctly handle the change in characteristic wave propagation (pdf_26).
+3. Replace Chemical Mechanism. If the fuel or oxidizer composition changes, replace the chemistry and transport mechanism files with ones appropriate for the new species. The literature demonstrates the use of distinct, tailored mechanisms for different fuels, such as H₂-air (pdf_2), n-dodecane (pdf_5), and DME (pdf_16).
+4. Assess Grid Resolution. Assess if the base grid (amr.n_cell) and the number of refinement levels (amr.max_level) are sufficient for the new physics. The grid must be fine enough to resolve the smallest relevant physical scales, such as the laminar flame thickness or the turbulent Kolmogorov scale. A common practice is to ensure at least 10 cells across a laminar flame thickness (pdf_2, pdf_3) or to resolve the Kolmogorov scale in highly turbulent zones (pdf_22).
+
+3.2 Tuning Progression for Stability
+
+When setting up a simulation from scratch, it is best to start with conservative parameters and tune progressively to find a balance between stability and performance.
+
+* Establish a Conservative Baseline. Start with a set of parameters known to be robust, based on values from the source documents:
+  * Set a low CFL number: cfl = 0.1 (pdf_29).
+  * Use tight ODE solver tolerances, especially for low-Mach simulations: ode.atol = 10⁻¹² (pdf_5).
+  * Start with a moderate number of AMR levels to balance resolution and cost: amr.max_level = 2 or 3 (pdf_2).
+* Iterate Based on Stability. Use the simulation behavior to guide tuning adjustments:
+  * If the simulation is stable and performance is slow: Consider cautiously increasing the cfl number in small increments (e.g., to 0.15, then 0.2). This will allow for larger time steps.
+  * If the simulation is unstable (e.g., crashing, producing non-physical values): The primary remedy is to decrease the cfl number.
+    * If the ODE solver reports repeated convergence failures, the primary suspect is overly loose ode.atol/rtol for the chemical stiffness of your problem.
+    * If you observe NaN (Not-a-Number) values appearing in the flow field, an aggressive cfl number is the most common cause.
+
+These workflows help tune individual simulations, but rigorous scientific work often requires systematic parameter sweeps for validation purposes.
+
+4. Validation-Driven Parameter Sets
+
+A fundamental tenet of computational science is the verification that results are independent of numerical discretization. The following parameter sweeps are not merely best practices; they are essential procedures for establishing the credibility and physical relevance of your simulation results. This section provides examples of parameter sets for common validation studies, drawn directly from the literature.
+
+4.1 Grid Convergence Study
+
+The goal of a grid convergence study is to ensure that the solution is not sensitive to the mesh resolution, implying that the physical phenomena are adequately resolved.
+
+* Parameter to Vary: amr.max_level
+* Example Sequence: Run a set of identical simulations, varying only the maximum allowed refinement level. A typical sequence, as used in studies of rotating detonation engines and scramjets, would be to run cases with amr.max_level set to 2, 3, and 4 (pdf_26, pdf_29).
+* Success Criterion: Key physical outputs, such as mean temperature profiles, flame speed, or pressure fields, should show diminishing changes as the grid is refined from one level to the next. If the solution changes significantly between the two finest grids, it suggests that even higher resolution may be required. This is often confirmed by visual inspection and quantitative analysis of plots, as demonstrated in the appendices of pdf_2, pdf_26, and pdf_29.
+
+4.2 Chemical Mechanism Comparison
+
+The goal of a mechanism comparison study is to understand the impact of chemical fidelity on the simulation results and to justify the choice of a particular model.
+
+* Parameter to Vary: The chemical kinetics input file.
+* Example Sequence: Run simulations with a fixed grid and identical flow conditions, but with different chemical mechanisms. An ODW study, for example, compared a "Baseline" H₂-air mechanism against "Termolecular" and "Corrected Termolecular" models that included additional reaction pathways (pdf_13).
+* Analysis: Compare key outputs like ignition delay time, heat release rate, and the concentration of critical radical species (e.g., H, OH, O). This analysis quantifies the sensitivity of the simulation to the chemical model and can reveal which reaction pathways are most influential under the given conditions.
+
+Formal validation studies are essential for building confidence in simulation results; the next section focuses on avoiding common, unforced errors in configuration.
+
+5. Common Configuration Pitfalls
+
+This section summarizes common mistakes and invalid parameter combinations that can lead to failed simulations, poor performance, or incorrect results. Awareness of these pitfalls can save significant time and computational resources.
+
+5.1 Invalid Parameter Combinations
+
+* High Mach number with PeleLMeX: Using the low-Mach solver for flows where the Mach number is expected to locally or globally exceed ~0.3 is a violation of the solver's underlying physical model. This is a direct violation of the solver selection constraint detailed in Section 2.1 and can lead to inaccurate predictions of ignition and flame dynamics.
+* QSSA with inadequate ODE solver: Employing a QSS-reduced chemical mechanism without an appropriate Jacobian-based integrator can lead to convergence failures. This is particularly problematic in low-Mach solvers (PeleLMeX), which use larger time steps that are more demanding for the chemical integrator (pdf_5).
+
+5.2 Typical Numerical Errors
+
+* Insufficient grid resolution: A base grid that is too coarse or an amr.max_level that is too low will fail to resolve critical physics like shear layers, shocks, or flame fronts. This is a primary source of inaccurate results, as under-resolved features cannot be correctly modeled (pdf_2, pdf_26).
+* Overly loose ODE tolerances: Using an absolute tolerance (ode.atol) that is too high (e.g., 10⁻⁸ instead of 10⁻¹²) can cause the chemistry integrator to become unstable or produce inaccurate solutions, especially for stiff chemistry (pdf_5).
+* Aggressive CFL number: Setting the cfl too high in an attempt to accelerate the simulation is a primary cause of numerical instability and simulation crashes.
+
+5.3 Performance Traps
+
+These are configurations that may run correctly but are computationally inefficient.
+
+* Excessive AMR levels: While high resolution is desirable, each additional AMR level dramatically increases the total cell count and computational cost. Using more levels than are physically necessary to resolve the relevant scales is a primary performance trap (pdf_37).
+* Unnecessary Soret effect: Enabling the Soret effect model is computationally more expensive than the standard mixture-averaged transport model. It should only be used when physically required, such as for simulating thermodiffusive instabilities in lean hydrogen flames (pdf_18). For other fuels and regimes, it adds cost for negligible benefit.
+
+Avoiding these common mistakes is crucial. The following section provides complete, working examples to serve as templates for new simulations.
+
+6. Canonical Case Templates
+
+This section provides concrete parameter descriptions for three archetypal simulation setups, representing a spectrum of complexity from fundamental flame physics to high-fidelity multiphysics applications. These templates describe the key physical and numerical parameters used in published studies and serve as robust starting points for user simulations. They are not complete input files but rather detailed architectural summaries.
+
+6.1 Template 1: Minimal (2D Laminar Premixed Flame)
+
+This minimal setup is ideal for studying fundamental flame physics, such as intrinsic thermodiffusive instabilities, and is based on linear stability analysis studies (pdf_31, pdf_38).
+
+* Physics: 2D, Laminar, Premixed H₂/CO₂/Air.
+* Solver: PeleLMeX.
+* Domain: A simple, high-aspect-ratio rectangular channel (e.g., 80 × 640 thermal flame thicknesses) with periodic side boundaries to allow for uninhibited growth of instabilities.
+* Initial Conditions: A 1D unstretched laminar flame profile generated by Cantera is imposed on the grid, with a small, random sinusoidal perturbation applied to the flame front to trigger instability growth.
+* Chemistry: A detailed H₂ chemical mechanism.
+* AMR: 3 levels of refinement, triggered by temperature gradients to ensure the thin flame front is well-resolved.
+
+6.2 Template 2: Standard (3D Turbulent Reacting Flow)
+
+This configuration represents a standard "workhorse" setup applicable to many practical problems involving turbulent combustion in complex geometries, based on the supersonic cavity flame-holder simulation (pdf_2, pdf_3).
+
+* Physics: 3D, Turbulent, Supersonic, Non-premixed H₂-air combustion in a complex geometry.
+* Solver: PeleC.
+* Domain & Geometry: A rectangular domain with an Embedded Boundary (EB) representing the cavity flame-holder.
+* Boundary Conditions: Supersonic inflow for air, a separate subsonic inflow for the fuel jet, and adiabatic no-slip walls for the cavity surfaces.
+* Chemistry: A compact 9-species, 21-reaction H₂-air mechanism suitable for high-temperature combustion.
+* AMR: 3 levels of refinement, using a combination of indicators (density gradients, temperature, vorticity) to dynamically resolve shocks, flame structures, and turbulent shear layers.
+
+6.3 Template 3: High-Fidelity (Multiphysics Simulation)
+
+This high-fidelity setup requires specialized physics modules for phenomena beyond simple gas-phase combustion, based on sooting and spray flame examples (pdf_6).
+
+* Physics: 3D, Turbulent, Sooting non-premixed flame OR Swirl-stabilized spray flame.
+* Solver: PeleLMeX with the PeleMP library enabled.
+* Domain & Geometry: A piloted burner geometry for the sooting flame or a bluff-body swirl combustor with EBs for the spray flame.
+* Multiphysics Models:
+  * Soot: The Hybrid Method of Moments (HMOM) is enabled to track soot particle formation and growth.
+  * Radiation: The P1 model is enabled to account for thermal radiation from soot and hot gases.
+  * Spray: A Lagrangian spray model is enabled to track discrete fuel droplets, including multicomponent evaporation.
+* AMR: In addition to standard flow and flame criteria, refinement is triggered on the soot volume fraction to capture regions of intense particle formation.
+
+This guide has provided a structured overview of parameterization, from individual settings to interdependent systems and practical workflows. It is intended to serve as a comprehensive resource to empower users to conduct high-quality, reliable, and impactful simulations with the Pele suite.

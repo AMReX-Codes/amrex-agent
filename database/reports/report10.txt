@@ -1,0 +1,3 @@
+=== Test Report ===
+
+TEST CONTENT - If you see this, the function works

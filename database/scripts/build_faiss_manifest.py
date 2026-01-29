@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""
+Build a manifest for published FAISS artifacts.
+
+Generates manifest.json with file paths + hashes for download clients.
+"""
+
+import argparse
+import hashlib
+import json
+import logging
+from datetime import UTC, datetime
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+
+def _sha256(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def _collect_files(root: Path, exclude_path: Path | None = None) -> list[dict]:
+    files = []
+    exclude_resolved = exclude_path.resolve() if exclude_path else None
+    for path in sorted(root.rglob("*")):
+        if path.is_dir():
+            continue
+        if exclude_resolved and path.resolve() == exclude_resolved:
+            continue
+        rel_path = path.relative_to(root).as_posix()
+        files.append(
+            {
+                "path": rel_path,
+                "size": path.stat().st_size,
+                "sha256": _sha256(path),
+            }
+        )
+    return files
+
+
+def main() -> None:
+    """
+    Build and write a FAISS manifest JSON file.
+
+    Returns
+    -------
+    None
+        Writes the manifest to disk.
+    """
+    parser = argparse.ArgumentParser(description="Build manifest for FAISS artifacts.")
+    parser.add_argument("--faiss-root", type=Path, default=Path("database/faiss"), help="FAISS root directory")
+    parser.add_argument("--output", type=Path, default=Path("database/faiss/manifest.json"), help="Manifest output path")
+    parser.add_argument("--base-url", help="Optional base URL to include per-file download URLs")
+    args = parser.parse_args()
+
+    faiss_root = args.faiss_root
+    if not faiss_root.exists():
+        raise SystemExit(f"FAISS root not found: {faiss_root}")
+
+    files = _collect_files(faiss_root, exclude_path=args.output)
+    if args.base_url:
+        base = args.base_url.rstrip("/") + "/"
+        for entry in files:
+            entry["url"] = base + entry["path"]
+
+    manifest = {
+        "generated_at": datetime.now(UTC).isoformat(),
+        "root": str(faiss_root),
+        "files": files,
+    }
+
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(manifest, indent=2))
+    logger.info(f"Wrote manifest with {len(files)} files to {args.output}")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    main()

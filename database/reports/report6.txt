@@ -1,0 +1,164 @@
+Pele Simulation Suite: Job Sizing and Performance Characteristics Report
+
+Analyzing concrete case studies is essential for effective computational resource planning. These examples, drawn from a range of successfully executed simulations, provide a grounded baseline for estimating the cost and performance of new computational projects. By examining the resource requirements of representative problems, researchers can develop more accurate proposals, allocate high-performance computing (HPC) resources efficiently, and anticipate the performance characteristics of their own simulations.
+
+1.0 Direct Resource Reports for Representative Cases
+
+1.1 Case Study: Supersonic Cavity Flame-Holder
+
+**CASE:** Supersonic Cavity-Stabilized Hydrogen Combustor
+**GRID:** Base: 512 × 128 × 32 cells (140 μm) → AMR max: 3 levels (35 μm finest)
+**HARDWARE:** 1080 processor cores
+**RUNTIME:** 2 days (48 hours) wall-clock for 0.1 ms physical time simulated
+**COST:** ~51,840 core-hours
+**THROUGHPUT:** 0.00208 ms simulated time / wall-clock hour
+
+
+1.2 Case Study: Gas Turbine Premixer
+
+**CASE:** Gas Turbine (GT) Premixer with Multi-Jet in Crossflow
+**GRID:** Base: 12.5 μm → AMR max: 3 levels. Cell count evolved from ~100 million to ~230 million.
+**HARDWARE:** CPU-based cluster (platform unspecified)
+**RUNTIME:** Wall-clock time not specified.
+**COST:** Approximately 2,000,000 CPU-hours
+**THROUGHPUT:** Not directly calculable from source data.
+
+
+While these direct reports offer concrete cost anchors, a deeper understanding of the code's scaling behavior is required to extrapolate these findings to problems of different sizes and on different hardware architectures.
+
+2.0 Scaling Characteristics
+
+To effectively utilize leadership-class computing platforms, it is critical to understand how a simulation's performance scales with an increasing number of processors. Strong scaling measures how the runtime for a fixed-size problem decreases as more processors are added, while weak scaling measures how the runtime for a problem of increasing size remains constant when the number of processors is increased proportionally. These studies are critical for determining the efficiency of a simulation on modern heterogeneous, GPU-accelerated platforms.
+
+2.1 Strong Scaling on GPU Architectures
+
+An exascale simulation of four n-dodecane fuel jets in a piston-bowl geometry was used to assess the strong scaling performance of the Pele suite on GPU-based systems. The tests, conducted on the Frontier supercomputer, demonstrated that parallel efficiency begins to degrade significantly beyond approximately 56,800 GPUs, indicating the strong scaling limit for this problem size. This limit is reached at the point where the fixed computational work per GPU becomes smaller than the communication overhead required to synchronize across the machine.
+
+2.2 Weak Scaling Benchmarks
+
+The PeleMP multiphysics solver, which includes both the compressible (PeleC) and low-Mach (PeleLMeX) solvers, has been benchmarked for weak scaling performance. These studies have demonstrated that both solvers exhibit good weak scaling behavior on multiple supercomputers, including the exascale platform Frontier. This confirms the capability of the code to efficiently handle problems of increasing size by distributing the workload across a proportionally larger number of nodes.
+
+This scaling efficiency is not just a function of the core algorithm but is also heavily influenced by the specific physics and chemistry models being solved.
+
+3.0 Key Cost-Performance Relationships
+
+The primary factors driving computational cost in Pele simulations are the grid resolution required to capture relevant physics, the complexity of the chemical and physical models being employed, and the specific numerical methods used for time integration and spatial discretization. Understanding these relationships is key to balancing simulation fidelity with computational expense.
+
+3.1 Grid Resolution and Adaptive Mesh Refinement (AMR)
+
+The relationship between grid resolution and computational cost is fundamental to simulation planning. Adaptive Mesh Refinement (AMR) is a key technology used in the Pele suite to concentrate computational effort only where it is needed most.
+
+* Resolution Rules of Thumb: For scramjet simulations, a grid size of approximately 3η to 10η (where η is the Kolmogorov length scale) is considered adequate for resolving the key characteristics of supersonic combustion. This provides a target resolution for the finest AMR levels.
+* AMR vs. Uniform Grid: Tightening the thresholds for AMR triggers leads to a steep increase in computational cost. This is because more sensitive triggers cause a greater population of cells to be refined to the finest, most computationally expensive level. This underscores the critical importance of tuning AMR criteria, as overly sensitive triggers can easily exhaust a computational allocation with diminishing returns in accuracy.
+* Embedded Boundary (EB) Refinement Strategy: For simulations involving complex geometries, the strategy for refining cells near the embedded boundary has a significant performance impact. In a simulation of a piston-bowl geometry, using adaptive refinement at the boundary was 3.2 times faster than forcing full refinement on all boundary cells, while achieving identical flow field results.
+
+3.2 Chemistry and Physics Model Complexity
+
+The choice of physics and chemistry models can dramatically alter the computational cost of a simulation. The following table summarizes the impact of several key models documented in the source literature.
+
+Model/Component	Cost Impact	Source Finding
+Real Gas EoS	Higher Cost	Simulations with the Soave–Redlich–Kwong (SRK) EoS have "much larger wall-clock times" compared to the ideal gas EoS.
+Radiation & Soot	High impact on accuracy; moderate computational overhead.	Including radiation is critical for accuracy, as it can reduce the peak soot volume fraction by nearly half in a turbulent sooting flame.
+QSSA Chemistry	Reduced Cost	Quasi-Steady State Approximation (QSSA) reduced mechanisms significantly lower the number of transported species (e.g., from 53 to 35 for n-dodecane), thereby reducing cost.
+CEMA	Very High Cost	The cost of Chemical Explosive Mode Analysis (CEMA) is reported to be 30+ times the cost of a single reacting flow solver timestep.
+Analytic Jacobian	High Performance	Using a symbolic Analytic Jacobian (AJ) provides a significant speedup compared to Jacobian-free or Finite Difference (FD) methods, especially for low-Mach solvers.
+
+These cost-performance relationships can be distilled into practical guidelines for setting up and estimating a simulation run.
+
+4.0 Resource Estimation Rules and Guidelines
+
+This section translates the previous findings into actionable guidelines for estimating the memory, storage, and time requirements for a new simulation. Proper planning using these rules can significantly improve the efficiency and success rate of computational projects.
+
+4.1 AMR Triggering Strategies
+
+The criteria used to trigger mesh refinement are highly problem-dependent. The following table provides a summary of effective strategies reported for different simulation types.
+
+Case Type	Refinement Criteria	Threshold Value / Guideline
+Supersonic Cavity	Density Difference	3 × 10⁻⁵ g/cm³
+	Temperature	1300 K
+	Temperature Difference	500 K
+	Vorticity Magnitude	10⁶ s⁻¹
+GT Premixer	Local Vorticity	Resolve Kolmogorov scale with at least 2 grid points.
+	Flame Fronts	Resolve thinnest species layers with at least 10 grid points.
+	Wall Boundary Layers	Resolve inner length scale with at least one grid point.
+Lean H2 Flames	Species Concentration	Refine where HO₂ mass fraction > 30% of its 1D max value.
+
+4.2 Memory and Storage Considerations
+
+Numerical optimizations can have a direct impact on memory usage. The use of a symbolic Analytic Jacobian (AJ) for chemistry integration requires precomputing and storing common subexpressions, which increases memory requirements. However, optimization algorithms have been developed that can reduce the number of these precomputed terms by a factor of 5 to 10 without a negative impact on compute time. This optimization makes the high-performance AJ method feasible for memory-constrained architectures like GPUs.
+
+4.3 Time Estimation and Run Planning
+
+Strategic planning can maximize the scientific output from a given computational allocation.
+
+* Decoupled Simulations: Consider breaking a complex simulation into multiple stages. For example, in a micromix combustor simulation, a computationally less expensive, high-velocity, non-reacting precursor simulation was used to generate realistic, turbulent inflow conditions. These conditions were then used to initialize the more expensive reacting simulation in the larger combustion chamber, isolating the high-cost portion of the problem.
+* In-Situ Analysis: For exascale-level simulations, writing full datasets to disk can become a major performance bottleneck and generate unmanageable amounts of data. In-situ analysis, where data is processed as the simulation runs, is a highly effective strategy. The computational overhead for an in-situ anomaly detection algorithm was measured to be less than 3% of the solver's timestep, making it an extremely efficient method for reducing data storage requirements while capturing important transient events.
+
+These general rules are applicable across platforms, but certain HPC systems have unique characteristics that can be leveraged.
+
+5.0 Platform-Specific Guidance
+
+Pele simulations have been successfully executed on several leadership-class HPC systems. Performance characteristics can be platform-dependent, particularly when comparing traditional CPU architectures with modern GPU-based systems.
+
+5.1 OLCF Platforms (Crusher, Frontier)
+
+Simulations conducted on the Oak Ridge Leadership Computing Facility's (OLCF) AMD GPU-based systems have demonstrated the Pele suite's exascale capabilities. The development of optimized QSSA chemistry integration was performed on Crusher, while a large-scale turbulent sooting flame simulation was executed on 65,536 GPUs of Frontier. The massive on-node parallelism of the AMD GPUs on Crusher and Frontier is particularly effective for stencil-based codes like Pele and for computationally-intensive tasks like the Analytic Jacobian and QSSA chemistry integration, which can be executed efficiently on-GPU.
+
+5.2 NREL Platforms (Eagle)
+
+The simulation of a piston-bowl geometry, which demonstrated the significant performance benefits of adaptive refinement at embedded boundaries, was conducted on NREL's Eagle supercomputer. This work highlights the code's robust performance on traditional multi-core CPU clusters, which remain a cost-effective choice for simulations that are not dominated by the highly parallelizable tasks at which GPUs excel.
+
+Beyond platform selection, specific numerical and workflow choices are crucial for achieving optimal performance.
+
+6.0 Key Performance Optimization Strategies
+
+Achieving optimal performance requires careful tuning of numerical methods and runtime strategies that go beyond simply selecting a hardware platform. The following strategies have been shown to provide significant performance benefits.
+
+6.1 Numerical and Algorithmic Tuning
+
+* Chemistry Integration: For problems involving stiff chemistry, particularly in low-Mach number simulations, using an Analytic Jacobian is critical for both performance and stability. Attempting to solve such problems with Jacobian-free methods often leads to convergence failures or prohibitively small timesteps. The symbolic generation method provided within the Pele ecosystem is highly effective and significantly outperforms Jacobian-free or finite-difference approaches.
+* AMR for Embedded Boundaries: When simulating complex geometries with embedded boundaries, avoid forcing full refinement on all boundary cells. Using adaptive refinement criteria at the boundary can yield speedups exceeding 3x with no discernible loss of accuracy in the flow field.
+* GPU-Specific Code Generation: On GPU platforms, performance can be enhanced through code generation strategies that transform certain mathematical operations. For example, replacing pow() function calls for small integer exponents with explicit multiplications can yield performance improvements.
+
+6.2 Runtime and Workflow Strategies
+
+* Multi-Stage Workflows: Decompose complex problems into stages. Use cheaper precursor simulations (e.g., non-reacting or using simplified physics) to generate realistic boundary conditions for more computationally expensive, fully-featured reacting simulations.
+* Leverage In-Situ Analysis: For large-scale simulations where I/O is a bottleneck, utilize low-overhead in-situ data analysis. This dramatically reduces storage footprints and allows for the capture of high-frequency transient events that would be missed with traditional data checkpointing.
+
+Not all simulation parameters lead to a stable or physically meaningful result. Understanding the documented failure modes is as important as understanding optimization techniques.
+
+7.0 Documented Failure Modes and Inefficient Regimes
+
+Understanding the limits of stable and efficient simulation is crucial for resource planning and avoiding wasted computational allocation. The following examples highlight conditions where simulations either failed to produce the intended physical phenomena or entered inefficient regimes.
+
+7.1 Flame Extinction and Failure to Stabilize
+
+* Rotating Detonation Engine (RDE): An RDE configuration with only 15 discrete inlet nozzles failed to sustain a stable detonation wave. The large, inhomogeneous regions of burned gas between the bands of fresh reactants created instabilities that ultimately quenched the detonation, leading to a complete failure of the simulation to capture the target phenomenon.
+* Supersonic Cavity Flame-Holder: In a simulation with fuel injection located near the cavity ramp (Case C2), high scalar dissipation rates resulting from intense turbulence led to evidence of local flame extinction. This highlights a critical physical consideration for flame stability analysis and demonstrates a regime where the flame may struggle to anchor.
+* Explosive Transition of Deflagration: Under certain conditions of high temperature and pressure, a stable 1D laminar premixed flame structure cannot exist. Analysis of n-heptane combustion shows that when unburned gas conditions in a multidimensional simulation cross a theoretical "explosive transition boundary," auto-ignition becomes inevitable. This provides a fundamental basis for predicting knock onset in engine simulations, representing a failure mode of stable deflagration.
+
+8.0 Resource Request Template
+
+The following template should be used when requesting computational allocations for Pele simulations. It is designed to clearly and concisely justify the requested resources based on the findings in this report, prior work, or scaled-up estimates from similar cases.
+
+### Resource Request Template
+
+**FOR:** [Describe the case type, e.g., "3D DNS of a turbulent spray flame"]
+**NEED:** [Number of node-hours or core/GPU-hours, e.g., "500,000 GPU-hours on Frontier"]
+**BASIS:** [Justify the request. Refer to a similar case, scaling study, or rule-of-thumb.]
+  *   **Similar Case:** [Reference a specific case, e.g., "The GT Premixer simulation (Section 1.2)"]
+  *   **Problem Size:** [Grid size, number of species, key physics models]
+  *   **Scaling:** [Expected scaling efficiency based on similar runs]
+**EXPECTED OUTPUT:** [Physical time to be simulated, key data products, expected data storage size]
+
+---
+
+### Example Filled Template
+
+**FOR:** 3D DNS of a reacting jet in crossflow in a gas turbine premixer with complex geometry.
+**NEED:** 2,500,000 CPU-hours
+**BASIS:**
+  *   **Similar Case:** This request is based on the GT Premixer simulation detailed in Section 1.2, which cost 2M CPU-hours.
+  *   **Problem Size:** The proposed grid is slightly larger (~250M cells vs. 230M max) and includes a more complex fuel mechanism, justifying a 25% cost increase.
+  *   **Scaling:** The simulation will be run on a CPU-based cluster where good scaling is expected based on prior runs.
+**EXPECTED OUTPUT:** Approximately 1 ms of physical time simulated, generating time-averaged flow fields and species concentrations. Estimated data storage: ~20 TB for key snapshots and averaged data.

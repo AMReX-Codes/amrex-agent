@@ -1,0 +1,293 @@
+Guidance for Pele Simulation Setup: A Synthesis of Published Parameters and Rationale
+
+In computational fluid dynamics (CFD), the classification of the problem is a foundational step that governs the entire simulation strategy. The inherent physics of a combustion scenario—such as its flow regime, chemical complexity, and geometric constraints—dictate the most appropriate modeling choices. Selecting the correct physical models, numerical schemes, and even the specific Pele code variant (the compressible PeleC or the low-Mach PeleLMeX/LM) begins with a clear characterization of the problem's core attributes. The following catalog organizes a range of published case studies into distinct physical regimes to illustrate this principle in action.
+
+1.0 Problem Classification Catalog
+
+1.1 Supersonic and Detonative Combustion
+
+Case Type: Oblique Detonation Wave (ODW)
+
+* Associated Papers: Ramachandran & Yang (2024), Desai et al. (2023)
+* Pele Code: PeleC
+* Flow Regime: Supersonic (Mach 10 inflow)
+* Chemistry: Detailed H₂-air (9 species, 21 reactions)
+* Geometry: 2D wedge, adiabatic no-slip wall
+* Key Parameters: Inlet p=549.8 kPa, T=929.8 K; V=2697 m/s
+* AMR Focus: Shock fronts, transverse waves, shear layers (tracked via temperature, pressure, and vorticity gradients to capture sharp discontinuities and resolve fine vortical structures inherent to the detonation front).
+
+Case Type: Supersonic Cavity Flame-Holder
+
+* Associated Papers: Sitaraman et al. (2021)
+* Pele Code: PeleC
+* Flow Regime: Supersonic (Mach 2 air inflow), subsonic H₂ injection
+* Chemistry: Detailed H₂-air (Li et al., 9 species, 21 reactions)
+* Geometry: 3D cavity with an embedded circular fuel inlet
+* Key Parameters: Inflow Reynolds Number ~80,000; H₂ injection T=300 K, V_peak=50 m/s
+* AMR Focus: Shear layers, shocks, density/temperature gradients, and vorticity (to resolve the complex shock-train, turbulent mixing layers, and reaction zones essential for flame stabilization).
+
+Case Type: Rotating Detonation Engine (RDE)
+
+* Associated Papers: Valencia et al. (2024)
+* Pele Code: PeleC
+* Flow Regime: Supersonic, detonative
+* Chemistry: Detailed H₂-air (Li et al., 9 species, 21 reactions)
+* Geometry: 2D unwrapped annulus with periodic boundaries and discrete inlet nozzles
+* Key Parameters: Stoichiometric H₂/air mixture; varied number of inlet nozzles (15 to 240)
+* AMR Focus: Detonation wave, oblique shocks, slip lines, and deflagration surfaces (to capture the primary wave structure and secondary features that govern engine stability and performance).
+
+Case Type: Scramjet Choking
+
+* Associated Papers: Jin et al. (2024)
+* Pele Code: PeleC
+* Flow Regime: Supersonic (Mach 2.0 and 2.5 inflow)
+* Chemistry: Detailed H₂-air
+* Geometry: 3D scramjet combustor with a 1 mm diameter fuel injection hole
+* Key Parameters: Specified H₂ injection mass flow rates (0.109 g/s and 0.131 g/s)
+* AMR Focus: Density gradients (to resolve injection-induced shocks, mixing zones, and the shock-train dynamics leading to thermal choking).
+
+These high-speed, compressible phenomena stand in contrast to the next category of low-Mach number combustion.
+
+1.2 Low-Mach Number and Turbulent Flames
+
+Case Type: Spherically/Cylindrically Expanding Laminar Flames
+
+* Associated Papers: University of Southern California / Shell (preprint)
+* Pele Code: PeleLMeX
+* Flow Regime: Low-Mach number, Laminar
+* Chemistry: Detailed CH₄/H₂ kinetics
+* Geometry: 2D, 22 cm square domain with a 10 cm radius circular Embedded Boundary (EB)
+* Key Parameters: Pressure up to 30 atm, T_unburned up to 530 K, Karlovitz number ~10⁻³
+* AMR Focus: Reaction zone (to resolve the flame front down to micrometer scales, which is critical for identifying the onset of hydrodynamic instabilities at high pressure).
+
+Case Type: High-Pressure/Supercritical Temporal Mixing Layer
+
+* Associated Papers: Ramachandran et al. (2023)
+* Pele Code: PeleC
+* Flow Regime: Compressible, turbulent (Re_turb ~35,466)
+* Chemistry: Detailed DME (41 species)
+* Geometry: 2D periodic mixing layer
+* Key Parameters: Pressures of 80 atm & 150 atm; Real Gas EoS (SRK) vs Ideal Gas
+* AMR Focus: N/A (uniform grid was used for this study).
+
+Case Type: Micromix Combustors
+
+* Associated Papers: Howarth et al. (2024)
+* Pele Code: PeleLM
+* Flow Regime: Low-Mach, turbulent (essentially-lean inhomogeneously-premixed)
+* Chemistry: Comprehensive H₂/O₂ kinetic model for high pressure
+* Geometry: 3D domain with periodic boundaries to mimic a large injector array
+* Key Parameters: p=24 atm, T_inflow=732 K, global φ=0.46
+* AMR Focus: Flame structure (to differentiate between the core flame, burning in the thin reaction zone regime, and the peripheral flame in the distributed burning regime).
+
+Case Type: Gas Turbine (GT) Premixers
+
+* Associated Papers: Vabre et al. (preprint)
+* Pele Code: PeleLMeX
+* Flow Regime: Low-Mach, turbulent, auto-ignitive
+* Chemistry: Detailed DME/CH₄
+* Geometry: Rectangular prism with two rows of three air jets in a fuel crossflow
+* Key Parameters: D=0.3 mm jet diameter
+* AMR Focus: Kolmogorov scale (vorticity), boundary layers (distance to wall), and flame fronts (species like HCO) (to resolve the smallest turbulent eddies, near-wall physics, and the thin reaction zones, respectively).
+
+Case Type: Premixed H₂/NH₃/CO₂ Flames
+
+* Associated Papers: Pandey et al. (2025), Lehmann et al. (2025)
+* Pele Code: PeleLMeX
+* Flow Regime: Low-Mach, freely-propagating (laminar and turbulent)
+* Chemistry: Detailed H₂/CO₂/air and NH₃/H₂/air
+* Geometry: 2D domain with inflow/outflow or periodic boundaries
+* AMR Focus: Flame front (typically tracked via key intermediate species such as HO₂ to precisely resolve the thin reaction zone and capture thermodiffusive instabilities).
+
+Beyond these canonical and component-level studies, simulating entire engine cycles introduces another layer of geometric and physical complexity.
+
+1.3 Engine and Multiphysics Combustion
+
+Case Type: Reactivity-Controlled Compression Ignition (RCCI) Engine
+
+* Associated Papers: Wimer et al. (2023)
+* Pele Code: PeleC & PeleLMeX (comparative study)
+* Flow Regime: Low-Mach with compressible effects
+* Chemistry: Methane/Dodecane surrogate kinetics
+* Geometry: 3D scaled single cylinder with a profiled piston head EB
+* Key Parameters: Initial T=900 K, P=60 atm; Compression Ratio 16.2
+* AMR Focus: Ignition kernels (to resolve the onset of combustion at micrometer scales and track subsequent flame development).
+
+Case Type: Piston-Bowl Geometries
+
+* Associated Papers: Barrio Sanchez et al. (2024)
+* Pele Code: PeleC
+* Flow Regime: Compressible, turbulent
+* Chemistry: Methane (DRM19 mechanism) or n-dodecane (35-species mechanism)
+* Geometry: 3D piston-bowl geometries representing production diesel engines using EB
+* Key Parameters: Dual-pulse injection of gaseous fuel into a high-temperature oxidizer
+* AMR Focus: Dynamically refined based on flow features (to resolve jet interaction with complex wall geometries and capture mixing-driven ignition).
+
+Case Type: Spray and Sooting Flames
+
+* Associated Papers: Hassanaly et al. (2024, "PeleMP...")
+* Pele Code: PeleLMeX with PeleMP (multiphysics module)
+* Flow Regime: Low-Mach, turbulent
+* Chemistry: Ethylene or Sustainable Aviation Fuel (SAF) surrogates
+* Geometry: Axisymmetric coflow burner or bluff-body swirl stabilizer with EB
+* Key Parameters: Lagrangian spray models, Hybrid Method of Moments (HMOM) for soot, P1 model for radiation
+* AMR Focus: Regions of high vorticity and temperature gradients (to resolve turbulent mixing, reaction zones, and regions of soot formation).
+
+Having established a catalog of what has been simulated, the following sections shift focus to how these simulations were constructed, detailing the specific numerical and physical model parameters employed.
+
+
+--------------------------------------------------------------------------------
+
+
+2.0 Grid and Resolution Strategies
+
+Grid resolution and Adaptive Mesh Refinement (AMR) are critical tools for balancing the immense computational cost of high-fidelity simulations with the need for physical accuracy. Resolving all relevant length scales—from the turbulent Kolmogorov scale to the thickness of a flame front—across an entire engineering-scale domain is often intractable. AMR addresses this by dynamically adding resolution only in regions where it is most needed. This section quantifies the typical mesh parameters, AMR levels, and refinement criteria documented in successful Pele simulations, providing a data-driven baseline for setting up new computational domains.
+
+2.1 Domain Sizing and Base Grid Resolution
+
+The following table summarizes the domain dimensions and base grid resolutions for several representative cases, providing a sense of the typical scale and starting resolution for different problem types.
+
+Case Type	Domain Size (cm)	Base Grid (n_cell)	Notes	Source Paper
+Oblique Detonation Wave	1.0 × 0.75	1600 × 1200	Large domain to capture downstream cellular structure.	Ramachandran & Yang (2024)
+RCCI Engine	2.8 × 2.8 × 0.7	512 × 512 × 128	Scaled single cylinder at top dead center.	Wimer et al. (2023)
+Supersonic Cavity	Domain accommodates cavity	512 × 128 × 32	Cavity length of 1.27 cm.	Sitaraman et al. (2021)
+Rotating Detonation Engine	23.4 × 6.0	~936 × 240 (inferred)	2D unwrapped annulus geometry.	Valencia et al. (2024)
+GT Premixer	0.33 × 0.09 × 0.12	264 × 72 × 96	Rectangular prism sized by jet diameter (D=0.3mm).	Vabre et al. (preprint)
+
+2.2 Adaptive Mesh Refinement (AMR) Parameters
+
+AMR dynamically refines the grid based on physical criteria, concentrating computational effort on the most important flow features. Below is a summary of typical AMR levels and the physical triggers used for refinement.
+
+AMR Levels and Finest Resolution
+
+Case Type	AMR Levels	Finest Resolution (μm)	Source Paper
+Oblique Detonation Wave	3	0.78	Ramachandran & Yang (2024)
+Supersonic Cavity	2	35	Sitaraman et al. (2021)
+Rotating Detonation Engine	3	31.25	Valencia et al. (2024)
+GT Premixer	3	1.56	Vabre et al. (preprint)
+Spherically Expanding Flames	8	"a few micrometers"	Univ. of Southern California (preprint)
+
+Common Refinement Criteria
+
+* Vorticity Magnitude: A primary criterion for resolving turbulent structures, shear layers, and vortices. A typical threshold value is 10^6 s⁻¹ (Sitaraman et al., 2021; Vabre et al., preprint).
+* Temperature / Density Gradients: Essential for capturing sharp discontinuities like shock waves, contact surfaces, and flame fronts. This is a standard criterion in nearly all compressible and reacting flow simulations (Ramachandran & Yang, 2024; Sitaraman et al., 2021; Jin et al., 2024).
+* Species Mass Fraction: Used to target the chemical reaction zone with high precision by tracking the presence of key intermediate species. Examples include refining on the mass fraction of HO₂ in lean hydrogen flames or on species like HCO and CH₂OH in hydrocarbon flames (Howarth et al., 2024; Vabre et al., preprint).
+* Distance to Wall: In simulations involving complex geometries with the Embedded Boundary method, refinement can be triggered based on proximity to the wall to ensure adequate resolution of the boundary layer (Vabre et al., preprint).
+
+2.3 Resolution Guidelines and Rationale
+
+The literature provides several explicit justifications for the chosen level of grid resolution, moving beyond simple heuristics to physically grounded requirements.
+
+1. Points Per Flame Thickness: A widely accepted practice is to resolve the characteristic thermal or reaction thickness of a flame with a specific number of grid cells at the finest AMR level. For instance, in a supersonic H₂-air simulation, the flame thickness of approximately 350 μm was resolved by about 10 grid cells (35 μm finest resolution) to ensure the flame structure was adequately captured (Sitaraman et al., 2021).
+2. Kolmogorov Scale Resolution: In turbulent flows, resolving the smallest eddies, characterized by the Kolmogorov length scale (η), is critical. Studies have found that a grid size of approximately 1.3–2.6 times the local Kolmogorov scale is appropriate for capturing key flow physics. Furthermore, resolutions up to 10η have been deemed sufficient for accurately resolving the characteristics of supersonic combustion (Jin et al., 2024).
+3. Grid Convergence Studies: A consensus best practice across all high-quality studies is the performance of an a posteriori grid convergence analysis. This essential validation step confirms that the simulation results are independent of the grid resolution by comparing key quantities of interest across multiple mesh densities. This practice is explicitly documented as a necessary step in numerous publications (Sitaraman et al., 2021; Ramachandran & Yang, 2024; Valencia et al., 2024).
+
+After establishing the spatial discretization, the next critical choice involves how the solution is advanced in time.
+
+
+--------------------------------------------------------------------------------
+
+
+3.0 Time Advancement and Chemistry Integration
+
+The integration of the governing equations over time presents a core challenge in combustion simulation, primarily due to the extreme stiffness of chemical reaction source terms. The timescales of chemical reactions can be many orders of magnitude smaller than those of the fluid flow, requiring specialized numerical methods to maintain stability and accuracy without resorting to prohibitively small time steps. A key architectural difference between Pele codes is their time-advancement strategy: the compressible PeleC solver employs time-step subcycling, where finer AMR levels are advanced with smaller time steps, whereas the low-Mach PeleLMeX solver advances all levels simultaneously with a single, monolithic time-step size (Hassanaly et al., 2024, "PeleMP..."). This section provides quantitative data on these approaches.
+
+3.1 Time-Stepping Parameters
+
+The selection of the time step and integration scheme is crucial for stability and efficiency. The following table summarizes common parameters and strategies used in the literature.
+
+Pele Code	Case Type	CFL	Time-Advance Strategy	Notes & Source Paper
+PeleC	Rotating Detonation Engine	0.2	Subcycling with SDC	3rd-order SDC for coupled advection, diffusion, reaction. (Valencia et al., 2024)
+PeleC	Scramjet Choking	0.1	Subcycling	The specific time integration method is not stated. (Jin et al., 2024)
+PeleC	Oblique Detonation Wave	Not stated	Subcycling with SDC	A 3rd-order accurate SDC scheme was used. (Ramachandran & Yang, 2024)
+PeleLMeX	RCCI Engine / Spray Flame	N/A	Monolithic SDC	Time steps are absolute, typically 10⁻⁶–10⁻⁴ s. (Hassanaly et al., 2024, "QSSA...")
+
+3.2 Chemistry Mechanisms and Solvers
+
+The choice of chemical kinetic mechanism represents a trade-off between fidelity and computational cost. Reduced or skeletal mechanisms are often employed to make large-scale simulations tractable.
+
+* Hydrogen (H₂): For pure hydrogen-air combustion, particularly in supersonic and RDE contexts, the Li et al. mechanism (9 species, 21 reactions) is a frequently used and well-validated choice (Sitaraman et al., 2021; Ramachandran & Yang, 2024; Valencia et al., 2024).
+* Hydrocarbons (Dodecane, DME, etc.): Reduced skeletal mechanisms are standard for larger fuels. For instance, a 53-species skeletal n-dodecane mechanism was used for engine simulations, which could be further reduced via the Quasi-Steady State Approximation (QSSA) to 35 transported species (Hassanaly et al., 2024, "QSSA..."). A 41-species DME mechanism was used for high-pressure mixing layer studies (Ramachandran et al., 2023).
+* Chemistry Solvers: The SUNDIALS library is a common choice for integrating the stiff ordinary differential equations (ODEs) of chemistry. The CVODE solver is explicitly mentioned for its stability and scalability in several studies (Ramachandran et al., 2023; Valencia et al., 2024), while DVODE is also noted (Sitaraman et al., 2021).
+* Solver Tolerances: The stability of implicit ODE solvers is highly sensitive to tolerance settings. For low-Mach solvers with an analytical Jacobian, absolute tolerances as low as 10⁻¹² were explored to ensure robust convergence across a wide range of time-step sizes (Hassanaly et al., 2024, "QSSA...").
+
+3.3 Transport and Thermodynamic Models
+
+The physical models for species transport and fluid thermodynamics are also critical components of the simulation setup.
+
+* Transport Model: The mixture-averaged diffusion model is the most common approach for approximating species transport, balancing accuracy with computational efficiency (Sitaraman et al., 2021; Howarth et al., 2024; Pandey et al., 2025). A notable exception is made for lean hydrogen flames, where differential diffusion effects are significant. In this special case, Soret effects, which are typically neglected, were added back into the simulation using a rescaled model to improve accuracy (Howarth et al., 2024).
+* Equation of State (EoS): The Ideal Gas EoS is the standard for the vast majority of applications, providing sufficient accuracy for many combustion problems (Sitaraman et al., 2021; Valencia et al., 2024). However, for simulations at very high pressures or near-critical conditions, real gas effects become important. One study specifically contrasted the Ideal Gas law with the Soave-Redlich-Kwong (SRK) real gas model to investigate its impact on supercritical mixing and combustion (Ramachandran et al., 2023).
+
+With the core numerical and physical models defined, the final step in setting up the problem is to define how the computational domain is initialized and bounded.
+
+
+--------------------------------------------------------------------------------
+
+
+4.0 Boundary Conditions and Initialization
+
+Boundary conditions (BCs) and initial conditions (ICs) are fundamental to defining a well-posed physical problem. They anchor the simulation to a specific physical reality, and their proper implementation is critical for obtaining meaningful and stable results. This section catalogs the common BC and IC patterns used in Pele simulations for a variety of physical scenarios, from supersonic inlets to turbulent flame initialization.
+
+4.1 Boundary Condition Patterns
+
+The following table organizes the most frequently used boundary conditions by type, detailing their implementation and providing examples from the source literature.
+
+Boundary Type	Implementation Details & Common Usage	Source Examples
+Inflow	- Supersonic: Fixed state variables (pressure, temperature, velocity, species).<br>- Subsonic: Characteristic-based, with pressure interpolated from the interior and a Riemann problem solved at the face (Sitaraman et al., 2021).<br>- Nozzle/Injector: Isentropic expansion relations (Valencia et al., 2024) or a specified mass flow rate (Jin et al., 2024). Precursor turbulent pipe flow data is often used for realistic fluctuations (Salinas et al., 2025).	Ramachandran & Yang (2024), Sitaraman et al. (2021), Valencia et al. (2024)
+Outflow	- Supersonic: Simple first-order extrapolation of all variables.<br>- Subsonic: Characteristic-based methods like FOExtrap (Ramachandran et al., 2023) or Mach-dependent conditions (Valencia et al., 2024) are used to minimize spurious pressure wave reflections.	Ramachandran et al. (2023), Valencia et al. (2024)
+Wall	- Adiabatic no-slip is the most common assumption for solid walls, typically represented by the Embedded Boundary (EB) method.<br>- Slip walls are sometimes used for simplifying assumptions where viscous effects are deemed negligible (e.g., top boundary in Vabre et al., preprint).	Ramachandran & Yang (2024), Vabre et al. (preprint)
+Periodic	- Used for canonical configurations like temporal mixing layers or to represent repeating elements in an array, such as in Rotating Detonation Engines (RDEs) or micromix combustor arrays.	Ramachandran et al. (2023), Valencia et al. (2024)
+
+4.2 Initialization Techniques
+
+The method used to initialize the flow field at time t=0 sets the stage for the entire simulation. Different techniques are used depending on the problem's requirements.
+
+* Uniform/Perturbed Fields: For problems like engine compression ignition, the domain is often initialized with a homogeneous mixture at a specified temperature and pressure. A low-level turbulent intensity perturbation is frequently added to this field to represent residual turbulence and trigger instabilities (Wimer et al., 2023).
+* 1D Profile Extrusion: To study the evolution of flame instabilities, a common technique is to initialize a 2D or 3D domain by extruding a 1D laminar flame profile (often calculated with a tool like Cantera). A random sinusoidal perturbation is typically applied to the flame front to accelerate the growth of instabilities (Howarth et al., 2024).
+* Precursor Simulation Data: For simulations requiring a fully-developed turbulent inflow or initial state, a non-reacting precursor simulation is often run first. The main reacting simulation is then initialized from the statistically stationary state of this precursor, providing a realistic and physically consistent starting point (Sitaraman et al., 2021; Howarth et al., 2024).
+
+The final section synthesizes these individual setup parameters into a coherent set of guidelines and best practices for designing new simulations.
+
+
+--------------------------------------------------------------------------------
+
+
+5.0 Synthesis and Best Practices
+
+This section serves as the capstone of the guide, distilling the preceding quantitative data and qualitative observations into a practical decision-making framework. The following subsections present a structured approach for selecting key parameters, a summary of consensus best practices observed across the literature, and a collection of explicit rationales from various authors to inform and justify modeling choices in future simulation designs.
+
+5.1 Decision Framework for Parameter Selection
+
+This guide, presented in a decision-tree format, helps a user select the appropriate code and key parameters based on the physical characteristics of their problem.
+
+* IF your flow is globally supersonic, involves strong shocks, or detonations:
+  * THEN use PeleC.
+  * SET a conservative CFL number, CFL <= 0.5. For highly complex or unstable cases like RDEs, values of 0.1–0.2 are typical for ensuring stability (Valencia et al., 2024; Jin et al., 2024).
+  * FOCUS AMR on density and/or pressure gradients to sharply resolve shocks and contact discontinuities.
+* IF your flow is subsonic, or features deflagrative flames without strong shocks (e.g., premixed flames, spray combustion):
+  * THEN use PeleLMeX or PeleLM.
+  * USE the monolithic Spectral Deferred Correction (SDC) time-stepper. Absolute timesteps are typically in the 1e-6 s to 1e-4 s range (Hassanaly et al., 2024, "QSSA...").
+  * FOCUS AMR on temperature gradients and the mass fractions of key intermediate species (e.g., HO₂) to resolve the thin reaction zone of the flame front (Howarth et al., 2024).
+* IF your simulation involves complex, non-Cartesian geometry (e.g., pistons, cylinders, nozzles, bluff bodies):
+  * THEN utilize the Embedded Boundary (EB) method to represent the geometry on the Cartesian grid.
+  * ENSURE sufficient grid resolution near the EB, often through distance-based AMR criteria, to capture wall effects and boundary layers accurately.
+* IF pressure exceeds ~50 atm or thermodynamic conditions approach the critical point of the fluid:
+  * THEN evaluate the need for a real gas Equation of State (e.g., Soave-Redlich-Kwong) instead of the default Ideal Gas law, as real gas effects on density and transport properties can become significant (Ramachandran et al., 2023).
+
+5.2 Consensus Approaches and Safe Defaults
+
+The following is a list of common, reliable choices distilled from the literature that can serve as safe starting points for a new simulation setup.
+
+* Default AMR Strategy: Start with 2-3 levels of AMR, with a refinement ratio of 2 between each level. This provides a factor of 4 to 8 increase in resolution from the base grid to the finest level and is a common configuration in many studies.
+* Standard H₂ Chemistry: For H₂-air combustion, the Li et al. 9-species, 21-reaction mechanism is a widely validated and computationally tractable choice that accurately captures key combustion phenomena (Sitaraman et al., 2021; Ramachandran & Yang, 2024).
+* Transport Model: Begin with the mixture-averaged transport model and neglect Soret effects. This provides a good balance of accuracy and cost for most applications. Only consider more complex models if simulating phenomena where differential diffusion is known to be critical, such as in lean hydrogen flames (Howarth et al., 2024).
+* Essential Validation: Always perform a grid convergence study as a primary validation step. This is a non-negotiable practice observed in nearly all cited high-quality studies to ensure that the results are independent of the mesh resolution.
+
+5.3 Extracted Decision Rationale
+
+This list compiles justifications for specific modeling choices, closely paraphrased from the source documents, to provide insight into the expert reasoning behind them.
+
+* On using detailed vs. simple chemistry: "Detailed chemistry offers a more accurate, consistent and faithful representation of multiple combustion properties... thereby enhancing the fidelity of computations." (Ramachandran & Yang, 2024)
+* On using Navier-Stokes vs. Euler equations: "Viscous effects will almost certainly influence and alter [pseudo-cellular structure] formation, thereby necessitating the solution of the Navier-Stokes equations rather than the Euler equations." (Ramachandran & Yang, 2024)
+* On the need for a Jacobian in chemistry integration: "...a chemical Jacobian would be typically needed for low-Mach number solvers that use timestep sizes of the order 10⁻⁶ − 10⁻⁴ s." (Hassanaly et al., 2024, "QSSA...")
+* On simplifying assumptions: "We use some simplifying assumptions in this work such as uniform inflow conditions and adiabatic wall boundaries to isolate the important physics pertaining to fuel-jet-shear-layer interactions." (Sitaraman et al., 2021)

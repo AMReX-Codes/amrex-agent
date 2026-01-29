@@ -1,0 +1,332 @@
+# ============================================================================
+# Python: Byte-compiled / optimized / DLL files
+# ============================================================================
+__pycache__/
+*.py[codz]
+*$py.class
+*.so
+
+# ============================================================================
+# Python: Distribution / packaging
+# ============================================================================
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# ============================================================================
+# Python: Installer logs
+# ============================================================================
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============================================================================
+# Python: Testing and coverage
+# ============================================================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# ============================================================================
+# Python: Translations
+# ============================================================================
+*.mo
+*.pot
+
+# ============================================================================
+# Python: Framework-specific
+# ============================================================================
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# ============================================================================
+# Python: Jupyter and IPython
+# ============================================================================
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# ============================================================================
+# Python: Environment and dependency management
+# ============================================================================
+# pyenv
+# .python-version
+
+# Environments
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# pipenv
+#Pipfile.lock
+
+# UV
+#uv.lock
+
+# poetry
+#poetry.lock
+#poetry.toml
+
+# pdm
+#pdm.lock
+#pdm.toml
+.pdm-python
+.pdm-build/
+
+# pixi
+#pixi.lock
+.pixi
+
+# PEP 582
+__pypackages__/
+
+# ============================================================================
+# Python: Celery
+# ============================================================================
+celerybeat-schedule
+celerybeat.pid
+
+# ============================================================================
+# Python: SageMath
+# ============================================================================
+*.sage.py
+
+# ============================================================================
+# Python: IDE and editor settings
+# ============================================================================
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# PyCharm
+#.idea/
+
+# Visual Studio Code
+# .vscode/
+
+# Cursor AI editor
+.cursorignore
+.cursorindexingignore
+
+# ============================================================================
+# Python: Documentation
+# ============================================================================
+# mkdocs
+/site
+
+# ============================================================================
+# Python: Type checkers and linters
+# ============================================================================
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Ruff
+.ruff_cache/
+
+# Cython
+cython_debug/
+
+# ============================================================================
+# Python: Deployment and configuration
+# ============================================================================
+# PyPI
+.pypirc
+
+# Abstra (AI-powered process automation)
+.abstra/
+
+# Marimo
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+
+# ============================================================================
+# Project: External Repositories (AMReX ecosystem)
+# ============================================================================
+# These repos should be managed separately, not as submodules
+/amrex/
+/PeleC/
+/warpx/
+
+# ============================================================================
+# Project: Database and Embeddings
+# ============================================================================
+# FAISS vector databases - regenerated from source
+database/faiss/
+
+# All schema files with version hashes - these are generated
+database/schemas/*.json
+
+# ============================================================================
+# Project: Temporary and Backup Files
+# ============================================================================
+# Editor backups
+*~
+*.bak
+*.backup
+*.orig
+.#*
+\#*\#
+
+# Service/config backups
+*.before_service
+
+# Temporary text files
+tmp*.txt
+tmp_*.txt
+
+# ============================================================================
+# Project: Output and Log Files
+# ============================================================================
+# Index and output files from runs
+*INDEX_FILE
+*output
+*output*.txt
+
+# Backtrace/crash dumps
+Backtrace.*
+
+# ============================================================================
+# Project: Work-in-Progress Documentation
+# ============================================================================
+# Timestamped working notes (YYYY-MM-DD format)
+2025-*-*.txt
+2025-*-*.md
+20[2-9][0-9]-[0-1][0-9]-[0-3][0-9]-*.txt
+20[2-9][0-9]-[0-1][0-9]-[0-3][0-9]-*.md
+
+# Working execution plans and development docs
+docs/EXECUTION_PLAN.md
+docs/EXECUTION_PLAN_v*.md
+docs/TDD_PLAN*.md
+docs/Phase*_PRD*.md
+docs/GATE*_DELIVERABLES.md
+docs/PRD*.md
+docs/*PRD*.md
+docs/tmp.txt
+docs/generate_context_database_scripts.sh
+docs/handoff_wt_*.md
+
+# ============================================================================
+# Project: Scripts and Tools
+# ============================================================================
+# Local utility scripts (not part of core codebase)
+scripts/
+run_*.sh
+extract_*.sh
+generate_*.sh
+*.sh~
+
+# Database utility scripts (backups and development tools)
+database/scripts/*~
+database/scripts/__pycache__/
+database/scripts/check_config_signatures.py
+database/scripts/declaration_extractor.py
+database/scripts/fix_all_config_signatures.py
+
+# ============================================================================
+# Project: Test Artifacts
+# ============================================================================
+# Test indices and working test files
+test_indices/
+test_*.py
+!tests/**/test_*.py
+
+# Old/backup test files
+tests/conftest.py.bak
+tests/**/*.old
+tests/**/*.bak
+
+# ============================================================================
+# Project: NotebookLM and Generated Content
+# ============================================================================
+# NotebookLM generated documentation
+notebooklm_docs/
+notebooklm_sources/
+
+# ============================================================================
+# Project: Patches and Update Tracking
+# ============================================================================
+# Patch files
+*.patch
+
+# Component update logs
+updates_*.txt
+updates_from_*.txt
+updates_up_to_*.txt
+weight.txt
+
+# ============================================================================
+# Project: Miscellaneous
+# ============================================================================
+# Malformed/orphaned files
+=*
+
+# Project config backups
+pyproject.toml~
+pytest.ini~
+
+# OS-generated files
+.DS_Store
+Thumbs.db

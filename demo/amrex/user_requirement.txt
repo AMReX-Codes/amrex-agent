@@ -1,0 +1,4 @@
+AMReX advection test
+Grid: 512x512 cells
+AMR: 2 levels of refinement
+Run for 1000 timesteps

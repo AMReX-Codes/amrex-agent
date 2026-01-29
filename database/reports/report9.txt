@@ -1,0 +1,8058 @@
+=== PeleC Example Cases - Complete Inventory ===
+
+=== Complete PeleC Example Case Documentation ===
+
+Repository: /global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/PeleC
+
+Scanned: /global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/PeleC/Exec
+
+Total test cases found: 47
+
+  - RegTests: 41
+
+  - Production: 5
+
+  - UnitTests: 1
+
+  - Other: 0
+
+
+
+======================================================================
+
+Test Case: Production/CavityFlame
+
+Category: Production
+
+Location: Exec/Production/CavityFlame
+
+======================================================================
+
+
+--- README ---
+
+
+These case files are from the 2021 cavity flame holder paper:
+
+Sitaraman, H., Yellapantula, S., de Frahan, M. T. H., Perry, B., 
+Rood, J., Grout, R., & Day, M. (2021). Adaptive mesh based combustion simulations 
+of direct fuel injection effects in a supersonic cavity flame-holder. 
+Combustion and Flame, 232, 111531.
+
+The runs from the paper are quite expensive. The baseline grid 
+is 512 x 128 x 32 and simulations are performed with 3 levels (max_level=2).
+
+When running on coarser grids, there may be numerical stability issues
+depending on how the velocity field is initialized. Three options for velocity
+initialization are available; setting `prob.init_type = 1` or `2` may help
+simulations stably get through the initial transient. These
+options apply reduced velocities in the cavity region; in the default (0)
+there is a uniform initial x velocity everywhere.
+
+First a non-reacting simulation is performed and then reacting cases for 
+C1 and C2 are restarted from the non-reacting checkpoint file with 
+inject_fuel=1 and appropriate injection location set by centx. The 
+fuel autoignites because of the high stagnation temperature near the injection
+location.
+
+Further information is also available in the youtube video from 
+APS gallery of fluid motion:
+https://www.youtube.com/watch?v=QIaLfaethIw
+
+
+
+
+--- Inputs: cavity.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =   512  128   32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 2       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 10       # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 8
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = 1000      # number of timesteps between checkpoints
+
+amr.plot_file        = plt
+
+amr.plot_int         = 1000
+
+amr.derive_plot_vars = density x_velocity y_velocity z_velocity magvel Y(CH4) Y(O) Y(OH) Y(H) Temp magvort pressure MachNumber
+
+
+
+# CVODE (2 parameters)
+
+cvode.solve_type = GMRES
+
+cvode.max_order = 4
+
+
+
+# EB2 (1 parameters)
+
+eb2.geom_type = "extruded_triangles"
+
+
+
+# EXTRUDED_TRIANGLES (10 parameters)
+
+extruded_triangles.num_tri = 3
+
+extruded_triangles.tri_0_point_0 = -2.0      0.305   0.0
+
+extruded_triangles.tri_0_point_1 =  0.7     -0.392   0.0
+
+extruded_triangles.tri_0_point_2 =  0.7      0.305   0.0
+
+extruded_triangles.tri_1_point_0 =   0.7     -0.392  0.0
+
+extruded_triangles.tri_1_point_1 =   2.478   -0.392  0.0
+
+extruded_triangles.tri_1_point_2 =   2.478    0.305  0.0
+
+extruded_triangles.tri_2_point_0 =  12.0      0.305  0.0
+
+extruded_triangles.tri_2_point_1 =  2.478    0.305  0.0
+
+extruded_triangles.tri_2_point_2 =  2.478   -0.392  0.0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0   0  1
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =   0.0  0.0   0.0
+
+geometry.prob_hi     =   7.2  1.8   0.45
+
+
+
+# PELEC (21 parameters)
+
+pelec.lo_bc       =  "Hard"       "Hard"       "Interior"
+
+pelec.hi_bc       =  "FOExtrap"  "NoSlipWall"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth = 1
+
+pelec.sdc_iters = 2
+
+pelec.add_ext_src = 0
+
+pelec.chem_integrator="ReactorCvode"
+
+pelec.use_typ_vals_chem = 1
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+# ... and 6 more
+
+
+
+# PROB (1 parameters)
+
+prob.inject_fuel=0
+
+
+
+# TAGGING (11 parameters)
+
+tagging.denerr  = 1e20
+
+tagging.dengrad = 3.0e-5
+
+tagging.max_denerr_lev = 3
+
+tagging.max_dengrad_lev = 3
+
+tagging.temperr  = 1300.0
+
+tagging.temprad = 500.0
+
+tagging.max_temperr_lev = 3
+
+tagging.max_tempgrad_lev = 3
+
+tagging.vfracerr = 0.5
+
+tagging.max_vfracerr_lev = 3
+
+tagging.max_eb_refine_lev = 3
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = TRUE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: Production/ChallengeProblem
+
+Category: Production
+
+Location: Exec/Production/ChallengeProblem
+
+======================================================================
+
+
+--- Inputs: challenge.inp ---
+
+
+```ini
+
+# AMR (18 parameters)
+
+amr.n_cell           =  512 512 128
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extremalog
+
+amr.max_level       = 3       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2       # how often to regrid
+
+amr.blocking_factor = 16       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.grid_eff        = 0.9
+
+amr.n_error_buf     = 2 2 2 2 2 2 # number of buffer cells in error est
+
+amr.loadbalance_with_workestimates = 1
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = 400      # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+# ... and 3 more
+
+
+
+# AMREX (2 parameters)
+
+amrex.the_arena_is_managed=0
+
+amrex.abort_on_out_of_gpu_memory=1
+
+
+
+# ASCENT (1 parameters)
+
+ascent.plot_int = 20
+
+
+
+# CVODE (2 parameters)
+
+cvode.solve_type = GMRES
+
+cvode.max_order = 4
+
+
+
+# EB2 (3 parameters)
+
+eb2.geom_type = "Line-Piston-Cylinder"
+
+eb2.num_coarsen_opt = 3
+
+eb2.max_grid_size = 64
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 1
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0   0  0
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  -1.4 -1.4 -0.275
+
+geometry.prob_hi     =  1.4  1.4  0.425
+
+
+
+# IC (11 parameters)
+
+ic.hitIC = 1
+
+ic.inres = 128
+
+ic.binfmt = 1
+
+ic.iname = "hit_ic_ut_128.in"
+
+ic.uin_norm = 1.3231790983814187
+
+ic.lscale = 2.4166097335 # = 2*pi / domain length
+
+ic.offset = -3.1415926536
+
+ic.urms0 = 400.0
+
+ic.win_lo = -0.7 -0.7 0.15
+
+ic.win_hi =  0.7 0.7 0.3
+
+ic.win_slope = 10.0
+
+
+
+# PELEC (27 parameters)
+
+pelec.lo_bc       =  "NoSlipWall"  "NoSlipWall"  "NoSlipWall"
+
+pelec.hi_bc       =  "NoSlipWall"  "NoSlipWall"  "Hard"
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth = 1
+
+pelec.sdc_iters = 2
+
+pelec.chem_integrator="ReactorCvode"
+
+pelec.use_typ_vals_chem = 1
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.2     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.01    # scale back initial timestep
+
+# ... and 12 more
+
+
+
+# PROB (14 parameters)
+
+prob.P_mean = 6.0795e7
+
+prob.T_mean = 900.0
+
+prob.centx = 0.00
+
+prob.centy = 0.00
+
+prob.r_circ = 0.15
+
+prob.r_hole = 0.0085
+
+prob.nholes = 4
+
+prob.cone_angle= 45.0
+
+prob.T_jet = 470.0
+
+prob.vel_jet = 2800.0
+
+prob.Z = 0.45
+
+prob.injection_start = 0.0
+
+prob.injection_duration = 0.0005
+
+prob.turbulent_inflow = true
+
+
+
+# TAGGING (10 parameters)
+
+tagging.temperr  = 1e20
+
+tagging.tempgrad = 50.0
+
+tagging.max_temperr_lev = 5
+
+tagging.max_tempgrad_lev = 5
+
+tagging.max_ftracerr_lev = 5
+
+tagging.ftracerr = 0.25
+
+tagging.vfracerr = 1e20
+
+tagging.max_vfracerr_lev = 2
+
+tagging.max_eb_refine_lev = 0
+
+tagging.eb_detag_factor = 1.5
+
+
+
+# TURBINFLOW (36 parameters)
+
+turbinflow.inj1.turb_file      = Turb.test2
+
+turbinflow.inj1.dir            = 2
+
+turbinflow.inj1.side           = high
+
+turbinflow.inj1.turb_scale_loc = 1.0
+
+turbinflow.inj1.turb_scale_vel = 100.0
+
+turbinflow.inj1.turb_center    = 0.0 0.15
+
+turbinflow.inj1.turb_conv_vel  = 2800.0
+
+turbinflow.inj1.turb_nplane    = 32
+
+turbinflow.inj1.time_offset    = 0.0
+
+turbinflow.inj2.turb_file      = Turb.test2
+
+turbinflow.inj2.dir            = 2
+
+turbinflow.inj2.side           = high
+
+turbinflow.inj2.turb_scale_loc = 1.0
+
+turbinflow.inj2.turb_scale_vel = 100.0
+
+turbinflow.inj2.turb_center    = -0.15 0.0
+
+# ... and 21 more
+
+
+
+```
+
+
+--- YAML: ascent_actions.yaml ---
+
+
+Preview:
+```yaml
+
+-
+  action: "add_scenes"
+  scenes:
+    scene1:
+      image_prefix: "temperature_"
+      plots:
+        plt1:
+          type: "pseudocolor"
+          field: "Temp"
+    scene2:
+      image_prefix: "x_velocity_"
+      plots:
+        p1:
+          type: "pseudocolor"
+          field: "x_velocity"
+          min_value: -100.0
+          max_value: 100.0
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = TRUE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: Production/JetFlame
+
+Category: Production
+
+Location: Exec/Production/JetFlame
+
+======================================================================
+
+
+--- Inputs: inputs.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           =  64 64 128
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.grid_log        = grdlog  # name of grid logging file
+
+amr.max_level       = 3       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2   # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 500        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# AMREX (1 parameters)
+
+amrex.signal_handling=0
+
+
+
+# CVODE (2 parameters)
+
+cvode.solve_type = denseAJ_direct     # CVODE Linear solve type (for Newton direction)
+
+cvode.max_order  = 4                  # CVODE max BDF order.
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0  # For each dir, 0: non-perio, 1: periodic
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -0.256 -0.256 0.0
+
+geometry.prob_hi     =  0.256  0.256 1.024
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc       =  "FOExtrap"  "FOExtrap"  "UserBC"
+
+pelec.hi_bc       =  "FOExtrap"  "FOExtrap"  "FOExtrap"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth=1
+
+pelec.do_react = 1
+
+pelec.do_mol = 0
+
+pelec.chem_integrator="ReactorCvode"
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+# ... and 3 more
+
+
+
+# PROB (13 parameters)
+
+prob.P_mean = 60795000
+
+prob.inj_start = 1e-7
+
+prob.inj_dur   = 5e-4
+
+prob.v_in      = 2800
+
+prob.D         = 1.7e-2
+
+prob.fu_spec   = NC12H26
+
+prob.fu_ox_spec= CH4
+
+prob.Y_O2_ox   = 0.164305
+
+prob.Y_fu_ox   = 0.0205938
+
+prob.T_ox      = 900.
+
+prob.T_fu      = 470.
+
+prob.tau       = 0.01
+
+prob.turbulence     = true
+
+
+
+# TAGGING (2 parameters)
+
+tagging.tempgrad = 1
+
+tagging.max_temprad_lev = 3
+
+
+
+# TURBINFLOW (9 parameters)
+
+turbinflow.bottom_jet.turb_file = Turb.test2
+
+turbinflow.bottom_jet.dir = 2
+
+turbinflow.bottom_jet.side = "low"
+
+turbinflow.bottom_jet.turb_scale_loc = 1.0
+
+turbinflow.bottom_jet.turb_scale_vel = 100.0
+
+turbinflow.bottom_jet.turb_center    = 0.0 0.0
+
+turbinflow.bottom_jet.turb_conv_vel  = 2800.0
+
+turbinflow.bottom_jet.turb_nplane    = 1025
+
+turbinflow.bottom_jet.time_offset    = 0.0
+
+
+
+```
+
+
+--- Inputs: inputs.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           =  64 64 128
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.grid_log        = grdlog  # name of grid logging file
+
+amr.max_level       = 3       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2   # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 500        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# AMREX (1 parameters)
+
+amrex.signal_handling=0
+
+
+
+# CVODE (2 parameters)
+
+cvode.solve_type = denseAJ_direct     # CVODE Linear solve type (for Newton direction)
+
+cvode.max_order  = 4                  # CVODE max BDF order.
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0  # For each dir, 0: non-perio, 1: periodic
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -0.256 -0.256 0.0
+
+geometry.prob_hi     =  0.256  0.256 1.024
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc       =  "FOExtrap"  "FOExtrap"  "UserBC"
+
+pelec.hi_bc       =  "FOExtrap"  "FOExtrap"  "FOExtrap"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth=1
+
+pelec.do_react = 1
+
+pelec.do_mol = 0
+
+pelec.chem_integrator="ReactorCvode"
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+# ... and 3 more
+
+
+
+# PROB (13 parameters)
+
+prob.P_mean = 60795000
+
+prob.inj_start = 1e-7
+
+prob.inj_dur   = 5e-4
+
+prob.v_in      = 2800
+
+prob.D         = 1.7e-2
+
+prob.fu_spec   = NC12H26
+
+prob.fu_ox_spec= CH4
+
+prob.Y_O2_ox   = 0.164305
+
+prob.Y_fu_ox   = 0.0205938
+
+prob.T_ox      = 900.
+
+prob.T_fu      = 470.
+
+prob.tau       = 0.01
+
+prob.turbulence     = true
+
+
+
+# TAGGING (2 parameters)
+
+tagging.tempgrad = 1
+
+tagging.max_temprad_lev = 3
+
+
+
+# TURBINFLOW (9 parameters)
+
+turbinflow.bottom_jet.turb_file = Turb.test2
+
+turbinflow.bottom_jet.dir = 2
+
+turbinflow.bottom_jet.side = "low"
+
+turbinflow.bottom_jet.turb_scale_loc = 1.0
+
+turbinflow.bottom_jet.turb_scale_vel = 100.0
+
+turbinflow.bottom_jet.turb_center    = 0.0 0.0
+
+turbinflow.bottom_jet.turb_conv_vel  = 2800.0
+
+turbinflow.bottom_jet.turb_nplane    = 1025
+
+turbinflow.bottom_jet.time_offset    = 0.0
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: Production/PistonBowl
+
+Category: Production
+
+Location: Exec/Production/PistonBowl
+
+======================================================================
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: Production/PistonBowl/inputs
+
+Category: Production
+
+Location: Exec/Production/PistonBowl/inputs
+
+======================================================================
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (16 parameters)
+
+amr.n_cell           =  64  64 24
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2       # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 16
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.loadbalance_with_workestimates = 1
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = 1000      # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file        = plt
+
+amr.plot_int         = 200
+
+# ... and 1 more
+
+
+
+# CVODE (1 parameters)
+
+cvode.solve_type=GMRES
+
+
+
+# EB2 (2 parameters)
+
+eb2.geom_type = "Line-Piston-Cylinder"
+
+eb2.small_volfrac = 1.e-6
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 1
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0   0  0
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  -1.3 -1.3 -0.475
+
+geometry.prob_hi     =  1.3  1.3  0.5
+
+
+
+# IC (8 parameters)
+
+ic.hitIC = 1
+
+ic.inres = 128
+
+ic.binfmt = 1
+
+ic.iname = "hit_ic_ut_128.in"
+
+ic.uin_norm = 1.3231790983814187
+
+ic.lscale = 2.4166097335 # = 2*pi / domain length
+
+ic.offset = -3.1415926536
+
+ic.urms0 = 2000.0
+
+
+
+# INFLOW (2 parameters)
+
+inflow.inflowProfileFile = "InflowPC.bin"
+
+inflow.turb_inflow_type = 1
+
+
+
+# ODE (1 parameters)
+
+ode.typ_vals = 1.e-7 3.e-9 1.e-8 3.e-5 7.e-8 1.e-6 1.e-7 5.e-9 1.e-9 9.e-7 6.e-6 1.e-6 1.7e-8 1.9e-8 7.4e-7 6.7e-9 3.5e-7 1.6e-8 1.3e-8 1.e-4 1.8e-33 2300
+
+
+
+# PELEC (23 parameters)
+
+pelec.lo_bc       =  "NoSlipWall"  "NoSlipWall"  "NoSlipWall"
+
+pelec.hi_bc       =  "NoSlipWall"  "NoSlipWall"  "Hard"
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth = 1
+
+pelec.sdc_iters = 2
+
+pelec.chem_integrator="ReactorCvode"
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.01    # scale back initial timestep
+
+pelec.change_max     = 1.05     # maximum increase in dt over successive steps
+
+# ... and 8 more
+
+
+
+# PROB (16 parameters)
+
+prob.Pres_domain = 1013250.0
+
+prob.Temp_domain = 2050.0
+
+prob.Yfuel_domain = 0.00
+
+prob.Yox_domain = 0.230
+
+prob.YN2_domain = 0.770
+
+prob.dens_jet = 0.00064425
+
+prob.vel_jet = 6000.0
+
+prob.Yox_jet = 0.00
+
+prob.Yfuel_jet = 1.00
+
+prob.YN2_jet = 0.00
+
+prob.centx = 0.00
+
+prob.centz = 0.00
+
+prob.r_circ = 0.31250
+
+prob.r_hole = 0.080
+
+prob.nholes = 4
+
+# ... and 1 more
+
+
+
+# TAGGING (8 parameters)
+
+tagging.temperr  = 1e20
+
+tagging.tempgrad = 50.0
+
+tagging.max_temperr_lev = 5
+
+tagging.max_tempgrad_lev = 3
+
+tagging.max_ftracerr_lev = 2
+
+tagging.ftracerr = 0.25
+
+tagging.vfracerr = 1e20
+
+tagging.max_vfracerr_lev = 2
+
+
+
+```
+
+
+
+======================================================================
+
+Test Case: RegTests/Sod
+
+Category: RegTests
+
+Location: Exec/RegTests/Sod
+
+======================================================================
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 32     8     8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 2       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0     0     0
+
+geometry.prob_hi     =  1     0.25  0.25
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (8 parameters)
+
+prob.p_l = 1.0
+
+prob.u_l = 0.0
+
+prob.rho_l = 1.0
+
+prob.p_r = 0.1
+
+prob.u_r = 0.0
+
+prob.rho_r = 0.125
+
+prob.idir = 1
+
+prob.frac = 0.5
+
+
+
+# TAGGING (8 parameters)
+
+tagging.denerr = 3
+
+tagging.dengrad = 0.01
+
+tagging.max_denerr_lev = 3
+
+tagging.max_dengrad_lev = 3
+
+tagging.presserr = 3
+
+tagging.pressgrad = 0.01
+
+tagging.max_presserr_lev = 3
+
+tagging.max_pressgrad_lev = 3
+
+
+
+```
+
+
+--- Inputs: shock-cylinder.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =    16 16 16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 8
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = ALL
+
+
+
+# EB2 (6 parameters)
+
+eb2.geom_type = "cylinder"
+
+eb2.cylinder_direction = 2
+
+eb2.cylinder_center = 0.5 0.5 0.5
+
+eb2.cylinder_radius = 0.1
+
+eb2.cylinder_height = 1000.0
+
+eb2.cylinder_has_fluid_inside = 0
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0     0     0
+
+geometry.prob_hi     =  1.0     1.0  1.0
+
+
+
+# PELEC (16 parameters)
+
+pelec.lo_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.do_mol = 0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+pelec.eb_boundary_T = 300.
+
+# ... and 1 more
+
+
+
+# PROB (8 parameters)
+
+prob.rho_l = 3.6737153092795505
+
+prob.u_l   = 3.8260444105770732
+
+prob.p_l   = 22.613625000000006
+
+prob.rho_r = 1.0
+
+prob.u_r   = 0.0
+
+prob.p_r   = 2.5
+
+prob.idir = 1
+
+prob.frac = 0.2
+
+
+
+# TAGGING (8 parameters)
+
+tagging.denerr = 3
+
+tagging.dengrad = 0.01
+
+tagging.max_denerr_lev = 3
+
+tagging.max_dengrad_lev = 3
+
+tagging.presserr = 3
+
+tagging.pressgrad = 0.01
+
+tagging.max_presserr_lev = 3
+
+tagging.max_pressgrad_lev = 3
+
+
+
+```
+
+
+--- Inputs: sod-1.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 32     8     8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 2       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0     0     0
+
+geometry.prob_hi     =  1     0.25  0.25
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (8 parameters)
+
+prob.p_l = 1.0
+
+prob.u_l = 0.0
+
+prob.rho_l = 1.0
+
+prob.p_r = 0.1
+
+prob.u_r = 0.0
+
+prob.rho_r = 0.125
+
+prob.idir = 1
+
+prob.frac = 0.5
+
+
+
+# TAGGING (8 parameters)
+
+tagging.denerr = 3
+
+tagging.dengrad = 0.01
+
+tagging.max_denerr_lev = 3
+
+tagging.max_dengrad_lev = 3
+
+tagging.presserr = 3
+
+tagging.pressgrad = 0.01
+
+tagging.max_presserr_lev = 3
+
+tagging.max_pressgrad_lev = 3
+
+
+
+```
+
+
+--- Inputs: sod-2.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 32     8     8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 2       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0     0     0
+
+geometry.prob_hi     =  1     0.25  0.25
+
+
+
+# PELEC (14 parameters)
+
+pelec.lo_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "Hard"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.ppm_type = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (8 parameters)
+
+prob.p_l = 1.0
+
+prob.u_l = 0.0
+
+prob.rho_l = 1.0
+
+prob.p_r = 0.1
+
+prob.u_r = 0.0
+
+prob.rho_r = 0.125
+
+prob.idir = 1
+
+prob.frac = 0.5
+
+
+
+# TAGGING (8 parameters)
+
+tagging.denerr = 3
+
+tagging.dengrad = 0.01
+
+tagging.max_denerr_lev = 3
+
+tagging.max_dengrad_lev = 3
+
+tagging.presserr = 3
+
+tagging.pressgrad = 0.01
+
+tagging.max_presserr_lev = 3
+
+tagging.max_pressgrad_lev = 3
+
+
+
+```
+
+
+--- Inputs: sod-3.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 32     8     8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 0 0 0 0 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0     0     0
+
+geometry.prob_hi     =  1     0.25  0.25
+
+
+
+# PELEC (14 parameters)
+
+pelec.lo_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (8 parameters)
+
+prob.p_l = 1.0
+
+prob.u_l = 0.0
+
+prob.rho_l = 1.0
+
+prob.p_r = 0.1
+
+prob.u_r = 0.0
+
+prob.rho_r = 0.125
+
+prob.idir = 1
+
+prob.frac = 0.5
+
+
+
+# TAGGING (15 parameters)
+
+tagging.denerr = 3
+
+tagging.dengrad = 0.01
+
+tagging.max_denerr_lev = 0
+
+tagging.max_dengrad_lev = 0
+
+tagging.presserr = 3
+
+tagging.pressgrad = 0.01
+
+tagging.max_presserr_lev = 0
+
+tagging.max_pressgrad_lev = 0
+
+tagging.max_vfracerr_lev = 0
+
+tagging.eb_refine_type = "adaptive"
+
+tagging.max_eb_refine_lev = 0
+
+tagging.min_eb_refine_lev = 0
+
+tagging.refinement_indicators = box
+
+tagging.box.in_box_lo =  0.6  0.125  0.125
+
+tagging.box.in_box_hi =  0.8  0.22  0.25
+
+
+
+```
+
+
+--- Inputs: sod-4.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 32 32 32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 16      # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 0 0 0 0 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# EB2 (4 parameters)
+
+eb2.geom_type = sphere
+
+eb2.sphere_radius = 0.125
+
+eb2.sphere_center = 0.7 0.5 0.5
+
+eb2.sphere_has_fluid_inside = 0
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0     0     0
+
+geometry.prob_hi     =  1.0     1.0 1.0
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+pelec.eb_boundary_T = 300.
+
+# ... and 2 more
+
+
+
+# PROB (8 parameters)
+
+prob.p_l = 1.0
+
+prob.u_l = 0.0
+
+prob.rho_l = 1.0
+
+prob.p_r = 0.1
+
+prob.u_r = 0.0
+
+prob.rho_r = 0.125
+
+prob.idir = 1
+
+prob.frac = 0.5
+
+
+
+# TAGGING (15 parameters)
+
+tagging.denerr = 3
+
+tagging.dengrad = 0.01
+
+tagging.max_denerr_lev = 0
+
+tagging.max_dengrad_lev = 0
+
+tagging.presserr = 3
+
+tagging.pressgrad = 0.01
+
+tagging.max_presserr_lev = 0
+
+tagging.max_pressgrad_lev = 0
+
+tagging.max_vfracerr_lev = 0
+
+tagging.eb_refine_type = "adaptive"
+
+tagging.max_eb_refine_lev = 0
+
+tagging.min_eb_refine_lev = 0
+
+tagging.refinement_indicators = box
+
+tagging.box.in_box_lo =  0.55 0.5  0.3
+
+tagging.box.in_box_hi =  0.85 0.65 0.7
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/Sedov
+
+Category: RegTests
+
+Location: Exec/RegTests/Sedov
+
+======================================================================
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 64 64 64
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 0
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0.   0.   0.
+
+geometry.prob_hi     =  1.   1.   1.
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.5     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.01    # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 10      # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (5 parameters)
+
+prob.r_init = 0.01
+
+prob.p_ambient = 1.e-5
+
+prob.dens_ambient = 1.0
+
+prob.exp_energy = 1.0
+
+prob.nsub = 10
+
+
+
+```
+
+
+--- Inputs: sedov-1.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           = 64 64 64
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 0
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0.   0.   0.
+
+geometry.prob_hi     =  1.   1.   1.
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.hi_bc       = "SlipWall"   "SlipWall"   "SlipWall"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.5     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.01    # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 10      # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (5 parameters)
+
+prob.r_init = 0.01
+
+prob.p_ambient = 1.e-5
+
+prob.dens_ambient = 1.0
+
+prob.exp_energy = 1.0
+
+prob.nsub = 10
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/TG
+
+Category: RegTests
+
+Location: Exec/RegTests/TG
+
+======================================================================
+
+
+--- README ---
+
+
+# Taylor-Green Vortex
+
+This setup is one of the test problems outlined by [the High-Order CFD
+workshop](https://www1.grc.nasa.gov/research-and-engineering/hiocfd/).
+
+A complete description of the problem can be
+found
+[here](https://www1.grc.nasa.gov/wp-content/uploads/case_c3.3.pdf) and
+the reference data is
+found
+[here](https://www1.grc.nasa.gov/wp-content/uploads/C3.3_datafiles.zip). More
+details of the problem and methods used to obtain the reference data
+can be found in Bull and Jameson (2014) 7th AIAA Theoretical Fluid
+Mechanics Conference (doi: 10.2514/6.2014-3210) and DeBonis (2013)
+51st AIAA Aerospace Sciences Meeting (doi:10.2514/6.2013-382).
+
+
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           =  32    32    32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# AMREX (1 parameters)
+
+amrex.signal_handling=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.do_mol = 1
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.reynolds = 1600.0
+
+prob.mach = 0.1
+
+prob.prandtl = 0.71
+
+
+
+```
+
+
+--- Inputs: tg-1.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =  64    64    64
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (12 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.reynolds = 1600.0
+
+prob.mach = 0.1
+
+prob.prandtl = 0.71
+
+
+
+```
+
+
+--- Inputs: tg-2.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =  32    32    32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (12 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.reynolds = 1600.0
+
+prob.mach = 0.1
+
+prob.prandtl = 0.71
+
+
+
+# TAGGING (2 parameters)
+
+tagging.vorterr = 2e4
+
+tagging.max_vorterr_lev = 5
+
+
+
+```
+
+
+--- Inputs: tg-3.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =  64    64    64
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (15 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.use_explicit_filter=1
+
+pelec.les_filter_type=2
+
+pelec.les_filter_fgr=2
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.reynolds = 1600.0
+
+prob.mach = 0.1
+
+prob.prandtl = 0.71
+
+
+
+```
+
+
+--- Inputs: tg-4.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =  64    64    64
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 100        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 100        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (16 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_mol=1
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.use_explicit_filter=1
+
+pelec.les_filter_type=2
+
+pelec.les_filter_fgr=2
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+# ... and 1 more
+
+
+
+# PROB (3 parameters)
+
+prob.reynolds = 1600.0
+
+prob.mach = 0.1
+
+prob.prandtl = 0.71
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/TGReact
+
+Category: RegTests
+
+Location: Exec/RegTests/TGReact
+
+======================================================================
+
+
+--- README ---
+
+
+# Reacting Taylor-Green vortex breakdown
+
+These cases are setup to mimic the cases described community reacting
+DNS workshop entitled "Mini-Symposium on Verification and Validation
+of Combustion DNS".
+
+
+
+
+--- Inputs: inputs_2d.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  64 64
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extralog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 128
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000       # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000       # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity magvel magvort z_vorticity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0.0   0.0
+
+geometry.prob_hi     =  100.0   100.0
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in Castro.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.rho0 = 0.001172
+
+prob.u0 = 500.0
+
+prob.mu = 1.863e-4
+
+
+
+```
+
+
+--- Inputs: inputs_2d.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  64 64
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extralog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 128
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000       # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000       # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity magvel magvort z_vorticity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  0.0   0.0
+
+geometry.prob_hi     =  100.0   100.0
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in Castro.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.rho0 = 0.001172
+
+prob.u0 = 500.0
+
+prob.mu = 1.863e-4
+
+
+
+```
+
+
+--- Inputs: inputs_3d.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  32    32    32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extralog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity magvel magvort z_vorticity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0 0.0 0.0
+
+geometry.prob_hi     =   628.31853071795864  628.31853071795864  628.31853071795864
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in Castro.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.rho0 = 0.001
+
+prob.u0 = 100.0
+
+prob.mu = 0.00625
+
+
+
+```
+
+
+--- Inputs: inputs_3d.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  32    32    32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extralog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity magvel magvort z_vorticity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0 0.0 0.0
+
+geometry.prob_hi     =   628.31853071795864  628.31853071795864  628.31853071795864
+
+
+
+# PELEC (13 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in Castro.cpp
+
+
+
+# PROB (3 parameters)
+
+prob.rho0 = 0.001
+
+prob.u0 = 100.0
+
+prob.mu = 0.00625
+
+
+
+```
+
+
+--- Inputs: inputs_3d_nonreacting.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  32    32    32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extralog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity magvel magvort z_vorticity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0 0.0 0.0
+
+geometry.prob_hi     =   0.62831853071795864  0.62831853071795864  0.62831853071795864
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.cfl            = 0.25     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in Castro.cpp
+
+# ... and 2 more
+
+
+
+# PROB (4 parameters)
+
+prob.u0 = 400.0
+
+prob.iname = "cantera/profiles.dat"
+
+prob.case_type = "nonreacting"
+
+prob.nx = 2048
+
+
+
+```
+
+
+--- Inputs: inputs_3d_nonreacting.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  32    32    32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extralog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity magvel magvort z_vorticity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0 0.0 0.0
+
+geometry.prob_hi     =   0.62831853071795864  0.62831853071795864  0.62831853071795864
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.cfl            = 0.25     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in Castro.cpp
+
+# ... and 2 more
+
+
+
+# PROB (4 parameters)
+
+prob.u0 = 400.0
+
+prob.iname = "cantera/profiles.dat"
+
+prob.case_type = "nonreacting"
+
+prob.nx = 2048
+
+
+
+```
+
+
+--- Inputs: tgreact.inp ---
+
+
+```ini
+
+# AMR (12 parameters)
+
+amr.n_cell           = 32 32 32
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog extralog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity magvel magvort z_vorticity heat_release
+
+
+
+# CVODE (1 parameters)
+
+cvode.solve_type= "GMRES"
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0 0.0 0.0
+
+geometry.prob_hi     =   0.62831853071795864  0.62831853071795864  0.62831853071795864
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_spec = 1
+
+pelec.diffuse_enth = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorCvode"
+
+pelec.cfl            = 0.25     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in Castro.cpp
+
+# ... and 2 more
+
+
+
+# PROB (4 parameters)
+
+prob.u0 = 400.0
+
+prob.iname = "profiles.dat"
+
+prob.case_type = "reacting"
+
+prob.nx = 256
+
+
+
+```
+
+
+--- YAML: environment.yaml ---
+
+
+Preview:
+```yaml
+
+# Install with conda env create --file environment.yaml
+name: tgreact
+channels:
+  - cantera
+  - defaults
+dependencies:
+  - cantera
+  - ipython
+  - matplotlib
+  - numpy
+  - pandas
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/PMF
+
+Category: RegTests
+
+Location: Exec/RegTests/PMF
+
+======================================================================
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 0
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.data_log = extremalog
+
+
+
+# AMREX (1 parameters)
+
+amrex.signal_handling=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   0.3125     0.3125    6.0
+
+
+
+# PELEC (19 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorRK64"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+pelec.diffuse_spec=1
+
+pelec.diffuse_vel=1
+
+# ... and 4 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-ascent.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom rho_E rho_e Temp rho_omega_H2 rho_omega_O2 rho_omega_H2O rho_omega_H rho_omega_O rho_omega_OH rho_omega_HO2 rho_omega_H2O2 rho_omega_N2 pressure Y(H2) Y(O2) Y(H2O) Y(H) Y(O) Y(OH) Y(HO2) Y(H2O2) Y(N2) x_velocity y_velocity z_velocity
+
+
+
+# ASCENT (1 parameters)
+
+ascent.plot_int = 2
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# EXTERN (1 parameters)
+
+extern.new_Jacobian_each_cell = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   0.3125     0.3125    6.0
+
+
+
+# PELEC (20 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorArkode"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+# ... and 5 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-dodecane.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.loadbalance_with_workestimates = 1
+
+
+
+# AMREX (1 parameters)
+
+amrex.signal_handling=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       0.0
+
+geometry.prob_hi     =   0.1        0.1       1.6
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.05     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorRK64"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+pelec.diffuse_spec=1
+
+pelec.diffuse_vel=1
+
+# ... and 2 more
+
+
+
+# PROB (5 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.01
+
+prob.standoff = -1.0
+
+prob.pmf_datafile = "PMF_NC12H26_1bar_300K_DodecaneLu.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-hdf5-zfp.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom rho_E rho_e Temp rho_omega_H2 rho_omega_O2 rho_omega_H2O rho_omega_H rho_omega_O rho_omega_OH rho_omega_HO2 rho_omega_H2O2 rho_omega_N2 pressure Y(H2) Y(O2) Y(H2O) Y(H) Y(O) Y(OH) Y(HO2) Y(H2O2) Y(N2) x_velocity y_velocity z_velocity
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# EXTERN (1 parameters)
+
+extern.new_Jacobian_each_cell = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   0.3125     0.3125    6.0
+
+
+
+# PELEC (22 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.write_hdf5_plots = true
+
+pelec.hdf5_compression = "ZFP_ACCURACY@0.001"
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorArkode"
+
+# ... and 7 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-hdf5.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom rho_E rho_e Temp rho_omega_H2 rho_omega_O2 rho_omega_H2O rho_omega_H rho_omega_O rho_omega_OH rho_omega_HO2 rho_omega_H2O2 rho_omega_N2 pressure Y(H2) Y(O2) Y(H2O) Y(H) Y(O) Y(OH) Y(HO2) Y(H2O2) Y(N2) x_velocity y_velocity z_velocity
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# EXTERN (1 parameters)
+
+extern.new_Jacobian_each_cell = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   0.3125     0.3125    6.0
+
+
+
+# PELEC (21 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.write_hdf5_plots = true
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorArkode"
+
+pelec.diffuse_temp=1
+
+# ... and 6 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-isooctane.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.loadbalance_with_workestimates = 1
+
+
+
+# AMREX (1 parameters)
+
+amrex.signal_handling=0
+
+
+
+# CVODE (1 parameters)
+
+cvode.solve_type = "GMRES"
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       0.0
+
+geometry.prob_hi     =   0.015625   0.015625  0.25
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.05     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorCvode"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+pelec.diffuse_spec=1
+
+pelec.diffuse_vel=1
+
+# ... and 2 more
+
+
+
+# PROB (5 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -1.0
+
+prob.pertmag = 0.0001
+
+prob.standoff = 0.0
+
+prob.pmf_datafile = "PMF_IC8H18_IsooctaneLu.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-lidryer-arkode-10dx.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom rho_E rho_e Temp rho_omega_H2 rho_omega_O2 rho_omega_H2O rho_omega_H rho_omega_O rho_omega_OH rho_omega_HO2 rho_omega_H2O2 rho_omega_N2 pressure Y(H2) Y(O2) Y(H2O) Y(H) Y(O) Y(OH) Y(HO2) Y(H2O2) Y(N2) x_velocity y_velocity z_velocity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   3.125      0.3125    6.0
+
+
+
+# PELEC (20 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorArkode"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+# ... and 5 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (6 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+tagging.refinement_indicators = gtemp
+
+tagging.gtemp.adjacent_difference_greater = 100
+
+tagging.gtemp.field_name = Temp
+
+tagging.gtemp.max_level = 1
+
+
+
+```
+
+
+--- Inputs: pmf-lidryer-arkode.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom rho_E rho_e Temp rho_omega_H2 rho_omega_O2 rho_omega_H2O rho_omega_H rho_omega_O rho_omega_OH rho_omega_HO2 rho_omega_H2O2 rho_omega_N2 pressure Y(H2) Y(O2) Y(H2O) Y(H) Y(O) Y(OH) Y(HO2) Y(H2O2) Y(N2) x_velocity y_velocity z_velocity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   0.3125     0.3125    6.0
+
+
+
+# PELEC (20 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorArkode"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+# ... and 5 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (6 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+tagging.refinement_indicators = gtemp
+
+tagging.gtemp.adjacent_difference_greater = 100
+
+tagging.gtemp.field_name = Temp
+
+tagging.gtemp.max_level = 1
+
+
+
+```
+
+
+--- Inputs: pmf-lidryer-cvode.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars  = density xmom ymom zmom rho_E rho_e Temp rho_omega_H2 rho_omega_O2 rho_omega_H2O rho_omega_H rho_omega_O rho_omega_OH rho_omega_HO2 rho_omega_H2O2 rho_omega_N2 pressure Y(H2) Y(O2) Y(H2O) Y(H) Y(O) Y(OH) Y(HO2) Y(H2O2) Y(N2) x_velocity y_velocity z_velocity
+
+
+
+# CVODE (1 parameters)
+
+cvode.solve_type = "GMRES"
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   0.3125     0.3125    6.0
+
+
+
+# PELEC (27 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorCvode"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+# ... and 12 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-lidryer-rk64.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars  = density xmom ymom zmom rho_E rho_e Temp rho_omega_H2 rho_omega_O2 rho_omega_H2O rho_omega_H rho_omega_O rho_omega_OH rho_omega_HO2 rho_omega_H2O2 rho_omega_N2 pressure Y(H2) Y(O2) Y(H2O) Y(H) Y(O) Y(OH) Y(HO2) Y(H2O2) Y(N2) x_velocity y_velocity z_velocity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       1.0
+
+geometry.prob_hi     =   0.3125     0.3125    6.0
+
+
+
+# PELEC (20 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorRK64"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+# ... and 5 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 1013250.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.005
+
+prob.pmf_datafile = "LiDryer_H2_p1_phi0_4000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- YAML: ascent_actions.yaml ---
+
+
+Preview:
+```yaml
+
+- 
+  action: "add_scenes"
+  scenes: 
+    scene1: 
+      image_prefix: "temperature_"
+      plots: 
+        plt1: 
+          type: "pseudocolor"
+          field: "Temp"
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/PMF-SRK
+
+Category: RegTests
+
+Location: Exec/RegTests/PMF-SRK
+
+======================================================================
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 8 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 0
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+
+
+# AMREX (1 parameters)
+
+amrex.signal_handling=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       0.855
+
+geometry.prob_hi     =   0.0025     0.0025    0.895
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorRK64"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+pelec.diffuse_spec=1
+
+pelec.diffuse_vel=1
+
+# ... and 2 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 101325000.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.00005
+
+prob.pmf_datafile = "LiDryer_H2_p100_phi1_0000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Inputs: pmf-srk-1.inp ---
+
+
+```ini
+
+# AMR (15 parameters)
+
+amr.n_cell           =   8          8         128
+
+amr.v              = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 8 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file              = chk    # root name of checkpoint file
+
+amr.check_int               = 500    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file         = plt     # root name of plotfile
+
+amr.plot_int          = 10   # number of timesteps between plotfiles
+
+amr.derive_plot_vars = density xmom ymom zmom eden Temp pressure x_velocity y_velocity z_velocity
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =   0.0        0.0       0.855
+
+geometry.prob_hi     =   0.0025     0.0025    0.895
+
+
+
+# PELEC (20 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Hard"
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval = 1       # coarse time steps between computing mass on domain
+
+pelec.v            = 1       # verbosity in PeleC cpp files
+
+pelec.plot_rhoy = 0
+
+pelec.plot_massfrac = 1
+
+pelec.do_hydro = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorRK64"
+
+pelec.diffuse_temp=1
+
+pelec.diffuse_enth=1
+
+# ... and 5 more
+
+
+
+# PROB (4 parameters)
+
+prob.pamb = 101325000.0
+
+prob.phi_in = -0.5
+
+prob.pertmag = 0.00005
+
+prob.pmf_datafile = "LiDryer_H2_p100_phi1_0000tu0300.dat"
+
+
+
+# TAGGING (2 parameters)
+
+tagging.max_ftracerr_lev = 4
+
+tagging.ftracerr = 150.e-6
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/EB-FlowPastCylinder
+
+Category: RegTests
+
+Location: Exec/RegTests/EB-FlowPastCylinder
+
+======================================================================
+
+
+--- README ---
+
+
+# 2D Flow over a cylinder
+
+Building on the [EB-C10 case](https://amrex-combustion.github.io/PeleC/ebverification/C10/README.html), this case prescribes flow over a cylinder.
+
+
+## Short case description
+
+|                    | description                                         |
+|:-------------------|:----------------------------------------------------|
+| Problem definition | Flow over a cylinder                                |
+| EB geometry        | embedded cylinder                                   |
+| EOS                | GammaLaw                                            |
+| Multi-level        | no                                                  |
+| Metric             | vortex shedding occurs for Re = 500                 |
+
+
+
+
+--- Inputs: eb-flowpastcylinder-re10.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  192 64 16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 5       # how often to regrid
+
+amr.blocking_factor = 16       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chkReLow      # root name of checkpoint file
+
+amr.check_int       = 100000       # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = pltReLow
+
+amr.plot_int        = 20000
+
+amr.derive_plot_vars=ALL
+
+
+
+# EB2 (5 parameters)
+
+eb2.geom_type = "sphere"
+
+eb2.sphere_radius = 0.5
+
+eb2.sphere_center = 0 0 0
+
+eb2.sphere_has_fluid_inside = 0
+
+eb2.small_volfrac = 1.0e-4
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0  0  0
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  -2.   -2.  -2.
+
+geometry.prob_hi     =  10.  2.   2.
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.hi_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.eb_boundary_T = 298.
+
+pelec.eb_isothermal = 1
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 0
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 1
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1    # scale back initial timestep
+
+# ... and 3 more
+
+
+
+# PROB (5 parameters)
+
+prob.p = 1013250.
+
+prob.T = 298.
+
+prob.Re = 10.
+
+prob.Ma = 0.2
+
+prob.Pr = 0.7
+
+
+
+```
+
+
+--- Inputs: eb-flowpastcylinder-re500.inp ---
+
+
+```ini
+
+# AMR (12 parameters)
+
+amr.n_cell           =  192 64 16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 16       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chkReHigh      # root name of checkpoint file
+
+amr.check_int       = 100000       # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = pltReHigh
+
+amr.plot_int        = 20000
+
+amr.derive_plot_vars=ALL
+
+
+
+# EB2 (5 parameters)
+
+eb2.geom_type = "sphere"
+
+eb2.sphere_radius = 0.5
+
+eb2.sphere_center = 0 0 0
+
+eb2.sphere_has_fluid_inside = 0
+
+eb2.small_volfrac = 1.0e-4
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0  0  0
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  -2.   -2.  -2.
+
+geometry.prob_hi     =  10.  2.   2.
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.hi_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.eb_boundary_T = 298.
+
+pelec.eb_isothermal = 1
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 0
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 1
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.7     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1    # scale back initial timestep
+
+# ... and 3 more
+
+
+
+# PROB (5 parameters)
+
+prob.p = 1013250.
+
+prob.T = 298.
+
+prob.Re = 500.
+
+prob.Ma = 0.2
+
+prob.Pr = 0.7
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 2
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = TRUE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/EB-C12
+
+Category: RegTests
+
+Location: Exec/RegTests/EB-C12
+
+======================================================================
+
+
+--- README ---
+
+
+# Smooth periodic problem
+
+Full description and the results of this case can be found in the
+[documentation](https://pelec.readthedocs.io/en/latest/VandV.html#verification-of-eb-pelec).
+
+## Short case description
+
+|                    | description                             |
+|:-------------------|:----------------------------------------|
+| Problem definition | Advection of a smooth density variation |
+| EB geometry        | Channel                                 |
+| EOS                | GammaLaw                                |
+| Multi-level        | no                                      |
+| Metric             | analytical                              |
+
+
+
+
+--- Inputs: eb-c12.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           = 40 8 8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = 1000       # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt
+
+amr.plot_int        = 1000
+
+amr.derive_plot_vars=ALL
+
+
+
+# EB2 (6 parameters)
+
+eb2.geom_type = "cylinder"
+
+eb2.cylinder_direction = 0
+
+eb2.cylinder_center = 0.0 0.0 0.0
+
+eb2.cylinder_radius = 0.1
+
+eb2.cylinder_height = 1000.0
+
+eb2.cylinder_has_fluid_inside = 1
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  1   1  1
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     = -1.0 -0.2 -0.2
+
+geometry.prob_hi     = 1.0 0.2 0.2
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.eb_boundary_T = 300.
+
+pelec.eb_isothermal = 0
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_vel  = 0
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 0
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.8    # scale back initial timestep
+
+# ... and 3 more
+
+
+
+```
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           = 40 8 8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = 1000       # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt
+
+amr.plot_int        = 1000
+
+amr.derive_plot_vars=ALL
+
+
+
+# EB2 (6 parameters)
+
+eb2.geom_type = "cylinder"
+
+eb2.cylinder_direction = 0
+
+eb2.cylinder_center = 0.0 0.0 0.0
+
+eb2.cylinder_radius = 0.1
+
+eb2.cylinder_height = 1000.0
+
+eb2.cylinder_has_fluid_inside = 1
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  1   1  1
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     = -1.0 -0.2 -0.2
+
+geometry.prob_hi     = 1.0 0.2 0.2
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.hi_bc       =  "Interior"  "Interior"  "Interior"
+
+pelec.eb_boundary_T = 300.
+
+pelec.eb_isothermal = 0
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_vel  = 0
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 0
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.8    # scale back initial timestep
+
+# ... and 3 more
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/Spray-A-Wbreakup
+
+Category: RegTests
+
+Location: Exec/RegTests/Spray-A-Wbreakup
+
+======================================================================
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           = 32 32 160
+
+amr.v                = 1    # verbosity in Amr.cpp
+
+amr.max_level       = 3
+
+amr.regrid_int =  4 4 4 4 4
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.blocking_factor = 16
+
+amr.max_grid_size   = 128
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk  # root name of checkpoint file
+
+amr.check_int       = 1000
+
+amr.plot_file       = plt # root name of plotfile
+
+amr.plot_per        = 2.5E-4
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity pressure   # these variables appear in the plotfile
+
+
+
+# AMREX (1 parameters)
+
+amrex.abort_on_out_of_gpu_memory = 1
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -0.6 -0.6 0.
+
+geometry.prob_hi     = 0.6 0.6 6.
+
+
+
+# PARTICLES (21 parameters)
+
+particles.v = 0
+
+particles.derive_plot_vars = 1
+
+particles.mom_transfer = 1
+
+particles.mass_transfer = 1
+
+particles.fuel_ref_temp = 298.15
+
+particles.fuel_species = NC12H26
+
+particles.NC12H26_crit_temp = 658.
+
+particles.NC12H26_boil_temp = 489.
+
+particles.NC12H26_latent = 3.59411E9
+
+particles.NC12H26_cp = 2.217E7
+
+particles.NC12H26_lambda = 2059.0484837579133 -2.4391762758823385 9.633688833837596e-06 6.93350414269127e-07
+
+particles.NC12H26_mu = -0.028611188933370675 39.40765272136905 -18125.486152106896 3021587.187559424
+
+particles.NC12H26_rho = 1.7799145710513213 -0.006848424883513244 1.5016559178741312e-05 -1.2149370117669905e-08
+
+particles.NC12H26_psat = 4.265416493004907 1741.1453093807672 -80.90351868881419 1000000.0
+
+particles.fuel_sigma = 15.
+
+# ... and 6 more
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc        = "FOExtrap" "FOExtrap" "NoSlipWall"
+
+pelec.hi_bc        = "FOExtrap" "FOExtrap" "FOExtrap"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_enth = 1
+
+pelec.diffuse_spec = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 1
+
+pelec.chem_integrator = "ReactorNull"
+
+pelec.plot_massfrac = 1
+
+pelec.cfl            = 0.5    # cfl number for hyperbolic system
+
+pelec.init_shrink    = 1.     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+# ... and 3 more
+
+
+
+# PROB (7 parameters)
+
+prob.ref_T = 900.
+
+prob.ref_p = 6.E7
+
+prob.init_v = 0.
+
+prob.X_N2 = 0.8971
+
+prob.X_O2 = 0.
+
+prob.X_H2O = 0.0377
+
+prob.X_CO2 = 0.0652
+
+
+
+# SPRAY (11 parameters)
+
+spray.jet1.do_inject = 1
+
+spray.jet1.T = 363.
+
+spray.jet1.jet_dia = 9.E-3
+
+spray.jet1.jet_cent = 0. 0. 0.
+
+spray.jet1.jet_norm = 0. 0. 1.
+
+spray.jet1.dist_type = Uniform
+
+spray.jet1.diameter = 89.E-4
+
+spray.jet1.inject_ppp = 0.1
+
+spray.jet1.spread_angle = 20.
+
+spray.jet1.roi_file = roi.dat
+
+spray.jet1.discharge_coeff = 0.89
+
+
+
+# TAGGING (4 parameters)
+
+tagging.refinement_indicators = box
+
+tagging.box.in_box_lo = -0.3 -0.3 0.
+
+tagging.box.in_box_hi = 0.3 0.3 0.3
+
+tagging.tempgrad = 40.
+
+
+
+```
+
+
+--- Inputs: spray-a-wbreakup.inp ---
+
+
+```ini
+
+# AMR (11 parameters)
+
+amr.n_cell           = 8 8 40
+
+amr.v                = 1    # verbosity in Amr.cpp
+
+amr.max_level       = 0
+
+amr.blocking_factor = 4
+
+amr.max_grid_size   = 128
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk  # root name of checkpoint file
+
+amr.check_int       = 1000
+
+amr.plot_file       = plt # root name of plotfile
+
+amr.plot_per        = 2.5E-4
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity pressure   # these variables appear in the plotfile
+
+
+
+# AMREX (1 parameters)
+
+amrex.abort_on_out_of_gpu_memory = 1
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -0.6 -0.6 0.
+
+geometry.prob_hi     = 0.6 0.6 6.
+
+
+
+# PARTICLES (22 parameters)
+
+particles.v = 0
+
+particles.derive_plot_vars = 1
+
+particles.mom_transfer = 1
+
+particles.mass_transfer = 1
+
+particles.fuel_ref_temp = 298.15
+
+particles.fuel_species = NC12H26
+
+particles.NC12H26_crit_temp = 658.
+
+particles.NC12H26_boil_temp = 489.
+
+particles.NC12H26_latent = 3.59411E9
+
+particles.NC12H26_cp = 2.217E7
+
+particles.NC12H26_lambda = 2059.0484837579133 -2.4391762758823385 9.633688833837596e-06 6.93350414269127e-07
+
+particles.NC12H26_mu = -0.028611188933370675 39.40765272136905 -18125.486152106896 3021587.187559424
+
+particles.NC12H26_rho = 1.7799145710513213 -0.006848424883513244 1.5016559178741312e-05 -1.2149370117669905e-08
+
+particles.NC12H26_psat = 4.265416493004907 1741.1453093807672 -80.90351868881419 1000000.0
+
+particles.fuel_sigma = 15.
+
+# ... and 7 more
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc        = "FOExtrap" "FOExtrap" "NoSlipWall"
+
+pelec.hi_bc        = "FOExtrap" "FOExtrap" "FOExtrap"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_enth = 1
+
+pelec.diffuse_spec = 1
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 1
+
+pelec.chem_integrator = "ReactorNull"
+
+pelec.plot_massfrac = 1
+
+pelec.cfl            = 0.5    # cfl number for hyperbolic system
+
+pelec.init_shrink    = 1.     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+# ... and 3 more
+
+
+
+# PROB (7 parameters)
+
+prob.ref_T = 900.
+
+prob.ref_p = 6.E7
+
+prob.init_v = 0.
+
+prob.X_N2 = 0.8971
+
+prob.X_O2 = 0.
+
+prob.X_H2O = 0.0377
+
+prob.X_CO2 = 0.0652
+
+
+
+# SPRAY (1 parameters)
+
+spray.jet1.do_inject = 0
+
+
+
+# TAGGING (4 parameters)
+
+tagging.refinement_indicators = box
+
+tagging.box.in_box_lo = -0.3 -0.3 0.
+
+tagging.box.in_box_hi = 0.3 0.3 0.3
+
+tagging.tempgrad = 40.
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/Soot-Flame
+
+Category: RegTests
+
+Location: Exec/RegTests/Soot-Flame
+
+======================================================================
+
+
+--- Inputs: soot-flame.inp ---
+
+
+```ini
+
+# AMR (11 parameters)
+
+amr.n_cell           = 128 8 8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000
+
+amr.plot_file       = plt # root name of plotfile
+
+amr.derive_plot_vars = x_velocity y_velocity pressure soot_vars
+
+
+
+# CVODE (1 parameters)
+
+cvode.solve_type = GMRES
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     = 0. 0. 0.
+
+geometry.prob_hi     = 4. 0.25 0.25
+
+
+
+# PELEC (24 parameters)
+
+pelec.lo_bc =  "Hard" "Interior" "Interior"
+
+pelec.hi_bc =  "Hard" "Interior" "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_enth = 1
+
+pelec.diffuse_spec = 1
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorCvode"
+
+pelec.do_mol = 0
+
+pelec.allow_negative_energy = 1
+
+pelec.cfl            = 0.8     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 1.     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+# ... and 9 more
+
+
+
+# PROB (4 parameters)
+
+prob.pmf_datafile = "mueller_burner.dat"
+
+prob.pamb = 1.E6
+
+prob.pmf_standoff = 0.
+
+prob.pmf_average = 0
+
+
+
+# SOOT (5 parameters)
+
+soot.incept_pah = A2 # Soot inception species
+
+soot.v = 0
+
+soot.num_subcycles = 1
+
+soot.temp_cutoff = 350.
+
+soot.conserve_mass = false
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 2
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/Soot-ZeroD
+
+Category: RegTests
+
+Location: Exec/RegTests/Soot-ZeroD
+
+======================================================================
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           = 4 4 4
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000
+
+amr.plot_file       = plt # root name of plotfile
+
+amr.plot_per        = 2.5E-5
+
+amr.derive_plot_vars = x_velocity y_velocity pressure soot_vars soot_large_particles
+
+
+
+# AMREX (3 parameters)
+
+amrex.fpe_trap_invalid = 1
+
+amrex.fpe_trap_zero = 1
+
+amrex.fpe_trap_overflow = 1
+
+
+
+# CVODE (1 parameters)
+
+cvode.solve_type = dense_direct
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     = 0. 0. 0.
+
+geometry.prob_hi     = 1. 1. 1.
+
+
+
+# PELEC (22 parameters)
+
+pelec.lo_bc =  "Interior" "Interior" "Interior"
+
+pelec.hi_bc =  "Interior" "Interior" "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_enth = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorCvode"
+
+pelec.do_mol = 1
+
+pelec.allow_negative_energy = 1
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+# ... and 7 more
+
+
+
+# PROB (6 parameters)
+
+prob.init_T = 1300.
+
+prob.init_p = 1.01325E6
+
+prob.init_N2 = 0.6686465670855919
+
+prob.init_O2 = 0.20313062439007742
+
+prob.init_fuel = 0.12822280852433066
+
+prob.fuel_name = N-C7H16
+
+
+
+# SOOT (3 parameters)
+
+soot.incept_pah = A2 # Soot inception species
+
+soot.v = 0
+
+soot.conserve_mass = true
+
+
+
+```
+
+
+--- Inputs: soot-zerod.inp ---
+
+
+```ini
+
+# AMR (12 parameters)
+
+amr.n_cell           = 4 4 4
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000
+
+amr.plot_file       = plt # root name of plotfile
+
+amr.plot_int        = 10
+
+amr.derive_plot_vars = x_velocity y_velocity pressure soot_vars soot_large_particles
+
+
+
+# CVODE (1 parameters)
+
+cvode.solve_type = dense_direct
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 1 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     = 0. 0. 0.
+
+geometry.prob_hi     = 1. 1. 1.
+
+
+
+# PELEC (22 parameters)
+
+pelec.lo_bc =  "Interior" "Interior" "Interior"
+
+pelec.hi_bc =  "Interior" "Interior" "Interior"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 0
+
+pelec.diffuse_temp = 0
+
+pelec.diffuse_enth = 0
+
+pelec.diffuse_spec = 0
+
+pelec.do_react = 1
+
+pelec.chem_integrator = "ReactorCvode"
+
+pelec.do_mol = 1
+
+pelec.allow_negative_energy = 1
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+# ... and 7 more
+
+
+
+# PROB (6 parameters)
+
+prob.init_T = 1300.
+
+prob.init_p = 1.01325E6
+
+prob.init_N2 = 0.6686465670855919
+
+prob.init_O2 = 0.20313062439007742
+
+prob.init_fuel = 0.12822280852433066
+
+prob.fuel_name = N-C7H16
+
+
+
+# SOOT (3 parameters)
+
+soot.incept_pah = A2 # Soot inception species
+
+soot.v = 0
+
+soot.conserve_mass = true
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 2
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/AuxQuantities
+
+Category: RegTests
+
+Location: Exec/RegTests/AuxQuantities
+
+======================================================================
+
+
+--- README ---
+
+
+# Advected and auxiliary quantities
+
+This demonstrates the use of the advected and auxiliary quantities described in the PeleC model [equations](https://amrex-combustion.github.io/PeleC/Equations.html). The case introduces two advected and two auxiliary quantities into the domain.  The auxiliary quantities experience simple exponential decay with a source term of $S_{ext,B_k} = -30 B_k$.
+
+
+## Short case description
+
+|                    | description                                         |
+|:-------------------|:----------------------------------------------------|
+| Problem definition | advected and auxiliaru quantities                   |
+| EB geometry        | embedded cylinder (optional)                        |
+| EOS                | GammaLaw                                            |
+| Multi-level        | yes                                                 |
+| Metric             | numerical solutions for $B_k$ match theory          |
+
+
+
+
+--- Inputs: auxquantities.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  96 32 8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1        # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2  # refinement ratio
+
+amr.regrid_int      = 5        # how often to regrid
+
+amr.blocking_factor = 8        # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk       # root name of checkpoint file
+
+amr.check_int       = 10000     # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt
+
+amr.plot_int        = 1000
+
+amr.derive_plot_vars= x_velocity y_velocity z_velocity
+
+
+
+# EB2 (1 parameters)
+
+eb2.geom_type = "all_regular"
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0  0  0
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  -2.   -2.  -2.
+
+geometry.prob_hi     =  10.  2.   2.
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.hi_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.add_ext_src = 1
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 0
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 1
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.7     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # maximum increase in dt over successive steps
+
+# ... and 2 more
+
+
+
+# PROB (9 parameters)
+
+prob.p = 1013250.
+
+prob.T = 100.
+
+prob.Re = 100.
+
+prob.Pr = 0.7
+
+prob.U = 100.
+
+prob.aux_xy_lo = -1.
+
+prob.aux_length = 1.
+
+prob.aux_height = 2.
+
+prob.aux_srcstrength = -30.
+
+
+
+# TAGGING (7 parameters)
+
+tagging.refinement_indicators = adv_0 adv_1
+
+tagging.adv_0.field_name = rho_A_0
+
+tagging.adv_0.adjacent_difference_greater = 0.01
+
+tagging.adv_0.max_level = 1
+
+tagging.adv_1.field_name = rho_A_1
+
+tagging.adv_1.adjacent_difference_greater = 0.02
+
+tagging.adv_1.max_level = 1
+
+
+
+```
+
+
+--- Inputs: auxquantities_eb.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  96 32 8
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 5       # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = 10000    # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt
+
+amr.plot_int        = 1000
+
+amr.derive_plot_vars= x_velocity y_velocity z_velocity vfrac
+
+
+
+# EB2 (5 parameters)
+
+eb2.geom_type = "sphere"
+
+eb2.sphere_radius = 0.5
+
+eb2.sphere_center = 3 0 0
+
+eb2.sphere_has_fluid_inside = 0
+
+eb2.small_volfrac = 1.0e-4
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0  0  0
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  -2.   -2.  -2.
+
+geometry.prob_hi     =  10.  2.   2.
+
+
+
+# PELEC (19 parameters)
+
+pelec.lo_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.hi_bc       =  "Hard" "SlipWall" "FOExtrap"
+
+pelec.add_ext_src = 1
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 0
+
+pelec.do_react = 0
+
+pelec.allow_negative_energy = 0
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 1
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.7     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # maximum increase in dt over successive steps
+
+# ... and 4 more
+
+
+
+# PROB (9 parameters)
+
+prob.p = 1013250.
+
+prob.T = 100.
+
+prob.Re = 100.
+
+prob.Pr = 0.7
+
+prob.U = 100.
+
+prob.aux_xy_lo = -1.
+
+prob.aux_length = 1.
+
+prob.aux_height = 2.
+
+prob.aux_srcstrength = -30.
+
+
+
+# TAGGING (7 parameters)
+
+tagging.refinement_indicators = adv_0 adv_1
+
+tagging.adv_0.field_name = rho_A_0
+
+tagging.adv_0.adjacent_difference_greater = 0.01
+
+tagging.adv_0.max_level = 1
+
+tagging.adv_1.field_name = rho_A_1
+
+tagging.adv_1.adjacent_difference_greater = 0.02
+
+tagging.adv_1.max_level = 1
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 2
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = TRUE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/ChannelFlow
+
+Category: RegTests
+
+Location: Exec/RegTests/ChannelFlow
+
+======================================================================
+
+
+--- README ---
+
+
+# Channel flow
+
+
+
+
+--- Inputs: channel-1.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 72  24 36
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 1       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 500        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 10       # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# EB2 (1 parameters)
+
+eb2.geom_type = "all_regular"
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 0 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     = 0.0 -0.5 -0.75
+
+geometry.prob_hi     = 3.0 0.5 0.75
+
+
+
+# PELEC (19 parameters)
+
+pelec.lo_bc       = "Interior"   "NoSlipWall"   "Interior"
+
+pelec.hi_bc       = "Interior"   "NoSlipWall"   "Interior"
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 0
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_spec = 1
+
+pelec.do_react = 0
+
+pelec.diffuse_enth = 0
+
+pelec.add_ext_src = 1
+
+pelec.external_forcing = 70.979 0.0 0.0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+# ... and 4 more
+
+
+
+# PROB (2 parameters)
+
+prob.T_mean = 750.0
+
+prob.dpdx = 70.979
+
+
+
+# TAGGING (5 parameters)
+
+tagging.refinement_indicators = yLow yHigh
+
+tagging.yLow.in_box_lo = -0.1  -0.52  -0.85
+
+tagging.yLow.in_box_hi =  3.1 -0.45    0.85
+
+tagging.yHigh.in_box_lo = -0.1  0.45  -0.85
+
+tagging.yHigh.in_box_hi =  3.1  0.52    0.85
+
+
+
+```
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           = 576  192 288
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog
+
+amr.max_level       = 2       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 4       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 12 8 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 1
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 500        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 5000       # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# EB2 (1 parameters)
+
+eb2.geom_type = "all_regular"
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 1 0 1
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     = 0.0 -0.5 -0.75
+
+geometry.prob_hi     = 3.0 0.5 0.75
+
+
+
+# PELEC (19 parameters)
+
+pelec.lo_bc       = "Interior"   "NoSlipWall"   "Interior"
+
+pelec.hi_bc       = "Interior"   "NoSlipWall"   "Interior"
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 0
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_spec = 1
+
+pelec.do_react = 0
+
+pelec.diffuse_enth = 0
+
+pelec.add_ext_src = 1
+
+pelec.external_forcing = 70.979 0.0 0.0
+
+pelec.cfl            = 0.9     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.1     # scale back initial timestep
+
+pelec.change_max     = 1.05    # scale back initial timestep
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+# ... and 4 more
+
+
+
+# PROB (2 parameters)
+
+prob.T_mean = 750.0
+
+prob.dpdx = 70.979
+
+
+
+# TAGGING (5 parameters)
+
+tagging.refinement_indicators = yLow yHigh
+
+tagging.yLow.in_box_lo = -0.1  -0.52  -0.85
+
+tagging.yLow.in_box_hi =  3.1 -0.45    0.85
+
+tagging.yHigh.in_box_lo = -0.1  0.45  -0.85
+
+tagging.yHigh.in_box_hi =  3.1  0.52    0.85
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = TRUE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/EB-BluffBody
+
+Category: RegTests
+
+Location: Exec/RegTests/EB-BluffBody
+
+======================================================================
+
+
+--- Inputs: eb-bluffbody-1.inp ---
+
+
+```ini
+
+# AMR (12 parameters)
+
+amr.n_cell           =  128   64   16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = -1       # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt
+
+amr.plot_int        = 100
+
+amr.derive_plot_vars=ALL
+
+
+
+# EB2 (1 parameters)
+
+eb2.geom_type = "extruded_triangles"
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# EXTRUDED_TRIANGLES (7 parameters)
+
+extruded_triangles.num_tri = 2
+
+extruded_triangles.tri_0_point_0 = 4.25    3.01  0.0
+
+extruded_triangles.tri_0_point_1 = 5.25    2.01  0.0
+
+extruded_triangles.tri_0_point_2 = 5.25    4.01  0.0
+
+extruded_triangles.tri_1_point_0 = 5.25   2.01  0.0
+
+extruded_triangles.tri_1_point_1 = 6.25   3.01  0.0
+
+extruded_triangles.tri_1_point_2 = 5.25   4.01   0.0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0   0  1
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  0    0    0
+
+geometry.prob_hi     =  12.0  6.0  1.5
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Hard"     "FOExtrap" "Interior"
+
+pelec.hi_bc       =  "FOExtrap" "FOExtrap" "Interior"
+
+pelec.eb_boundary_T = 300.
+
+pelec.eb_isothermal = 1
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 0
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.8    # scale back initial timestep
+
+pelec.change_max     = 1.05     # maximum increase in dt over successive steps
+
+# ... and 2 more
+
+
+
+# PROB (6 parameters)
+
+prob.p = 1013250.0
+
+prob.rho = 0.00116
+
+prob.vx_in =  9000.0
+
+prob.vy_in =  0.0
+
+prob.Re_L = 625.0
+
+prob.Pr = 0.7
+
+
+
+```
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (14 parameters)
+
+amr.n_cell           =  128   64   16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2       # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk      # root name of checkpoint file
+
+amr.check_int       = -1       # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt
+
+amr.plot_int        = 100
+
+amr.derive_plot_vars = density xmom ymom zmom rho_E rho_e Temp pressure kineng enstrophy soundspeed MachNumber entropy magvort divu eint_E eint_e logden x_velocity y_velocity z_velocity magvel magmom
+
+
+
+# EB2 (1 parameters)
+
+eb2.geom_type = "extruded_triangles"
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type = 0
+
+
+
+# EXTRUDED_TRIANGLES (7 parameters)
+
+extruded_triangles.num_tri = 2
+
+extruded_triangles.tri_0_point_0 = 4.25    3.01  0.0
+
+extruded_triangles.tri_0_point_1 = 5.25    2.01  0.0
+
+extruded_triangles.tri_0_point_2 = 5.25    4.01  0.0
+
+extruded_triangles.tri_1_point_0 = 5.25   2.01  0.0
+
+extruded_triangles.tri_1_point_1 = 6.25   3.01  0.0
+
+extruded_triangles.tri_1_point_2 = 5.25   4.01   0.0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic =  0   0  1
+
+geometry.coord_sys   =  0       # 0 => cart
+
+geometry.prob_lo     =  0    0    0
+
+geometry.prob_hi     =  12.0  6.0  1.5
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       =  "Hard"     "FOExtrap" "Interior"
+
+pelec.hi_bc       =  "FOExtrap" "FOExtrap" "Interior"
+
+pelec.eb_boundary_T = 300.
+
+pelec.eb_isothermal = 1
+
+pelec.do_hydro = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.diffuse_temp = 1
+
+pelec.diffuse_vel  = 1
+
+pelec.diffuse_spec = 0
+
+pelec.diffuse_enth = 0
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.cfl            = 0.3     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.8    # scale back initial timestep
+
+pelec.change_max     = 1.05     # maximum increase in dt over successive steps
+
+# ... and 2 more
+
+
+
+# PROB (6 parameters)
+
+prob.p = 1013250.0
+
+prob.rho = 0.00116
+
+prob.vx_in =  9000.0
+
+prob.vy_in =  0.0
+
+prob.Re_L = 625.0
+
+prob.Pr = 0.7
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+Test Case: RegTests/EB-C1
+
+Category: RegTests
+
+Location: Exec/RegTests/EB-C1
+
+======================================================================
+
+
+--- README ---
+
+
+# Method of Manufactured Solutions for Embedded Boundaries
+
+This is an MMS around a sphere using embedded boundaries. See `MMS`
+readme for more details on using and running. Full description and the
+results of this case can be found in the
+[documentation](https://pelec.readthedocs.io/en/latest/VandV.html#verification-of-eb-pelec).
+
+## Short case description
+
+|                    | description         |
+|:-------------------|:--------------------|
+| Problem definition | MMS around a sphere |
+| EB geometry        | sphere              |
+| Mechanism          | GammaLaw            |
+| Multi-level        | no                  |
+| Metric             | MMS analysis        |
+
+
+
+
+--- Inputs: eb-symmetry-mol.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =  16    16    16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog mmslog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure rhommserror ummserror vmmserror wmmserror pmmserror
+
+
+
+# EB2 (4 parameters)
+
+eb2.geom_type = sphere
+
+eb2.sphere_radius = 0.25
+
+eb2.sphere_center = 0.0 0.0  0.0
+
+eb2.sphere_has_fluid_inside = 0
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (16 parameters)
+
+pelec.lo_bc       = "Hard" "Hard" "Hard"
+
+pelec.hi_bc       = "Hard" "Hard" "Hard"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.do_mms = 1
+
+pelec.masa_solution_name = ad_cns_3d_les_sph
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+# ... and 1 more
+
+
+
+# PROB (1 parameters)
+
+prob.rho_x_fact = 0.0
+
+
+
+```
+
+
+--- Inputs: eb-symmetry-plm.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =  16    16    16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog mmslog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 32
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure rhommserror ummserror vmmserror wmmserror pmmserror
+
+
+
+# EB2 (4 parameters)
+
+eb2.geom_type = sphere
+
+eb2.sphere_radius = 0.25
+
+eb2.sphere_center = 0.0 0.0  0.0
+
+eb2.sphere_has_fluid_inside = 0
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (16 parameters)
+
+pelec.lo_bc       = "Hard" "Hard" "Hard"
+
+pelec.hi_bc       = "Hard" "Hard" "Hard"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_mol = 0
+
+pelec.do_react = 0
+
+pelec.do_mms = 1
+
+pelec.masa_solution_name = ad_cns_3d_les_sph
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+# ... and 1 more
+
+
+
+# PROB (1 parameters)
+
+prob.rho_x_fact = 0.0
+
+
+
+```
+
+
+--- Inputs: ebmms-1.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =  16    16    16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog mmslog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure rhommserror ummserror vmmserror wmmserror pmmserror
+
+
+
+# EB2 (4 parameters)
+
+eb2.geom_type = sphere
+
+eb2.sphere_radius = 0.25
+
+eb2.sphere_center = 0.0 0.0  0.0
+
+eb2.sphere_has_fluid_inside = 0
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       = "Hard" "Hard" "Hard"
+
+pelec.hi_bc       = "Hard" "Hard" "Hard"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.do_mms = 1
+
+pelec.masa_solution_name = ad_cns_3d_les_sph
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+# ... and 2 more
+
+
+
+```
+
+
+--- Inputs: ebmms-2.inp ---
+
+
+```ini
+
+# AMR (13 parameters)
+
+amr.n_cell           =  16    16    16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog mmslog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+amr.plot_vars  =  density Temp
+
+amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure rhommserror ummserror vmmserror wmmserror pmmserror
+
+
+
+# EB2 (4 parameters)
+
+eb2.geom_type = sphere
+
+eb2.sphere_radius = 0.25
+
+eb2.sphere_center = 0.0 0.0  0.0
+
+eb2.sphere_has_fluid_inside = 0
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (17 parameters)
+
+pelec.lo_bc       = "Hard" "Hard" "Hard"
+
+pelec.hi_bc       = "Hard" "Hard" "Hard"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_mol = 0
+
+pelec.do_react = 0
+
+pelec.do_mms = 1
+
+pelec.masa_solution_name = ad_cns_3d_les_sph
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+pelec.v              = 1       # verbosity in PeleC.cpp
+
+# ... and 2 more
+
+
+
+```
+
+
+--- Inputs: example.inp ---
+
+
+```ini
+
+# AMR (17 parameters)
+
+amr.n_cell           =  16    16    16
+
+amr.v                = 1       # verbosity in Amr.cpp
+
+amr.data_log         = datlog mmslog
+
+amr.max_level       = 0       # maximum level number allowed
+
+amr.ref_ratio       = 2 2 2 2 # refinement ratio
+
+amr.regrid_int      = 2 2 2 2 # how often to regrid
+
+amr.blocking_factor = 8       # block factor in grid generation
+
+amr.max_grid_size   = 64
+
+amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
+
+amr.checkpoint_files_output = 0
+
+amr.check_file      = chk        # root name of checkpoint file
+
+amr.check_int       = 1000        # number of timesteps between checkpoints
+
+amr.plot_files_output = 1
+
+amr.plot_file       = plt        # root name of plotfile
+
+amr.plot_int        = 1000        # number of timesteps between plotfiles
+
+# ... and 2 more
+
+
+
+# EB2 (4 parameters)
+
+eb2.geom_type = sphere
+
+eb2.sphere_radius = 0.25
+
+eb2.sphere_center = 0.0 0.0  0.0
+
+eb2.sphere_has_fluid_inside = 0
+
+
+
+# EBD (1 parameters)
+
+ebd.boundary_grad_stencil_type=0
+
+
+
+# GEOMETRY (4 parameters)
+
+geometry.is_periodic = 0 0 0
+
+geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
+
+geometry.prob_lo     =  -1.0 -1.0 -1.0
+
+geometry.prob_hi     =   1.0  1.0  1.0
+
+
+
+# PELEC (18 parameters)
+
+pelec.lo_bc       = "Hard" "Hard" "Hard"
+
+pelec.hi_bc       = "Hard" "Hard" "Hard"
+
+pelec.do_hydro = 1
+
+pelec.diffuse_vel = 1
+
+pelec.diffuse_temp = 1
+
+pelec.do_mol = 1
+
+pelec.do_react = 0
+
+pelec.do_mms = 1
+
+pelec.masa_solution_name = "ad_cns_3d_les_sph"
+
+pelec.allow_negative_energy = 1
+
+pelec.cfl            = 0.1     # cfl number for hyperbolic system
+
+pelec.init_shrink    = 0.3     # scale back initial timestep
+
+pelec.change_max     = 1.1     # max time step growth
+
+pelec.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
+
+pelec.sum_interval   = 1       # timesteps between computing mass
+
+# ... and 3 more
+
+
+
+# PROB (1 parameters)
+
+prob.rho_x_fact = 0.0
+
+
+
+```
+
+
+--- Build Config: GNUmakefile ---
+
+
+Build configuration:
+```makefile
+
+COMP = gnu
+
+DIM = 3
+
+USE_CUDA = FALSE
+
+USE_HIP = FALSE
+
+USE_MPI = FALSE
+
+```
+
+
+Problem-specific files: prob.H, prob.cpp, prob_parm.H
+
+
+
+======================================================================
+
+COMPLETE TEST CASE INDEX
+
+======================================================================
+
+
+
+Production (5 cases):
+
+  - Production/CavityFlame
+
+  - Production/ChallengeProblem
+
+  - Production/JetFlame
+
+  - Production/PistonBowl
+
+  - Production/PistonBowl/inputs
+
+
+RegTests (41 cases):
+
+  - RegTests/AuxQuantities
+
+  - RegTests/ChannelFlow
+
+  - RegTests/EB-BluffBody
+
+  - RegTests/EB-C1
+
+  - RegTests/EB-C10
+
+  - RegTests/EB-C11
+
+  - RegTests/EB-C12
+
+  - RegTests/EB-C13
+
+  - RegTests/EB-C14
+
+  - RegTests/EB-C3
+
+  - RegTests/EB-C4-5
+
+  - RegTests/EB-C7
+
+  - RegTests/EB-C8
+
+  - RegTests/EB-C9
+
+  - RegTests/EB-ConvergingNozzle
+
+  - RegTests/EB-EnclosedVortex
+
+  - RegTests/EB-FlowPastCylinder
+
+  - RegTests/EB-InflowBC
+
+  - RegTests/EB-Rotor4Blade
+
+  - RegTests/EB-TaylorCouette
+
+  - RegTests/HIT
+
+  - RegTests/MMS
+
+  - RegTests/MassCons
+
+  - RegTests/MultiSpecSod
+
+  - RegTests/PMF
+
+  - RegTests/PMF-SRK
+
+  - RegTests/Sedov
+
+  - RegTests/Shu-Osher
+
+  - RegTests/Sod
+
+  - RegTests/Soot-Flame
+
+  - RegTests/Soot-ZeroD
+
+  - RegTests/Spray-A-Wbreakup
+
+  - RegTests/Spray-Conv
+
+  - RegTests/Spray-EB
+
+  - RegTests/Spray-Evaporation
+
+  - RegTests/Spray-Jet
+
+  - RegTests/Spray-Multijet
+
+  - RegTests/Spray-TG
+
+  - RegTests/TG
+
+  - RegTests/TGReact
+
+  - RegTests/zeroD
+

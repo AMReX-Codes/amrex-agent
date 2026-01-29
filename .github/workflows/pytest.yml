@@ -1,0 +1,31 @@
+name: pytest
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yaml
+          environment-name: amrex-agent-dev
+          cache-environment: true
+          cache-downloads: true
+
+      - name: Run unit tests
+        run: |
+          micromamba run -n amrex-agent-dev pytest tests/unit
+
+      - name: Run quality tests
+        run: |
+          micromamba run -n amrex-agent-dev pytest tests/quality

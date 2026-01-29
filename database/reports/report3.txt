@@ -1,0 +1,192 @@
+A Decision Framework for Selecting and Configuring Pele Suite Solvers
+
+1.0 Introduction: Navigating High-Fidelity Reacting Flow Simulation
+
+Selecting the appropriate computational tool for simulating complex, multiscale combustion phenomena is a critical first step that profoundly influences both the physical fidelity and the computational feasibility of a study. The Pele software suite, an exascale-ready collection of solvers built upon the block-structured AMReX adaptive mesh refinement (AMR) framework, offers a family of specialized tools designed for distinct physical regimes. The suite's primary flow solvers—PeleC for compressible flows, PeleLMeX for low-Mach number flows with embedded boundaries, and PeleLM for low-Mach number flows in simple geometries—are each tailored to a specific class of problems. While PeleLM is optimized for simple Cartesian domains and PeleLMeX adds support for complex geometries via embedded boundaries, their underlying low-Mach number physics formulation is identical. For the purpose of the primary physics decisions in this framework, they are considered together. This document provides a hierarchical decision framework to guide users through the process of selecting the appropriate solver for their application, configuring the build with the necessary physics modules, and estimating the required computational resources. By progressing from high-level physics decisions to detailed configuration and troubleshooting, this framework aims to empower computational scientists and engineers to effectively leverage the Pele suite for high-fidelity reacting flow simulation.
+
+2.0 The Primary Decision: Selecting the Correct Compressibility Regime
+
+The most critical decision in configuring a Pele simulation is determining the appropriate compressibility regime, a choice governed primarily by the flow's Mach number (Ma). This selection dictates the underlying governing equations, fundamentally shaping the physics that can be captured and the associated computational expense. PeleC is engineered to solve the fully compressible reacting Navier-Stokes equations, making it essential for scenarios where acoustic phenomena, shocks, and significant pressure fluctuations are important. Conversely, PeleLMeX and PeleLM are built on a low-Mach number formulation that filters out sound waves. This key difference allows the low-Mach solvers to employ significantly larger time steps, drastically reducing computational cost for problems where acoustic effects are negligible. This section provides clear quantitative and qualitative guidelines for making this foundational choice.
+
+2.1 When to Use PeleC: Compressible Flows (Ma > 0.3)
+
+1. Define the Operational Threshold: PeleC is the designated solver for fully compressible reacting flows. The primary quantitative guideline for its use is for problems where the maximum instantaneous Mach number is expected to exceed 0.3.
+2. Analyze Key Physical Phenomena: PeleC is required to capture physical phenomena that are intrinsically linked to fluid compressibility. As demonstrated in the source materials, PeleC's formulation correctly models:
+  * Acoustic Waves and Pressure Fluctuations: The propagation of sound waves and their influence on the flow field.
+  * Compressive Heating: Localized temperature increases that result directly from pressure fluctuations, which can be a critical factor in ignition phenomena.
+  * Shocks and Detonations: Discontinuities in the flow field, such as Oblique Detonation Waves (ODWs) and the complex structures within Rotating Detonation Engines (RDEs).
+3. Illustrate with Application Examples: Based on the studies provided, PeleC is the appropriate choice for a range of high-Mach number applications, including:
+  * Supersonic and Hypersonic Combustion: This includes propulsion systems like scramjets and shcramjets where the flow is inherently high-speed.
+  * Detonation Phenomena: Simulations of ODWs and RDEs depend on capturing the shock-induced combustion that is the hallmark of detonation.
+  * High-Pressure Fuel Injection and Ignition: Applications involving high-pressure injection can generate localized high-velocity flows and pressure waves that necessitate a compressible treatment.
+  * Shock-Turbulence and Shock-Flame Interactions: Problems where shocks interact with flames or turbulent structures require a solver that can accurately represent these discontinuities.
+
+2.2 When to Use PeleLMeX/PeleLM: Low-Mach Number Flows (Ma < 0.3)
+
+1. Define the Operational Threshold: PeleLMeX and PeleLM are optimized for low-Mach number flows, where the fluid velocity is significantly less than the speed of sound (Ma < 0.3).
+2. Explain the Low-Mach Formulation: The core assumption of the low-Mach number model is that it allows for a "temporally varying, spatially homogeneous pressure." This means the thermodynamic pressure is treated as a function of time only, p(t), not space, p(x,y,z,t). This is the key assumption that filters out spatially propagating acoustic waves while still allowing the system pressure to evolve due to global effects like heat release in a confined domain.
+3. Detail the Primary Advantage: The most significant benefit of this approach is the dramatic reduction in computational cost. By removing the stringent time-step constraint imposed by the acoustic Courant–Friedrichs–Lewy (CFL) condition, the solver can take much larger time steps (e.g., 10⁻⁶ – 10⁻⁴ s) compared to a fully compressible solver. This enables the simulation of slow, diffusive, and reactive processes over much longer physical timescales.
+4. Illustrate with Application Examples: The low-Mach solvers are well-suited for a variety of applications characterized by low-speed flow, such as:
+  * Laminar and Turbulent Flames with Low-Speed Inflows: This includes canonical problems like freely propagating or spherically expanding flames where inflow velocities are low.
+  * Gas Turbine Premixers and Micromix Combustors: These systems often involve complex mixing and reaction in a low-speed flow environment before the flow is accelerated through the turbine.
+  * Buoyancy-Driven Flows: Problems like pool fires, where the flow is driven by density differences rather than high-speed momentum, are ideal applications for the low-Mach formulation.
+  * Reactivity-Controlled Compression Ignition (RCCI): In certain engine simulations where acoustic effects are not the primary focus, the low-Mach approach can provide an efficient means to study ignition and combustion phenomena.
+
+2.3 Cross-Code Comparison: RCCI Engine Simulation
+
+A direct comparison of PeleC and PeleLMeX for the same Reactivity-Controlled Compression Ignition (RCCI) engine problem clearly illustrates the physical consequences of the solver choice. Although the mean flow is in the low-Mach regime, the underlying physics modeled by each code leads to distinct results. The analysis reveals two key differences:
+
+* Ignition Delay: The fully-compressible PeleC simulation predicts a longer ignition delay than the PeleLMeX simulation.
+* Temperature Variance: The PeleC solution captures significant variance in temperature, particularly at early times. This variance is attributed to compressive heating from pressure fluctuations within the cylinder—a physical phenomenon that PeleLMeX is explicitly designed to filter out by its low-Mach number formulation.
+
+This comparison demonstrates that the choice of solver directly impacts critical physical predictions. If acoustic phenomena and their thermodynamic consequences, such as compressive heating, are integral to the problem's physics, PeleC is required, even if the mean flow velocity is low. If these effects are negligible for the quantities of interest, PeleLMeX offers a far more computationally efficient path to a solution. This primary decision on compressibility logically leads to the next level of configuration: selecting the specific physics models required for the simulation.
+
+3.0 Selecting Physics Models and Multiphysics Capabilities
+
+After selecting the appropriate solver based on the compressibility regime, the next step is to determine which specific physics modules are required to accurately represent the problem. The Pele suite includes PeleMP, a dedicated multiphysics library that provides advanced models for sprays, soot, and radiation. These modules can be coupled with either the compressible or low-Mach flow solvers to handle complex, multiphase reacting flows. This section details the decision logic for when to incorporate these crucial multiphysics capabilities.
+
+3.1 Gas-Phase Chemistry
+
+The Pele suite is designed to handle detailed, multi-step finite-rate chemistry, allowing for high-fidelity representation of fuel oxidation and pollutant formation. The choice of chemical mechanism depends on the specific fuel and the physical phenomena of interest. The source documents demonstrate the suite's versatility with a range of fuels:
+
+* Hydrogen/Air: A 9-species, 21-reaction mechanism by Li et al. is frequently used for high-speed hydrogen combustion applications.
+* n-Dodecane (Diesel Surrogate): Both a 53-species skeletal mechanism and a 35-species QSS-reduced version are used for diesel engine and spray simulations.
+* Ammonia/Hydrogen/Air Blends: Simulations of alternative fuels like ammonia blends are supported, enabling research into decarbonized energy systems.
+* Kerosene/Air: A reduced two-step mechanism has been used for simulations involving aviation fuels.
+
+3.2 Spray Modeling (PeleMP)
+
+1. Decision Criterion: The spray model is necessary for any simulation that involves the direct injection of a liquid fuel into a gaseous environment.
+2. Model Description: PeleMP employs a Lagrangian framework where discrete droplet parcels are tracked as they move through the domain, exchanging mass, momentum, and energy with the Eulerian gas phase. The model also supports multi-component evaporation, allowing for the simulation of complex fuel blends.
+3. Application Examples: This module is essential for applications such as diesel spray injection in internal combustion engines and the combustion of sustainable aviation fuel (SAF) spray flames.
+
+3.3 Soot Modeling (PeleMP)
+
+1. Decision Criterion: The soot model should be included when simulating the combustion of sooting fuels, such as ethylene or kerosene, where the formation of solid carbonaceous particles is a key physical phenomenon.
+2. Model Description: PeleMP uses a Hybrid Method of Moments (HMOM) approach to model the evolution of the soot particle size distribution. This model is coupled to the gas phase through the consumption of Polycyclic Aromatic Hydrocarbon (PAH) species, which act as precursors for soot nucleation and growth.
+3. Application Example: A primary validation case and application for this module is the simulation of turbulent sooting ethylene flames.
+
+3.4 Radiation Modeling (PeleMP)
+
+1. Decision Criterion: The radiation model must be included in simulations where radiative heat transfer is expected to significantly impact the energy balance. This is particularly critical in sooting flames, where hot soot particles dominate radiative emission, or in very high-temperature, optically thick gaseous systems.
+2. Model Description: The model is based on the P1 approximation to the Radiative Transfer Equation (RTE). It introduces a radiative heat source term into the gas-phase energy equation, enabling a two-way coupling between the flow and the radiation field.
+3. Impact Analysis: The inclusion of radiation can have a profound impact on the simulation outcome. In the turbulent sooting ethylene flame example, radiative heat loss was shown to cool the peak flame temperatures. This cooling, in turn, strongly reduced the rate of soot formation, demonstrating the critical importance of capturing this two-way coupling for accurate predictions.
+
+4.0 Build-Time Configuration Framework
+
+The physical and modeling decisions made in the previous sections map directly to a set of pre-processor flags and configuration choices made at compile-time. This approach allows for the creation of an optimized executable tailored to the specific needs of the simulation. This section provides a pattern-based guide for setting up the most critical build configurations to implement the chosen physics.
+
+4.1 Geometry: USE_EB
+
+Decision Logic: Activate the USE_EB (Embedded Boundary) flag for any simulation involving complex, non-Cartesian geometries.
+
+* Functionality: The Embedded Boundary method utilizes a cutting algorithm to represent complex shapes on the underlying Cartesian grid. This process creates irregular "cut-cells" at the fluid-solid interface, allowing for accurate representation of walls without requiring a body-fitted mesh.
+* Applications: A wide range of geometries from the source materials necessitate the use of USE_EB, including:
+  * Engine piston bowls
+  * Cavity flame-holders in scramjets
+  * Cylinders and wedges used in shock and detonation studies
+  * Nozzles and complex industrial geometries like circulating fluidized beds
+
+4.2 Equation of State: Eos_Model
+
+Decision Logic: Choose the Equation of State (EoS) based on the operating pressure relative to the fluid's thermodynamic critical pressure.
+
+* Eos_Model=IdealGas: This is the default setting and is suitable for the majority of combustion applications operating at low to moderate pressures where real gas effects are negligible.
+* Eos_Model=SRK: Use the Soave–Redlich–Kwong (SRK) real gas model for simulations conducted at or near supercritical pressures. This is essential to capture real gas effects, such as large density variations with small changes in temperature or pressure.
+* Quantitative Guideline: A study of Dimethyl Ether (DME) ignition provides a clear example. With a mixture critical pressure of 147 atm, simulations at 150 atm required the SRK EoS to accurately predict fluid density and heat release rates compared to the ideal gas model.
+
+4.3 Transport: Transport_Model
+
+Decision Logic: The choice of transport model depends on the required physical fidelity versus computational cost, particularly for fuels containing light, highly diffusive species like hydrogen.
+
+* Transport_Model=MixtureAveraged: This is the standard, computationally efficient approach and is used in many of the source simulations. It provides a good balance of accuracy and cost for a wide range of problems.
+* Transport_Model=Multicomponent: This model is more physically accurate and is necessary to capture complex transport phenomena like the Soret effect (thermodiffusion), which can be significant in lean hydrogen flames where the light H₂ and H species diffuse preferentially towards cooler regions.
+* Expert Recommendation: For lean hydrogen flames, the high cost of the multicomponent model can be avoided. A rescaled mixture-averaged model can be used to mimic Soret effects with minimal additional computational expense. The recommended scaling factors are: For H₂ and H atoms, the thermal diffusion ratios can be scaled as α_H2 = 0.664 and α_H = 0.580 to approximate multicomponent behavior.
+
+4.4 Chemistry: Chemistry_Model
+
+Decision Logic: Select the chemistry model based on the trade-off between the size and stiffness of the chemical mechanism and the desired solver performance.
+
+* Skeletal: Use a standard skeletal chemical mechanism for maximum accuracy with a manageable number of species.
+* QSSA: Employ a Quasi-Steady State Approximation (QSSA) reduced mechanism to decrease the number of transported species and reduce the chemical stiffness of the system. This can lead to a significant reduction in computational cost, particularly for large hydrocarbon fuels.
+* Jacobian Configuration: For QSSA mechanisms, it is highly recommended to use a symbolically-derived Analytic Jacobian (AJ). The AJ is more robust and computationally faster than a numerically-approximated Finite Difference (FD) Jacobian. This is especially true for low-Mach number solvers like PeleLMeX that use large time steps, where a robust Jacobian is critical for the stability of the implicit chemistry integration.
+
+4.5 Parallelization and Architecture
+
+Decision Logic: The Pele suite is designed and optimized for modern heterogeneous High-Performance Computing (HPC) architectures, with a strong emphasis on GPU acceleration.
+
+* CPU vs. GPU: While the codes can be compiled and run on CPU-only systems, they are architected to leverage the massive parallelism of GPUs for maximum computational performance.
+* Exascale Readiness: The Pele suite has been successfully benchmarked and used for production simulations on pre-exascale (Crusher) and exascale (Frontier) platforms. This demonstrates the suite's robust scalability and readiness for tackling the largest and most challenging combustion problems.
+
+5.0 Resource Planning and Feasibility
+
+High-fidelity reacting flow simulations are computationally intensive endeavors that require careful planning to ensure feasibility. Estimating the required resources involves understanding the interplay between the physics to be resolved, the necessary grid resolution, and the efficiency gains offered by technologies like Adaptive Mesh Refinement (AMR). This section provides guidance on these factors by analyzing the role of AMR and providing specific resolution rules and computational cost examples from the source studies.
+
+5.1 The Role of Adaptive Mesh Refinement (AMR)
+
+Adaptive Mesh Refinement is a foundational technology within the Pele suite that makes simulations of multiscale combustion phenomena computationally tractable. AMR dynamically and intelligently places finer grid levels only in regions of the domain where high resolution is needed, while using coarser grids elsewhere. This refinement is typically triggered by large gradients in physical quantities. Examples from the source documents include refining:
+
+* Shear layers and mixing layers where turbulence is generated.
+* Flame fronts, identified by high temperature gradients.
+* Shock waves and detonation fronts, identified by high density gradients.
+
+By focusing computational effort only where needed, AMR makes it feasible to meet the stringent resolution requirements for flames (~10 cells) and turbulence (~Kolmogorov scale), as detailed in the following section, without the prohibitive cost of a uniformly fine grid.
+
+5.2 Resolution Requirements and Rules of Thumb
+
+The source documents provide several actionable guidelines for determining the necessary grid resolution to capture key physical phenomena accurately.
+
+1. Flame Resolution: To adequately resolve the internal structure of a flame, the flame front should be covered by approximately 10 cells at the highest level of mesh refinement.
+2. Turbulence Resolution: For Direct Numerical Simulation (DNS) or well-resolved Large Eddy Simulation (LES), the finest grid cells should be on the order of the local Kolmogorov length scale to capture the smallest scales of turbulent motion.
+3. High-Speed Flow Resolution: In hypersonic applications, such as the simulation of Oblique Detonation Waves (ODWs), the resolution may be dictated by physical limits. For instance, a finest-level resolution of approximately 20 times the mean-free path of the gas mixture was used to ensure the validity of the continuum assumption while resolving fine-scale shock structures.
+
+5.3 Computational Cost Examples
+
+The following table provides context for the computational scale of problems discussed in the source material. These figures are intended as illustrative examples to help in planning and are not universal benchmarks, as costs will vary significantly with the specific problem setup, physics, and machine architecture.
+
+Simulation Type	Code	Machine	Resources Used	Source
+3D Multipulse n-Dodecane Ignition	PeleLMeX	Crusher (Pre-Exascale)	64-240 GPUs	pdf_5.pdf
+3D Turbulent Sooting Flame (Ethylene)	PeleLMeX + PeleMP	Frontier (Exascale)	8,192 nodes (65,536 GPUs)	pdf_6.pdf
+3D Piston-Bowl Injection	PeleC	Eagle (HPC Cluster)	32 nodes (128 GPUs)	pdf_8.pdf
+
+6.0 Quick Reference Guides
+
+This section consolidates the detailed discussions from the preceding framework into a set of high-level summary tables. These guides are designed for rapid reference to assist in making key decisions during the simulation setup process.
+
+6.1 Code Capability Matrix
+
+This matrix summarizes the primary features and typical applications of the PeleC and PeleLMeX/LM solvers based on the full source context.
+
+Feature / Capability	PeleC (Compressible)	PeleLMeX / PeleLM (Low-Mach)	Notes / Sources
+Mach Regime	Ma > 0.3	Ma < 0.3	Key differentiator. (pdf_16.pdf)
+Acoustics/Shocks	✅ Yes	❌ No (Filtered)	Captures shocks, detonations, compressive heating. (pdf_11.pdf, pdf_15.pdf)
+Detailed Chemistry	✅ Yes	✅ Yes	Supports skeletal, QSS, various fuels. (pdf_5.pdf, pdf_2.pdf)
+Spray (PeleMP)	✅ Yes	✅ Yes	Lagrangian multi-component spray model. (pdf_6.pdf)
+Soot (PeleMP)	✅ Yes	✅ Yes	Hybrid Method of Moments (HMOM) model. (pdf_6.pdf)
+Radiation (PeleMP)	✅ Yes	✅ Yes	P1 approximation model. (pdf_6.pdf)
+EB Geometry	✅ Yes	✅ Yes (PeleLMeX)	For complex, non-Cartesian geometries. (pdf_7.pdf, pdf_8.pdf)
+GPU Support	✅ Yes	✅ Yes	Designed for heterogeneous HPC architectures. (pdf_5.pdf, pdf_6.pdf)
+Typical Apps	Scramjets, RDEs, Detonations, High-Pressure Compression Ignition	GT Combustors, Laminar Flames, Buoyant Plumes, RCCI	(Consolidated from all sources)
+
+6.2 Build Flag Decision Table
+
+This table maps a physical characteristic of a simulation problem to a recommended build flag or configuration setting.
+
+If your problem involves...	Then use this configuration...
+Flow with Ma > 0.3 or shocks	PeleC solver
+Flow with Ma < 0.3, no shocks	PeleLMeX or PeleLM solver
+Non-Cartesian geometry (e.g., piston, cavity)	USE_EB = true
+Pressures near/above critical point	Eos_Model = SRK (real gas)
+Lean H₂ flames where Soret effect is key	Transport_Model = MixtureAveraged with rescaled coefficients
+Large, stiff chemical mechanisms	A QSSA-reduced mechanism with an Analytic_Jacobian
+Liquid fuel injection	Couple with PeleMP spray module
+Sooting fuels (e.g., ethylene)	Couple with PeleMP soot and radiation modules
+
+7.0 When to Re-evaluate Your Solver Choice
+
+Even with careful initial selection based on this framework, the results of a simulation may reveal that the chosen physical model is inappropriate for the problem. The following "red flags" are indicators that the fundamental choice of solver should be re-evaluated.
+
+* Symptom: You are using PeleLMeX/LM and observe that physically important phenomena, such as ignition or flame stabilization, are being driven by small-scale pressure waves or compressive heating effects.
+  * Recommendation: Your problem contains critical compressible physics that the low-Mach formulation is designed to filter. Switch to PeleC to correctly capture these effects.
+* Symptom: You are using PeleC, your simulation is computationally very expensive, and a post-processing analysis shows that the Mach number remains consistently low (< 0.3) throughout the domain and time of interest.
+  * Recommendation: You are paying the high computational cost of resolving acoustic waves that are not important to your problem's core physics. Switch to PeleLMeX/LM for a significant performance increase without sacrificing relevant physical accuracy.

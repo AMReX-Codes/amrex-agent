@@ -1,0 +1,5 @@
+llm_provider: alcf
+embedding_provider: alcf
+alcf_cluster: sophia
+faiss_embedding_model: mistralai/Mistral-7B-Instruct-v0.3-embed
+vector_store_backend: faiss_local

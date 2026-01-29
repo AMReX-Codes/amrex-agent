@@ -1,0 +1,139 @@
+{
+  "version": "1.0",
+  "node_name": "runner",
+  "description": "Execution node that submits and monitors simulation jobs",
+  "canonical_schema_version": "1.0",
+  "philosophy": "Intent-driven contract with computation output in workflow_history.details only",
+  "required_inputs": {
+    "workflow_history": "List[Dict] (for baseline extraction AND run_directory/inputs_file_path)",
+    "config": "AMReXAgentConfig (with HPC configuration)",
+    "data_source_architecture": {
+      "run_directory": "READ from workflow_history (input_writer entry)['details']['run_directory']",
+      "inputs_file_path": "READ from workflow_history (input_writer entry)['details']['inputs_file_path']",
+      "baseline": "READ from workflow_history (architect entry)['details']['baseline']",
+      "enforcement": "Do NOT look for these in top-level state - only in workflow_history.details"
+    }
+  },
+  "state_updates_returned": {
+    "description": "Dual validation paths: canonical (workflow_history) + pragmatic (state convenience)",
+    "utility_flags_top_level_REQUIRED": {
+      "mode": "Literal['proceed', 'fail'] (continue to analysis or terminal failure)",
+      "iteration": "int (preserved from input state)",
+      "workflow_history": "List[Dict] (append new submission entry)"
+    },
+    "canonical_data_location_PRIMARY": {
+      "path": "workflow_history[-1]['details']",
+      "contains": [
+        "job_id",
+        "submission_status",
+        "submission_time"
+      ],
+      "purpose": "Source of truth for job submission audit trail"
+    },
+    "pragmatic_data_location_OPTIONAL": {
+      "path": "top-level state",
+      "allowed_fields": [
+        "job_id",
+        "job_status"
+      ],
+      "constraint": "Must match workflow_history.details if present",
+      "purpose": "Convenience for polling and status checking"
+    }
+  },
+  "computation_output_location": "workflow_history[-1]['details'] PRIMARY, state optional",
+  "note": "Job execution details go in workflow_history.details (source of truth), state can have convenience copies",
+  "execution_result_structure": {
+    "description": "Job submission and execution results in workflow_history[-1]['details']",
+    "required_fields": {
+      "job_id": "str (SLURM job ID or process ID)",
+      "submission_status": "Literal['submitted', 'failed']",
+      "submission_time": "str (ISO 8601 timestamp)"
+    },
+    "optional_fields": {
+      "executable_path": "str (path to compiled executable used)",
+      "submit_script_path": "str (path to job submission script)",
+      "compiler_version": "str (compiler used for compilation)",
+      "compilation_log": "str (last lines of compilation log if compiled)"
+    }
+  },
+  "workflow_history_entry_CANONICAL": {
+    "description": "Canonical workflow_history entry for runner node",
+    "required_fields": {
+      "node": "Literal['runner'] (identifies which node created this entry)",
+      "timestamp": "str (ISO 8601 format with Z suffix, UTC)",
+      "action": "Literal['job_submitted'] (indicates job submission)",
+      "iteration": "int (global iteration counter for workflow state)",
+      "details": "Dict containing job_id, submission_status, and submission_time"
+    },
+    "example": {
+      "node": "runner",
+      "timestamp": "2025-01-02T14:31:05Z",
+      "action": "job_submitted",
+      "iteration": 0,
+      "details": {
+        "job_id": "12345678",
+        "submission_status": "submitted",
+        "submission_time": "2025-01-02T14:31:05Z",
+        "executable_path": "/path/AMReX/Tests/Amr/Advection_AmrCore/AMReX.ex",
+        "submit_script_path": "/scratch/runs/run_20250102_143100/submit.sh"
+      }
+    }
+  },
+  "critical_bug_fixes": [
+    {
+      "bug_id": 1,
+      "title": "Missing baseline metadata needed for executable location",
+      "requirement": "Architect MUST provide baseline.local_path for runner to find case directory",
+      "consequence": "If baseline missing, runner cannot find executable or compilation target",
+      "source_contract": "architect_node_contract.json"
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "job_submission",
+      "description": "Job submitted successfully to SLURM",
+      "markers": [
+        "@pytest.mark.integration",
+        "@pytest.mark.use_real_services"
+      ],
+      "input": {
+        "run_directory": "/scratch/runs/test_run",
+        "inputs_file_path": "/scratch/runs/test_run/inputs",
+        "workflow_history": [
+          {
+            "node": "architect",
+            "details": {
+              "baseline": {
+                "code_name": "AMReX",
+                "repo_path": "/path/AMReX",
+                "local_path": "/path/AMReX/Tests/Amr/Advection_AmrCore"
+              }
+            }
+          }
+        ]
+      },
+      "assertions": [
+        "result['mode'] == 'proceed'",
+        "result['job_id']",
+        "result['job_status'] in ['queued', 'running', 'completed', 'failed']",
+        "result['workflow_history'][-1]['node'] == 'runner'",
+        "result['workflow_history'][-1]['action'] == 'job_submitted'",
+        "result['workflow_history'][-1]['details']['submission_status'] == 'submitted'"
+      ]
+    }
+  ],
+  "schema_compliance_checklist": [
+    {
+      "field": "job_id and job_status",
+      "requirement": "MUST be at top level for control flow and polling",
+      "canonical_format": "job_id: str, job_status: one of queued/running/completed/failed",
+      "violation_consequence": "Cannot track job execution or poll for completion"
+    },
+    {
+      "field": "workflow_history[-1]['details']",
+      "requirement": "Must contain detailed submission information",
+      "canonical_format": "See execution_result_structure",
+      "violation_consequence": "Audit trail incomplete, cannot reproduce job submission"
+    }
+  ]
+}

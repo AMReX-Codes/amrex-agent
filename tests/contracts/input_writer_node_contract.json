@@ -1,0 +1,175 @@
+{
+  "version": "1.0",
+  "node_name": "input_writer",
+  "description": "File generation node that creates simulation input files from the validated plan",
+  "canonical_schema_version": "1.0",
+  "philosophy": "Intent-driven contract with computation output in workflow_history.details only",
+  "required_inputs": {
+    "workflow_history": "List[Dict] (must contain architect plan and reviewer approval)",
+    "config": "AMReXAgentConfig (runtime configuration with file paths)",
+    "data_source_architecture": {
+      "plan_data": "READ by searching: next(e for e in workflow_history if e['node'] == 'architect')['details']",
+      "expected_fields_from_architect": [
+        "selected_case",
+        "modifications",
+        "baseline"
+      ],
+      "approval_data": "READ by searching: next(e for e in workflow_history if e['node'] == 'reviewer')['details']",
+      "expected_approval_field": "status == 'approved'",
+      "NOT_from_top_level": "Do NOT look for selected_case, modifications at top level - they're only in workflow_history"
+    }
+  },
+  "state_updates_returned": {
+    "description": "Dual validation paths: canonical (workflow_history) + pragmatic (state convenience)",
+    "utility_flags_top_level_REQUIRED": {
+      "mode": "Literal['proceed', 'retry', 'fail']",
+      "iteration": "int (preserved from input state)",
+      "workflow_history": "List[Dict] (append new generation entry)"
+    },
+    "canonical_data_location_PRIMARY": {
+      "path": "workflow_history[-1]['details']",
+      "contains": [
+        "run_directory",
+        "inputs_file_path",
+        "status",
+        "modifications_applied"
+      ],
+      "purpose": "Source of truth for file generation audit trail"
+    },
+    "pragmatic_data_location_OPTIONAL": {
+      "path": "top-level state",
+      "allowed_fields": [
+        "run_directory",
+        "inputs_file_path"
+      ],
+      "constraint": "Must match workflow_history.details if present",
+      "purpose": "Convenience for runner node (can read from state OR workflow_history)"
+    }
+  },
+  "computation_output_location": "workflow_history[-1]['details'] PRIMARY, state optional",
+  "note": "Generation results go in workflow_history.details (source of truth), state can have convenience copies for runner",
+  "generation_result_structure": {
+    "description": "File generation results stored in workflow_history[-1]['details']",
+    "required_fields": {
+      "run_directory": "str (path to generated simulation directory)",
+      "inputs_file_path": "str (path to generated inputs file)",
+      "status": "Literal['success', 'failed', 'partial']",
+      "modifications_applied": "int (count of parameter modifications applied)"
+    },
+    "optional_fields": {
+      "file_size_bytes": "int (size of generated inputs file)",
+      "validation_errors": "List[str] (any issues found in generated files)",
+      "file_hash": "str (SHA256 of inputs file for reproducibility)"
+    }
+  },
+  "workflow_history_entry_CANONICAL": {
+    "description": "Canonical workflow_history entry for input_writer node",
+    "required_fields": {
+      "node": "Literal['input_writer'] (identifies which node created this entry)",
+      "timestamp": "str (ISO 8601 format with Z suffix, UTC)",
+      "action": "Literal['inputs_generated'] (indicates input file generation)",
+      "iteration": "int (global iteration counter for workflow state)",
+      "details": "Dict containing run_directory, inputs_file_path, and generation status"
+    },
+    "example": {
+      "node": "input_writer",
+      "timestamp": "2025-01-02T14:31:00Z",
+      "action": "inputs_generated",
+      "iteration": 0,
+      "details": {
+        "run_directory": "/scratch/runs/run_20250102_143100",
+        "inputs_file_path": "/scratch/runs/run_20250102_143100/inputs",
+        "status": "success",
+        "modifications_applied": 2,
+        "file_size_bytes": 4234,
+        "file_hash": "abc123def456",
+        "applied_modifications": [
+          [
+            "amr.n_cell",
+            "64 64 64"
+          ],
+          [
+            "amr.max_level",
+            "3"
+          ]
+        ]
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "id": "successful_generation",
+      "description": "Inputs file generated successfully with all modifications",
+      "markers": [
+        "@pytest.mark.integration",
+        "@pytest.mark.use_real_services"
+      ],
+      "input": {
+        "workflow_history": [
+          {
+            "node": "architect",
+            "details": {
+              "selected_case": "Tests/Amr/Advection_AmrCore",
+              "modifications": [
+                [
+                  "amr.n_cell",
+                  "64 64 64"
+                ]
+              ],
+              "baseline": {
+                "code_name": "AMReX",
+                "repo_path": "/path/AMReX",
+                "case_path": "Tests/Amr/Advection_AmrCore",
+                "local_path": "/path/AMReX/Tests/Amr/Advection_AmrCore"
+              }
+            }
+          },
+          {
+            "node": "reviewer",
+            "details": {
+              "status": "approved",
+              "validation_passed": true
+            }
+          }
+        ]
+      },
+      "assertions": [
+        "result['mode'] == 'proceed'",
+        "result['run_directory']",
+        "result['inputs_file_path']",
+        "result['workflow_history'][-1]['node'] == 'input_writer'",
+        "result['workflow_history'][-1]['action'] == 'inputs_generated'",
+        "result['workflow_history'][-1]['details']['status'] == 'success'",
+        "result['workflow_history'][-1]['details']['modifications_applied'] > 0",
+        "os.path.exists(result['run_directory'])",
+        "os.path.exists(result['inputs_file_path'])"
+      ]
+    }
+  ],
+  "critical_dependencies": [
+    {
+      "dependency": "Architect provides complete baseline metadata",
+      "consequence": "Input writer needs baseline.local_path to locate template files",
+      "source_contract": "architect_node_contract.json - baseline_structure_CRITICAL"
+    },
+    {
+      "dependency": "Reviewer approves plan",
+      "consequence": "Input writer should only run if reviewer.status == 'approved'",
+      "source_contract": "reviewer_node_contract.json - mode_transition_rules"
+    }
+  ],
+  "schema_compliance_checklist": [
+    {
+      "field": "run_directory and inputs_file_path",
+      "requirement": "ONLY at top level, REQUIRED for downstream nodes",
+      "canonical_format": "Absolute filesystem paths, created before returning",
+      "violation_consequence": "Runner cannot find files for execution"
+    },
+    {
+      "field": "workflow_history[-1]['details']",
+      "requirement": "Must contain generation results and applied modifications",
+      "canonical_format": "See generation_result_structure",
+      "violation_consequence": "Audit trail incomplete, cannot reproduce generated inputs"
+    }
+  ]
+}

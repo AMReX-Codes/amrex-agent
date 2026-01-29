@@ -1,0 +1,227 @@
+{
+  "version": "1.0",
+  "node_name": "reviewer",
+  "description": "Validation node that analyzes proposed plan for errors and feasibility before execution",
+  "canonical_schema_version": "1.0",
+  "philosophy": "Intent-driven contract with computation output in workflow_history.details only",
+  "required_inputs": {
+    "workflow_history": "List[Dict] (MUST contain architect entry where plan results are stored)",
+    "config": "AMReXAgentConfig (runtime configuration)",
+    "data_source_architecture": {
+      "plan_inputs": "READ from workflow_history[-1]['details'] where architect stored: selected_case, modifications, baseline",
+      "NOT_from_top_level": "Do NOT try to read selected_case, modifications from top-level state (not there by design)",
+      "enforcement": "If trying to access result['selected_case'] at top level, it will be None/missing - this enforces the architecture"
+    }
+  },
+  "state_updates_returned": {
+    "description": "Dual validation paths: canonical (workflow_history) + pragmatic (state convenience copies)",
+    "utility_flags_top_level_REQUIRED": {
+      "mode": "Literal['proceed', 'retry', 'fail'] (control flow: next node, reflexion loop, or terminal)",
+      "iteration": "int (preserved from input state)",
+      "workflow_history": "List[Dict] (append new validation entry)"
+    },
+    "canonical_data_location_PRIMARY": {
+      "path": "workflow_history[-1]['details']",
+      "contains": [
+        "status",
+        "errors",
+        "warnings",
+        "validation_passed"
+      ],
+      "purpose": "Source of truth for validation decisions"
+    },
+    "pragmatic_data_location_OPTIONAL": {
+      "path": "top-level state",
+      "allowed_fields": [
+        "review_analysis",
+        "errors_active",
+        "errors_found",
+        "errors_fixed"
+      ],
+      "constraint": "Must match workflow_history.details if present"
+    }
+  },
+  "computation_output_location": "workflow_history[-1]['details'] PRIMARY, state optional",
+  "note": "Review results go in workflow_history.details (source of truth), state can have convenience copies",
+  "review_analysis_structure": {
+    "description": "Validation assessment stored in workflow_history[-1]['details']",
+    "required_fields": {
+      "status": "Literal['approved', 'rejected', 'needs_changes']",
+      "errors": "List[str] (blocking issues that must be fixed)",
+      "warnings": "List[str] (non-blocking issues to note)",
+      "validation_passed": "bool (all required validations succeeded)"
+    },
+    "optional_fields": {
+      "suggested_fixes": "List[Dict] (recommendations for fixing errors)",
+      "resource_estimate": "Dict (memory, nodes, walltime predictions)",
+      "confidence_score": "float (0-1, confidence in proposed plan)"
+    }
+  },
+  "workflow_history_entry_CANONICAL": {
+    "description": "Canonical workflow_history entry for reviewer node",
+    "required_fields": {
+      "node": "Literal['reviewer'] (identifies which node created this entry)",
+      "timestamp": "str (ISO 8601 format with Z suffix, UTC)",
+      "action": "Literal['validation_completed'] (indicates review completion)",
+      "iteration": "int (global iteration counter for workflow state)",
+      "details": "Dict containing review_analysis and validation results"
+    },
+    "example": {
+      "node": "reviewer",
+      "timestamp": "2025-01-02T14:30:50Z",
+      "action": "validation_completed",
+      "iteration": 0,
+      "details": {
+        "status": "approved",
+        "errors": [],
+        "warnings": [
+          "case_path contains underscore, may need escaping"
+        ],
+        "validation_passed": true,
+        "error_count": 0,
+        "warning_count": 1,
+        "confidence_score": 0.95,
+        "reviewed_plan": {
+          "selected_case": "Tests/Amr/Advection_AmrCore",
+          "modifications_count": 2
+        }
+      }
+    }
+  },
+  "mode_transition_rules": {
+    "approved": {
+      "output_mode": "proceed",
+      "description": "Plan passes all validations, ready for execution"
+    },
+    "needs_changes": {
+      "output_mode": "retry",
+      "description": "Plan has non-blocking issues; offer suggestions and retry"
+    },
+    "rejected": {
+      "output_mode": "fail",
+      "description": "Plan has blocking errors, cannot proceed"
+    }
+  },
+  "validation_checks": [
+    {
+      "id": "parameters_valid",
+      "description": "Each modification tuple has correct format",
+      "rule": "All items in modifications are 2-tuples of (str, str)",
+      "error_if_fails": "Modification format invalid",
+      "severity": "error"
+    },
+    {
+      "id": "parameters_recognized",
+      "description": "Parameter names are recognized AMReX parameters",
+      "rule": "Check against known_parameters list",
+      "error_if_fails": "Unknown parameter",
+      "severity": "warning"
+    },
+    {
+      "id": "case_accessible",
+      "description": "Specified case exists in repository",
+      "rule": "Check baseline.local_path exists and is directory",
+      "error_if_fails": "Case directory not found",
+      "severity": "error"
+    },
+    {
+      "id": "makefile_present",
+      "description": "Case directory contains GNUmakefile",
+      "rule": "Check for GNUmakefile in case directory",
+      "error_if_fails": "Case directory missing GNUmakefile",
+      "severity": "error"
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "valid_plan",
+      "description": "Valid plan passes all reviews",
+      "markers": [
+        "@pytest.mark.integration"
+      ],
+      "input": {
+        "workflow_history": [
+          {
+            "node": "architect",
+            "timestamp": "2025-01-02T14:30:45Z",
+            "action": "plan_created",
+            "iteration": 0,
+            "details": {
+              "selected_case": "Tests/Amr/Advection_AmrCore",
+              "modifications": [
+                [
+                  "amr.n_cell",
+                  "64 64 64"
+                ]
+              ],
+              "baseline": {
+                "code_name": "AMReX",
+                "repo_path": "/path/AMReX",
+                "case_path": "Tests/Amr/Advection_AmrCore",
+                "local_path": "/path/AMReX/Tests/Amr/Advection_AmrCore"
+              }
+            }
+          }
+        ]
+      },
+      "assertions": [
+        "result['mode'] == 'proceed'",
+        "result['workflow_history'][-1]['node'] == 'reviewer'",
+        "result['workflow_history'][-1]['details']['status'] == 'approved'",
+        "result['workflow_history'][-1]['details']['validation_passed'] == true",
+        "result['workflow_history'][-1]['details']['error_count'] == 0"
+      ]
+    },
+    {
+      "id": "missing_case",
+      "description": "Plan references non-existent case",
+      "markers": [
+        "@pytest.mark.integration"
+      ],
+      "input": {
+        "workflow_history": [
+          {
+            "node": "architect",
+            "timestamp": "2025-01-02T14:30:45Z",
+            "action": "plan_created",
+            "iteration": 0,
+            "details": {
+              "selected_case": "NonExistent/Case",
+              "modifications": [],
+              "baseline": {
+                "local_path": "/nonexistent/path"
+              }
+            }
+          }
+        ]
+      },
+      "assertions": [
+        "result['mode'] == 'fail'",
+        "result['workflow_history'][-1]['details']['status'] == 'rejected'",
+        "result['workflow_history'][-1]['details']['validation_passed'] == false",
+        "len(result['workflow_history'][-1]['details']['errors']) > 0"
+      ]
+    }
+  ],
+  "critical_dependencies": [
+    {
+      "dependency": "Architect provides baseline metadata",
+      "consequence": "Reviewer cannot validate case accessibility without baseline.local_path",
+      "source_contract": "architect_node_contract.json - baseline_structure_CRITICAL"
+    }
+  ],
+  "schema_compliance_checklist": [
+    {
+      "field": "Top-level state",
+      "requirement": "Must contain ONLY: mode, iteration, retry_count, workflow_history",
+      "canonical_format": "No review_analysis, errors, or warnings at top level",
+      "violation_consequence": "Violates separation of concerns"
+    },
+    {
+      "field": "workflow_history[-1]['details']",
+      "requirement": "Must contain review_analysis and all validation details",
+      "canonical_format": "See review_analysis_structure and workflow_history_entry_CANONICAL",
+      "violation_consequence": "Audit trail incomplete"
+    }
+  ]
+}

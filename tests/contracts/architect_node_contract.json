@@ -1,0 +1,307 @@
+{
+  "version": "1.0",
+  "node_name": "architect",
+  "description": "Planning node that selects simulation case and parameters based on user prompt",
+  "canonical_schema_version": "1.0",
+  "philosophy": "Intent-driven contract defining REQUIRED outputs to fix known bugs",
+  "required_inputs": {
+    "prompt": "string (user's natural language request)",
+    "config": "AMReXAgentConfig (runtime configuration with indexing_strategy)",
+    "note_on_state_pollution": "architect_node reads from top-level inputs (prompt, config) ONLY. No downstream node should read computation output from top-level state."
+  },
+  "required_outputs": {
+    "description": "Dual validation paths: canonical (workflow_history source of truth) + pragmatic (state convenience copies)",
+    "utility_flags_top_level_REQUIRED": {
+      "mode": "Literal['proceed', 'fail'] (control flow indicator, next node or terminal)",
+      "iteration": "int (preserved from input state)",
+      "workflow_history": "List[Dict] (immutable append-only audit trail)"
+    },
+    "canonical_data_location_PRIMARY": {
+      "path": "workflow_history[-1]['details']",
+      "contains": [
+        "selected_case",
+        "modifications",
+        "reasoning",
+        "baseline",
+        "indexing_strategy",
+        "indexing_calls_count"
+      ],
+      "purpose": "Source of truth for audit trail, reproducibility, debugging",
+      "validation_mode": "strict"
+    },
+    "pragmatic_data_location_OPTIONAL": {
+      "path": "top-level state",
+      "allowed_fields": [
+        "selected_case",
+        "modifications",
+        "reasoning",
+        "baseline",
+        "plan"
+      ],
+      "purpose": "Convenience copies for performance/ease-of-use",
+      "constraint": "Must match workflow_history.details if present",
+      "validation_mode": "permissive",
+      "note": "Fallback path for debugging if state is corrupted or polluted"
+    }
+  },
+  "state_updates_returned": {
+    "description": "Dict returned by architect_node updates state with only these fields",
+    "mode": "Literal['proceed', 'fail']",
+    "iteration": "int",
+    "retry_count": "int (optional, if incrementing)",
+    "workflow_history": "List[Dict] (append new entry with planning results)"
+  },
+  "baseline_structure_CRITICAL": {
+    "description": "FIX #1: Architect must compute and return baseline metadata. Runner cannot find executable without it.",
+    "required_fields": {
+      "code_name": "string (e.g., 'AMReX', 'ERF')",
+      "repo_path": "string (absolute path to code repository)",
+      "case_path": "string (repo-relative path to case, e.g., 'Tests/Amr/Advection_AmrCore')",
+      "local_path": "string (absolute filesystem path: repo_path + case_path)"
+    },
+    "example": {
+      "code_name": "AMReX",
+      "repo_path": "/home/user/codes/AMReX",
+      "case_path": "Tests/Amr/Advection_AmrCore",
+      "local_path": "/home/user/codes/AMReX/Tests/Amr/Advection_AmrCore"
+    }
+  },
+  "optional_outputs": {
+    "plan": "Dict (combined plan object for backwards compatibility with input_writer)",
+    "case_candidates": "List[Dict] (top FAISS search results)",
+    "baseline_confidence": "float (similarity score 0-1)"
+  },
+  "workflow_history_entry_CANONICAL": {
+    "description": "FIX #7: All nodes must use canonical workflow_history format. Computation output stored ONLY here, not in top-level state",
+    "required_fields": {
+      "node": "string ('architect')",
+      "timestamp": "string (ISO 8601 with 'Z' suffix, e.g., '2025-01-01T12:00:00Z')",
+      "action": "string ('plan_created' or 'planning_failed')",
+      "iteration": "int (retry attempt number, 0-indexed)",
+      "details": "Dict[str, Any] (CONTAINS all computation output for this planning step)"
+    },
+    "details_computation_output": {
+      "selected_case": "string (repo-relative path, e.g., 'Tests/Amr/Advection_AmrCore')",
+      "modifications": "List[tuple] (parameter changes, e.g., [('amr.n_cell', '64 64 64')])",
+      "reasoning": "string (human-readable explanation of selection)",
+      "baseline": "Dict (code_name, repo_path, case_path, local_path)"
+    },
+    "details_execution_metadata": {
+      "indexing_strategy": "string ('simple', 'hierarchical', or 'override_static')",
+      "indexing_calls_count": "int (number of search operations performed, can be 0)",
+      "top_candidate_score": "float (confidence of selected case, 0-1)"
+    },
+    "example": {
+      "node": "architect",
+      "timestamp": "2025-01-02T14:30:45Z",
+      "action": "plan_created",
+      "iteration": 0,
+      "details": {
+        "selected_case": "Tests/Amr/Advection_AmrCore",
+        "modifications": [
+          [
+            "amr.n_cell",
+            "64 64 64"
+          ],
+          [
+            "amr.max_level",
+            "3"
+          ]
+        ],
+        "reasoning": "Selected Advection_AmrCore case because user requested an AMReX test problem",
+        "baseline": {
+          "code_name": "AMReX",
+          "repo_path": "/home/user/codes/AMReX",
+          "case_path": "Tests/Amr/Advection_AmrCore",
+          "local_path": "/home/user/codes/AMReX/Tests/Amr/Advection_AmrCore"
+        },
+        "indexing_strategy": "simple",
+        "indexing_calls_count": 1,
+        "top_candidate_score": 0.92
+      }
+    }
+  },
+  "behavior_contracts": {
+    "simple_indexing": {
+      "description": "Development approach: single FAISS search, proven to work e2e",
+      "marker": "@pytest.mark.indexing_simple",
+      "expected_execution": "Calls create_plan() from architect service",
+      "top_level_state_updates": [
+        "mode",
+        "iteration",
+        "workflow_history"
+      ],
+      "computation_output_location": "workflow_history[-1]['details']",
+      "workflow_action": "plan_created",
+      "indexing_detail_calls": 1,
+      "validation_rules": [
+        "workflow_history[-1]['details']['baseline']['code_name'] must be non-empty",
+        "workflow_history[-1]['details']['baseline']['repo_path'] must be absolute filesystem path",
+        "workflow_history[-1]['details']['baseline']['local_path'] must equal repo_path + '/' + case_path",
+        "workflow_history[-1]['details']['selected_case'] must not be empty",
+        "workflow_history[-1]['details']['reasoning'] must be substantive (>50 chars)"
+      ]
+    },
+    "hierarchical_indexing": {
+      "description": "Experimental approach: L0/L1/L2 hierarchical search, under comparative testing",
+      "marker": "@pytest.mark.indexing_hierarchical",
+      "expected_execution": "Calls create_plan_rag() from architect service",
+      "top_level_state_updates": [
+        "mode",
+        "iteration",
+        "workflow_history"
+      ],
+      "computation_output_location": "workflow_history[-1]['details']",
+      "optional_top_level": [
+        "plan",
+        "case_candidates",
+        "baseline_confidence"
+      ],
+      "workflow_action": "plan_created",
+      "indexing_detail_calls": 3,
+      "validation_rules": [
+        "workflow_history[-1]['details']['baseline']['code_name'] must be non-empty",
+        "workflow_history[-1]['details']['baseline']['repo_path'] must be absolute filesystem path",
+        "workflow_history[-1]['details']['baseline']['local_path'] must equal repo_path + '/' + case_path",
+        "workflow_history[-1]['details'] must contain 'case_candidates' or reference to candidates",
+        "workflow_history[-1]['details']['indexing_strategy'] must be 'hierarchical'",
+        "workflow_history[-1]['details']['indexing_calls_count'] >= 1"
+      ]
+    }
+  },
+  "test_cases": [
+    {
+      "id": "simple_2d_flame",
+      "description": "Simple indexing: 2D flame simulation request",
+      "markers": [
+        "@pytest.mark.integration",
+        "@pytest.mark.indexing_simple"
+      ],
+      "input": {
+        "prompt": "Run 2D premixed flame simulation with PMF case",
+        "config": {
+          "indexing_strategy": "simple"
+        }
+      },
+      "expected_mode": "proceed",
+      "computation_output_in_workflow_history": true,
+      "assertions": [
+        "result['mode'] == 'proceed'",
+        "len(result['workflow_history']) > 0",
+        "result['workflow_history'][-1]['node'] == 'architect'",
+        "result['workflow_history'][-1]['action'] == 'plan_created'",
+        "result['workflow_history'][-1]['details']['selected_case'].startswith('Exec/')",
+        "isinstance(result['workflow_history'][-1]['details']['baseline'], dict)",
+        "result['workflow_history'][-1]['details']['baseline'].get('code_name') == 'AMReX'",
+        "result['workflow_history'][-1]['details']['baseline'].get('repo_path')",
+        "result['workflow_history'][-1]['details']['baseline'].get('local_path')",
+        "result['workflow_history'][-1]['details']['indexing_strategy'] == 'simple'",
+        "isinstance(result['workflow_history'][-1]['details']['modifications'], list)",
+        "len(result['workflow_history'][-1]['details']['reasoning']) > 50"
+      ]
+    },
+    {
+      "id": "hierarchical_2d_flame",
+      "description": "Hierarchical indexing: 2D flame simulation request with L0/L1/L2",
+      "markers": [
+        "@pytest.mark.integration",
+        "@pytest.mark.indexing_hierarchical"
+      ],
+      "input": {
+        "prompt": "Run 2D premixed flame simulation with PMF case",
+        "config": {
+          "indexing_strategy": "hierarchical"
+        }
+      },
+      "expected_mode": "proceed",
+      "computation_output_in_workflow_history": true,
+      "assertions": [
+        "result['mode'] == 'proceed'",
+        "len(result['workflow_history']) > 0",
+        "result['workflow_history'][-1]['node'] == 'architect'",
+        "result['workflow_history'][-1]['action'] == 'plan_created'",
+        "result['workflow_history'][-1]['details']['selected_case'].startswith('Exec/')",
+        "isinstance(result['workflow_history'][-1]['details']['baseline'], dict)",
+        "result['workflow_history'][-1]['details']['baseline'].get('code_name') == 'AMReX'",
+        "result['workflow_history'][-1]['details']['baseline'].get('repo_path')",
+        "result['workflow_history'][-1]['details']['baseline'].get('local_path')",
+        "result['workflow_history'][-1]['details']['indexing_strategy'] == 'hierarchical'",
+        "result['workflow_history'][-1]['details']['indexing_calls_count'] >= 1",
+        "isinstance(result['workflow_history'][-1]['details']['modifications'], list)",
+        "len(result['workflow_history'][-1]['details']['reasoning']) > 50"
+      ]
+    },
+    {
+      "id": "simple_fallback",
+      "description": "Hierarchical fails gracefully and falls back to simple",
+      "markers": [
+        "@pytest.mark.integration",
+        "@pytest.mark.indexing_hierarchical"
+      ],
+      "input": {
+        "prompt": "Invalid/ambiguous prompt that might fail hierarchical",
+        "config": {
+          "indexing_strategy": "hierarchical",
+          "fallback_to_simple_on_error": true
+        }
+      },
+      "expected_mode": "proceed",
+      "computation_output_in_workflow_history": true,
+      "assertions": [
+        "result['mode'] == 'proceed'",
+        "len(result['workflow_history']) > 0",
+        "result['workflow_history'][-1]['details']['selected_case']",
+        "result['workflow_history'][-1]['details']['baseline'].get('local_path')",
+        "result['workflow_history'][-1]['details']['indexing_strategy'] == 'simple'"
+      ]
+    }
+  ],
+  "critical_bug_fixes": [
+    {
+      "bug_id": 1,
+      "title": "Missing baseline metadata (runner cannot find executable)",
+      "requirement": "architect_node MUST return baseline dict with code_name, repo_path, case_path, local_path",
+      "validation_in_contract": "baseline_structure_CRITICAL section",
+      "test_case": "simple_2d_flame and hierarchical_2d_flame"
+    },
+    {
+      "bug_id": 4,
+      "title": "Plan dict format mismatch (confusing API between services)",
+      "requirement": "execute_planning() normalizes both create_plan() and create_plan_rag() outputs to canonical format",
+      "validation_in_contract": "required_outputs section (selected_case, modifications at top level)",
+      "test_case": "All test cases"
+    }
+  ],
+  "schema_compliance_checklist": [
+    {
+      "field": "workflow_history[-1]['details'] (CANONICAL PATH - MUST HAVE)",
+      "requirement": "Must contain ALL computation output: selected_case, modifications (full list), reasoning (full), baseline, indexing_strategy, indexing_calls_count",
+      "canonical_format": "See details_computation_output and details_execution_metadata sections",
+      "violation_consequence": "Audit trail incomplete, reproducibility broken, debugging impossible"
+    },
+    {
+      "field": "Top-level state (PRAGMATIC PATH - OPTIONAL)",
+      "requirement": "CAN have convenience copies of: selected_case, modifications, reasoning, baseline, plan. Must match workflow_history.details if present.",
+      "canonical_format": "Same structure as workflow_history.details, OR OMITTED entirely",
+      "violation_consequence": "Confusion, but audit trail (canonical path) remains valid. Downstream nodes must prefer workflow_history."
+    },
+    {
+      "field": "workflow_history",
+      "requirement": "Must be immutable append-only list with canonical entry format (node, timestamp, action, iteration, details)",
+      "canonical_format": "See workflow_history_entry_CANONICAL",
+      "violation_consequence": "Audit trail breaks, cannot replay workflow"
+    },
+    {
+      "field": "baseline (in workflow_history.details)",
+      "requirement": "MUST be computed by architect and stored in workflow_history[-1]['details']['baseline']",
+      "canonical_format": "See baseline_structure_CRITICAL with code_name, repo_path, case_path, local_path",
+      "violation_consequence": "Runner cannot find executable path [BUG #1]"
+    },
+    {
+      "field": "indexing metadata (in workflow_history.details)",
+      "requirement": "MUST include indexing_strategy and indexing_calls_count for comparative testing",
+      "canonical_format": "indexing_strategy: 'simple'|'hierarchical'|'override_static', indexing_calls_count: int >= 0",
+      "violation_consequence": "Cannot compare strategies or debug indexing performance"
+    }
+  ]
+}

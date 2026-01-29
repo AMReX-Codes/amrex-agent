@@ -1,0 +1,158 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amrex-agent"
+version = "2.0.0"
+description = "AI agent for AMReX-based simulation setup"
+requires-python = ">=3.11"
+authors = [
+    {name = "Jean M. Sexton", email = "jmsexton@lbl.gov"}
+]
+readme = "README.md"
+keywords = ["simulation", "AMReX", "multiphysics", "HPC", "AI"]
+
+[tool.amrex_agent]
+dependency_file = "environment.yaml"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = [".git", ".worktrees", "tools", "src", "reports", "*.egg-info", "_archive*", "__pycache__"]
+python_files = "test_*.py"
+python_functions = "test_*"
+python_classes = "Test*"
+addopts = [
+    "-v",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--tb=short",
+    "--strict-markers",
+    "--durations=10",
+]
+markers = [
+    "unit: Unit tests (fast, isolated, mocked)",
+    "functional: Unit tests exercising real components with minimal mocks",
+    "mocked: Unit tests primarily using mocks or fakes",
+    "e2e: End-to-end demo-driven smoke tests",
+    "demo: Demo flows exercised via pytest",
+    "disable_validators: Set PELE_DISABLED_VALIDATORS for test runs",
+    "integration: Integration tests requiring external resources",
+    "timeout: Per-test timeout (pytest-timeout compatibility)",
+    "integration_l1: Architect + Reviewer (State Logic)",
+    "integration_l2: + InputWriter (Filesystem I/O)",
+    "integration_l3: + Analysis/Visualization (Output Parsing)",
+    "integration_l4: + Runner (Execution/Shim)",
+    "integration_full: L5 full pipeline tests",
+    "architect_solver_selection: Architect Service - Solver Selection",
+    "architect_context_retrieval: Architect Service - Context Retrieval",
+    "architect_baseline_selection: Architect Service - Baseline Selection",
+    "architect_modification_planning: Architect Service - Modification Planning",
+    "architect_orchestration: Architect Service - Orchestration Logic",
+    "architect_llm_planning: Architect Service - LLM Planning",
+    "input_writer_schema_scraper: Input Writer - Schema Scraper",
+    "input_writer_config_model_factory: Input Writer - Config Model Hydration tests",
+    "input_writer_rule_engine: Input Writer - Rule Engine tests",
+    "input_writer_inputs_file_writer: Input Writer - Inputs File Writer tests",
+    "input_writer_rule_engine_orchestrator: Input Writer - Rule Engine Orchestrator tests",
+    "input_writer_schema_composition: Input Writer - Schema Composition & Dependency Discovery",
+    "technical_debt: Marks legacy code needing refactor (tracked but not blocking)",
+    "performance: marks tests as performance/latency tests (skipped if indices not built)",
+    "architecture: Architectural compliance tests (enforce design patterns)",
+    "quality: Data quality tests (validate metadata consistency)",
+    "real_repos: Tests against ../PeleC, ../warpx (auto-skip if not found)",
+    "requires_filesystem: Tests that create files/directories",
+    "slow: Slower integration tests (may be skipped in CI)",
+    "skip: Skipped tests (use sparingly)",
+    "use_real_services: Run tests with real services (not mocked)",
+    "use_mock_services: Run tests with mocked services (default, fast)",
+    "requires_repos: Tests require solver repositories to be available",
+    "requires_schema: Tests require schema files to be available",
+    "indexing_simple: Use simple indexing strategy (development approach, proven e2e)",
+    "indexing_hierarchical: Use hierarchical indexing strategy (L0/L1/L2, experimental)",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/demo/*",
+    "*/demo_*.py",
+    "*/database/*",
+    "*/docs/*",
+    "*/tools/*",
+    "*/test_langgraph_streaming.py",
+    "*/mcp_server.py",
+]
+branch = true
+relative_files = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_any_generics = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_equality = true
+follow_imports = "normal"
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["faiss.*", "langchain.*", "anthropic.*", "utils.pele_tools.*", "amrex_tools.*"]
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+  | __pycache__
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP", "B", "C4", "SIM", "D"]
+ignore = ["E501", "B008", "C901", "D100", "D104", "D105"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["F401", "F811"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "amrex_tools", "utils"]

@@ -1,0 +1,32 @@
+# Default configuration overrides for AMReX Agent
+# This file is optional. Keys here override AMReXAgentConfig defaults.
+
+# Indexing / retrieval
+# Options: simple, hierarchical, override_static
+indexing_strategy: simple
+# For override_static runs, set:
+# indexing_strategy: override_static
+faiss_semantic_weight: 0.5
+faiss_fallback_to_llm: true
+faiss_topk: 3
+
+# Embeddings / vector store
+embedding_provider: cborg
+vector_store_backend: auto
+faiss_embedding_model: text-embedding-3-small
+
+# Inputs selection
+inputs_file_strategy: newest
+inputs_file_override: null
+
+# Baseline override (optional)
+baseline_override: null
+# For override_static runs, set:
+# baseline_override: AMReX/Tests/Amr/Advection_AmrCore/Exec
+
+# Execution
+allow_local_run: true
+max_iterations: 3
+
+# Output
+output_dir: output

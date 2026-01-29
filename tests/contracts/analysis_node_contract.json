@@ -1,0 +1,157 @@
+{
+  "version": "1.0",
+  "node_name": "analysis",
+  "description": "Post-execution analysis node that processes simulation results and generates diagnostics",
+  "canonical_schema_version": "1.0",
+  "philosophy": "Intent-driven contract with computation output in workflow_history.details only",
+
+  "required_inputs": {
+    "workflow_history": "List[Dict] (for job_id/status AND run_directory)",
+
+    "data_source_architecture": {
+      "job_id": "READ from workflow_history (runner entry)['details']['job_id']",
+      "job_submission_status": "READ from workflow_history (runner entry)['details']['submission_status']",
+      "run_directory": "READ from workflow_history (input_writer entry)['details']['run_directory']",
+      "enforcement": "Do NOT look for job_id in top-level state - only in workflow_history"
+    }
+  },
+
+  "state_updates_returned": {
+    "description": "Dual validation paths: canonical (workflow_history) + pragmatic (state convenience)",
+
+    "utility_flags_top_level_REQUIRED": {
+      "mode": "Literal['proceed', 'fail']",
+      "iteration": "int (preserved from input state)",
+      "workflow_history": "List[Dict] (append new analysis entry)"
+    },
+
+    "canonical_data_location_PRIMARY": {
+      "path": "workflow_history[-1]['details']",
+      "contains": ["analysis_report", "job_status"],
+      "purpose": "Source of truth for analysis audit trail"
+    },
+
+    "pragmatic_data_location_OPTIONAL": {
+      "path": "top-level state",
+      "allowed_fields": ["job_status", "analysis_report"],
+      "constraint": "Must match workflow_history.details if present",
+      "purpose": "Convenience for visualization (can read from state OR workflow_history)"
+    }
+  },
+
+  "computation_output_location": "workflow_history[-1]['details'] PRIMARY, state optional",
+  "note": "Analysis results go in workflow_history.details (source of truth), state can have convenience copies for visualization",
+
+  "analysis_report_structure": {
+    "description": "Analysis results stored in workflow_history[-1]['details']['analysis_report']",
+    "required_fields": {
+      "status": "Literal['success', 'failed', 'unstable']",
+      "total_steps": "int (simulation steps completed)",
+      "final_time": "float (final simulation time)"
+    },
+    "optional_fields": {
+      "issues": "List[str] (problems detected)",
+      "warnings": "List[str] (non-critical issues)",
+      "metrics": "Dict (performance metrics)",
+      "suggestions": "List[str] (recommended improvements)"
+    }
+  },
+
+  "workflow_history_entry_CANONICAL": {
+    "description": "Canonical workflow_history entry for analysis node",
+    "required_fields": {
+      "node": "Literal['analysis'] (identifies which node created this entry)",
+      "timestamp": "str (ISO 8601 format with Z suffix, UTC)",
+      "action": "Literal['analysis_completed'] (indicates analysis completion)",
+      "iteration": "int (global iteration counter for workflow state)",
+      "details": "Dict containing analysis_report with full results and metrics"
+    },
+    "example": {
+      "node": "analysis",
+      "timestamp": "2025-01-02T15:00:00Z",
+      "action": "analysis_completed",
+      "iteration": 0,
+      "details": {
+        "analysis_report": {
+          "status": "success",
+          "total_steps": 10000,
+          "final_time": 5.0,
+          "issues": [],
+          "warnings": ["Memory usage peaked at 95% of allocation"],
+          "metrics": {
+            "walltime_seconds": 1234,
+            "steps_per_second": 8.1,
+            "peak_memory_gb": 3.8
+          }
+        },
+        "analysis_duration_seconds": 45
+      }
+    }
+  },
+
+  "test_cases": [
+    {
+      "id": "successful_analysis",
+      "description": "Analysis completes successfully, identifies results",
+      "markers": ["@pytest.mark.integration", "@pytest.mark.use_real_services"],
+      "input": {
+        "job_id": "12345678",
+        "run_directory": "/scratch/runs/test_run",
+        "workflow_history": [
+          {
+            "node": "runner",
+            "details": {"submission_status": "submitted"}
+          }
+        ]
+      },
+      "assertions": [
+        "result['job_status'] in ['completed', 'failed', 'unstable']",
+        "result['workflow_history'][-1]['node'] == 'analysis'",
+        "result['workflow_history'][-1]['action'] == 'analysis_completed'",
+        "result['workflow_history'][-1]['details']['analysis_report']",
+        "'status' in result['workflow_history'][-1]['details']['analysis_report']"
+      ]
+    },
+
+    {
+      "id": "failed_analysis",
+      "description": "Job failed, analysis detects failure",
+      "markers": ["@pytest.mark.integration", "@pytest.mark.use_real_services"],
+      "input": {
+        "job_id": "failed_job_id",
+        "run_directory": "/scratch/runs/failed_run"
+      },
+      "assertions": [
+        "result['job_status'] == 'failed'",
+        "result['workflow_history'][-1]['details']['analysis_report']['status'] == 'failed'"
+      ]
+    }
+  ],
+
+  "schema_compliance_checklist": [
+    {
+      "field": "job_status",
+      "requirement": "MUST be at top level, updated from runner status",
+      "canonical_format": "Literal['completed', 'failed', 'unstable']",
+      "violation_consequence": "Control flow cannot determine next action"
+    },
+    {
+      "field": "analysis_report (optional at top level)",
+      "requirement": "Can be at top level for visualization convenience, ALSO in workflow_history[-1]['details']",
+      "canonical_format": "See analysis_report_structure",
+      "violation_consequence": "Visualization may not have quick access to summary results"
+    },
+    {
+      "field": "workflow_history[-1]['details']['analysis_report']",
+      "requirement": "MUST contain full analysis results for audit trail",
+      "canonical_format": "See analysis_report_structure",
+      "violation_consequence": "Cannot replay analysis or verify conclusions"
+    },
+    {
+      "field": "error_logs",
+      "requirement": "MUST be initialized (in main.py) and appended to",
+      "canonical_format": "List[str] with detailed error messages [FIX #3]",
+      "violation_consequence": "Error tracking breaks, KeyError when appending [BUG #3]"
+    }
+  ]
+}

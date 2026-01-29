@@ -1,0 +1,81 @@
+name: amrex-agent-dev
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # === Core ===
+  - python=3.11
+  - pip
+  
+  # === Scientific Computing ===
+  - numpy>=1.26
+  - pandas>=2.3
+  - matplotlib-base>=3.10
+  - scipy  # Implicit dependency, make explicit
+  - yt  # Visualization backend for plotfiles
+  
+  # === Data & Parsing ===
+  - pyyaml>=6.0
+  - requests>=2.32
+  - beautifulsoup4>=4.14
+  
+  # === AI/ML Infrastructure ===
+  - faiss>=1.9.0  # Vector search (CPU version)
+  - langgraph
+  - langchain>=0.3.27
+  - langchain-community>=0.3.31
+  - langchain-text-splitters>=0.3.11
+  
+  # === LLM Providers ===
+  - anthropic>=0.74
+  - openai  # Via pip below
+  
+  # === Jupyter & Interactive ===
+  - jupyter-ai>=2.31
+  - ipykernel>=7.1
+  - ipython>=9.7
+  - jupytext>=1.18  # Notebook-to-markdown conversion
+  - ipywidgets>=8.1
+  
+  # === Testing & Quality (Gate 0) ===
+  - pytest>=7.4.0
+  - pytest-cov>=4.1.0
+  - pytest-asyncio>=0.21.0
+  - pytest-mock>=3.11.0
+  
+  # === Code Quality (Gate 0-1) ===
+  - mypy>=1.5.0
+  - black>=23.7.0
+  - ruff>=0.0.287
+  
+  # === Type Stubs ===
+  - types-requests
+  - types-pyyaml
+  
+  # === Utilities ===
+  - tqdm>=4.67  # Progress bars
+  - python-dotenv>=1.2  # .env file loading
+  - PyGithub
+  
+  # === Pip-only packages ===
+  - pip:
+      # LangChain integrations (not in conda-forge)
+      - langchain-anthropic>=0.3.22
+      - langchain-openai>=0.3.35
+      - langsmith>=0.4.46
+      - mcp
+      
+      # OpenAI
+      - openai>=1.0
+      - instructor
+      
+      # Document processing (Gate 4)
+      - arxiv>=2.3.1
+      - pymupdf  # PDF parsing
+      
+      # Vector DB alternatives (future)
+      - chromadb  # If we need persistent vector store
+      
+      # Additional utilities
+      - python-json-logger>=4.0  # Structured logging

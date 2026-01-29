@@ -1,0 +1,201 @@
+"""
+Router functions to determine next node in workflow.
+
+Similar to: foamagent/src/router_func.py
+
+These functions examine the GraphState and decide which node to execute next.
+Used by LangGraph's conditional_edges.
+
+Phase 2: Simplified routing using error tracking.
+- Nodes update iteration (not router)
+- Uses errors_active for termination logic
+
+Phase 4 Workflow Routes (Strategy 3):
+1. Architect → Reviewer (pre-execution validation)
+2. Reviewer → Input Writer (approved) OR Architect (rejected, retry)
+3. Input Writer → Runner (always)
+4. Runner → Analysis (always - Phase 4 decision)
+5. Analysis → Visualization (passed) OR Reviewer (failed)
+6. Visualization → END (always)
+"""
+
+from src.models import GraphState
+from langgraph.graph import END
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def route_after_architect(state: GraphState) -> str:
+    """
+    Route after architect node.
+
+    Phase 4: Always proceed to reviewer for pre-execution validation.
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        Next node name: 'reviewer'
+    """
+    logger.debug("\n[ROUTE] Router: Architect → Reviewer (pre-execution validation)")
+    return "reviewer"
+
+
+def route_after_input_writer(state: GraphState) -> str:
+    """
+    Route after input_writer node.
+    
+    Always proceed to runner to setup job directory.
+    
+    Args:
+        state: Current graph state
+        
+    Returns:
+        Next node name: 'runner'
+    """
+    logger.debug("\n[ROUTE] Router: Input Writer → Runner")
+    return "runner"
+
+
+def route_after_runner(state: GraphState) -> str:
+    """
+    Route after runner node.
+
+    Per PRD error handling strategy:
+    - System failures (compilation, permissions) → TERMINAL (END)
+    - Runtime failures (job crashes, physics issues) → RETRYABLE (Analysis)
+
+    System failures cannot be fixed by changing inputs. Runtime failures may be
+    addressable through input modifications discovered during analysis.
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        'analysis' for success or runtime failures, END for system failures
+    """
+    # Check compilation_failed flag first (set by runner node)
+    if state.get("compilation_failed"):
+        logger.error("[ROUTE] Compilation failed (terminal) → END")
+        return END
+    
+    mode = state.get("mode", "fail")
+    error = state.get("error", "")
+    
+    # Also check mode == "terminal" (explicit terminal state)
+    if mode == "terminal":
+        logger.error(f"[ROUTE] Terminal mode → END: {error}")
+        return END
+
+    # Terminal system failures (cannot be fixed by changing inputs)
+    terminal_errors = [
+        "Compilation failed",
+        "Executable resolution failed",
+        "PermissionError",
+        "OSError",
+        "Disk",
+        "No such file"
+    ]
+
+    # Check if error is a terminal system failure
+    if mode == "fail" and any(err in error for err in terminal_errors):
+        logger.error(f"[ROUTE] Terminal system failure → END: {error}")
+        return END
+
+    # All other cases go to analysis (including runtime job failures)
+    # Analysis will determine if failure is retryable
+    if mode == "fail":
+        logger.warning(f"[ROUTE] Runtime failure → Analysis (retryable): {error}")
+        return "analysis"
+
+    # Success case
+    logger.debug("\n[ROUTE] Router: Runner → Analysis (execution succeeded)")
+    return "analysis"
+
+
+def route_after_reviewer(state: GraphState) -> str:
+    """
+    Route after Reviewer validation.
+    
+    Graph Assembly: Routing Logic: Conditional routing logic.
+    - proceed → input_writer
+    - retry (with attempts) → architect
+    - fail or max retries → END
+    """
+    mode = state.get("mode", "fail")
+    retry_count = state.get("retry_count", 0)
+    max_retries = state.get("max_retries", 3)
+    
+    if mode == "proceed":
+        logger.debug("[ROUTE] Reviewer → Input Writer (Approved)")
+        return "input_writer"
+    
+    elif mode == "retry":
+        if retry_count < max_retries:
+            logger.debug(f"[ROUTE] Reviewer → Architect (Retry {retry_count + 1}/{max_retries})")
+            return "architect"
+        else:
+            logger.warning(f"[ROUTE] Reviewer → END (Max retries {max_retries} exceeded)")
+            return END
+    
+    else:  # mode == "fail" or unknown
+        logger.warning(f"[ROUTE] Reviewer → END (Validation Failed: {mode})")
+        return END
+def route_after_analysis(state: GraphState) -> str:
+    """
+    Route after analysis node.
+
+    Phase 4 Decision:
+    - If analysis passed → visualization
+    - If analysis failed → reviewer (for retry loop)
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        Next node name: 'visualization' or 'reviewer'
+    """
+    analysis_report = state.get("analysis_report", {})
+    status = analysis_report.get("status", "unknown")
+
+    if status == "failed":
+        issues = analysis_report.get("issues", [])
+        logger.debug("\n[ROUTE] Router: Analysis → Reviewer (simulation failed)")
+        logger.debug(f"   Issues: {len(issues)}")
+        if len(issues) == 0:
+            logger.warning("[ROUTE] Analysis failure without actionable issues → Reviewer")
+        state["mode"] = "retry"  # Signal post-execution retry
+        return "reviewer"
+
+    logger.debug("\n[ROUTE] Router: Analysis → Visualization (simulation passed)")
+    return "visualization"
+
+
+def route_after_visualization(state: GraphState) -> str:
+    """
+    Route after visualization node.
+
+    Phase 4: Always end workflow after visualization.
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        Next node name: END
+    """
+    images = state.get("visualization_images", [])
+    logger.debug(f"\n[ROUTE] Router: Visualization → END ({len(images)} images generated)")
+    return END
+
+
+# Export for LangGraph
+__all__ = [
+    'route_after_architect',
+    'route_after_input_writer', 
+    'route_after_runner',
+    'route_after_reviewer',
+    'route_after_analysis',
+    'route_after_visualization'
+]
