@@ -190,6 +190,9 @@ class Level1Builder:
     def _save_index(self, documents: List[str], metadata: List[Dict],
                     index_name: str, output_dir: Path):
         """Save FAISS index and metadata."""
+        if hasattr(self.embedder, "expand_documents"):
+            documents, metadata = self.embedder.expand_documents(documents, metadata)
+
         # Embed documents
         embeddings = self.embedder.embed_texts(documents)
         embeddings_array = np.array(embeddings).astype('float32')

@@ -1,0 +1,24 @@
+{
+  "repos": {
+    "amrex": {
+      "url": "https://github.com/AMReX-Codes/amrex.git",
+      "branch": "development",
+      "commit": "33007cb7d8798b53082323275ae70ead3e1e9ffa"
+    },
+    "pelec": {
+      "url": "https://github.com/AMReX-Combustion/PeleC.git",
+      "branch": "development",
+      "commit": "43b12b0a4f6199d04ab81baa14b41a1772e3dd5a"
+    },
+    "pelelmex": {
+      "url": "https://github.com/baperry2/PeleLMeX.git",
+      "branch": "JICF-ModCon",
+      "commit": "7578f85da7bbc8f8e128bd2e02228787d7e30f03"
+    },
+    "erf": {
+      "url": "https://github.com/erf-model/ERF.git",
+      "branch": "development",
+      "commit": "ba2bcac5882fedf31a9f2a63252b39a359e0bbc0"
+    }
+  }
+}

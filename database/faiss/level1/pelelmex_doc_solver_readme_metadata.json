@@ -1,0 +1,49 @@
+[
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "section": "header"
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Overview",
+    "section": "Overview"
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Documentation",
+    "section": "Documentation"
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Installation",
+    "section": "Installation"
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Getting help, contributing",
+    "section": "Getting help, contributing"
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Versioning",
+    "section": "Versioning"
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Acknowledgment",
+    "section": "Acknowledgment"
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Citation",
+    "section": "Citation"
+  }
+]

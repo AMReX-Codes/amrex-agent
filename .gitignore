@@ -214,6 +214,16 @@ __marimo__/
 # ============================================================================
 # FAISS vector databases - regenerated from source
 database/faiss/
+!database/faiss/level0/
+!database/faiss/level0/*.faiss
+!database/faiss/level0/*_metadata.json
+!database/faiss/level1/
+!database/faiss/level1/pelelmex_*.faiss
+!database/faiss/level1/pelelmex_*_metadata.json
+!database/faiss/level2/
+!database/faiss/level2/pelelmex_*.faiss
+!database/faiss/level2/pelelmex_*_metadata.json
+!database/faiss/pelelmex_*
 
 # All schema files with version hashes - these are generated
 database/schemas/*.json

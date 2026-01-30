@@ -17,6 +17,7 @@ export PELELMEX_REPO_PATH=/path/to/PeleLMeX
 bash demo/setup_demo_database.sh --code pelelmex
 ```
 
+If `database/schemas` and `database/faiss` already contain the prebuilt PeleLMeX artifacts, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash in `.dependencies.json` with your local repo if you need to validate you’re on the same version. The `--clone-missing` flow uses `.dependencies.json` only to select the fork/branch/commit to clone when repos are missing.
 
 Auto-clone missing PeleLMeX repo (requires git + network). Uses recursive
 clone to pull submodules.

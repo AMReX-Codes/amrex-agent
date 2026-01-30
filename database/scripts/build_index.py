@@ -100,19 +100,42 @@ def get_embedding_model(provider: str = "openai", model_name: str = "text-embedd
     Any
         Embeddings client instance.
     """
-    from services.embedding_factory import create_embeddings
+    from src.services.embedding_service_factory import get_embedding_service
 
-    embeddings = create_embeddings(
-        provider=provider,
-        model_name=model_name,
-        config=PELE_CONFIG,  # Uses loaded config if available
-        enable_cache=True
-    )
-
-    if embeddings is None:
+    service = get_embedding_service(PELE_CONFIG)
+    if service.embeddings is None:
         raise RuntimeError(f"Failed to initialize {provider} embeddings")
 
-    return embeddings
+    class EmbeddingAdapter:
+        def __init__(self, embedding_service):
+            self.service = embedding_service
+
+        def embed_documents(self, texts):
+            return self.service.embed_texts(texts)
+
+        def embed_query(self, text):
+            if hasattr(self.service.embeddings, "embed_query"):
+                return self.service.embeddings.embed_query(text)
+            raise RuntimeError("Embedding provider does not support embed_query")
+
+        def expand_documents(self, documents, metadata=None):
+            return self.service.expand_documents(documents, metadata)
+
+    return EmbeddingAdapter(service)
+
+
+def _maybe_chunk_documents(documents: list[Document], embedding_model) -> list[Document]:
+    if not hasattr(embedding_model, "expand_documents"):
+        return documents
+    texts = [doc.page_content for doc in documents]
+    metas = [doc.metadata for doc in documents]
+    chunked_texts, chunked_metas = embedding_model.expand_documents(texts, metas)
+    if not chunked_texts:
+        return documents
+    return [
+        Document(page_content=text, metadata=meta)
+        for text, meta in zip(chunked_texts, chunked_metas, strict=False)
+    ]
 
 
 
@@ -216,12 +239,13 @@ def build_case_structure_index(
         skip_tokenize=skip_tokenize
     )
 
+    documents = _maybe_chunk_documents(documents, embedding_model)
     # Build FAISS index
     logger.debug("Generating embeddings and building FAISS index...")
     vectordb = FAISS.from_documents(documents, embedding_model)
 
     # Save index
-    from scripts.index_utils import save_faiss_index
+    from database.scripts.index_utils import save_faiss_index
     save_faiss_index(vectordb, output_dir)
 
     logger.debug(f"[OK] Index saved to {output_dir}")
@@ -336,12 +360,13 @@ def build_case_details_index(
         skip_tokenize=skip_tokenize
     )
 
+    documents = _maybe_chunk_documents(documents, embedding_model)
     # Build FAISS index
     logger.debug("Generating embeddings and building FAISS index...")
     vectordb = FAISS.from_documents(documents, embedding_model)
 
     # Save index
-    from scripts.index_utils import save_faiss_index
+    from database.scripts.index_utils import save_faiss_index
     save_faiss_index(vectordb, output_dir)
 
     logger.debug(f"[OK] Index saved to {output_dir}")
@@ -449,12 +474,13 @@ def build_input_templates_index(
         skip_tokenize=skip_tokenize
     )
 
+    documents = _maybe_chunk_documents(documents, embedding_model)
     # Build FAISS index
     logger.debug("Generating embeddings and building FAISS index...")
     vectordb = FAISS.from_documents(documents, embedding_model)
 
     # Save index
-    from scripts.index_utils import save_faiss_index
+    from database.scripts.index_utils import save_faiss_index
     save_faiss_index(vectordb, output_dir)
 
     logger.debug(f"[OK] Index saved to {output_dir}")
@@ -592,6 +618,7 @@ def build_case_names_index(
         logger.debug("ERROR: No documents created!")
         return
 
+    documents = _maybe_chunk_documents(documents, embedding_model)
     logger.debug("Building FAISS index...")
     vectordb = FAISS.from_documents(documents, embedding_model)
 
@@ -697,12 +724,13 @@ def build_chemistry_index(
     if not documents:
         return
 
+    documents = _maybe_chunk_documents(documents, embedding_model)
     # Build FAISS index
     logger.debug("Generating embeddings and building FAISS index...")
     vectordb = FAISS.from_documents(documents, embedding_model)
 
     # Save index
-    from scripts.index_utils import save_faiss_index
+    from database.scripts.index_utils import save_faiss_index
     save_faiss_index(vectordb, output_dir)
 
     logger.debug(f"[OK] Index saved to {output_dir}")

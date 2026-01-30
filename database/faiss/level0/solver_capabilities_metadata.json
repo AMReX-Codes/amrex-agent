@@ -1,0 +1,164 @@
+[
+  {
+    "code_name": "AMReX",
+    "capability_type": "description",
+    "chunk_parent": 0,
+    "chunk_index": 0
+  },
+  {
+    "code_name": "PeleC",
+    "capability_type": "description",
+    "chunk_parent": 1,
+    "chunk_index": 1
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "handles strong shocks",
+    "capability_type": "specific",
+    "chunk_parent": 2,
+    "chunk_index": 2
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "compressible reacting flow",
+    "capability_type": "specific",
+    "chunk_parent": 3,
+    "chunk_index": 3
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "supersonic combustion",
+    "capability_type": "specific",
+    "chunk_parent": 4,
+    "chunk_index": 4
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "detonation physics",
+    "capability_type": "specific",
+    "chunk_parent": 5,
+    "chunk_index": 5
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability_type": "description",
+    "chunk_parent": 6,
+    "chunk_index": 6
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "low Mach number formulation",
+    "capability_type": "specific",
+    "chunk_parent": 7,
+    "chunk_index": 7
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "detailed chemical kinetics",
+    "capability_type": "specific",
+    "chunk_parent": 8,
+    "chunk_index": 8
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "flame dynamics",
+    "capability_type": "specific",
+    "chunk_parent": 9,
+    "chunk_index": 9
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "diffusion-dominated physics",
+    "capability_type": "specific",
+    "chunk_parent": 10,
+    "chunk_index": 10
+  },
+  {
+    "code_name": "incflo",
+    "capability_type": "description",
+    "chunk_parent": 11,
+    "chunk_index": 11
+  },
+  {
+    "code_name": "WarpX",
+    "capability_type": "description",
+    "chunk_parent": 12,
+    "chunk_index": 12
+  },
+  {
+    "code_name": "WarpX",
+    "capability": "particle-in-cell method",
+    "capability_type": "specific",
+    "chunk_parent": 13,
+    "chunk_index": 13
+  },
+  {
+    "code_name": "WarpX",
+    "capability": "electromagnetic field solver",
+    "capability_type": "specific",
+    "chunk_parent": 14,
+    "chunk_index": 14
+  },
+  {
+    "code_name": "WarpX",
+    "capability": "plasma accelerators",
+    "capability_type": "specific",
+    "chunk_parent": 15,
+    "chunk_index": 15
+  },
+  {
+    "code_name": "WarpX",
+    "capability": "beam dynamics",
+    "capability_type": "specific",
+    "chunk_parent": 16,
+    "chunk_index": 16
+  },
+  {
+    "code_name": "ERF",
+    "capability_type": "description",
+    "chunk_parent": 17,
+    "chunk_index": 17
+  },
+  {
+    "code_name": "ERF",
+    "capability": "atmospheric dynamics",
+    "capability_type": "specific",
+    "chunk_parent": 18,
+    "chunk_index": 18
+  },
+  {
+    "code_name": "ERF",
+    "capability": "mesoscale modeling",
+    "capability_type": "specific",
+    "chunk_parent": 19,
+    "chunk_index": 19
+  },
+  {
+    "code_name": "ERF",
+    "capability": "terrain-following coordinates",
+    "capability_type": "specific",
+    "chunk_parent": 20,
+    "chunk_index": 20
+  },
+  {
+    "code_name": "ERF",
+    "capability": "buoyancy-driven flows",
+    "capability_type": "specific",
+    "chunk_parent": 21,
+    "chunk_index": 21
+  },
+  {
+    "code_name": "ERF",
+    "capability": "rising bubble simulations",
+    "capability_type": "specific",
+    "chunk_parent": 22,
+    "chunk_index": 22
+  },
+  {
+    "code_name": "ERF",
+    "capability": "atmospheric boundary layer",
+    "capability_type": "specific",
+    "chunk_parent": 23,
+    "chunk_index": 23
+  }
+]
