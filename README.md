@@ -11,7 +11,7 @@ It turns freeform user intent into runnable simulation setups across the AMReX s
 
 ```bash
 conda env create -f environment.yaml
-conda activate amrex-agent
+conda activate amrex-agent-dev
 ```
 
 2) Set your API key (CBORG recommended):
