@@ -152,13 +152,18 @@ def _load_sfapi_key_file() -> tuple[str, str] | None:
         os.getenv("SUPERFACILITY_KEY_PATH"),
         os.getenv("NERSC_SFAPI_KEY_PATH"),
     ]
-    search_paths = [
-        Path(p) for p in env_paths if p
-    ] + [
+    search_paths = [Path(p) for p in env_paths if p]
+
+    superfacility_dir = Path.home() / ".superfacility"
+    if superfacility_dir.exists():
+        search_paths.extend(sorted(superfacility_dir.glob("*.pem")))
+        search_paths.append(superfacility_dir / "key.pem")
+        search_paths.append(superfacility_dir / "priv_key.pem")
+
+    search_paths.extend([
         Path.cwd() / "priv_key.pem",
-        Path.home() / ".superfacility" / "priv_key.pem",
         Path.home() / "sfapi" / "priv_key.pem",
-    ]
+    ])
 
     for path in search_paths:
         if path.exists():
