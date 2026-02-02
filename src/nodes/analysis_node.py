@@ -41,18 +41,18 @@ def get_run_directory(state: GraphState) -> str | None:
         )
         run_dir = input_writer_entry.get('details', {}).get('run_directory')
         if run_dir:
-            logger.debug("✓ Run directory loaded from workflow_history (canonical path)")
+            logger.debug("Run directory loaded from workflow_history (canonical path)")
             return run_dir
     except StopIteration:
-        logger.debug("⚠️  Input writer entry not in workflow_history, falling back to state")
+        logger.debug("Input writer entry not in workflow_history, falling back to state")
 
     # Fallback to pragmatic path (convenience copy in state)
     run_dir = state.get("run_directory")
     if run_dir:
-        logger.debug("✓ Run directory loaded from state (pragmatic path - convenience copy)")
+        logger.debug("Run directory loaded from state (pragmatic path - convenience copy)")
         return run_dir
 
-    logger.warning("✗ Run directory not found in workflow_history or state")
+    logger.warning("Run directory not found in workflow_history or state")
     return None
 
 def analysis_node(state: GraphState) -> dict[str, Any]:
@@ -143,7 +143,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
                 kwargs[key] = value
 
         report = analyzer.analyze_simulation(**kwargs)
-        logger.debug("✓ Analysis completed successfully")
+        logger.debug("Analysis completed successfully")
     except Exception as e:
         # Catch any service errors and return graceful failure
         logger.error(f"[ERROR] Analysis service crashed: {e}")
@@ -307,7 +307,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
         "retry_guidance": retry_guidance,
     }
 
-    logger.info(f"✅ Analysis complete: {status}")
+    logger.info(f"Analysis complete: {status}")
     return updates
 
 

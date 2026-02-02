@@ -406,7 +406,7 @@ class InputWriterService:
 
             # 4. MODIFY: Apply modifications (Input Writer: Config Model Factory extension)
             logger.info(f"[InputWriter] Step 3/5: Applying {len(modifications)} modification(s)")
-            logger.info(f"[InputWriter] Modifications to apply: {modifications}")
+            logger.debug(f"[InputWriter] Modifications to apply: {modifications}")
 
             baseline_params = [
                 line.split('=')[0].strip()
@@ -430,11 +430,11 @@ class InputWriterService:
             remap_mapping = modification_result.get("remap_mapping", {})
             applied_params = set(modification_result.get("applied_params", []))
 
-            logger.info("📊 [DATA TRANSFER] Received result from ConfigModelFactory")
-            logger.info(f"📊 [DATA TRANSFER] Result keys: {list(modification_result.keys())}")
-            logger.info(f"📊 [DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
-            logger.info(f"📊 [DATA TRANSFER]   - available_schema_params: {len(available_params)}")
-            logger.info(f"📊 [DATA TRANSFER]   - remap_success_count: {remap_count}")
+            logger.debug("[DATA TRANSFER] Received result from ConfigModelFactory")
+            logger.debug(f"[DATA TRANSFER] Result keys: {list(modification_result.keys())}")
+            logger.debug(f"[DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
+            logger.debug(f"[DATA TRANSFER]   - available_schema_params: {len(available_params)}")
+            logger.debug(f"[DATA TRANSFER]   - remap_success_count: {remap_count}")
 
             # Check if we have unresolved parameters that need architect attention
             if unresolved:
@@ -492,7 +492,7 @@ class InputWriterService:
                 baseline_info = {'path': baseline_case, 'code': code_name}
                 self._copy_auxiliary_files(baseline_info, output_dir)
 
-            logger.info("[Input Writer] Pipeline complete ✓")
+            logger.info("[Input Writer] Pipeline complete")
 
             result = {
                 'inputs_path': str(inputs_path),
@@ -510,9 +510,9 @@ class InputWriterService:
             # Add resolution feedback if there were unresolved parameters
             if unresolved:
                 result['requires_parameter_resolution'] = True
-                logger.info("📊 [DATA TRANSFER] Adding resolution feedback to result")
-                logger.info(f"📊 [DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
-                logger.info(f"📊 [DATA TRANSFER]   - available_schema_params: {len(available_params)}")
+                logger.debug("[DATA TRANSFER] Adding resolution feedback to result")
+                logger.debug(f"[DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
+                logger.debug(f"[DATA TRANSFER]   - available_schema_params: {len(available_params)}")
                 feedback = ConfigModelFactory.build_parameter_resolution_feedback(
                     unresolved_params=unresolved,
                     config_service=self.config,

@@ -31,7 +31,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing job execution results.
     """
-    logger.info("🚀 Executing Runner Node")
+    logger.info("Executing Runner Node")
 
     # ========================================
     # COMPONENT 11a: STATE VALIDATION
@@ -89,7 +89,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "error": f"Inputs file not found: {inputs_file_path}"
         }
 
-    logger.info(f"✅ Validation passed: {run_dir_path.name}")
+    logger.info(f"Validation passed: {run_dir_path.name}")
 
     # ========================================
     # COMPONENT 11b: SERVICE ORCHESTRATION
@@ -140,7 +140,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         # Extract actual run directory from setup (may be nested)
         actual_run_dir = setup_result.get('run_dir')
-        logger.info(f"✅ Job setup complete: {setup_result.get('executable')}")
+        logger.info(f"Job setup complete: {setup_result.get('executable')}")
         logger.debug(f"   Using run directory: {actual_run_dir}")
 
         # Submit job (Runner Node: Script Generation)

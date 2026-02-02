@@ -8,6 +8,7 @@ Based on: DESIGN_reviewer_visualization_analysis.md section 3
 Note: Visual diagnostics deferred to Phase 5
 """
 
+import json
 import logging
 import re
 import subprocess
@@ -178,14 +179,18 @@ class AnalysisService:
 
         # Print summary
         self._print_summary(report)
-        print(report)
 
         # Normalize status to canonical enum (Node/Router contract)
         report['status'] = self._normalize_status(
             report['status'],
             report.get('issues', [])
         )
-        print(report)
+        report_path = run_dir / "analysis_report.json"
+        try:
+            report_path.write_text(json.dumps(report, indent=2))
+            logger.info(f"Analysis report saved to {report_path}")
+        except Exception as exc:
+            logger.warning(f"Failed to write analysis report to {report_path}: {exc}")
 
         return report
 
@@ -664,16 +669,16 @@ class AnalysisService:
         logger.debug(f"{'='*80}")
 
         status = report['status']
-        status_emoji = {
-            'success': '✅',
-            'failed': '❌',
-            'unstable': '⚠️',
-            'completed_with_warnings': '⚠️',
-            'incomplete': '🔄',
-            'no_log_file': '❓'
+        status_label = {
+            'success': '[SUCCESS]',
+            'failed': '[FAILED]',
+            'unstable': '[WARN]',
+            'completed_with_warnings': '[WARN]',
+            'incomplete': '[INCOMPLETE]',
+            'no_log_file': '[NO_LOG]'
         }
 
-        logger.debug(f"\nStatus: {status_emoji.get(status, '[QUERY]')} {status.upper()}")
+        logger.debug(f"\nStatus: {status_label.get(status, '[UNKNOWN]')} {status.upper()}")
 
         if report.get('total_steps'):
             logger.debug(f"Total steps: {report['total_steps']}")

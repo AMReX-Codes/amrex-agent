@@ -37,3 +37,7 @@ python amrex_agent.py \
   --save-workflow \
   --verbose
 ```
+
+Note: This prompt-file demo can hit the reviewer retry limit if parameter
+resolution fails. For a more reliable run, use the inline prompt or the
+config override example instead.

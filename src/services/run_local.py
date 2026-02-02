@@ -311,10 +311,10 @@ class LocalRunner:
         # Determine job status from exit code
         if return_code == 0:
             job_status = "completed"
-            logger.info("✅ Job completed successfully (exit code: 0)")
+            logger.info("Job completed successfully (exit code: 0)")
         else:
             job_status = "failed"
-            logger.error(f"❌ Job failed (exit code: {return_code})")
+            logger.error(f"Job failed (exit code: {return_code})")
 
         return {
             'job_id': str(proc.pid),

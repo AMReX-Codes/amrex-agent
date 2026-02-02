@@ -170,7 +170,7 @@ class FeedbackGenerator:
         """
         icon = self._get_icon(v.severity)
 
-        # Format: - 🔴 **param**: Message.
+        # Format: - [CRITICAL] **param**: Message.
         msg = f"- {icon} "
 
         if v.parameter:
@@ -196,8 +196,8 @@ class FeedbackGenerator:
             Emoji icon
         """
         return {
-            "critical": "🔴",
-            "error": "❌",
-            "warning": "⚠️",
-            "info": "ℹ️"
-        }.get(severity.lower(), "•")
+            "critical": "[CRITICAL]",
+            "error": "[ERROR]",
+            "warning": "[WARNING]",
+            "info": "[INFO]"
+        }.get(severity.lower(), "[INFO]")

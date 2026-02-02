@@ -9,16 +9,16 @@ Architecture:
   Output: AMReX inputs file text
 
 Responsibilities:
-  ✅ Serialize Pydantic model to inputs format
-  ✅ Preserve comments and formatting
-  ✅ Handle array values (list → "64 64 64")
-  ✅ Maintain parameter ordering
+  - Serialize Pydantic model to inputs format
+  - Preserve comments and formatting
+  - Handle array values (list -> "64 64 64")
+  - Maintain parameter ordering
 
 Not Responsible For:
-  ❌ File I/O (no Path.write_text)
-  ❌ Auxiliary files (probin, chemistry)
-  ❌ Directory management
-  ❌ Service orchestration
+  - File I/O (no Path.write_text)
+  - Auxiliary files (probin, chemistry)
+  - Directory management
+  - Service orchestration
 """
 
 import logging
@@ -65,8 +65,8 @@ class InputsFileWriter:
         # Get model data with AMReX parameter names (aliases)
         data = model.model_dump(by_alias=True, exclude_defaults=True, exclude_none=True)
         sample_keys = list(data.keys())[:10]
-        logger.info(f"[DEBUG] Sample model keys: {sample_keys}")
-        logger.info(f"[DEBUG] Total keys in model: {len(data)}")
+        logger.debug(f"[DEBUG] Sample model keys: {sample_keys}")
+        logger.debug(f"[DEBUG] Total keys in model: {len(data)}")
         if not original_text:
             # Scratch generation - no Ghostwriter
             return InputsFileWriter._generate_clean(data)
