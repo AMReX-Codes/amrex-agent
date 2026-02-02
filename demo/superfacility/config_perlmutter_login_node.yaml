@@ -6,6 +6,10 @@ environment: perlmutter
 # Repo path (update for your Perlmutter workspace)
 amrex_repo_path: /global/cfs/cdirs/$PROJECT/$USER/amrex
 
+# Demo overrides (baseline + inputs)
+baseline_override: AMReX/Tests/Amr/Advection_AmrCore/Exec
+inputs_file_override: inputs
+
 # Output directory for run artifacts (Perlmutter CFS)
 output_dir: /global/cfs/cdirs/$PROJECT/$USER/superfacility
 

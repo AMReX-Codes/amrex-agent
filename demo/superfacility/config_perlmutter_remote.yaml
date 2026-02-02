@@ -6,6 +6,10 @@ environment: perlmutter
 # Local output directory (this host)
 output_dir: /tmp/amrex_agent_runs
 
+# Demo overrides (baseline + inputs)
+baseline_override: AMReX/Tests/Amr/Advection_AmrCore/Exec
+inputs_file_override: inputs
+
 # Remote destination for staged runs
 remote_output_dir: /global/cfs/cdirs/$PROJECT/$USER/superfacility
 remote_staging: true

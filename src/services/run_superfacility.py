@@ -295,9 +295,21 @@ class SuperfacilityRunner:
             'executable': executable
         }
 
+        remote_staging = getattr(self.config, "remote_staging", False)
+        remote_run_dir = None
+        if remote_staging:
+            remote_output_dir = getattr(self.config, "remote_output_dir", None) or self.config.output_dir
+            remote_output_dir = Path(os.path.expandvars(str(remote_output_dir)))
+            fixed_remote_run_dir = getattr(self.config, "remote_run_dir", None)
+            if fixed_remote_run_dir:
+                remote_run_dir = Path(os.path.expandvars(str(fixed_remote_run_dir)))
+            else:
+                remote_run_dir = Path(remote_output_dir) / run_dir.name
+
+        run_dir_for_script = remote_run_dir if remote_run_dir else run_dir
         script = generate_slurm_script(
             params=params,
-            run_dir=str(run_dir),
+            run_dir=str(run_dir_for_script),
         )
 
         # Write script
@@ -314,15 +326,7 @@ class SuperfacilityRunner:
                 'submitted': False
             }
 
-        remote_staging = getattr(self.config, "remote_staging", False)
         if remote_staging:
-            remote_output_dir = getattr(self.config, "remote_output_dir", None) or self.config.output_dir
-            remote_output_dir = Path(os.path.expandvars(str(remote_output_dir)))
-            fixed_remote_run_dir = getattr(self.config, "remote_run_dir", None)
-            if fixed_remote_run_dir:
-                remote_run_dir = Path(os.path.expandvars(str(fixed_remote_run_dir)))
-            else:
-                remote_run_dir = Path(remote_output_dir) / run_dir.name
             cfg = self.config.model_dump() if hasattr(self.config, "model_dump") else {}
             client_id = cfg.get("superfacility_client_id")
             secret = cfg.get("superfacility_secret")

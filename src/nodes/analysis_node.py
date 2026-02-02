@@ -78,6 +78,32 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
     config = state["config"]
     iteration = state.get("iteration", 0)
 
+    if getattr(config, "dry_run", False):
+        logger.info("[INFO] Dry-run enabled - skipping analysis")
+        workflow_history = state.get("workflow_history", [])
+        history_entry = {
+            "node": "analysis",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "action": "analysis_skipped",
+            "iteration": iteration,
+            "details": {
+                "status": "skipped",
+                "reason": "dry_run"
+            }
+        }
+        new_history = workflow_history + [history_entry]
+
+        return {
+            "mode": "proceed",
+            "iteration": iteration,
+            "workflow_history": new_history,
+            "job_status": "skipped",
+            "analysis_report": {
+                "status": "skipped",
+                "message": "Dry-run: analysis skipped"
+            }
+        }
+
     # Get run_directory from canonical path (workflow_history) with fallback to state
     run_dir = get_run_directory(state)
 

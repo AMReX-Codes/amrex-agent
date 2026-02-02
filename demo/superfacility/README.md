@@ -80,7 +80,7 @@ Synapse-style shared layout (example):
 ```bash
 python amrex_agent.py \
   --prompt "AMReX Advection_AmrCore with a 64x64 grid" \
-  --config demo/superfacility/config_perlmutter.yaml \
+  --config demo/superfacility/config_perlmutter_login_node.yaml \
   --environment perlmutter \
   --dry-run
 ```
