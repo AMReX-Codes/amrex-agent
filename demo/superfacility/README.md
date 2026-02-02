@@ -65,12 +65,12 @@ export NERSC_API_TOKEN=your_token
 # or SFAPI_TOKEN=your_token
 ```
 
-## Config template
+## Config templates
 
-Start with `config_perlmutter.yaml` in this folder and update the paths:
+Start with one of the configs in this folder and update the paths:
 
-- `amrex_repo_path`: Perlmutter AMReX repo path
-- `output_dir`: where runs and scripts should be staged
+- `config_perlmutter_login_node.yaml`: run on Perlmutter with local CFS paths
+- `config_perlmutter_remote.yaml`: stage from another host to Perlmutter via SFAPI
 
 Synapse-style shared layout (example):
 `/global/cfs/cdirs/$PROJECT/$USER/superfacility`

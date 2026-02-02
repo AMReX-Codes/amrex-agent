@@ -1,4 +1,4 @@
-# Superfacility (SFAPI) config overrides for Perlmutter
+# Superfacility (SFAPI) config overrides for Perlmutter (on-site run)
 
 # Environment selection
 environment: perlmutter
@@ -6,8 +6,9 @@ environment: perlmutter
 # Repo path (update for your Perlmutter workspace)
 amrex_repo_path: /global/cfs/cdirs/$PROJECT/$USER/amrex
 
-# Output directory for run artifacts
+# Output directory for run artifacts (Perlmutter CFS)
 output_dir: /global/cfs/cdirs/$PROJECT/$USER/superfacility
 
 # Execution
 allow_local_run: false
+remote_staging: false

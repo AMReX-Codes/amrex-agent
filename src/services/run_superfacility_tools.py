@@ -240,6 +240,7 @@ def submit_via_sfapi_client(
     system: str = "perlmutter",
     client_id: str | None = None,
     secret: str | None = None,
+    is_path: bool = False,
     config: dict | None = None,
 ) -> dict[str, Any]:
     """
@@ -272,8 +273,6 @@ def submit_via_sfapi_client(
     if not client_id or not secret:
         return {"error": "Missing SFAPI client credentials"}
 
-    script = Path(script_path).read_text()
-
     machine = Machine.perlmutter
     if system and system != "perlmutter":
         return {"error": f"Unsupported system for sfapi_client: {system}"}
@@ -281,7 +280,11 @@ def submit_via_sfapi_client(
     try:
         with Client(client_id=client_id, secret=secret) as client:
             perlmutter = client.compute(machine)
-            job = perlmutter.submit_job(script)
+            if is_path:
+                job = perlmutter.submit_job(script_path)
+            else:
+                script = Path(script_path).read_text()
+                job = perlmutter.submit_job(script)
             job_id = getattr(job, "jobid", None) or getattr(job, "job_id", None)
             if job_id is None:
                 job_id = getattr(job, "id", None)
@@ -296,6 +299,7 @@ def submit_via_sfapi(
     script_path: str,
     system: str = "perlmutter",
     nersc_session: dict | None = None,
+    is_path: bool = False,
     config: dict | None = None,
 ) -> dict[str, Any]:
     """
@@ -330,10 +334,12 @@ def submit_via_sfapi(
     if not nersc_session:
         return {"error": "No NERSC session", "suggestion": "Setup OAuth client or token"}
 
-    script = Path(script_path).read_text()
-
     api_url = f"https://api.nersc.gov/api/v1.2/compute/jobs/{system}"
-    payload = {"job": script, "isPath": False}
+    if is_path:
+        payload = {"job": script_path, "isPath": True}
+    else:
+        script = Path(script_path).read_text()
+        payload = {"job": script, "isPath": False}
 
     if nersc_session["type"] == "oauth":
         response = nersc_session["session"].post(api_url, json=payload)
@@ -386,6 +392,7 @@ def submit_job(
     script_path: str,
     system: str = "perlmutter",
     nersc_session: dict | None = None,
+    is_path: bool = False,
     config: dict | None = None,
 ) -> tuple[str, str]:
     """
@@ -422,6 +429,7 @@ def submit_job(
             system=system,
             client_id=client_id,
             secret=secret,
+            is_path=is_path,
             config=config,
         )
         if "job_id" in result:
@@ -433,6 +441,7 @@ def submit_job(
                 script_path=script_path,
                 system=system,
                 nersc_session=nersc_session,
+                is_path=is_path,
             )
 
             if "job_id" in result:
@@ -446,6 +455,61 @@ def submit_job(
         return (result["job_id"], result["method"])
 
     raise RuntimeError(f"Submission failed: {result.get('error')}")
+
+
+def stage_run_directory(
+    local_run_dir: str | Path,
+    remote_run_dir: str,
+    client_id: str | None = None,
+    secret: str | None = None,
+) -> None:
+    """
+    Stage a local run directory to a remote filesystem via sfapi_client.
+
+    Parameters
+    ----------
+    local_run_dir : str or Path
+        Local run directory to upload.
+    remote_run_dir : str
+        Remote destination directory (must exist or be creatable).
+    client_id : str or None
+        SFAPI OAuth client ID.
+    secret : str or None
+        SFAPI private key (PEM).
+    """
+    try:
+        from sfapi_client import Client
+        from sfapi_client.compute import Machine
+    except Exception as exc:
+        raise RuntimeError("sfapi_client not available for staging") from exc
+
+    if not client_id or not secret:
+        raise RuntimeError("Missing SFAPI client credentials for staging")
+
+    local_run_dir = Path(local_run_dir)
+    if not local_run_dir.exists():
+        raise FileNotFoundError(f"Local run directory not found: {local_run_dir}")
+
+    with Client(client_id=client_id, secret=secret) as client:
+        perlmutter = client.compute(Machine.perlmutter)
+
+        target_dir = None
+        try:
+            [target_dir] = perlmutter.ls(remote_run_dir, directory=True)
+        except Exception:
+            target_dir = None
+
+        if target_dir is None:
+            raise FileNotFoundError(
+                f"Remote run directory not found: {remote_run_dir}. "
+                "Create it on Perlmutter or via the SFAPI client."
+            )
+
+        for item in sorted(local_run_dir.iterdir()):
+            if not item.is_file():
+                continue
+            with open(item, "rb") as handle:
+                target_dir.upload(handle)
 
 
 def monitor_job(

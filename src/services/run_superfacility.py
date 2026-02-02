@@ -14,7 +14,9 @@ from amrex_tools import copy_to_rundir, setup_run_directory
 from src.services.build_tools import compile_amrex
 from src.services.run_superfacility_tools import (
     generate_slurm_script,
+    _load_sfapi_key_file,
     monitor_job,
+    stage_run_directory,
     submit_job,
 )
 
@@ -311,10 +313,31 @@ class SuperfacilityRunner:
                 'submitted': False
             }
 
+        remote_staging = getattr(self.config, "remote_staging", False)
+        if remote_staging:
+            remote_output_dir = getattr(self.config, "remote_output_dir", None) or self.config.output_dir
+            remote_run_dir = Path(remote_output_dir) / run_dir.name
+            cfg = self.config.model_dump() if hasattr(self.config, "model_dump") else {}
+            client_id = cfg.get("superfacility_client_id")
+            secret = cfg.get("superfacility_secret")
+            if not client_id or not secret:
+                parsed = _load_sfapi_key_file()
+                if parsed:
+                    client_id, secret = parsed
+            stage_run_directory(
+                local_run_dir=run_dir,
+                remote_run_dir=str(remote_run_dir),
+                client_id=client_id,
+                secret=secret,
+            )
+
+            script_path = remote_run_dir / 'submit.sh'
+
         # Submit job (API with sbatch fallback)
         job_id, method = submit_job(
             script_path=str(script_path),
             system=system,
+            is_path=remote_staging,
             config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 

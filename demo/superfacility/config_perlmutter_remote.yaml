@@ -1,0 +1,17 @@
+# Superfacility (SFAPI) config overrides for Perlmutter (remote staging)
+
+# Environment selection
+environment: perlmutter
+
+# Local output directory (this host)
+output_dir: /tmp/amrex_agent_runs
+
+# Remote destination for staged runs
+remote_output_dir: /global/cfs/cdirs/$PROJECT/$USER/superfacility
+remote_staging: true
+
+# Repo path (optional; follows normal priority if unset)
+# amrex_repo_path: /path/to/amrex
+
+# Execution
+allow_local_run: false

@@ -451,6 +451,15 @@ class AMReXAgentConfig(BaseModel):
         default="https://api.nersc.gov/api/v1.2",
         description="Superfacility API endpoint"
     )
+
+    remote_staging: bool = Field(
+        default=False,
+        description="If True, stage run directory to a remote filesystem before submission."
+    )
+    remote_output_dir: Optional[Path] = Field(
+        default=None,
+        description="Remote output directory for staged runs (defaults to output_dir)."
+    )
     
     # === Workflow Settings ===
     max_iterations: int = Field(
