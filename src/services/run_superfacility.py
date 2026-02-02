@@ -318,14 +318,6 @@ class SuperfacilityRunner:
         script_path.chmod(0o755)
         logger.info(f" Generated submit script: {script_path.name}")
 
-        if dry_run:
-            return {
-                'script_path': str(script_path),
-                'run_dir': str(run_dir),
-                'method': 'dry_run',
-                'submitted': False
-            }
-
         if remote_staging:
             cfg = self.config.model_dump() if hasattr(self.config, "model_dump") else {}
             client_id = cfg.get("superfacility_client_id")
@@ -344,6 +336,14 @@ class SuperfacilityRunner:
             )
 
             script_path = remote_run_dir / 'submit.sh'
+
+        if dry_run:
+            return {
+                'script_path': str(script_path),
+                'run_dir': str(run_dir),
+                'method': 'dry_run',
+                'submitted': False
+            }
 
         # Submit job (API with sbatch fallback)
         job_id, method = submit_job(
