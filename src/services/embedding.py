@@ -37,6 +37,7 @@ class EmbeddingService:
             config: Agent configuration instance with FAISS settings
         """
         self.config = config
+        self._disabled = bool(getattr(config, "disable_embeddings", False))
         self.embeddings = None
         self._indices_loaded = False
         self._vector_backend = self._init_vector_backend()
@@ -45,6 +46,10 @@ class EmbeddingService:
 
         # Instance-based FAISS cache (replaces global)
         self._faiss_cache: dict[str, FAISS] = {}
+
+        if self._disabled:
+            logger.info("[Config] Embeddings disabled via disable_embeddings")
+            return
 
         # Initialize embedding model
         self._init_embeddings()

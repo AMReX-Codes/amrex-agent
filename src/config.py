@@ -375,6 +375,11 @@ class AMReXAgentConfig(BaseModel):
         description="If True, use LLM assistance to refine retry guidance for inputs/baseline switching."
     )
 
+    disable_embeddings: bool = Field(
+        default=False,
+        description="Disable embedding initialization and FAISS usage (forces non-embedding paths)."
+    )
+
     baseline_switch_after_retries: int = Field(
         default=3,
         ge=1,
@@ -518,6 +523,21 @@ class AMReXAgentConfig(BaseModel):
 
     def model_post_init(self, __context):
         """Populate repositories dict from individual paths."""
+        fields_set = getattr(self, "model_fields_set", set())
+        if self.indexing_strategy == "override_static":
+            if "disable_embeddings" not in fields_set and not self.disable_embeddings:
+                self.disable_embeddings = True
+                logger.info("[Config] override_static sets disable_embeddings=True by default")
+            elif "disable_embeddings" in fields_set and not self.disable_embeddings:
+                logger.warning(
+                    "[Config] override_static with disable_embeddings=False; embeddings may initialize unexpectedly"
+                )
+        elif "disable_embeddings" in fields_set and self.disable_embeddings:
+            logger.warning(
+                "[Config] disable_embeddings=True while indexing_strategy=%s; embeddings will be disabled",
+                self.indexing_strategy,
+            )
+
         self.repositories = {
             'PeleC': self.pelec_repo_path,
             'PeleLMeX': self.pelelmex_repo_path,
