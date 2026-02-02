@@ -148,11 +148,13 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         if config.environment == "local":
             submit_result = runner.submit(
                 run_directory=actual_run_dir,
-                nodes=getattr(config, "mpi_ranks", 1)
+                nodes=getattr(config, "mpi_ranks", 1),
+                dry_run=getattr(config, "dry_run", False),
             )
         else:
             submit_result = runner.submit(
-                run_directory=actual_run_dir
+                run_directory=actual_run_dir,
+                dry_run=getattr(config, "dry_run", False),
             )
 
         # ========================================

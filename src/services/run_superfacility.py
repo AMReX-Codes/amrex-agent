@@ -6,6 +6,7 @@ This is ONE way to run - alternatives: run_local.py, run_container.py.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -316,7 +317,12 @@ class SuperfacilityRunner:
         remote_staging = getattr(self.config, "remote_staging", False)
         if remote_staging:
             remote_output_dir = getattr(self.config, "remote_output_dir", None) or self.config.output_dir
-            remote_run_dir = Path(remote_output_dir) / run_dir.name
+            remote_output_dir = Path(os.path.expandvars(str(remote_output_dir)))
+            fixed_remote_run_dir = getattr(self.config, "remote_run_dir", None)
+            if fixed_remote_run_dir:
+                remote_run_dir = Path(os.path.expandvars(str(fixed_remote_run_dir)))
+            else:
+                remote_run_dir = Path(remote_output_dir) / run_dir.name
             cfg = self.config.model_dump() if hasattr(self.config, "model_dump") else {}
             client_id = cfg.get("superfacility_client_id")
             secret = cfg.get("superfacility_secret")
@@ -324,11 +330,13 @@ class SuperfacilityRunner:
                 parsed = _load_sfapi_key_file()
                 if parsed:
                     client_id, secret = parsed
+            staging_method = getattr(self.config, "remote_staging_method", "auto")
             stage_run_directory(
                 local_run_dir=run_dir,
                 remote_run_dir=str(remote_run_dir),
                 client_id=client_id,
                 secret=secret,
+                method=staging_method,
             )
 
             script_path = remote_run_dir / 'submit.sh'

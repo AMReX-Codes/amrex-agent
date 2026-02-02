@@ -460,6 +460,15 @@ class AMReXAgentConfig(BaseModel):
         default=None,
         description="Remote output directory for staged runs (defaults to output_dir)."
     )
+    remote_run_dir: Optional[Path] = Field(
+        default=None,
+        description="Optional fixed remote run directory (overrides remote_output_dir/run_name)."
+    )
+    remote_staging_method: str = Field(
+        default="auto",
+        description="Remote staging method: auto (sfapi_client then REST upload), "
+                    "sfapi_client, or rest_upload."
+    )
     
     # === Workflow Settings ===
     max_iterations: int = Field(

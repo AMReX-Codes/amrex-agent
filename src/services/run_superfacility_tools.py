@@ -115,6 +115,12 @@ def find_nersc_clients() -> dict[str, Any]:
                     clients[color] = str(client_dir)
                     break
 
+        # Support flat layout (clientid.txt + priv_key.jwk in base path)
+        clientid_file = base_path / "clientid.txt"
+        privkey_file = base_path / "priv_key.jwk"
+        if clientid_file.exists() and privkey_file.exists():
+            clients.setdefault("default", str(base_path))
+
     for base_path in search_paths:
         if not base_path.exists():
             continue
@@ -326,7 +332,7 @@ def submit_via_sfapi(
     if nersc_session is None:
         clients = find_nersc_clients()
         if clients:
-            for color in ["green", "orange", "red"]:
+            for color in ["default", "green", "orange", "red"]:
                 nersc_session = create_nersc_session(clients, color=color)
                 if nersc_session:
                     break
@@ -457,7 +463,7 @@ def submit_job(
     raise RuntimeError(f"Submission failed: {result.get('error')}")
 
 
-def stage_run_directory(
+def stage_run_directory_sfapi_client(
     local_run_dir: str | Path,
     remote_run_dir: str,
     client_id: str | None = None,
@@ -509,7 +515,172 @@ def stage_run_directory(
             if not item.is_file():
                 continue
             with open(item, "rb") as handle:
+                handle.filename = item.name  # sfapi_client expects filename attribute
                 target_dir.upload(handle)
+
+
+def stage_run_directory_rest(
+    local_run_dir: str | Path,
+    remote_run_dir: str,
+    nersc_session: dict | None = None,
+    upload_host: str = "perlmutter",
+) -> None:
+    """
+    Stage a local run directory to a remote filesystem via REST upload.
+
+    Uses the NERSC utilities upload endpoint; creates subdirectories as needed.
+    """
+    import requests
+
+    local_run_dir = Path(local_run_dir)
+    if not local_run_dir.exists():
+        raise FileNotFoundError(f"Local run directory not found: {local_run_dir}")
+
+    if nersc_session is None:
+        clients = find_nersc_clients()
+        if clients:
+            for color in ["default", "green", "orange", "red"]:
+                nersc_session = create_nersc_session(clients, color=color)
+                if nersc_session:
+                    break
+
+    if not nersc_session:
+        raise RuntimeError("No NERSC session for REST upload staging")
+
+    upload_url = f"https://api.nersc.gov/api/v1.2/utilities/upload/{upload_host}"
+
+    for item in sorted(local_run_dir.iterdir()):
+        if not item.is_file():
+            continue
+        remote_path = str(Path(remote_run_dir) / item.name)
+        with open(item, "rb") as handle:
+            if nersc_session["type"] == "oauth":
+                response = nersc_session["session"].put(
+                    upload_url,
+                    data={"file": remote_path},
+                    files={"file": handle},
+                )
+            else:
+                headers = {"Authorization": f"Bearer {nersc_session['token']}"}
+                response = requests.put(
+                    upload_url,
+                    headers=headers,
+                    data={"file": remote_path},
+                    files={"file": handle},
+                )
+        if response.status_code not in (200, 201):
+            raise RuntimeError(
+                f"REST upload failed for {item.name}: {response.status_code} {response.text}"
+            )
+
+
+def ensure_remote_directory_rest(
+    remote_run_dir: str,
+    nersc_session: dict | None = None,
+    upload_host: str = "perlmutter",
+) -> None:
+    """
+    Ensure remote directory exists by uploading a placeholder file via REST.
+    """
+    import io
+    import requests
+
+    if nersc_session is None:
+        clients = find_nersc_clients()
+        if clients:
+            for color in ["green", "orange", "red"]:
+                nersc_session = create_nersc_session(clients, color=color)
+                if nersc_session:
+                    break
+
+    if not nersc_session:
+        raise RuntimeError("No NERSC session for REST upload staging")
+
+    upload_url = f"https://api.nersc.gov/api/v1.2/utilities/upload/{upload_host}"
+    remote_path = str(Path(remote_run_dir) / ".keep")
+    payload = io.BytesIO(b"")
+
+    if nersc_session["type"] == "oauth":
+        response = nersc_session["session"].put(
+            upload_url,
+            data={"file": remote_path},
+            files={"file": payload},
+        )
+    else:
+        headers = {"Authorization": f"Bearer {nersc_session['token']}"}
+        response = requests.put(
+            upload_url,
+            headers=headers,
+            data={"file": remote_path},
+            files={"file": payload},
+        )
+
+    if response.status_code not in (200, 201):
+        raise RuntimeError(
+            f"REST mkdir failed for {remote_path}: {response.status_code} {response.text}"
+        )
+
+
+def stage_run_directory(
+    local_run_dir: str | Path,
+    remote_run_dir: str,
+    client_id: str | None = None,
+    secret: str | None = None,
+    method: str = "auto",
+    nersc_session: dict | None = None,
+) -> None:
+    """
+    Stage a local run directory to a remote filesystem.
+
+    method:
+      - auto: try sfapi_client, then REST upload
+      - sfapi_client: require sfapi_client credentials
+      - rest_upload: use REST upload endpoint (token/OAuth)
+    """
+    if method == "sfapi_client":
+        stage_run_directory_sfapi_client(
+            local_run_dir=local_run_dir,
+            remote_run_dir=remote_run_dir,
+            client_id=client_id,
+            secret=secret,
+        )
+        return
+
+    if method == "rest_upload":
+        stage_run_directory_rest(
+            local_run_dir=local_run_dir,
+            remote_run_dir=remote_run_dir,
+            nersc_session=nersc_session,
+        )
+        return
+
+    if method == "auto":
+        # Try REST mkdir, then sfapi_client for bulk upload, fall back to REST upload.
+        try:
+            ensure_remote_directory_rest(
+                remote_run_dir=remote_run_dir,
+                nersc_session=nersc_session,
+            )
+        except Exception:
+            pass
+        try:
+            stage_run_directory_sfapi_client(
+                local_run_dir=local_run_dir,
+                remote_run_dir=remote_run_dir,
+                client_id=client_id,
+                secret=secret,
+            )
+            return
+        except Exception:
+            stage_run_directory_rest(
+                local_run_dir=local_run_dir,
+                remote_run_dir=remote_run_dir,
+                nersc_session=nersc_session,
+            )
+            return
+
+    if method != "auto":
+        raise ValueError(f"Unknown staging method: {method}")
 
 
 def monitor_job(
