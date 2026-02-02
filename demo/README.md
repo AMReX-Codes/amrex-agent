@@ -236,6 +236,7 @@ python amrex_agent.py \
 ```
 
 For PeleC-specific examples, see `demo/pelec/README.md`.
+For Superfacility (SFAPI) Perlmutter notes, see `demo/superfacility/README.md`.
 
 ## Command Line Options
 

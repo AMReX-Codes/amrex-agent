@@ -46,6 +46,25 @@ python amrex_agent.py --prompt "Run AMReX Advection_AmrCore with a 64x64 grid an
 
 For more scenarios, see `demo/README.md`.
 
+### Optional: Superfacility API (SFAPI) submission
+
+If you want to submit runs to NERSC via SFAPI, install `sfapi_client` and provide a
+PEM key file where the **first line is the client ID** and the remaining lines are
+the private key. Then set one of:
+
+```bash
+export SFAPI_KEY_PATH=/path/to/priv_key.pem
+# or SUPERFACILITY_KEY_PATH / NERSC_SFAPI_KEY_PATH
+```
+
+Alternatively, you can still use REST-token auth with `NERSC_API_TOKEN` or `SFAPI_TOKEN`.
+Monitoring will use `sfapi_client` if available, otherwise it falls back to the REST API.
+
+If you follow the Synapse-style shared layout, set your run artifacts under:
+`/global/cfs/cdirs/$PROJECT/$USER/superfacility` (configure via `output_dir` or `--output-dir`).
+
+For a Perlmutter-specific config template and demo notes, see `demo/superfacility/`.
+
 Config override example:
 
 ```bash
@@ -104,6 +123,7 @@ All demo commands live under `demo/`. Highlights:
 - PeleLMeX JetInCrossFlow DNS prompt example: `demo/pelelmex/README.md`
 - PeleLMeX retry/failure-path example: `demo/example_retry_setups.md`
 - ALCF inference endpoint demo (in development): `demo/alcf/README.md`
+- Superfacility (SFAPI) Perlmutter demo notes (in development): `demo/superfacility/README.md`
 
 ## Tests
 

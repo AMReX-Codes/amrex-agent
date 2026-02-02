@@ -397,6 +397,12 @@ def parse_arguments(args=None):
         type=str,
         help='Path to custom configuration file'
     )
+    parser.add_argument(
+        '--environment',
+        type=str,
+        choices=['local', 'perlmutter', 'mcp'],
+        help='Override environment detection (local, perlmutter, mcp)'
+    )
 
     # Flags
     parser.add_argument(
@@ -602,6 +608,9 @@ def main(args=None):
 
         if parsed_args.dry_run:
             config.dry_run = True
+
+        if parsed_args.environment:
+            config.environment = parsed_args.environment
 
         if hasattr(parsed_args, 'indexing_strategy') and parsed_args.indexing_strategy:
             config.indexing_strategy = parsed_args.indexing_strategy

@@ -131,6 +131,46 @@ def find_nersc_clients() -> dict[str, Any]:
     return clients
 
 
+def _parse_sfapi_pem(key_str: str) -> tuple[str, str] | None:
+    """Parse a PEM key string with client ID on the first line."""
+    lines = key_str.splitlines(keepends=True)
+    if not lines:
+        return None
+    first_line = lines[0].strip()
+    if "BEGIN" in first_line:
+        return None
+    secret = "".join(lines[1:]).strip()
+    if not secret:
+        return None
+    return first_line, secret
+
+
+def _load_sfapi_key_file() -> tuple[str, str] | None:
+    """Load Superfacility API client ID + key from a PEM file, if present."""
+    env_paths = [
+        os.getenv("SFAPI_KEY_PATH"),
+        os.getenv("SUPERFACILITY_KEY_PATH"),
+        os.getenv("NERSC_SFAPI_KEY_PATH"),
+    ]
+    search_paths = [
+        Path(p) for p in env_paths if p
+    ] + [
+        Path.cwd() / "priv_key.pem",
+        Path.home() / ".superfacility" / "priv_key.pem",
+        Path.home() / "sfapi" / "priv_key.pem",
+    ]
+
+    for path in search_paths:
+        if path.exists():
+            try:
+                parsed = _parse_sfapi_pem(path.read_text())
+                if parsed:
+                    return parsed
+            except Exception:
+                continue
+    return None
+
+
 def create_nersc_session(
     clients: dict[str, Any],
     color: str = "green",
@@ -188,6 +228,63 @@ def create_nersc_session(
         return {"token": clients["token"], "type": "token"}
 
     return None
+
+
+def submit_via_sfapi_client(
+    script_path: str,
+    system: str = "perlmutter",
+    client_id: str | None = None,
+    secret: str | None = None,
+    config: dict | None = None,
+) -> dict[str, Any]:
+    """
+    Submit via sfapi_client (official client library).
+
+    Parameters
+    ----------
+    script_path : str
+        Path to the submission script.
+    system : str, optional
+        Target system name.
+    client_id : str or None, optional
+        SFAPI OAuth client ID.
+    secret : str or None, optional
+        SFAPI private key (PEM).
+    config : dict or None, optional
+        Optional configuration overrides.
+
+    Returns
+    -------
+    dict
+        Submission result with job_id or error details.
+    """
+    try:
+        from sfapi_client import Client
+        from sfapi_client.compute import Machine
+    except Exception:
+        return {"error": "sfapi_client not available"}
+
+    if not client_id or not secret:
+        return {"error": "Missing SFAPI client credentials"}
+
+    script = Path(script_path).read_text()
+
+    machine = Machine.perlmutter
+    if system and system != "perlmutter":
+        return {"error": f"Unsupported system for sfapi_client: {system}"}
+
+    try:
+        with Client(client_id=client_id, secret=secret) as client:
+            perlmutter = client.compute(machine)
+            job = perlmutter.submit_job(script)
+            job_id = getattr(job, "jobid", None) or getattr(job, "job_id", None)
+            if job_id is None:
+                job_id = getattr(job, "id", None)
+            if job_id is None:
+                return {"error": "SFAPI client submission returned no job id"}
+            return {"job_id": str(job_id), "method": "sfapi_client"}
+    except Exception as exc:
+        return {"error": f"sfapi_client failed: {exc}"}
 
 
 def submit_via_sfapi(
@@ -305,6 +402,26 @@ def submit_job(
     tuple of (str, str)
         Job ID and submission method.
     """
+    client_id = None
+    secret = None
+    if config is not None:
+        client_id = config.get("superfacility_client_id")
+        secret = config.get("superfacility_secret")
+    if not client_id or not secret:
+        parsed = _load_sfapi_key_file()
+        if parsed:
+            client_id, secret = parsed
+    if client_id and secret:
+        result = submit_via_sfapi_client(
+            script_path=script_path,
+            system=system,
+            client_id=client_id,
+            secret=secret,
+            config=config,
+        )
+        if "job_id" in result:
+            return (result["job_id"], result["method"])
+
     if nersc_session or find_nersc_clients():
         try:
             result = submit_via_sfapi(
@@ -360,9 +477,66 @@ def monitor_job(
     import subprocess
     import time
 
+    import logging
+
+    logger = logging.getLogger(__name__)
+    client_id = None
+    secret = None
+    if method == "sfapi_client":
+        if config is not None:
+            client_id = config.get("superfacility_client_id")
+            secret = config.get("superfacility_secret")
+        if not client_id or not secret:
+            parsed = _load_sfapi_key_file()
+            if parsed:
+                client_id, secret = parsed
+        if client_id and secret:
+            logger.info("Monitoring via sfapi_client")
+        if not nersc_session:
+            clients = find_nersc_clients()
+            if clients:
+                for color in ["green", "orange", "red"]:
+                    nersc_session = create_nersc_session(clients, color=color)
+                    if nersc_session:
+                        break
+        if nersc_session and not (client_id and secret):
+            logger.info("Monitoring via REST API (token/OAuth)")
+
     for _ in range(max_polls):
         try:
+            if method == "sfapi_client" and client_id and secret:
+                try:
+                    from sfapi_client import Client
+                    from sfapi_client.compute import Machine
+                except Exception:
+                    method = "api"
+                else:
+                    with Client(client_id=client_id, secret=secret) as client:
+                        perlmutter = client.compute(Machine.perlmutter)
+                        job = None
+                        for attr in ("job", "jobs", "get_job", "job_by_id"):
+                            if hasattr(perlmutter, attr):
+                                job = getattr(perlmutter, attr)(job_id)
+                                break
+                        if job is None:
+                            for attr in ("job", "jobs", "get_job", "job_by_id"):
+                                if hasattr(client, attr):
+                                    job = getattr(client, attr)(job_id)
+                                    break
+                        if job is None:
+                            raise RuntimeError("Unable to fetch SFAPI job by id")
+                        if hasattr(job, "update"):
+                            job.update()
+                        state = getattr(job, "state", None) or getattr(job, "status", None)
+                        if hasattr(state, "value"):
+                            state = state.value
+                        if state:
+                            state_str = str(state).upper()
+                            if state_str not in ["RUNNING", "PENDING"]:
+                                return str(state)
+
             if method == "api" and nersc_session:
+                logger.debug("Polling via REST API for job %s", job_id)
                 api_url = f"https://api.nersc.gov/api/v1.2/compute/jobs/perlmutter/{job_id}"
 
                 if nersc_session["type"] == "oauth":

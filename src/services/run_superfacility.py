@@ -315,6 +315,7 @@ class SuperfacilityRunner:
         job_id, method = submit_job(
             script_path=str(script_path),
             system=system,
+            config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 
         logger.info(f"[ OK ] Job submitted: {job_id} (via {method})")
@@ -360,6 +361,7 @@ class SuperfacilityRunner:
             method=method,
             poll_interval=poll_interval,
             max_polls=max_polls,
+            config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 
         logger.info(f"[ OK ] Final state: {state}")
