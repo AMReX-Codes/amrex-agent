@@ -78,11 +78,11 @@ Synapse-style shared layout (example):
 ## Example command
 
 ```bash
+# export PROJECT=m4106
 python amrex_agent.py \
-  --prompt "AMReX Advection_AmrCore with a 64x64 grid" \
-  --config demo/superfacility/config_perlmutter_login_node.yaml \
-  --environment perlmutter \
-  --dry-run
+  --prompt "Run AMReX Advection_AmrCore using the default inputs file without changes." \
+  --config demo/superfacility/config_perlmutter_remote.yaml \
+  --environment perlmutter
 ```
 
 ## Notes
