@@ -122,7 +122,7 @@ class AMReXAgentConfig(BaseModel):
     """
     
     # === LLM Configuration ===
-    llm_provider: Literal["cborg", "alcf", "openai", "anthropic"] = Field(
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl"] = Field(
         default="cborg",
         description="LLM provider to use"
     )
@@ -183,6 +183,20 @@ class AMReXAgentConfig(BaseModel):
     anthropic_api_key: Optional[str] = Field(
         default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"),
         description="Anthropic API key"
+    )
+    
+    # === PNNL AI API ===
+    pnnl_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("LLM_API_KEY"),
+        description="PNNL AI API key (from LLM_API_KEY env var)"
+    )
+    pnnl_base_url: str = Field(
+        default="https://ai-incubator-api.pnnl.gov",
+        description="PNNL AI API base URL"
+    )
+    pnnl_default_model: str = Field(
+        default="claude-haiku-4-5-20251001-v1-birthright",
+        description="Default model for PNNL AI API"
     )
     
     pelec_executable: Optional[Path] = Field(
@@ -432,7 +446,7 @@ class AMReXAgentConfig(BaseModel):
 
     # === Superfacility API ===
     # Superfacility
-    superfacility_account: str = "mp111_g"  # Default NERSC account
+    superfacility_account: str = "m4304_g"  # Default NERSC account
     
     superfacility_client_id: Optional[str] = Field(
         default_factory=lambda: os.getenv("SUPERFACILITY_CLIENT_ID"),
@@ -684,6 +698,20 @@ def get_llm_client(config: AMReXAgentConfig):
     elif config.llm_provider == "anthropic":
         # TODO: Implement Anthropic client wrapper
         raise NotImplementedError("Anthropic provider not yet implemented")
+    
+    elif config.llm_provider == "pnnl":
+        if not config.pnnl_api_key:
+            raise ValueError("LLM_API_KEY environment variable not set for PNNL AI API")
+        
+        # Use default model if not explicitly set
+        if not config.llm_model:
+            config.llm_model = config.pnnl_default_model
+            logger.info(f" Using PNNL default model: {config.llm_model}")
+        
+        return OpenAI(
+            api_key=config.pnnl_api_key,
+            base_url=config.pnnl_base_url
+        )
     
     else:
         raise ValueError(f"Unknown LLM provider: {config.llm_provider}")
