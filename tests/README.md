@@ -16,6 +16,12 @@ Markers are registered in `pyproject.toml`. Auto-marking by path:
 - `tests/integration` → `@pytest.mark.integration`
 - `tests/quality` → `@pytest.mark.quality`
 `tests/e2e` is opt-in and only runs when selected by path or `-m e2e`.
+Resource markers:
+- `requires_solver("PeleC")` names the solver/code a test targets.
+- `requires_repos("PeleC")` and `requires_schema("PeleC")` gate tests on local assets.
+- `requires_indices("faiss" | "level0" | "level1" | "level2")` gate tests on index files.
+- `use_real_services` or `use_mock_services` describes service dependencies.
+`requires_solver(...)` bundles repo + schema + default index checks (hierarchical if `indexing_hierarchical`, otherwise `faiss`).
 
 Additional markers exist for integration ladder levels and components; keep them
 consistent with `pyproject.toml`.
@@ -34,6 +40,7 @@ You can also run by marker or path:
 pytest -m unit
 pytest tests/integration -m "not slow"
 pytest tests/quality
+pytest tests/e2e -m e2e -k pelec
 ```
 
 ## Coverage

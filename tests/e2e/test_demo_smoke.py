@@ -77,9 +77,11 @@ def _find_run_directory(output_dir: Path, stdout: str, stderr: str) -> Path | No
 @pytest.mark.demo
 @pytest.mark.use_real_services
 @pytest.mark.indexing_hierarchical
+@pytest.mark.requires_solver("PeleLMeX")
 @pytest.mark.requires_repos("PeleLMeX")
 @pytest.mark.requires_schema("PeleLMeX")
-def test_demo_prompt_file_hierarchical(tmp_path: Path) -> None:
+@pytest.mark.requires_indices("level0", "level1", "level2")
+def test_demo_prompt_file_pelelmex_hierarchical(tmp_path: Path) -> None:
     if not PELELMEX_PROMPT_PATH.exists():
         pytest.skip("Demo prompt file missing")
     repo_path = _resolve_pelelmex_repo()
@@ -131,8 +133,10 @@ def test_demo_prompt_file_hierarchical(tmp_path: Path) -> None:
 @pytest.mark.demo
 @pytest.mark.use_real_services
 @pytest.mark.indexing_simple
+@pytest.mark.requires_solver("ERF")
 @pytest.mark.requires_repos("ERF")
 @pytest.mark.requires_schema("ERF")
+@pytest.mark.requires_indices("faiss")
 def test_demo_prompt_file_erf(tmp_path: Path) -> None:
     if not ERF_PROMPT_PATH.exists():
         pytest.skip("ERF demo prompt file missing")
@@ -185,9 +189,11 @@ def test_demo_prompt_file_erf(tmp_path: Path) -> None:
 @pytest.mark.demo
 @pytest.mark.use_real_services
 @pytest.mark.indexing_simple
+@pytest.mark.requires_solver("PeleC")
 @pytest.mark.requires_repos("PeleC")
 @pytest.mark.requires_schema("PeleC")
-def test_demo_inline_prompt(tmp_path: Path) -> None:
+@pytest.mark.requires_indices("faiss")
+def test_demo_inline_prompt_pelec(tmp_path: Path) -> None:
     repo_path = _resolve_pelec_repo()
     if not repo_path:
         pytest.skip("PeleC repo not available")
@@ -237,8 +243,10 @@ def test_demo_inline_prompt(tmp_path: Path) -> None:
 @pytest.mark.demo
 @pytest.mark.use_real_services
 @pytest.mark.indexing_simple
+@pytest.mark.requires_solver("AMReX")
 @pytest.mark.requires_repos("AMReX")
 @pytest.mark.requires_schema("AMReX")
+@pytest.mark.requires_indices("faiss")
 def test_demo_amrex_baseline_override(tmp_path: Path) -> None:
     repo_path = _resolve_amrex_repo()
     if not repo_path:

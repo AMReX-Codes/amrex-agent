@@ -568,10 +568,12 @@ Success Criteria:
 # =============================================================================
 
 @pytest.mark.integration
+@pytest.mark.requires_indices("faiss")
+@pytest.mark.requires_solver("PeleC")
 class TestIntegrationWithRealIndex:
     """Integration test with actual FAISS index (if available)."""
     
-    def test_can_load_and_query_real_index(self):
+    def test_can_load_and_query_real_index_pelec(self):
         """
         Given: Real FAISS index exists
         When:  Loading and querying

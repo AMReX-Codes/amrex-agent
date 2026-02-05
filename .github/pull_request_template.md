@@ -27,11 +27,16 @@
 - [ ] tests/integration (if applicable): `pytest tests/integration`
 - [ ] other (list):
 - Output/summary:
+- If tests require repos/schemas/indices or real services, note markers used.
+- `requires_solver(...)` implies repo + schema + default indices are available locally.
+- Use `-k pelec|erf|amrex|warpx` to filter solver-specific tests.
 
 Examples:
 ```bash
-pytest tests/unit
-pytest tests/quality
+pytest tests/unit --tb=short -q
+pytest tests/quality --tb=short -q
+pytest tests/integration --tb=short -q
+pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py --tb=short -q
 ```
 
 ## Tests not run in CI (required if any)

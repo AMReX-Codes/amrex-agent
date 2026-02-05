@@ -96,8 +96,25 @@ def pytest_collection_modifyitems(config, items) -> None:
                 item.add_marker(skip_e2e)
 
     for item in items:
+        if item.get_closest_marker("use_real_services") and item.get_closest_marker("use_mock_services"):
+            raise pytest.UsageError(
+                "use_real_services and use_mock_services are mutually exclusive."
+            )
+
         if item.get_closest_marker("use_real_services") and not _has_cborg_key():
             item.add_marker(pytest.mark.skip(reason="CBORG API key not available"))
+
+        solver_marker = item.get_closest_marker("requires_solver")
+        if solver_marker:
+            solver_args = solver_marker.args
+            if solver_args and not _repos_available(solver_args):
+                item.add_marker(pytest.mark.skip(reason="Required solver repo(s) not available"))
+            if solver_args and not _schemas_available(solver_args):
+                item.add_marker(pytest.mark.skip(reason="Required solver schema(s) not available"))
+            if solver_args:
+                default_indices = _default_indices_for_item(item)
+                if default_indices and not _indices_available(default_indices):
+                    item.add_marker(pytest.mark.skip(reason="Required FAISS index files not available"))
 
         repo_marker = item.get_closest_marker("requires_repos")
         if repo_marker and not _repos_available(repo_marker.args):
@@ -106,6 +123,10 @@ def pytest_collection_modifyitems(config, items) -> None:
         schema_marker = item.get_closest_marker("requires_schema")
         if schema_marker and not _schemas_available(schema_marker.args):
             item.add_marker(pytest.mark.skip(reason="Required schema file(s) not available"))
+
+        indices_marker = item.get_closest_marker("requires_indices")
+        if indices_marker and not _indices_available(indices_marker.args):
+            item.add_marker(pytest.mark.skip(reason="Required FAISS index files not available"))
 
 
 def _explicit_e2e_selected(config) -> bool:
@@ -158,6 +179,52 @@ def _schemas_available(repo_names: tuple) -> bool:
         if not list(schema_root.glob(pattern)):
             return False
     return True
+
+
+def _indices_available(index_names: tuple) -> bool:
+    if not index_names:
+        return True
+    from src.config import AMReXAgentConfig
+    from src.services.faiss_artifacts import faiss_indices_present
+
+    faiss_root = AMReXAgentConfig().faiss_db_path
+    if not faiss_root.exists():
+        return False
+    for index_name in index_names:
+        normalized = str(index_name).strip().lower()
+        if not normalized:
+            continue
+        if normalized in {"faiss", "any", "all"}:
+            if not faiss_indices_present(faiss_root):
+                return False
+            continue
+        if normalized in {"level0", "l0"}:
+            if not _faiss_dir_has_indices(faiss_root / "level0"):
+                return False
+            continue
+        if normalized in {"level1", "l1"}:
+            if not _faiss_dir_has_indices(faiss_root / "level1"):
+                return False
+            continue
+        if normalized in {"level2", "l2"}:
+            if not _faiss_dir_has_indices(faiss_root / "level2"):
+                return False
+            continue
+        if not _faiss_dir_has_indices(faiss_root / normalized):
+            return False
+    return True
+
+
+def _default_indices_for_item(item) -> tuple[str, ...]:
+    if item.get_closest_marker("indexing_hierarchical"):
+        return ("level0", "level1", "level2")
+    return ("faiss",)
+
+
+def _faiss_dir_has_indices(directory: Path) -> bool:
+    if not directory.exists():
+        return False
+    return any(directory.rglob("*.faiss"))
 
 
 def _repo_env_and_dir(repo_name: str) -> tuple[str | None, str | None]:
