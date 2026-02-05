@@ -1,25 +1,17 @@
 ## Summary
 
-## PR type
-- [ ] bugfix
-- [ ] feature
-- [ ] refactor
-- [ ] docs
-- [ ] infra
-- [ ] tests
-- [ ] data/indices
+## Related or overlapping functionality / DRY guidance
+- What other functionality overlaps this change, and can it be reused to avoid duplication?
+- If adding a non-optional variable or function argument (esp. node updates), how does that align with `src/models/graph_state_canonical.py` and the written node contracts in `tests/contracts`?
+- Does this decrease pytest coverage or add tests in `tests/unit` or `tests/integration`?
 
-## Checklist (AMReX-style)
+## Impact checklist
 - [ ] fixes a bug or incorrect behavior
 - [ ] adds new capabilities
 - [ ] changes answers in the test suite to more than roundoff level
 - [ ] likely affects downstream users or results
 - [ ] includes docs updates (code/docs), if appropriate
-
-## Related or overlapping functionality / DRY guidance
-- What other functionality overlaps this change, and can it be reused to avoid duplication?
-- If adding a non-optional variable or function argument (esp. node updates), how does that align with `src/models/graph_state_canonical.py` and the written node contracts in `tests/contracts`?
-- Does this decrease pytest coverage or add tests in `tests/unit` or `tests/integration`?
+- [ ] none of the above
 
 ## Tests run (CI runs: `pytest tests/unit`, `pytest tests/quality`)
 - [ ] tests/unit: `pytest tests/unit`
@@ -62,13 +54,13 @@ pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py --tb=short -q
 - [ ] e2e demo: `pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py`
 - [ ] other (markers: use_real_services, requires_repos, requires_schema):
 
-## Docs/PRD updates (optional)
-- [ ] Docs updated
-- [ ] PRD updated or amended
-
 ## Notes (optional)
 - Manual output / logs (short):
 - Known limitations:
 
-## Maintainability note
+## Labels (optional)
+- [ ] I will check auto-labels after submitting.
+- [ ] Labels are okay if slightly off.
+
+## Maintainability note (optional)
 - Prefer the most maintainable, DRY, and human-readable option; add duplication only with a clear reason.
