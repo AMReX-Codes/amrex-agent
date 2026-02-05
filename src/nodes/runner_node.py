@@ -11,6 +11,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.run_superfacility import SuperfacilityRunner
+from src.services.run_superfacility_tools import stage_out_outputs
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +178,21 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 )
                 submit_result["job_status"] = final_state
                 submit_result["final_state"] = final_state
+                if (
+                    getattr(config, "stage_out_outputs", True)
+                    and submit_result.get("remote_run_dir")
+                ):
+                    stage_out_result = stage_out_outputs(
+                        remote_run_dir=submit_result["remote_run_dir"],
+                        local_run_dir=actual_run_dir,
+                        system=getattr(config, "environment", "perlmutter"),
+                    )
+                    submit_result["stage_out"] = stage_out_result
+                    if stage_out_result.get("errors"):
+                        logger.warning(
+                            "Stage-out completed with errors: %s",
+                            stage_out_result["errors"],
+                        )
 
         final_state = None
         method = submit_result.get("method")
@@ -204,7 +220,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "iteration": state.get("iteration", 0),
             "details": {
                 "job_id": job_id,
-                "script_path": submit_result.get("script_path")
+                "script_path": submit_result.get("script_path"),
+                "run_directory": str(actual_run_dir),
             }
         }
 

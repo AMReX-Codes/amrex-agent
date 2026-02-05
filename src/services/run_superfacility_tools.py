@@ -53,6 +53,8 @@ def generate_slurm_script(
 #SBATCH --constraint={constraint}
 #SBATCH --qos={qos}
 #SBATCH --job-name=amrex_{run_dir_name}
+#SBATCH --output=job_stdout.log
+#SBATCH --error=job_stderr.log
 
 # GPU environment
 export MPICH_GPU_SUPPORT_ENABLED=1
@@ -80,14 +82,14 @@ chmod +x ./{exe_name} 2>/dev/null || true
 
 # Run simulation
 echo "Starting at $(date)"
-srun -n {ntasks} {exe_cmd} inputs >& run.out
+srun -n {ntasks} {exe_cmd} inputs > stdout.log 2> stderr.log
 
 echo ""
 echo "Finished at $(date)"
 echo "\u2713 Complete. Output: run.out"
 echo ""
 echo "Files:"
-ls -lh run.out plt* 2>/dev/null || echo "  (no plotfiles yet)"
+ls -lh stdout.log stderr.log job_stdout.log job_stderr.log plt* 2>/dev/null || echo "  (no plotfiles yet)"
 """
 
     return script
@@ -812,6 +814,366 @@ def list_remote_files(
             if name:
                 names.append(str(name))
     return names
+
+
+def list_remote_entries(
+    remote_dir: str,
+    nersc_session: dict | None = None,
+    system: str = "perlmutter",
+) -> list[dict]:
+    """
+    Return directory entries from the SFAPI utilities endpoint.
+    """
+    import requests
+
+    if nersc_session is None:
+        clients = find_nersc_clients()
+        if clients:
+            for color in ["default", "green", "orange", "red"]:
+                nersc_session = create_nersc_session(clients, color=color)
+                if nersc_session:
+                    break
+
+    if not nersc_session:
+        raise RuntimeError("No NERSC session for REST directory listing")
+
+    api_url = f"https://api.nersc.gov/api/v1.2/utilities/ls/{system}/{remote_dir}"
+
+    if nersc_session["type"] == "oauth":
+        response = nersc_session["session"].get(api_url)
+    else:
+        headers = {"Authorization": f"Bearer {nersc_session['token']}"}
+        response = requests.get(api_url, headers=headers)
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"REST ls failed for {remote_dir}: {response.status_code} {response.text}"
+        )
+
+    result = response.json()
+    if isinstance(result, list):
+        return [{"name": item} if isinstance(item, str) else item for item in result if item]
+
+    if isinstance(result, dict):
+        for key in ("entries", "files", "contents", "items", "data"):
+            if isinstance(result.get(key), list):
+                return [
+                    {"name": item} if isinstance(item, str) else item
+                    for item in result[key]
+                    if item
+                ]
+
+    return []
+
+
+def _is_remote_dir(entry: dict) -> bool:
+    name = str(entry.get("name", ""))
+    if entry.get("type") in ("directory", "dir", "d"):
+        return True
+    if entry.get("is_dir") or entry.get("isdir"):
+        return True
+    if name.startswith("plt"):
+        return True
+    if name.startswith("Level_"):
+        return True
+    if name == "particles":
+        return True
+    return False
+
+
+def _resolve_sfapi_credentials() -> tuple[str | None, str | None]:
+    import os
+
+    client_id = os.getenv("SUPERFACILITY_CLIENT_ID")
+    secret = os.getenv("SUPERFACILITY_SECRET")
+    if client_id and secret:
+        return client_id, secret
+    parsed = _load_sfapi_key_file()
+    if parsed:
+        return parsed
+    return None, None
+
+
+def _download_remote_file_sfapi(
+    remote_path: str,
+    local_path: str | Path,
+    client_id: str,
+    secret: str,
+    system: str = "perlmutter",
+) -> bool:
+    try:
+        from sfapi_client import Client
+        from sfapi_client.compute import Machine
+    except Exception:
+        return False
+
+    if system != "perlmutter":
+        return False
+
+    local_path = Path(local_path)
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+
+    method_names = ("download", "download_file", "get_file", "get")
+    with Client(client_id=client_id, secret=secret) as client:
+        perlmutter = client.compute(Machine.perlmutter)
+        for name in method_names:
+            if not hasattr(perlmutter, name):
+                continue
+            method = getattr(perlmutter, name)
+            try:
+                result = method(remote_path, str(local_path))
+                return True
+            except TypeError:
+                try:
+                    result = method(remote_path)
+                except Exception:
+                    continue
+                if result is None:
+                    continue
+                if isinstance(result, (bytes, bytearray)):
+                    local_path.write_bytes(result)
+                    return True
+                if isinstance(result, str):
+                    local_path.write_text(result)
+                    return True
+                if hasattr(result, "read"):
+                    local_path.write_bytes(result.read())
+                    return True
+            except Exception:
+                continue
+    return False
+
+
+def download_remote_file(
+    remote_path: str,
+    local_path: str | Path,
+    nersc_session: dict | None = None,
+    system: str = "perlmutter",
+    client_id: str | None = None,
+    secret: str | None = None,
+) -> None:
+    """
+    Download a single remote file via the SFAPI utilities endpoint.
+    """
+    import requests
+
+    if nersc_session is None:
+        clients = find_nersc_clients()
+        if clients:
+            for color in ["default", "green", "orange", "red"]:
+                nersc_session = create_nersc_session(clients, color=color)
+                if nersc_session:
+                    break
+
+    if client_id and secret:
+        if _download_remote_file_sfapi(
+            remote_path=remote_path,
+            local_path=local_path,
+            client_id=client_id,
+            secret=secret,
+            system=system,
+        ):
+            return
+    import logging
+    logging.getLogger(__name__).debug(
+        "SFAPI client download unavailable or failed for %s", remote_path
+    )
+
+    if not nersc_session:
+        raise RuntimeError("No NERSC session for REST download")
+
+    api_url = f"https://api.nersc.gov/api/v1.2/utilities/download/{system}"
+
+    headers = None
+    if nersc_session["type"] != "oauth":
+        headers = {"Authorization": f"Bearer {nersc_session['token']}"}
+
+    def _do_download(path: str) -> requests.Response:
+        params = {"file": path}
+        if nersc_session["type"] == "oauth":
+            response = nersc_session["session"].get(
+                api_url,
+                params=params,
+                stream=True,
+                allow_redirects=False,
+            )
+        else:
+            response = requests.get(
+                api_url,
+                headers=headers,
+                params=params,
+                stream=True,
+                allow_redirects=False,
+            )
+
+        if response.status_code in (301, 302, 307, 308) and response.headers.get("Location"):
+            redirect_url = response.headers["Location"].replace("http://", "https://")
+            if nersc_session["type"] == "oauth":
+                response = nersc_session["session"].get(
+                    redirect_url,
+                    stream=True,
+                    allow_redirects=False,
+                )
+            else:
+                response = requests.get(
+                    redirect_url,
+                    headers=headers,
+                    stream=True,
+                    allow_redirects=False,
+                )
+        return response
+
+    response = _do_download(remote_path)
+    if response.status_code == 200:
+        content_type = response.headers.get("Content-Type", "")
+        if "application/json" in content_type:
+            try:
+                payload = response.json()
+            except Exception:
+                payload = {}
+            if isinstance(payload, dict) and payload.get("status") == "ERROR":
+                response = _do_download(remote_path.lstrip("/"))
+        if response.status_code == 200:
+            content_type = response.headers.get("Content-Type", "")
+            if "application/json" in content_type:
+                try:
+                    payload = response.json()
+                except Exception:
+                    payload = {}
+                if isinstance(payload, dict) and payload.get("status") == "ERROR":
+                    raise RuntimeError(
+                        f"REST download failed for {remote_path}: {payload}"
+                    )
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"REST download failed for {remote_path}: {response.status_code} {response.text}"
+        )
+
+    local_path = Path(local_path)
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(local_path, "wb") as handle:
+        for chunk in response.iter_content(chunk_size=1024 * 1024):
+            if chunk:
+                handle.write(chunk)
+
+
+def stage_out_outputs(
+    remote_run_dir: str,
+    local_run_dir: str | Path,
+    nersc_session: dict | None = None,
+    system: str = "perlmutter",
+    text_extensions: tuple[str, ...] = (".out", ".err", ".log", ".txt"),
+) -> dict[str, Any]:
+    """
+    Stage back output text files and the last plotfile.
+    """
+    local_run_dir = Path(local_run_dir)
+    import logging
+
+    logger = logging.getLogger(__name__)
+    if nersc_session is None:
+        clients = find_nersc_clients()
+        if clients:
+            for color in ["default", "green", "orange", "red"]:
+                nersc_session = create_nersc_session(clients, color=color)
+                if nersc_session:
+                    break
+    client_id, secret = _resolve_sfapi_credentials()
+    logger.debug(
+        "Stage-out SFAPI client creds available=%s", bool(client_id and secret)
+    )
+    if not nersc_session:
+        raise RuntimeError("No NERSC session for stage-out downloads")
+
+    entries = list_remote_entries(remote_run_dir, nersc_session=nersc_session, system=system)
+    downloaded: list[str] = []
+    errors: list[str] = []
+
+    plot_dirs: list[str] = []
+    for entry in entries:
+        name = Path(entry.get("name", "")).name
+        if not name:
+            continue
+        if name in (".", ".."):
+            continue
+        if name.startswith("plt") and _is_remote_dir(entry):
+            if ".old." in name:
+                continue
+            plot_dirs.append(name)
+            continue
+        if name.lower().endswith(text_extensions) and not _is_remote_dir(entry):
+            remote_path = str(Path(remote_run_dir) / name)
+            local_path = local_run_dir / name
+            try:
+                download_remote_file(
+                    remote_path=remote_path,
+                    local_path=local_path,
+                    nersc_session=nersc_session,
+                    system=system,
+                    client_id=client_id,
+                    secret=secret,
+                )
+                downloaded.append(str(local_path))
+            except Exception as exc:
+                errors.append(f"{remote_path}: {exc}")
+                logger.warning("Stage-out failed for %s: %s", remote_path, exc)
+
+    if plot_dirs:
+        plot_dirs.sort()
+        plot_dir = plot_dirs[-1]
+        try:
+            _download_plotfile_recursive(
+                remote_dir=str(Path(remote_run_dir) / plot_dir),
+                local_dir=local_run_dir / plot_dir,
+                nersc_session=nersc_session,
+                system=system,
+                client_id=client_id,
+                secret=secret,
+            )
+            downloaded.append(str(local_run_dir / plot_dir))
+        except Exception as exc:
+            errors.append(f"{plot_dir}: {exc}")
+            logger.warning("Stage-out failed for plotfile %s: %s", plot_dir, exc)
+
+    return {"downloaded": downloaded, "errors": errors}
+
+
+def _download_plotfile_recursive(
+    remote_dir: str,
+    local_dir: Path,
+    nersc_session: dict | None = None,
+    system: str = "perlmutter",
+    client_id: str | None = None,
+    secret: str | None = None,
+) -> None:
+    entries = list_remote_entries(remote_dir, nersc_session=nersc_session, system=system)
+    for entry in entries:
+        name = Path(entry.get("name", "")).name
+        if not name:
+            continue
+        if name in (".", ".."):
+            continue
+        remote_path = str(Path(remote_dir) / name)
+        local_path = local_dir / name
+        if _is_remote_dir(entry):
+            _download_plotfile_recursive(
+                remote_dir=remote_path,
+                local_dir=local_path,
+                nersc_session=nersc_session,
+                system=system,
+                client_id=client_id,
+                secret=secret,
+            )
+        else:
+            download_remote_file(
+                remote_path=remote_path,
+                local_path=local_path,
+                nersc_session=nersc_session,
+                system=system,
+                client_id=client_id,
+                secret=secret,
+            )
 
 
 def find_remote_executable(

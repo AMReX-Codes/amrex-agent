@@ -529,6 +529,10 @@ class AMReXAgentConfig(BaseModel):
         default=True,
         description="Monitor remote submissions until completion."
     )
+    stage_out_outputs: bool = Field(
+        default=True,
+        description="Stage back output logs and plotfiles after remote completion."
+    )
     
     # === Workflow Settings ===
     max_iterations: int = Field(

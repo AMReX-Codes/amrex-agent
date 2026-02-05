@@ -18,6 +18,7 @@ from src.services.run_superfacility_tools import (
     _load_sfapi_key_file,
     find_remote_executable,
     monitor_job,
+    stage_out_outputs,
     stage_run_directory,
     submit_job,
 )
@@ -249,12 +250,17 @@ class SuperfacilityRunner:
         if output_dir is None:
             output_dir = self.config.output_dir
 
-        # Create run directory
-        run_dir = setup_run_directory.invoke({
-            'base_name': base_name,
-            'base_dir': str(output_dir) if output_dir else None
-        })
-        logger.info(f" Run directory: {run_dir}")
+        output_dir_path = Path(output_dir) if output_dir else None
+        if output_dir_path and output_dir_path.exists() and (output_dir_path / "inputs").exists():
+            run_dir = output_dir_path
+            logger.info(f" Using existing run directory: {run_dir}")
+        else:
+            # Create run directory
+            run_dir = setup_run_directory.invoke({
+                'base_name': base_name,
+                'base_dir': str(output_dir) if output_dir else None
+            })
+            logger.info(f" Run directory: {run_dir}")
 
         # Find/compile executable if not provided
         if executable_path is None:
@@ -275,19 +281,21 @@ class SuperfacilityRunner:
                     require_cuda=True  # Default: assume GPU
                 )
 
+        run_dir_str = str(run_dir)
+
         # Copy files to run directory
         executable_arg = executable_path or ""
         if inputs_path:
             # Explicit inputs file
             files = copy_to_rundir.invoke({
-                'run_dir': run_dir,
+                'run_dir': run_dir_str,
                 'executable_path': executable_arg,
                 'inputs_path': str(inputs_path)
             })
         elif case_dir:
             # Auto-find inputs in case_dir
             files = copy_to_rundir.invoke({
-                'run_dir': run_dir,
+                'run_dir': run_dir_str,
                 'executable_path': executable_arg,
                 'inputs_dir': str(case_dir)
             })
@@ -297,7 +305,7 @@ class SuperfacilityRunner:
         logger.info(f"[ OK ] Copied {len(files)} files to run directory")
 
         return {
-            'run_dir': run_dir,
+            'run_dir': run_dir_str,
             'executable': executable_path,
             'inputs': files.get('inputs'),
             'files': files
@@ -483,6 +491,7 @@ class SuperfacilityRunner:
             'method': method,
             'run_dir': str(run_dir),
             'script_path': str(script_path),
+            'remote_run_dir': str(remote_run_dir) if remote_run_dir else None,
             'params': params,
             'job_status': 'queued'
         }

@@ -33,7 +33,20 @@ def get_run_directory(state: GraphState) -> str | None:
     str or None
         Run directory path if found; otherwise ``None``.
     """
-    # Try canonical path first (source of truth)
+    # Prefer runner entry if available (post-staging)
+    try:
+        runner_entry = next(
+            e for e in reversed(state.get('workflow_history', []))
+            if e.get('node') == 'runner'
+        )
+        run_dir = runner_entry.get('details', {}).get('run_directory')
+        if run_dir:
+            logger.debug("Run directory loaded from runner workflow_history entry")
+            return run_dir
+    except StopIteration:
+        pass
+
+    # Try canonical path next (source of truth)
     try:
         input_writer_entry = next(
             e for e in reversed(state.get('workflow_history', []))
