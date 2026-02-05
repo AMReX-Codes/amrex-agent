@@ -17,8 +17,8 @@
     },
     "erf": {
       "url": "https://github.com/erf-model/ERF.git",
-      "branch": "development",
-      "commit": "ba2bcac5882fedf31a9f2a63252b39a359e0bbc0"
+      "branch": "26.02",
+      "commit": "eb2717130c9f68cd5175388be721a30373343103"
     }
   }
 }
