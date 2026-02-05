@@ -15,6 +15,7 @@ Markers are registered in `pyproject.toml`. Auto-marking by path:
 - `tests/unit` → `@pytest.mark.unit`
 - `tests/integration` → `@pytest.mark.integration`
 - `tests/quality` → `@pytest.mark.quality`
+`tests/e2e` is opt-in and only runs when selected by path or `-m e2e`.
 
 Additional markers exist for integration ladder levels and components; keep them
 consistent with `pyproject.toml`.
@@ -52,6 +53,15 @@ Current coverage planning lives in `docs/coverage_map.md`. It links:
 When adding unit tests, prefer fixtures that mirror the contract shapes in
 `tests/contracts` and the fields defined in
 `src/models/graph_state_canonical.py`.
+
+## README Command Parity Policy
+
+When editing `README.md` or other docs with bash command blocks:
+- Keep commands and flags in sync with the current CLI behavior.
+- If a command changes, update the README and note the verification in the PR
+  template "Tests run" section.
+- Prefer commands that are runnable on a clean checkout (call out any required
+  env vars or API keys).
 
 ## Contributing
 
