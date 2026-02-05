@@ -105,7 +105,7 @@
         ]
       },
       "assertions": [
-        "result['job_status'] in ['completed', 'failed', 'unstable']",
+        "result['job_status'] in ['completed', 'failed']",
         "result['workflow_history'][-1]['node'] == 'analysis'",
         "result['workflow_history'][-1]['action'] == 'analysis_completed'",
         "result['workflow_history'][-1]['details']['analysis_report']",
@@ -132,7 +132,7 @@
     {
       "field": "job_status",
       "requirement": "MUST be at top level, updated from runner status",
-      "canonical_format": "Literal['completed', 'failed', 'unstable']",
+      "canonical_format": "Literal['completed', 'failed']",
       "violation_consequence": "Control flow cannot determine next action"
     },
     {

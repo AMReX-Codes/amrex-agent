@@ -10,6 +10,19 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
+    """Decide if runs need remote staging based on target vs detected environment."""
+    if target_env is not None:
+        target_env = target_env.strip().lower()
+    if detected_env is not None:
+        detected_env = detected_env.strip().lower()
+    if target_env != "perlmutter":
+        return False
+    if detected_env is None:
+        return False
+    return detected_env != "perlmutter"
+
+
 def detect_environment(env: dict = None) -> str:
     """Detect if running on Perlmutter, locally, or as MCP.
     
@@ -35,6 +48,28 @@ def detect_environment(env: dict = None) -> str:
         return 'mcp'
     else:
         return 'local'
+
+
+def detect_hpc_system() -> tuple[str, str]:
+    """Detect HPC site/system using environment and hostname hints."""
+    import socket
+
+    nersc_host = os.environ.get("NERSC_HOST")
+    if nersc_host and nersc_host in ["perlmutter", "alvarez", "muller"]:
+        return "nersc", "perlmutter"
+
+    if os.environ.get("LMOD_SITE_NAME") == "OLCF":
+        host_name = socket.getfqdn()
+        if "frontier" in host_name:
+            return "olcf", "frontier"
+        if "crusher" in host_name:
+            return "olcf", "crusher"
+
+    fqdn = socket.getfqdn()
+    if "alcf.anl.gov" in fqdn and "polaris" in fqdn:
+        return "alcf", "polaris"
+
+    return "unknown", "unknown"
 
 
 def resolve_database_path(relative_path: str) -> Path:
@@ -399,6 +434,12 @@ class AMReXAgentConfig(BaseModel):
         description="If True, generate scripts without executing external runs."
     )
 
+    run_mode: Literal["dry", "stage", "submit", "full"] = Field(
+        default="full",
+        description="Run execution strategy: dry (scripts only), stage (stage inputs only), "
+                    "submit (submit job only), full (stage + submit)."
+    )
+
     # === Phase 4: Container and Analysis Configuration ===
     container_mode: bool = Field(
         default_factory=lambda: bool(os.getenv('PODMAN_HPC') or os.getenv('SHIFTER')),
@@ -452,10 +493,6 @@ class AMReXAgentConfig(BaseModel):
         description="Superfacility API endpoint"
     )
 
-    remote_staging: bool = Field(
-        default=False,
-        description="If True, stage run directory to a remote filesystem before submission."
-    )
     remote_output_dir: Optional[Path] = Field(
         default=None,
         description="Remote output directory for staged runs (defaults to output_dir)."
@@ -524,6 +561,16 @@ class AMReXAgentConfig(BaseModel):
         from database.configs import discover_code_configs
         return {c.code_name: c for c in discover_code_configs()}
 
+    def detect_hpc_system(self) -> tuple[str, str]:
+        """Detect HPC site/system using shared config helper."""
+        return detect_hpc_system()
+
+    def should_stage_run(self, detected_env: str | None = None) -> bool:
+        """Decide if a run should be staged based on target vs detected environment."""
+        if detected_env is None:
+            detected_env = detect_environment()
+        return should_stage_run(getattr(self, "environment", None), detected_env)
+
     @property
     def amrex_agent_root(self) -> Path:
         """Root directory of amrex_agent (where src/ is).
@@ -555,6 +602,25 @@ class AMReXAgentConfig(BaseModel):
                 "[Config] disable_embeddings=True while indexing_strategy=%s; embeddings will be disabled",
                 self.indexing_strategy,
             )
+
+        allowed_run_modes = {"dry", "stage", "submit", "full"}
+        run_mode = getattr(self, "run_mode", "full")
+        if run_mode not in allowed_run_modes:
+            raise ValueError(f"Invalid run_mode: {run_mode}")
+        run_mode_set = "run_mode" in fields_set
+        dry_run_set = "dry_run" in fields_set
+        if run_mode_set:
+            if run_mode == "dry" and not self.dry_run:
+                self.dry_run = True
+            elif run_mode != "dry" and self.dry_run:
+                if dry_run_set:
+                    logger.warning(
+                        "[Config] dry_run=True ignored because run_mode=%s",
+                        run_mode,
+                    )
+                self.dry_run = False
+        elif self.dry_run:
+            self.run_mode = "dry"
 
         self.repositories = {
             'PeleC': self.pelec_repo_path,

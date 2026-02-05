@@ -219,7 +219,8 @@ class LocalRunner:
         qos: str = "regular",
         constraint: str = "gpu&hbm40g",
         system: str = "perlmutter",
-        dry_run: bool = False
+        dry_run: bool = False,
+        run_mode: str | None = None
     ) -> dict[str, Any]:
         """
         Execute locally via subprocess - matches SuperfacilityRunner.submit() interface.
@@ -244,6 +245,8 @@ class LocalRunner:
             Ignored (not applicable for local).
         dry_run : bool, optional
             If True, generate script but don't execute.
+        run_mode : str or None, optional
+            Execution strategy (dry/stage/submit/full). Overrides dry_run when set.
 
         Returns
         -------
@@ -279,13 +282,15 @@ class LocalRunner:
         script_path.chmod(0o755)
         logger.info(f" Generated script: {script_path.name}")
 
-        if dry_run:
+        effective_mode = run_mode or ("dry" if dry_run else "full")
+        if effective_mode in {"dry", "stage"}:
             logger.info(f"[DRY RUN] Would execute: {' '.join(cmd)}")
             return {
                 'script_path': str(script_path),
                 'run_dir': str(run_path),
                 'method': 'dry_run',
-                'submitted': False
+                'submitted': False,
+                'job_status': 'completed'
             }
 
         # Execute process and WAIT for completion (blocking)

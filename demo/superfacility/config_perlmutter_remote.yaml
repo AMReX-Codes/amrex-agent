@@ -12,7 +12,6 @@ inputs_file_override: inputs
 
 # Remote destination for staged runs
 remote_output_dir: /global/cfs/cdirs/$PROJECT/$USER/superfacility
-remote_staging: true
 remote_staging_method: sfapi_client
 remote_run_dir: /global/cfs/cdirs/$PROJECT/$USER/superfacility/run_test_1
 

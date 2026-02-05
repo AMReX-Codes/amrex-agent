@@ -418,7 +418,12 @@ def parse_arguments(args=None):
     parser.add_argument(
         '--dry-run',
         action='store_true',
-        help='Generate scripts but do not submit job'
+        help='Generate scripts but do not submit job (deprecated; use --run-mode dry)'
+    )
+    parser.add_argument(
+        '--run-mode',
+        choices=['dry', 'stage', 'submit', 'full'],
+        help='Run execution strategy: dry, stage, submit, full'
     )
     parser.add_argument(
         '--save-workflow',
@@ -606,8 +611,12 @@ def main(args=None):
         if parsed_args.output_dir:
             config.output_dir = Path(parsed_args.output_dir)
 
-        if parsed_args.dry_run:
+        if parsed_args.run_mode:
+            config.run_mode = parsed_args.run_mode
+            config.dry_run = parsed_args.run_mode == "dry"
+        elif parsed_args.dry_run:
             config.dry_run = True
+            config.run_mode = "dry"
 
         if parsed_args.environment:
             config.environment = parsed_args.environment

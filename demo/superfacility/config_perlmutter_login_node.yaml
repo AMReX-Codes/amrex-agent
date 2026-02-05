@@ -15,4 +15,3 @@ output_dir: /global/cfs/cdirs/$PROJECT/$USER/superfacility
 
 # Execution
 allow_local_run: false
-remote_staging: false

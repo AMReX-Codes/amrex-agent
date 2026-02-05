@@ -78,8 +78,15 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
     config = state["config"]
     iteration = state.get("iteration", 0)
 
-    if getattr(config, "dry_run", False):
-        logger.info("[INFO] Dry-run enabled - skipping analysis")
+    run_mode = getattr(config, "run_mode", None)
+    if run_mode is None or run_mode == "full":
+        if getattr(config, "dry_run", False):
+            run_mode = "dry"
+        else:
+            run_mode = run_mode or "full"
+
+    if run_mode in {"dry", "stage", "submit"}:
+        logger.info("[INFO] Run mode %s - skipping analysis", run_mode)
         workflow_history = state.get("workflow_history", [])
         history_entry = {
             "node": "analysis",
@@ -88,7 +95,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             "iteration": iteration,
             "details": {
                 "status": "skipped",
-                "reason": "dry_run"
+                "reason": run_mode
             }
         }
         new_history = workflow_history + [history_entry]
@@ -97,7 +104,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             "mode": "proceed",
             "iteration": iteration,
             "workflow_history": new_history,
-            "job_status": "skipped",
+            "job_status": state.get("job_status", "completed"),
             "analysis_report": {
                 "status": "skipped",
                 "message": "Dry-run: analysis skipped"
@@ -131,7 +138,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             "mode": "proceed",
             "iteration": iteration,
             "workflow_history": new_history,
-            "job_status": "skipped",
+            "job_status": state.get("job_status", "completed"),
             "analysis_report": {
                 "status": "skipped",
                 "message": "No run directory"
@@ -317,6 +324,13 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             logger.debug(f"   Performance: {performance['avg_cells_per_sec']:,.0f} cells/s (avg)")
 
     # Return state updates dict
+    status_map = {
+        "success": "completed",
+        "failed": "failed",
+        "unstable": "failed",
+    }
+    mapped_status = status_map.get(status)
+
     updates = {
         # === UTILITY FLAGS ===
         "mode": "proceed",
@@ -327,11 +341,12 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
 
         # === PRAGMATIC CONVENIENCE COPIES ===
         # For performance/visualization (optional, matches workflow_history.details)
-        "job_status": status,
         "analysis_report": report,
         "error_logs": error_logs if error_logs else state.get('error_logs', []),
         "retry_guidance": retry_guidance,
     }
+    if mapped_status:
+        updates["job_status"] = mapped_status
 
     logger.info(f"Analysis complete: {status}")
     return updates

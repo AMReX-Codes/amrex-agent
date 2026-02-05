@@ -231,7 +231,7 @@ python amrex_agent.py \
   --output-dir /tmp/amrex_e2e_runs \
   --indexing-strategy simple \
   --baseline-override AMReX/Tests/Amr/Advection_AmrCore/Exec \
-  --dry-run \
+  --run-mode dry \
   --save-workflow
 ```
 
@@ -250,6 +250,7 @@ Optional:
   --save-workflow           Save workflow_history.json
   --save-transcript         Save agent reasoning log
   --verbose, -v             Enable debug output
+  --run-mode MODE           Run strategy: dry, stage, submit, full (default: full)
   --indexing-strategy       Choose "simple", "hierarchical", or "override_static"
   --inputs-file-strategy    Choose inputs selection: oldest/newest/smallest/llm_compare/override
   --inputs-file-override    Explicit inputs file (absolute path or relative to case dir)

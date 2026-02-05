@@ -90,3 +90,21 @@ python amrex_agent.py \
 - The SFAPI path assumes the executable and inputs are already on Perlmutter.
 - The generated submission script uses `srun` (no container).
 - If `sfapi_client` is unavailable, the code falls back to REST token auth.
+
+## Run modes and data location
+
+Use `--run-mode` to control which actions happen:
+
+- `dry`: generate scripts only; all files remain local.
+- `stage`: stage inputs/executable to remote (when `--environment perlmutter` and running off-system); no submit.
+- `submit`: submit job only; no monitoring; run directory is local unless staging is enabled.
+- `full`: stage (if enabled), submit, and monitor until completion.
+
+Remote staging is inferred when `--environment perlmutter` and the host is not Perlmutter.
+
+SFAPI color mapping (docs only):
+
+- green: read-only/job status (no uploads or submit) -> use `--run-mode dry`
+- yellow: read-only + small downloads (no uploads or submit) -> use `--run-mode dry`
+- orange: adds uploads and transfers (no submit) -> use `--run-mode stage` when staging is inferred
+- red: submit + run commands -> use `--run-mode submit` or `--run-mode full`

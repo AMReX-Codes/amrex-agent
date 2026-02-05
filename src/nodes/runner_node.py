@@ -108,6 +108,13 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         }
 
     try:
+        run_mode = getattr(config, "run_mode", None)
+        if run_mode is None or run_mode == "full":
+            if getattr(config, "dry_run", False):
+                run_mode = "dry"
+            else:
+                run_mode = run_mode or "full"
+
         # Select runner based on environment
         if config.environment == "local":
             from src.services.run_local import LocalRunner
@@ -149,13 +156,22 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             submit_result = runner.submit(
                 run_directory=actual_run_dir,
                 nodes=getattr(config, "mpi_ranks", 1),
+                run_mode=run_mode,
                 dry_run=getattr(config, "dry_run", False),
             )
         else:
             submit_result = runner.submit(
                 run_directory=actual_run_dir,
+                run_mode=run_mode,
                 dry_run=getattr(config, "dry_run", False),
             )
+
+        final_state = None
+        method = submit_result.get("method")
+        if run_mode == "full" and method not in {"dry_run", "stage_only"}:
+            job_id = submit_result.get("job_id")
+            if job_id and hasattr(runner, "monitor"):
+                final_state = runner.monitor(job_id, method=method or "sbatch")
 
         # ========================================
         # COMPONENT 11e: OUTPUT MAPPING (Complete)
@@ -164,10 +180,15 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         job_id = submit_result.get("job_id") or "dry_run_placeholder"
 
         # Create structured history entry (Fix 11 - canonical format)
+        action = "job_submitted"
+        if run_mode == "dry":
+            action = "job_dry_run"
+        elif run_mode == "stage":
+            action = "job_staged"
         history_entry = {
             "node": "runner",
             "timestamp": datetime.utcnow().isoformat() + "Z",
-            "action": "job_submitted",
+            "action": action,
             "iteration": state.get("iteration", 0),
             "details": {
                 "job_id": job_id,
@@ -177,6 +198,28 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         # Get actual job status from submit result
         actual_status = submit_result.get("job_status", "completed")
+        if final_state:
+            state_str = str(final_state).upper()
+            failed_states = {
+                "FAILED",
+                "CANCELLED",
+                "TIMEOUT",
+                "NODE_FAIL",
+                "OUT_OF_MEMORY",
+                "BOOT_FAIL",
+                "DEADLINE",
+                "PREEMPTED",
+            }
+            completed_states = {"COMPLETED", "COMPLETING", "DONE", "SUCCESS"}
+            running_states = {"RUNNING", "PENDING", "CONFIGURING"}
+            if state_str in failed_states:
+                actual_status = "failed"
+            elif state_str in completed_states:
+                actual_status = "completed"
+            elif state_str in running_states:
+                actual_status = "running"
+            else:
+                actual_status = state_str.lower()
         exit_code = submit_result.get("exit_code", 0)
 
         return {

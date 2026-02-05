@@ -240,7 +240,8 @@ class SuperfacilityRunner:
                qos: str = "regular",
                constraint: str = "gpu&hbm40g",
                system: str = "perlmutter",
-               dry_run: bool = False) -> dict[str, Any]:
+               dry_run: bool = False,
+               run_mode: str | None = None) -> dict[str, Any]:
         """
         Submit job via Superfacility API (with sbatch fallback).
 
@@ -264,6 +265,8 @@ class SuperfacilityRunner:
             System name (perlmutter).
         dry_run : bool, optional
             If True, generate script but don't submit.
+        run_mode : str or None, optional
+            Execution strategy (dry/stage/submit/full). Overrides dry_run when set.
 
         Returns
         -------
@@ -295,10 +298,28 @@ class SuperfacilityRunner:
             'executable': executable
         }
 
-        remote_staging = getattr(self.config, "remote_staging", False)
+        effective_mode = run_mode or ("dry" if dry_run else "full")
+
+        try:
+            if hasattr(self.config, "should_stage_run"):
+                remote_staging = self.config.should_stage_run()
+            else:
+                from src.config import detect_environment, should_stage_run
+                remote_staging = should_stage_run(
+                    getattr(self.config, "environment", None),
+                    detect_environment(),
+                )
+        except Exception:
+            remote_staging = False
         remote_run_dir = None
         if remote_staging:
-            remote_output_dir = getattr(self.config, "remote_output_dir", None) or self.config.output_dir
+            remote_output_dir = getattr(self.config, "remote_output_dir", None)
+            if remote_output_dir is None:
+                remote_output_dir = self.config.output_dir
+                logger.warning(
+                    "[Config] remote_output_dir not set; defaulting staging target to %s",
+                    remote_output_dir,
+                )
             remote_output_dir = Path(os.path.expandvars(str(remote_output_dir)))
             fixed_remote_run_dir = getattr(self.config, "remote_run_dir", None)
             if fixed_remote_run_dir:
@@ -318,7 +339,16 @@ class SuperfacilityRunner:
         script_path.chmod(0o755)
         logger.info(f" Generated submit script: {script_path.name}")
 
-        if remote_staging:
+        if effective_mode == "dry":
+            return {
+                'script_path': str(script_path),
+                'run_dir': str(run_dir),
+                'method': 'dry_run',
+                'submitted': False,
+                'job_status': 'completed'
+            }
+
+        if remote_staging and effective_mode in {"stage", "submit", "full"}:
             cfg = self.config.model_dump() if hasattr(self.config, "model_dump") else {}
             client_id = cfg.get("superfacility_client_id")
             secret = cfg.get("superfacility_secret")
@@ -337,12 +367,13 @@ class SuperfacilityRunner:
 
             script_path = remote_run_dir / 'submit.sh'
 
-        if dry_run:
+        if effective_mode == "stage":
             return {
                 'script_path': str(script_path),
                 'run_dir': str(run_dir),
-                'method': 'dry_run',
-                'submitted': False
+                'method': 'stage_only',
+                'submitted': False,
+                'job_status': 'completed'
             }
 
         # Submit job (API with sbatch fallback)
@@ -360,7 +391,8 @@ class SuperfacilityRunner:
             'method': method,
             'run_dir': str(run_dir),
             'script_path': str(script_path),
-            'params': params
+            'params': params,
+            'job_status': 'queued'
         }
 
     def monitor(self,
