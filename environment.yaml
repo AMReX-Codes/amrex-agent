@@ -37,6 +37,9 @@ dependencies:
   - ipython>=9.7
   - jupytext>=1.18  # Notebook-to-markdown conversion
   - ipywidgets>=8.1
+
+  # === Documentation ===
+  - mkdocs>=1.5
   
   # === Testing & Quality (Gate 0) ===
   - pytest>=7.4.0
@@ -57,6 +60,7 @@ dependencies:
   - tqdm>=4.67  # Progress bars
   - python-dotenv>=1.2  # .env file loading
   - PyGithub
+  - globus-sdk  # ALCF inference auth helper dependency
   
   # === Pip-only packages ===
   - pip:
@@ -79,3 +83,4 @@ dependencies:
       
       # Additional utilities
       - python-json-logger>=4.0  # Structured logging
+      - sfapi-client

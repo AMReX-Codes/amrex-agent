@@ -2,6 +2,38 @@
 
 This folder contains design and workflow docs for the AMReX agent.
 
+## Python standards (docs, packaging, tests/examples)
+
+### Documentation tooling
+
+Decision: use MkDocs with the built-in Read the Docs theme for a light, fast
+site that can be hosted on ReadTheDocs when ready.
+
+Local build:
+
+```bash
+mkdocs serve
+```
+
+ReadTheDocs plan:
+- Add a `readthedocs.yml` that points at `mkdocs.yml`.
+- Use Python 3.11 in RTD to match `pyproject.toml`.
+- Install docs deps via a small `docs/requirements.txt` when publishing.
+
+### Packaging strategy
+
+- Use `conda` (conda-forge) as the source of truth for compiled dependencies.
+- Use `pip install -e .` for editable installs of the repo itself.
+- Prefer lower bounds in `environment.yaml` and avoid upper bounds unless
+  there is a known incompatibility.
+
+### Tests/examples
+
+- Add tests under `tests/` and update `tests/README.md` if you introduce new
+  markers or workflows.
+- Add example workflows under `demo/` and include a short README for each
+  new scenario.
+
 ## ALCF Inference (OpenAI-compatible)
 
 Default ALCF base URL (first pass) is the Sophia vLLM endpoint:

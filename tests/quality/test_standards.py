@@ -531,6 +531,29 @@ def test_docstring_format_compliance():
 
 
 @pytest.mark.quality
+def test_docs_tooling_expectations():
+    """
+    Enforce minimal documentation tooling and guidance expectations.
+    """
+    mkdocs_config = Path("mkdocs.yml")
+    assert mkdocs_config.exists(), "mkdocs.yml is required for docs tooling"
+
+    docs_index = Path("docs/index.md")
+    assert docs_index.exists(), "docs/index.md is required for the docs landing page"
+
+    docs_readme = Path("docs/README.md")
+    assert docs_readme.exists(), "docs/README.md must exist"
+    docs_text = docs_readme.read_text(encoding="utf-8")
+    assert "Python standards (docs, packaging, tests/examples)" in docs_text
+    assert "Packaging strategy" in docs_text
+
+    env_file = Path("environment.yaml")
+    assert env_file.exists(), "environment.yaml must exist"
+    env_text = env_file.read_text(encoding="utf-8")
+    assert "mkdocs" in env_text, "environment.yaml should include mkdocs for local docs builds"
+
+
+@pytest.mark.quality
 def test_type_hints_present():
     """
     Enforce type hints on public functions.

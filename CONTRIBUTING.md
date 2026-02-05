@@ -15,3 +15,17 @@ docstring style with `ruff`, so please run it before submitting:
 ```bash
 ruff check .
 ```
+
+## Tests and examples
+
+Tests are organized under `tests/`. Start with the test guide in
+`tests/README.md` and run the smallest scope that covers your change:
+
+```bash
+pytest --unit
+pytest --integration -m "not slow"
+pytest --quality
+```
+
+Examples live under `demo/`. Add a short README for new scenarios so others can
+replay the workflow quickly.
