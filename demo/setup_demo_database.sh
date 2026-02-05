@@ -314,7 +314,6 @@ build_solver_level12() {
     python - "$code" "$level" <<'PY'
 import sys
 from database.configs import discover_code_configs
-from database.indexing.level2_builder import Level2Builder
 
 code = sys.argv[1].lower()
 level = sys.argv[2]
@@ -331,7 +330,16 @@ if level == "1":
     doc_map = getattr(config, "documentation_map", {}) or {}
     print(len(doc_map))
 elif level == "2":
-    base = len(Level2Builder.WEIGHTS)
+    base_keys = [
+        "physics_parameters",
+        "grid_specifications",
+        "development_activity",
+        "configuration_complexity",
+        "path_hierarchy",
+        "domain_models",
+        "resource_requirements",
+    ]
+    base = len(base_keys)
     additional = len(getattr(config, "additional_level2_indices", {}) or {})
     print(base + additional)
 else:

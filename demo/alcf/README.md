@@ -27,3 +27,9 @@ python inference_auth_token.py get_access_token
 ```bash
 python amrex_agent.py --config demo/alcf/config_alcf_test.yaml --prompt "2D advection test"
 ```
+
+## 3) (In development) ALCF embeddings note
+
+ALCF-compatible embeddings are not currently stored, and using `--embedding alcf` with
+`--embedding-model mistralai/Mistral-7B-Instruct-v0.3-embed` in the RAG index builders
+is not fully exercised.

@@ -100,28 +100,67 @@ def get_embedding_model(provider: str = "openai", model_name: str = "text-embedd
     Any
         Embeddings client instance.
     """
-    from src.services.embedding_service_factory import get_embedding_service
+    from src.services.embedding_factory import create_embeddings
 
-    service = get_embedding_service(PELE_CONFIG)
-    if service.embeddings is None:
+    embeddings = create_embeddings(
+        provider=provider,
+        model_name=model_name,
+        config=PELE_CONFIG,
+    )
+    if embeddings is None:
         raise RuntimeError(f"Failed to initialize {provider} embeddings")
 
     class EmbeddingAdapter:
-        def __init__(self, embedding_service):
-            self.service = embedding_service
+        def __init__(self, embeddings_obj, config):
+            self.embeddings = embeddings_obj
+            self.config = config
 
         def embed_documents(self, texts):
-            return self.service.embed_texts(texts)
+            return self.embeddings.embed_documents(texts)
 
         def embed_query(self, text):
-            if hasattr(self.service.embeddings, "embed_query"):
-                return self.service.embeddings.embed_query(text)
+            if hasattr(self.embeddings, "embed_query"):
+                return self.embeddings.embed_query(text)
             raise RuntimeError("Embedding provider does not support embed_query")
 
         def expand_documents(self, documents, metadata=None):
-            return self.service.expand_documents(documents, metadata)
+            chunk_size = 0
+            if self.config is not None:
+                chunk_size = getattr(self.config, "embedding_chunk_size_chars", 0) or 0
+            if chunk_size <= 0 or not documents:
+                return documents, metadata or []
 
-    return EmbeddingAdapter(service)
+            chunked_docs = []
+            parent_indices = []
+            for idx, text in enumerate(documents):
+                if len(text) <= chunk_size:
+                    chunked_docs.append(text)
+                    parent_indices.append(idx)
+                    continue
+                start = 0
+                text_len = len(text)
+                while start < text_len:
+                    end = min(start + chunk_size, text_len)
+                    chunked_docs.append(text[start:end])
+                    parent_indices.append(idx)
+                    if end >= text_len:
+                        break
+                    start = end
+
+            if not parent_indices:
+                return documents, metadata or []
+
+            base_meta = metadata or [{} for _ in documents]
+            expanded_meta = []
+            for chunk_idx, parent_idx in enumerate(parent_indices):
+                parent = base_meta[parent_idx] if parent_idx < len(base_meta) else {}
+                meta = dict(parent) if isinstance(parent, dict) else {}
+                meta["chunk_parent"] = parent_idx
+                meta["chunk_index"] = chunk_idx
+                expanded_meta.append(meta)
+            return chunked_docs, expanded_meta
+
+    return EmbeddingAdapter(embeddings, PELE_CONFIG)
 
 
 def _maybe_chunk_documents(documents: list[Document], embedding_model) -> list[Document]:
