@@ -164,7 +164,19 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 run_directory=actual_run_dir,
                 run_mode=run_mode,
                 dry_run=getattr(config, "dry_run", False),
+                case_dir=case_dir,
             )
+            if (
+                not getattr(config, "dry_run", False)
+                and getattr(config, "monitor_job", True)
+                and submit_result.get("job_id")
+            ):
+                final_state = runner.monitor(
+                    job_id=submit_result["job_id"],
+                    method=submit_result.get("method", "sbatch"),
+                )
+                submit_result["job_status"] = final_state
+                submit_result["final_state"] = final_state
 
         final_state = None
         method = submit_result.get("method")

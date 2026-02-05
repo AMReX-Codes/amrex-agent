@@ -241,6 +241,10 @@ def setup_logging(parsed_args) -> None:
         os.getenv("ALCF_API_KEY"),
         os.getenv("OPENAI_API_KEY"),
         os.getenv("ANTHROPIC_API_KEY"),
+        os.getenv("SUPERFACILITY_CLIENT_ID"),
+        os.getenv("SUPERFACILITY_SECRET"),
+        os.getenv("NERSC_API_TOKEN"),
+        os.getenv("SFAPI_TOKEN"),
     ]
     redactor = RedactingFilter(secrets)
     handler.addFilter(redactor)

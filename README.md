@@ -60,8 +60,8 @@ export SFAPI_KEY_PATH=/path/to/priv_key.pem
 Alternatively, you can still use REST-token auth with `NERSC_API_TOKEN` or `SFAPI_TOKEN`.
 Monitoring will use `sfapi_client` if available, otherwise it falls back to the REST API.
 
-If you follow the Synapse-style shared layout, set your run artifacts under:
-`/global/cfs/cdirs/$PROJECT/$USER/superfacility` (configure via `output_dir` or `--output-dir`).
+If you follow the Synapse-style shared layout (SFAPI, NERSC systems), set your run artifacts under:
+`/global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility` (configure via `output_dir` or `--output-dir`).
 
 For a Perlmutter-specific config template and demo notes, see `demo/superfacility/`.
 

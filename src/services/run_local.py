@@ -220,7 +220,8 @@ class LocalRunner:
         constraint: str = "gpu&hbm40g",
         system: str = "perlmutter",
         dry_run: bool = False,
-        run_mode: str | None = None
+        run_mode: str | None = None,
+        case_dir: str | Path | None = None
     ) -> dict[str, Any]:
         """
         Execute locally via subprocess - matches SuperfacilityRunner.submit() interface.

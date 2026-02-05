@@ -389,6 +389,7 @@ def copy_to_rundir(
     run_dir = Path(run_dir)
     files: dict[str, str] = {}
 
+    baseline_dir = None
     if executable_path:
         exe_path = Path(executable_path)
         if exe_path.exists():
@@ -413,6 +414,8 @@ def copy_to_rundir(
                 shutil.copy2(inputs_src, inputs_dest)
             files["inputs"] = str(inputs_dest)
 
+            if baseline_dir is None and inputs_dir is not None:
+                baseline_dir = Path(inputs_dir)
             if baseline_dir:
                 aux_files = _copy_auxiliary_files(baseline_dir, run_dir, inputs_src)
                 files.update(aux_files)

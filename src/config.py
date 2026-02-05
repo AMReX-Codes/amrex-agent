@@ -21,7 +21,11 @@ def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
     if detected_env is None:
         return False
     return detected_env != "perlmutter"
-
+def _default_superfacility_account() -> str:
+    return (
+        os.getenv("SBATCH_ACCOUNT")
+        or "mp111_g"
+    )
 
 def detect_environment(env: dict = None) -> str:
     """Detect if running on Perlmutter, locally, or as MCP.
@@ -478,7 +482,10 @@ class AMReXAgentConfig(BaseModel):
 
     # === Superfacility API ===
     # Superfacility
-    superfacility_account: str = "mp111_g"  # Default NERSC account
+    superfacility_account: str = Field(
+        default_factory=_default_superfacility_account,
+        description="Default NERSC account to use for submission."
+    )
     
     superfacility_client_id: Optional[str] = Field(
         default_factory=lambda: os.getenv("SUPERFACILITY_CLIENT_ID"),
@@ -501,10 +508,26 @@ class AMReXAgentConfig(BaseModel):
         default=None,
         description="Optional fixed remote run directory (overrides remote_output_dir/run_name)."
     )
+    remote_executable_path: Optional[Path] = Field(
+        default=None,
+        description="Absolute path to a prebuilt executable on the remote system."
+    )
+    remote_executable_template: Optional[str] = Field(
+        default=None,
+        description="Template for remote executable path (supports {case_dir} and {case_dir_name})."
+    )
+    remote_executable_find: bool = Field(
+        default=True,
+        description="If True, attempt to discover a remote executable when template/path are not set."
+    )
     remote_staging_method: str = Field(
         default="auto",
         description="Remote staging method: auto (sfapi_client then REST upload), "
                     "sfapi_client, or rest_upload."
+    )
+    monitor_job: bool = Field(
+        default=True,
+        description="Monitor remote submissions until completion."
     )
     
     # === Workflow Settings ===

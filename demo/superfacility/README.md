@@ -72,13 +72,13 @@ Start with one of the configs in this folder and update the paths:
 - `config_perlmutter_login_node.yaml`: run on Perlmutter with local CFS paths
 - `config_perlmutter_remote.yaml`: stage from another host to Perlmutter via SFAPI
 
-Synapse-style shared layout (example):
-`/global/cfs/cdirs/$PROJECT/$USER/superfacility`
+Synapse-style shared layout (SFAPI on NERSC systems, example):
+`/global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility`
 
 ## Example command
 
 ```bash
-# export PROJECT=m4106
+# export SBATCH_ACCOUNT=m4106
 python amrex_agent.py \
   --prompt "Run AMReX Advection_AmrCore using the default inputs file without changes." \
   --config demo/superfacility/config_perlmutter_remote.yaml \
@@ -90,6 +90,8 @@ python amrex_agent.py \
 - The SFAPI path assumes the executable and inputs are already on Perlmutter.
 - The generated submission script uses `srun` (no container).
 - If `sfapi_client` is unavailable, the code falls back to REST token auth.
+- These example paths are SFAPI-specific and targeted at NERSC systems.
+- Make sure your `SBATCH_ACCOUNT` matches the allocation for the target paths.
 
 ## Run modes and data location
 

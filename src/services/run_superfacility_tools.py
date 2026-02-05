@@ -36,7 +36,10 @@ def generate_slurm_script(
 
     ntasks = nodes * 4
 
-    exe_name = Path(executable).name
+    exe_path = Path(executable)
+    exe_name = exe_path.name
+    use_absolute_exe = exe_path.is_absolute()
+    exe_cmd = str(exe_path) if use_absolute_exe else f"./{exe_name}"
     run_dir_name = Path(run_dir).name
 
     script = f"""#!/bin/bash
@@ -66,10 +69,18 @@ echo ""
 
 # Run from this directory
 cd {Path(run_dir).absolute()}
+"""
+    if not use_absolute_exe:
+        script += f"""
+# Ensure executable bit survives staging uploads.
+chmod +x ./{exe_name} 2>/dev/null || true
+"""
+
+    script += f"""
 
 # Run simulation
 echo "Starting at $(date)"
-srun -n {ntasks} ./{exe_name} inputs >& run.out
+srun -n {ntasks} {exe_cmd} inputs >& run.out
 
 echo ""
 echo "Finished at $(date)"
@@ -270,6 +281,8 @@ def submit_via_sfapi_client(
     dict
         Submission result with job_id or error details.
     """
+    import logging
+
     try:
         from sfapi_client import Client
         from sfapi_client.compute import Machine
@@ -284,6 +297,7 @@ def submit_via_sfapi_client(
         return {"error": f"Unsupported system for sfapi_client: {system}"}
 
     try:
+        logger = logging.getLogger(__name__)
         with Client(client_id=client_id, secret=secret) as client:
             perlmutter = client.compute(machine)
             if is_path:
@@ -295,6 +309,10 @@ def submit_via_sfapi_client(
             if job_id is None:
                 job_id = getattr(job, "id", None)
             if job_id is None:
+                logger.debug(
+                    "SFAPI client submission returned no job id (job type=%s).",
+                    type(job),
+                )
                 return {"error": "SFAPI client submission returned no job id"}
             return {"job_id": str(job_id), "method": "sfapi_client"}
     except Exception as exc:
@@ -327,6 +345,7 @@ def submit_via_sfapi(
     dict
         Submission result with job_id or error details.
     """
+    import logging
     import requests
 
     if nersc_session is None:
@@ -356,11 +375,23 @@ def submit_via_sfapi(
         }
         response = requests.post(api_url, headers=headers, json=payload)
 
+    logger = logging.getLogger(__name__)
+    logger.debug("SFAPI submit response status=%s", response.status_code)
+
     if response.status_code == 200:
         result = response.json()
+        logger.debug(
+            "SFAPI submit response keys=%s",
+            sorted(result.keys()) if isinstance(result, dict) else type(result),
+        )
         job_id = result.get("jobid") or result.get("task_id")
         return {"job_id": str(job_id), "method": "api"}
 
+    logger.warning(
+        "SFAPI submit failed: status=%s body=%s",
+        response.status_code,
+        response.text[:500],
+    )
     return {
         "error": f"API failed: {response.status_code}",
         "details": response.text[:200],
@@ -384,8 +415,25 @@ def submit_via_sbatch(script_path: str, config: dict | None = None) -> dict[str,
         Submission result with job_id or error details.
     """
     import subprocess
+    import shutil
 
-    result = subprocess.run(["sbatch", str(script_path)], capture_output=True, text=True)
+    if shutil.which("sbatch") is None:
+        return {
+            "error": "sbatch not found in PATH",
+            "suggestion": "Load the Slurm module or use the Superfacility API submission.",
+        }
+
+    try:
+        result = subprocess.run(
+            ["sbatch", str(script_path)],
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return {
+            "error": "sbatch not found in PATH",
+            "suggestion": "Load the Slurm module or use the Superfacility API submission.",
+        }
 
     if result.returncode == 0:
         job_id = result.stdout.strip().split()[-1]
@@ -420,6 +468,9 @@ def submit_job(
     tuple of (str, str)
         Job ID and submission method.
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
     client_id = None
     secret = None
     if config is not None:
@@ -440,6 +491,7 @@ def submit_job(
         )
         if "job_id" in result:
             return (result["job_id"], result["method"])
+        logger.warning("SFAPI client submission failed: %s", result)
 
     if nersc_session or find_nersc_clients():
         try:
@@ -452,6 +504,7 @@ def submit_job(
 
             if "job_id" in result:
                 return (result["job_id"], result["method"])
+            logger.warning("SFAPI REST submission failed: %s", result)
         except Exception:
             pass
 
@@ -459,6 +512,7 @@ def submit_job(
 
     if "job_id" in result:
         return (result["job_id"], result["method"])
+    logger.warning("sbatch submission failed: %s", result)
 
     raise RuntimeError(f"Submission failed: {result.get('error')}")
 
@@ -468,6 +522,7 @@ def stage_run_directory_sfapi_client(
     remote_run_dir: str,
     client_id: str | None = None,
     secret: str | None = None,
+    exclude_names: list[str] | None = None,
 ) -> None:
     """
     Stage a local run directory to a remote filesystem via sfapi_client.
@@ -493,6 +548,7 @@ def stage_run_directory_sfapi_client(
         raise RuntimeError("Missing SFAPI client credentials for staging")
 
     local_run_dir = Path(local_run_dir)
+    exclude = set(exclude_names or [])
     if not local_run_dir.exists():
         raise FileNotFoundError(f"Local run directory not found: {local_run_dir}")
 
@@ -514,6 +570,8 @@ def stage_run_directory_sfapi_client(
         for item in sorted(local_run_dir.iterdir()):
             if not item.is_file():
                 continue
+            if item.name in exclude:
+                continue
             with open(item, "rb") as handle:
                 handle.filename = item.name  # sfapi_client expects filename attribute
                 target_dir.upload(handle)
@@ -524,6 +582,7 @@ def stage_run_directory_rest(
     remote_run_dir: str,
     nersc_session: dict | None = None,
     upload_host: str = "perlmutter",
+    exclude_names: list[str] | None = None,
 ) -> None:
     """
     Stage a local run directory to a remote filesystem via REST upload.
@@ -533,6 +592,7 @@ def stage_run_directory_rest(
     import requests
 
     local_run_dir = Path(local_run_dir)
+    exclude = set(exclude_names or [])
     if not local_run_dir.exists():
         raise FileNotFoundError(f"Local run directory not found: {local_run_dir}")
 
@@ -551,6 +611,8 @@ def stage_run_directory_rest(
 
     for item in sorted(local_run_dir.iterdir()):
         if not item.is_file():
+            continue
+        if item.name in exclude:
             continue
         remote_path = str(Path(remote_run_dir) / item.name)
         with open(item, "rb") as handle:
@@ -628,6 +690,7 @@ def stage_run_directory(
     secret: str | None = None,
     method: str = "auto",
     nersc_session: dict | None = None,
+    exclude_names: list[str] | None = None,
 ) -> None:
     """
     Stage a local run directory to a remote filesystem.
@@ -643,6 +706,7 @@ def stage_run_directory(
             remote_run_dir=remote_run_dir,
             client_id=client_id,
             secret=secret,
+            exclude_names=exclude_names,
         )
         return
 
@@ -651,6 +715,7 @@ def stage_run_directory(
             local_run_dir=local_run_dir,
             remote_run_dir=remote_run_dir,
             nersc_session=nersc_session,
+            exclude_names=exclude_names,
         )
         return
 
@@ -669,6 +734,7 @@ def stage_run_directory(
                 remote_run_dir=remote_run_dir,
                 client_id=client_id,
                 secret=secret,
+                exclude_names=exclude_names,
             )
             return
         except Exception:
@@ -676,11 +742,99 @@ def stage_run_directory(
                 local_run_dir=local_run_dir,
                 remote_run_dir=remote_run_dir,
                 nersc_session=nersc_session,
+                exclude_names=exclude_names,
             )
             return
 
     if method != "auto":
         raise ValueError(f"Unknown staging method: {method}")
+
+
+def list_remote_files(
+    remote_dir: str,
+    nersc_session: dict | None = None,
+    system: str = "perlmutter",
+) -> list[str]:
+    """
+    List files in a remote directory using the SFAPI utilities endpoint.
+    """
+    import logging
+    import requests
+
+    if nersc_session is None:
+        clients = find_nersc_clients()
+        if clients:
+            for color in ["default", "green", "orange", "red"]:
+                nersc_session = create_nersc_session(clients, color=color)
+                if nersc_session:
+                    break
+
+    if not nersc_session:
+        raise RuntimeError("No NERSC session for REST directory listing")
+
+    api_url = f"https://api.nersc.gov/api/v1.2/utilities/ls/{system}/{remote_dir}"
+
+    if nersc_session["type"] == "oauth":
+        response = nersc_session["session"].get(api_url)
+    else:
+        headers = {"Authorization": f"Bearer {nersc_session['token']}"}
+        response = requests.get(api_url, headers=headers)
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"REST ls failed for {remote_dir}: {response.status_code} {response.text}"
+        )
+
+    result = response.json()
+    logger = logging.getLogger(__name__)
+    names: list[str] = []
+    items: list = []
+    if isinstance(result, list):
+        items = result
+    elif isinstance(result, dict):
+        logger.debug("Remote ls response keys=%s", sorted(result.keys()))
+        for key in ("entries", "files", "contents", "items", "data"):
+            if isinstance(result.get(key), list):
+                items = result[key]
+                break
+        if items:
+            logger.debug(
+                "Remote ls entries count=%s sample=%s",
+                len(items),
+                items[0] if items else None,
+            )
+
+    for item in items:
+        if isinstance(item, str):
+            names.append(item)
+        elif isinstance(item, dict):
+            name = item.get("name") or item.get("path")
+            if name:
+                names.append(str(name))
+    return names
+
+
+def find_remote_executable(
+    remote_case_dir: str,
+    nersc_session: dict | None = None,
+    system: str = "perlmutter",
+) -> str | None:
+    """
+    Find a .ex executable in a remote case directory.
+    """
+    files = list_remote_files(remote_case_dir, nersc_session=nersc_session, system=system)
+    candidates: list[str] = []
+    for item in files:
+        name = Path(item).name
+        if name.endswith(".ex"):
+            candidates.append(str(Path(remote_case_dir) / name))
+    if not candidates:
+        return None
+
+    cuda_candidates = [c for c in candidates if "CUDA" in Path(c).name]
+    if cuda_candidates:
+        return sorted(cuda_candidates)[0]
+    return sorted(candidates)[0]
 
 
 def monitor_job(
