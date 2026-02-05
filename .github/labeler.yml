@@ -1,0 +1,23 @@
+docs:
+  - changed-files:
+      - any-glob-to-any-file: "docs/**"
+      - any-glob-to-any-file: "README.md"
+      - any-glob-to-any-file: "docs/**/*.md"
+      - any-glob-to-any-file: "tests/README.md"
+tests:
+  - changed-files:
+      - any-glob-to-any-file: "tests/**"
+infra:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+      - any-glob-to-any-file: "environment.yaml"
+data/indices:
+  - changed-files:
+      - any-glob-to-any-file: "database/**"
+      - any-glob-to-any-file: "docs/BUILD_FAISS_INDICES.md"
+demo:
+  - changed-files:
+      - any-glob-to-any-file: "demo/**"
+code:
+  - changed-files:
+      - any-glob-to-any-file: "src/**"

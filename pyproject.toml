@@ -62,6 +62,8 @@ markers = [
     "quality: Data quality tests (validate metadata consistency)",
     "real_repos: Tests against ../PeleC, ../warpx (auto-skip if not found)",
     "requires_filesystem: Tests that create files/directories",
+    "requires_solver: Tests require a specific solver code name (args: AMReX, PeleC, WarpX, etc.)",
+    "requires_indices: Tests require FAISS indices (args: faiss, level0, level1, level2, or index subdir)",
     "slow: Slower integration tests (may be skipped in CI)",
     "skip: Skipped tests (use sparingly)",
     "use_real_services: Run tests with real services (not mocked)",
