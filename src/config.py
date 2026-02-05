@@ -233,6 +233,12 @@ class AMReXAgentConfig(BaseModel):
         description="Path to incflo repository (incompressible flow)"
     )
 
+    # Ocean modeling
+    remora_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("REMORA_REPO_PATH", "REMORA"),
+        description="Path to REMORA repository (Regional Ocean Modeling with AMReX)"
+    )
+
     # Tutorials (best for learning)
     amrex_tutorials_repo_path: Optional[Path] = Field(
         default_factory=lambda: _repo_path_from_env("AMREX_TUTORIALS_REPO_PATH", "amrex-tutorials"),
@@ -538,6 +544,7 @@ class AMReXAgentConfig(BaseModel):
             'ERF': self.erf_repo_path,
             'WarpX': self.warpx_repo_path,
             'incflo': self.incflo_repo_path,
+            'REMORA': self.remora_repo_path,
             'amrex-tutorials': self.amrex_tutorials_repo_path,
             'AMReX': self.amrex_repo_path,
         }

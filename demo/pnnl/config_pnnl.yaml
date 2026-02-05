@@ -5,6 +5,9 @@ llm_provider: pnnl
 # export AMREX_DATABASE_PATH=/global/cfs/cdirs/m4304/enuss/amrex-agent/database
 # This overrides the default Perlmutter path
 
+# Repository paths
+remora_repo_path: /global/cfs/cdirs/m4304/enuss/REMORA
+
 # Indexing / retrieval
 indexing_strategy: simple
 faiss_semantic_weight: 0.5
