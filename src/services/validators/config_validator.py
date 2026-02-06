@@ -139,7 +139,7 @@ if __name__ == "__main__":
     if amrex_inputs.exists():
         try:
             inputs_content = parse_pele_inputs(str(amrex_inputs))
-            logger.info(f"Loaded AMReX inputs from {amrex_inputs}")
+            logger.debug(f"Loaded AMReX inputs from {amrex_inputs}")
         except Exception as exc:
             logger.warning(f"Failed to parse {amrex_inputs}: {exc}")
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
             if isinstance(inputs_content.get("amr"), dict):
                 inputs_content["amr"]["blocking_factor"] = "8"
             inputs_content["amr.blocking_factor"] = "8"
-            logger.info("Adjusted amr.blocking_factor to 8 for demo consistency")
+            logger.debug("Adjusted amr.blocking_factor to 8 for demo consistency")
 
     solver_configs = discover_code_configs()
     solver_name = solver_configs[0].code_name if solver_configs else ""

@@ -1,0 +1,31 @@
+# Superfacility (SFAPI) config overrides for Perlmutter (remote staging)
+# Sonnet model preset
+
+# Environment selection
+environment: perlmutter
+
+# Local output directory (this host)
+output_dir: /tmp/amrex_agent_runs
+
+# Demo overrides (baseline + inputs)
+baseline_override: AMReX/Tests/Amr/Advection_AmrCore/Exec
+inputs_file_override: inputs
+
+# LLM model
+llm_model: claude-sonnet-4-5
+
+# Remote destination for staged runs
+remote_output_dir: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility
+remote_staging: true
+remote_staging_method: sfapi_client
+remote_run_dir: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility/run_test_1
+superfacility_account: $SBATCH_ACCOUNT
+# Remote executable discovery (finds *.ex, prefers CUDA)
+remote_executable_template: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility/{solver_name}/{case_dir}
+remote_executable_find: true
+
+# Repo path (optional; follows normal priority if unset)
+# amrex_repo_path: /path/to/amrex
+
+# Execution
+allow_local_run: false

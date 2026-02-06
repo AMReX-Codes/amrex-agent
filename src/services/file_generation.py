@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import math
 import os
-import socket
 from pathlib import Path
 from typing import Any
 
@@ -360,22 +359,8 @@ exit $EXIT_CODE
 
     @staticmethod
     def _detect_hpc_system() -> tuple[str, str]:
-        nersc_host = os.environ.get("NERSC_HOST")
-        if nersc_host and nersc_host in ["perlmutter", "alvarez", "muller"]:
-            return "nersc", "perlmutter"
-
-        if os.environ.get("LMOD_SITE_NAME") == "OLCF":
-            host_name = socket.getfqdn()
-            if "frontier" in host_name:
-                return "olcf", "frontier"
-            if "crusher" in host_name:
-                return "olcf", "crusher"
-
-        fqdn = socket.getfqdn()
-        if "alcf.anl.gov" in fqdn and "polaris" in fqdn:
-            return "alcf", "polaris"
-
-        return "unknown", "unknown"
+        from src.config import detect_hpc_system
+        return detect_hpc_system()
 
 
 if __name__ == "__main__":

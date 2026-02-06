@@ -32,7 +32,9 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates including run directory and input file metadata.
     """
-    logger.info("📝 Executing Input Writer Node")
+    logger.info("=" * 80)
+    logger.info("Starting Input Writer node")
+    logger.info("=" * 80)
 
     # ========================================
     # COMPONENT 10a: STATE VALIDATION & PLAN EXTRACTION FROM WORKFLOW_HISTORY
@@ -95,8 +97,8 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     baseline = plan_details.get("baseline")
     reasoning = plan_details.get("reasoning", "")
 
-    logger.info(f"[InputWriter] Plan extracted from workflow_history: {selected_case}")
-    logger.info(f"[InputWriter] Extracted {len(modifications)} modifications: {modifications[:3]}...")
+    logger.debug(f"[InputWriter] Plan extracted from workflow_history: {selected_case}")
+    logger.debug(f"[InputWriter] Extracted {len(modifications)} modifications: {modifications[:3]}...")
     logger.debug(f"[InputWriter] Baseline: {baseline}")
 
     def _should_prefer_strategy_on_retry(state: GraphState) -> bool:
@@ -198,7 +200,7 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
             output_dir=str(run_dir)  # Service physically creates this
         )
 
-        logger.info(f"✅ Files written to: {result.get('run_dir', 'unknown')}")
+        logger.info(f"Files written to: {result.get('run_dir', 'unknown')}")
 
     except Exception as e:
         logger.exception("Input writing failed")
@@ -225,18 +227,18 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     # ========================================
 
     # Check if service flagged unresolved parameters
-    logger.info("📊 [DATA TRANSFER] Checking InputWriterService result")
-    logger.info(f"📊 [DATA TRANSFER] Service result keys: {list(result.keys())}")
+    logger.debug("[DATA TRANSFER] Checking InputWriterService result")
+    logger.debug(f"[DATA TRANSFER] Service result keys: {list(result.keys())}")
     if result.get("requires_parameter_resolution"):
-        logger.info("📊 [DATA TRANSFER] ✓ Service flagged parameter resolution required")
+        logger.debug("[DATA TRANSFER] Service flagged parameter resolution required")
         unresolved = result.get("unresolved_parameters", [])
         guidance = result.get("resolution_guidance", "")
         available = result.get("available_schema_params", [])
         suggested = result.get("suggested_params", {})
 
-        logger.info(f"📊 [DATA TRANSFER] Extracted unresolved_parameters: {len(unresolved)} items")
-        logger.info(f"📊 [DATA TRANSFER] Extracted available_schema_params: {len(available)} items")
-        logger.info(f"📊 [DATA TRANSFER] Extracted suggested_params: {len(suggested)} mappings")
+        logger.debug(f"[DATA TRANSFER] Extracted unresolved_parameters: {len(unresolved)} items")
+        logger.debug(f"[DATA TRANSFER] Extracted available_schema_params: {len(available)} items")
+        logger.debug(f"[DATA TRANSFER] Extracted suggested_params: {len(suggested)} mappings")
 
         logger.warning(
             f"[InputWriter] {len(unresolved)} unresolved parameters - "
@@ -385,12 +387,15 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     if updated_plan is not None:
         updates["plan"] = updated_plan
 
-    logger.info(f"✅ Input Writer complete: {Path(result['run_dir']).name}")
+    logger.info(f"Input Writer complete: {Path(result['run_dir']).name}")
     logger.info(
         f"  Inputs selected: {result.get('inputs_file_selected')} "
         f"(strategy: {result.get('inputs_file_strategy')}, override: {result.get('inputs_file_override')})"
     )
     logger.debug(f"  Inputs written: {result.get('inputs_path')}")
     logger.debug(f"  Run directory: {result.get('run_dir')}")
+    logger.info("-" * 80)
+    logger.info("Input Writer node complete")
+    logger.info("-" * 80)
 
     return updates

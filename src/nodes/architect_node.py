@@ -38,7 +38,9 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates with selected case, modifications, and workflow metadata.
     """
-    logger.info("🏗️  Executing Architect Node")
+    logger.info("=" * 80)
+    logger.info("Starting Architect node")
+    logger.info("=" * 80)
 
     # ========================================
     # COMPONENT 9d: ITERATION SAFETY
@@ -58,7 +60,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     # Increment retry count only if we are in a retry loop
     if mode == "retry":
         new_retry_count = retry_count + 1
-        logger.info(f"🔄 Retry {new_retry_count}/{max_retries}")
+        logger.info(f"Retry {new_retry_count}/{max_retries}")
 
     # 3. Enforce Termination Limits
     if new_retry_count > max_retries:
@@ -97,22 +99,22 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     parameter_resolution_feedback: dict[str, Any] | None = None  # Initialize for both modes
 
     if mode == "retry":
-        logger.info("🔄 Retry mode detected - extracting feedback")
+        logger.debug("Retry mode detected - extracting feedback")
 
         # Extract feedback from workflow_history (canonical source)
         workflow_history_temp = state.get("workflow_history", [])
 
         # Get reviewer entries for schema params
         reviewer_entries = [e for e in workflow_history_temp if e.get("node") == "reviewer"]
-        logger.info(f"📊 [DATA TRANSFER] Found {len(reviewer_entries)} reviewer entries")
+        logger.debug(f"[DATA TRANSFER] Found {len(reviewer_entries)} reviewer entries")
 
         available_from_history = []
         if reviewer_entries:
             last_reviewer = reviewer_entries[-1]
             available_from_history = last_reviewer.get("details", {}).get("available_schema_params", [])
-            logger.info(f"📊 [DATA TRANSFER] Extracted from reviewer: {len(available_from_history)} schema params")
+            logger.debug(f"[DATA TRANSFER] Extracted from reviewer: {len(available_from_history)} schema params")
             if available_from_history:
-                logger.debug(f"📊 [DATA TRANSFER] Sample params: {available_from_history[:10]}")
+                logger.debug(f"[DATA TRANSFER] Sample params: {available_from_history[:10]}")
 
         # ----------------------------------------
         # 9c-ii: CHECK FOR PARAMETER RESOLUTION FEEDBACK FROM INPUT_WRITER
@@ -132,14 +134,14 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 suggested = details.get("suggested_params", {})
 
                 logger.warning(
-                    f"🔧 Parameter resolution feedback from workflow_history - "
+                    f"Parameter resolution feedback from workflow_history - "
                     f"{len(unresolved)} parameters need remapping"
                 )
 
                 # Log each unresolved parameter with suggestions
                 for param_name, value in unresolved:
                     suggestions = suggested.get(param_name, [])[:5]
-                    logger.info(
+                    logger.debug(
                         f"  - '{param_name}' (value: {value}) → "
                         f"suggestions: {suggestions if suggestions else 'none'}"
                     )
@@ -150,13 +152,13 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                     "available_schema_params": available,
                     "suggested_params": suggested,
                 }
-                logger.info(f"📊 [DATA TRANSFER] Built parameter_resolution_feedback from workflow_history with {len(unresolved)} unresolved params")
+                logger.debug(f"[DATA TRANSFER] Built parameter_resolution_feedback from workflow_history with {len(unresolved)} unresolved params")
 
         # If reviewer provided structured feedback, prefer it
         if not parameter_resolution_feedback and state.get("parameter_resolution_feedback"):
             parameter_resolution_feedback = state.get("parameter_resolution_feedback")
-            logger.info(
-                "📊 [DATA TRANSFER] Using parameter_resolution_feedback from reviewer state "
+            logger.debug(
+                "[DATA TRANSFER] Using parameter_resolution_feedback from reviewer state "
                 f"({len(parameter_resolution_feedback.get('unresolved_parameters', []))} unresolved)"
             )
 
@@ -178,8 +180,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                         "suggested_params": suggested,
                         "remap_mapping": remap_mapping,
                     }
-                    logger.info(
-                        "📊 [DATA TRANSFER] Built parameter_resolution_feedback from reviewer history "
+                    logger.debug(
+                        "[DATA TRANSFER] Built parameter_resolution_feedback from reviewer history "
                         f"({len(unresolved)} unresolved)"
                     )
 
@@ -202,7 +204,9 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 "retry_count": retry_count
             }
 
-            logger.info(f"Feedback: {len(errors)} errors, rejected baseline: {rejected_case}, inputs: {rejected_inputs}")
+            logger.debug(
+                f"Feedback: {len(errors)} errors, rejected baseline: {rejected_case}, inputs: {rejected_inputs}"
+            )
 
             # ----------------------------------------
             # 9c-iii: CONVERT SCHEMA ERRORS TO PARAMETER RESOLUTION FEEDBACK
@@ -228,21 +232,21 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                             "available_schema_params": available_from_history,
                             "suggested_params": {},
                         }
-                        logger.info(f"📊 [DATA TRANSFER] Built parameter_resolution_feedback from {len(unresolved)} schema errors")
-                        logger.info(f"🔧 Built parameter_resolution_feedback from {len(unresolved)} schema errors")
+                        logger.debug(f"[DATA TRANSFER] Built parameter_resolution_feedback from {len(unresolved)} schema errors")
+                        logger.debug(f"Built parameter_resolution_feedback from {len(unresolved)} schema errors")
 
         else:
             if not parameter_resolution_feedback:
                 logger.warning("Retry mode but no errors_active or parameter_resolution_feedback in state")
     else:
-        logger.info(f"Mode: {mode} (initial planning)")
+        logger.debug(f"Mode: {mode} (initial planning)")
 
     # Optional solver hint
     selected_solvers = state.get("selected_solvers")
     solver_hint = None
     if selected_solvers:
         solver_hint = selected_solvers[0][0] if selected_solvers else None
-        logger.info(f"Using solver hint: {solver_hint}")
+        logger.debug(f"Using solver hint: {solver_hint}")
 
     # ========================================
     # COMPONENT 9b: SERVICE ORCHESTRATION
@@ -282,16 +286,16 @@ def architect_node(state: GraphState) -> dict[str, Any]:
 
         if rejected_case and rejected_case not in excluded_cases:
             excluded_cases.append(rejected_case)
-            logger.info(f"Excluding baseline: {rejected_case}")
+            logger.debug(f"Excluding baseline: {rejected_case}")
 
         if rejected_inputs and rejected_inputs not in excluded_inputs_files:
             excluded_inputs_files.append(rejected_inputs)
-            logger.info(f"Excluding inputs file: {rejected_inputs}")
+            logger.debug(f"Excluding inputs file: {rejected_inputs}")
 
         if retry_guidance.get("baseline_base_action") == "switch" and rejected_case:
             if rejected_case not in excluded_cases:
                 excluded_cases.append(rejected_case)
-            logger.info(f"Retry guidance suggests switching baseline: {rejected_case}")
+            logger.debug(f"Retry guidance suggests switching baseline: {rejected_case}")
 
     logger.debug(f"Total exclusions: {len(excluded_cases)} cases, {len(excluded_inputs_files)} inputs files")
 
@@ -306,9 +310,9 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             excluded_inputs_files=excluded_inputs_files,
             parameter_resolution_feedback=parameter_resolution_feedback,  # NEW: pass to service
         )
-        logger.info(f"📊 [DATA TRANSFER] Called architect service with feedback={parameter_resolution_feedback is not None}")
+        logger.debug(f"[DATA TRANSFER] Called architect service with feedback={parameter_resolution_feedback is not None}")
 
-        logger.info(f"✅ Plan created: {plan_result.selected_case}")
+        logger.info(f"Plan created: {plan_result.selected_case}")
 
     except Exception as e:
         logger.exception(f"Architect planning failed: {e}")
@@ -493,7 +497,10 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         updates["mode"] = "terminal"
         updates["error"] = "User canceled at pre-confirm gate."
 
-    logger.info(f"✅ Iteration {new_iteration}, Retry {new_retry_count}, Mode: proceed")
+    logger.info(f"Iteration {new_iteration}, Retry {new_retry_count}, Mode: proceed")
+    logger.info("-" * 80)
+    logger.info("Architect node complete")
+    logger.info("-" * 80)
 
     # Return updates dict (LangGraph will merge into state)
     return updates

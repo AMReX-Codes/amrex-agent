@@ -42,18 +42,18 @@ def get_architect_plan(state: GraphState) -> dict[str, Any] | None:
         )
         plan = architect_entry.get('details', {})
         if plan:
-            logger.debug("✓ Plan loaded from workflow_history (canonical path)")
+            logger.debug("Plan loaded from workflow_history (canonical path)")
             return plan
     except StopIteration:
-        logger.debug("⚠️  Architect entry not in workflow_history, falling back to state")
+        logger.debug("Architect entry not in workflow_history, falling back to state")
 
     # Fallback to pragmatic path (convenience copy in state)
     plan = state.get("plan")
     if plan:
-        logger.debug("✓ Plan loaded from state (pragmatic path - convenience copy)")
+        logger.debug("Plan loaded from state (pragmatic path - convenience copy)")
         return plan
 
-    logger.warning("✗ Plan not found in workflow_history or state")
+    logger.warning("Plan not found in workflow_history or state")
     return None
 
 
@@ -73,9 +73,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing review decisions and guidance.
     """
-    logger.debug("="*80)
-    logger.debug("REVIEWER NODE - Pre-Execution Validation")
-    logger.debug("="*80 + "\n")
+    logger.info("=" * 80)
+    logger.info("Starting Reviewer node")
+    logger.info("=" * 80)
 
     config = state["config"]
     iteration = state.get("iteration", 0)
@@ -110,7 +110,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     # If input_writer flagged unresolved parameters, route back to architect
     # Extract from workflow_history instead of top-level state
 
-    logger.info("📊 [DATA TRANSFER] Checking for parameter resolution requirement")
+    logger.debug("[DATA TRANSFER] Checking for parameter resolution requirement")
 
     # Extract from input_writer entries in workflow_history
     input_writer_entries = [e for e in workflow_history if e.get("node") == "input_writer"]
@@ -131,12 +131,12 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             available = details.get("available_schema_params", [])
             suggested = details.get("suggested_params", {})
 
-            logger.info("📊 [DATA TRANSFER] ✓ Parameter resolution required from workflow_history")
-            logger.info(f"📊 [DATA TRANSFER] Extracted unresolved_parameters: {len(unresolved)} items")
-            logger.info(f"📊 [DATA TRANSFER] Extracted available_schema_params: {len(available)} items")
-            logger.info(f"📊 [DATA TRANSFER] Extracted suggested_params: {len(suggested)} mappings")
+            logger.debug("[DATA TRANSFER] Parameter resolution required from workflow_history")
+            logger.debug(f"[DATA TRANSFER] Extracted unresolved_parameters: {len(unresolved)} items")
+            logger.debug(f"[DATA TRANSFER] Extracted available_schema_params: {len(available)} items")
+            logger.debug(f"[DATA TRANSFER] Extracted suggested_params: {len(suggested)} mappings")
 
-    logger.info(f"📊 [DATA TRANSFER] requires_parameter_resolution = {requires_resolution}")
+    logger.debug(f"[DATA TRANSFER] requires_parameter_resolution = {requires_resolution}")
 
     if requires_resolution:
 
@@ -366,9 +366,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
 
         # Report progress
         if newly_fixed:
-            logger.info(f"✓ Fixed {len(newly_fixed)} errors: {newly_fixed}")
+            logger.info(f"Fixed {len(newly_fixed)} errors: {newly_fixed}")
         if newly_found:
-            logger.warning(f"✗ New errors found: {newly_found}")
+            logger.warning(f"New errors found: {newly_found}")
 
     # ========================================
     # PHASE 3: DECIDE MODE TRANSITION
@@ -378,15 +378,15 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         logger.error("Schema missing - terminating for manual schema build")
         next_mode = "terminal"
     elif approved:
-        logger.info("✓ Plan approved - proceeding to execution")
+        logger.info("Plan approved - proceeding to execution")
         next_mode = "proceed"
     else:
         # Check if we've hit max retries
         if retry_count >= max_retries:
-            logger.error(f"✗ Max retries ({max_retries}) exceeded - terminating")
+            logger.error(f"Max retries ({max_retries}) exceeded - terminating")
             next_mode = "terminal"
         else:
-            logger.warning(f"✗ Plan rejected ({len(errors_current)} errors) - retry {retry_count + 1}/{max_retries}")
+            logger.warning(f"Plan rejected ({len(errors_current)} errors) - retry {retry_count + 1}/{max_retries}")
             if errors_current:
                 logger.warning("Reviewer errors: %s", "; ".join(errors_current))
             next_mode = "retry"
@@ -543,10 +543,10 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     # ========================================
     # Store complete review results in workflow_history.details
 
-    logger.info("📊 [REVIEWER NODE] Creating history entry")
-    logger.info(f"📊 [REVIEWER NODE] validation_result.available_schema_params: {len(validation_result.available_schema_params)} items")
+    logger.debug("[REVIEWER NODE] Creating history entry")
+    logger.debug(f"[REVIEWER NODE] validation_result.available_schema_params: {len(validation_result.available_schema_params)} items")
     if validation_result.available_schema_params:
-        logger.debug(f"📊 [REVIEWER NODE] Sample schema params: {validation_result.available_schema_params[:10]}")
+        logger.debug(f"[REVIEWER NODE] Sample schema params: {validation_result.available_schema_params[:10]}")
 
     history_entry = {
         "node": "reviewer",
@@ -618,7 +618,10 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         "plan_rejected_inputs_file": rejected_inputs,
     }
 
-    logger.info(f"✅ Review complete: {next_mode} (errors: {len(errors_current)})")
+    logger.info(f"Review complete: {next_mode} (errors: {len(errors_current)})")
+    logger.info("-" * 80)
+    logger.info("Reviewer node complete")
+    logger.info("-" * 80)
     return updates
 
 

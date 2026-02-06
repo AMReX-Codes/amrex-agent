@@ -29,7 +29,7 @@ class SchemaSyntaxValidator:
         import logging
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(logging.INFO)
-        self._logger.info("📊 [SCHEMA VALIDATOR INIT] SchemaSyntaxValidator initialized")
+        self._logger.debug("[SCHEMA VALIDATOR INIT] SchemaSyntaxValidator initialized")
         """
         Initialize validator with app config.
 
@@ -57,10 +57,7 @@ class SchemaSyntaxValidator:
         list of RuleViolation
             Rule violations (empty if valid).
         """
-        print(f"🔥 VALIDATE ENTRY: plan keys = {list(plan.keys())}")
-        print("🔥🔥🔥 SCHEMA VALIDATOR CALLED 🔥🔥🔥")
-        self._logger.info("📊 [SCHEMA VALIDATOR] validate() called")
-        self._logger.info(f"📊 [SCHEMA VALIDATOR] Plan keys: {list(plan.keys())}")
+        self._logger.debug(f"[SCHEMA VALIDATOR] validate() called (plan keys: {list(plan.keys())})")
         violations = []
 
         # 1. Identify Solver and Baseline
@@ -95,12 +92,12 @@ class SchemaSyntaxValidator:
                 # Handle wrapped vs flat schema structure
                 schema = schema_data.get('parameters', schema_data)
                 self.available_schema_params = list(schema.keys())
-                self._logger.info(f"📊 [SCHEMA VALIDATOR] Loaded {len(self.available_schema_params)} schema parameters")
+                self._logger.debug(f"[SCHEMA VALIDATOR] Loaded {len(self.available_schema_params)} schema parameters")
         except FileNotFoundError:
             if schema_path:
-                self._logger.warning(f"📊 [SCHEMA VALIDATOR] Schema file NOT FOUND at {schema_path}")
+                self._logger.warning(f"[SCHEMA VALIDATOR] Schema file NOT FOUND at {schema_path}")
             else:
-                self._logger.warning("📊 [SCHEMA VALIDATOR] Schema file NOT FOUND (path unresolved)")
+                self._logger.warning("[SCHEMA VALIDATOR] Schema file NOT FOUND (path unresolved)")
             repo_root = None
             if solver_name and hasattr(self.config, "repositories"):
                 repo_root = self.config.repositories.get(solver_name)
@@ -173,7 +170,16 @@ class SchemaSyntaxValidator:
         if expected_type is None:
             expected_type = 'string'
 
-        val_str = str(value)
+        # Normalize list/tuple inputs to AMReX-style space-separated values.
+        if isinstance(value, (list, tuple)):
+            val_str = " ".join(str(v) for v in value)
+        else:
+            val_str = str(value)
+            # Also normalize stringified list representations like "[64, 64]".
+            if val_str.startswith("[") and val_str.endswith("]"):
+                inner = val_str[1:-1].strip()
+                if inner:
+                    val_str = " ".join(part.strip() for part in inner.split(","))
 
         # Syntax: Check for AMReX incompatible formats
         if "^" in val_str:

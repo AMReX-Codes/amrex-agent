@@ -88,7 +88,7 @@ class ReviewerOrchestrator:
                     critical_violations = [v for v in violations if v.severity == 'critical']
                     for cv in critical_violations:
                         logger.error(f"  Critical error: {cv.message}")
-                    logger.info(f"📊 [REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
+                    logger.debug(f"[REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
                     return ValidationResult(
                         available_schema_params=schema_params,
                         mode="fail",
@@ -99,7 +99,7 @@ class ReviewerOrchestrator:
             except Exception as e:
                 # Treat validator crash as critical system error
                 logger.exception(f"Validator {validator.__class__.__name__} crashed")
-                logger.info(f"📊 [REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
+                logger.debug(f"[REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
                 return ValidationResult(
                         available_schema_params=schema_params,
                         mode="fail",
@@ -109,7 +109,7 @@ class ReviewerOrchestrator:
 
         # Determine workflow mode
         if not all_violations:
-            logger.info(f"📊 [REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
+            logger.debug(f"[REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
             return ValidationResult(
                         available_schema_params=schema_params,
                         mode="proceed",
@@ -120,7 +120,7 @@ class ReviewerOrchestrator:
         # Check max retries
         max_retries = getattr(self.config, 'max_iterations', 3)
         if retry_count >= max_retries:
-            logger.info(f"📊 [REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
+            logger.debug(f"[REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
             return ValidationResult(
                         available_schema_params=schema_params,
                         mode="fail",
@@ -129,7 +129,7 @@ class ReviewerOrchestrator:
             )
 
         # Default to retry
-        logger.info(f"📊 [REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
+        logger.debug(f"[REVIEWER SERVICE] Returning ValidationResult with {len(schema_params)} schema params")
         return ValidationResult(
                         available_schema_params=schema_params,
                         mode="retry",

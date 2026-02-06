@@ -1,0 +1,18 @@
+# Superfacility (SFAPI) config overrides for Perlmutter (on-site run)
+
+# Environment selection
+environment: perlmutter
+
+# Repo path (update for your Perlmutter workspace)
+amrex_repo_path: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/amrex
+
+# Demo overrides (baseline + inputs)
+baseline_override: AMReX/Tests/Amr/Advection_AmrCore/Exec
+inputs_file_override: inputs
+
+# Output directory for run artifacts (Perlmutter CFS)
+output_dir: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility
+superfacility_account: $SBATCH_ACCOUNT
+
+# Execution
+allow_local_run: false

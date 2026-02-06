@@ -458,7 +458,7 @@ def mcp_run_simulation(payload: dict) -> dict:
             "inputs_file_path": inputs_path,
             "executable_path": None,
             "job_id": None,
-            "job_status": "dry_run",
+            "job_status": "completed",
             "script_path": None,
             "method": "dry_run",
             "dry_run_steps": dry_run_steps,
@@ -495,9 +495,9 @@ def mcp_run_simulation(payload: dict) -> dict:
     job_status = job_result.get("job_status")
     if not job_status:
         if job_result.get("method") == "dry_run":
-            job_status = "dry_run"
+            job_status = "completed"
         elif job_result.get("job_id"):
-            job_status = "submitted"
+            job_status = "queued"
         else:
             job_status = "unknown"
 

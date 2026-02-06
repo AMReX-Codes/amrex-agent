@@ -34,7 +34,20 @@ def get_run_directory(state: GraphState) -> str | None:
     str or None
         Run directory path if found; otherwise ``None``.
     """
-    # Try canonical path first (source of truth)
+    # Prefer runner entry if available (post-staging)
+    try:
+        runner_entry = next(
+            e for e in reversed(state.get('workflow_history', []))
+            if e.get('node') == 'runner'
+        )
+        run_dir = runner_entry.get('details', {}).get('run_directory')
+        if run_dir:
+            logger.debug("Run directory loaded from runner workflow_history entry")
+            return run_dir
+    except StopIteration:
+        pass
+
+    # Try canonical path next (source of truth)
     try:
         input_writer_entry = next(
             e for e in reversed(state.get('workflow_history', []))
@@ -42,18 +55,18 @@ def get_run_directory(state: GraphState) -> str | None:
         )
         run_dir = input_writer_entry.get('details', {}).get('run_directory')
         if run_dir:
-            logger.debug("✓ Run directory loaded from workflow_history (canonical path)")
+            logger.debug("Run directory loaded from workflow_history (canonical path)")
             return run_dir
     except StopIteration:
-        logger.debug("⚠️  Input writer entry not in workflow_history, falling back to state")
+        logger.debug("Input writer entry not in workflow_history, falling back to state")
 
     # Fallback to pragmatic path (convenience copy in state)
     run_dir = state.get("run_directory")
     if run_dir:
-        logger.debug("✓ Run directory loaded from state (pragmatic path - convenience copy)")
+        logger.debug("Run directory loaded from state (pragmatic path - convenience copy)")
         return run_dir
 
-    logger.warning("✗ Run directory not found in workflow_history or state")
+    logger.warning("Run directory not found in workflow_history or state")
     return None
 
 def analysis_node(state: GraphState) -> dict[str, Any]:
@@ -72,13 +85,47 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing analysis results.
     """
-    logger.debug("\n" + "="*80)
-    logger.debug("ANALYSIS NODE - Post-Execution Analysis")
-    logger.debug("="*80)
+    logger.info("=" * 80)
+    logger.info("Starting Analysis node")
+    logger.info("=" * 80)
 
     config = state["config"]
     iteration = state.get("iteration", 0)
 
+    run_mode = getattr(config, "run_mode", None)
+    if run_mode is None or run_mode == "full":
+        if getattr(config, "dry_run", False):
+            run_mode = "dry"
+        else:
+            run_mode = run_mode or "full"
+
+    if run_mode in {"dry", "stage", "submit"}:
+        logger.info("[INFO] Run mode %s - skipping analysis", run_mode)
+        workflow_history = state.get("workflow_history", [])
+        history_entry = {
+            "node": "analysis",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "action": "analysis_skipped",
+            "iteration": iteration,
+            "details": {
+                "status": "skipped",
+                "reason": run_mode
+            }
+        }
+        new_history = workflow_history + [history_entry]
+
+        return {
+            "mode": "proceed",
+            "iteration": iteration,
+            "workflow_history": new_history,
+            "job_status": state.get("job_status", "completed"),
+            "analysis_report": {
+                "status": "skipped",
+                "message": "Dry-run: analysis skipped"
+            }
+        }
+
+    gate_entry = None
     gate_result = run_preconfirm_gate(
         node_name="analysis",
         summary_lines=[
@@ -129,7 +176,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             "mode": "proceed",
             "iteration": iteration,
             "workflow_history": new_history,
-            "job_status": "skipped",
+            "job_status": state.get("job_status", "completed"),
             "analysis_report": {
                 "status": "skipped",
                 "message": "No run directory"
@@ -167,7 +214,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
                 kwargs[key] = value
 
         report = analyzer.analyze_simulation(**kwargs)
-        logger.debug("✓ Analysis completed successfully")
+        logger.debug("Analysis completed successfully")
     except Exception as e:
         # Catch any service errors and return graceful failure
         logger.error(f"[ERROR] Analysis service crashed: {e}")
@@ -191,16 +238,16 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
     # Determine action based on status
     if status == 'success':
         action = "analysis_success"
-        logger.info("\n[PASS] Simulation completed successfully")
+        logger.info("[PASS] Simulation completed successfully")
     elif status == 'unstable':
         action = "analysis_unstable"
-        logger.warning("\n[WARN] Simulation UNSTABLE")
+        logger.warning("[WARN] Simulation UNSTABLE")
     elif status == 'failed':
         action = "analysis_failed"
-        logger.error("\n[ERROR] Simulation FAILED")
+        logger.error("[ERROR] Simulation FAILED")
     else:
         action = "analysis_unknown"
-        logger.warning(f"\n[QUERY] Status: {status}")
+        logger.warning("[QUERY] Status: %s", status)
 
     # Retry guidance for inputs/baseline adjustments
     retry_guidance = None
@@ -317,6 +364,13 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             logger.debug(f"   Performance: {performance['avg_cells_per_sec']:,.0f} cells/s (avg)")
 
     # Return state updates dict
+    status_map = {
+        "success": "completed",
+        "failed": "failed",
+        "unstable": "failed",
+    }
+    mapped_status = status_map.get(status)
+
     updates = {
         # === UTILITY FLAGS ===
         "mode": "proceed",
@@ -327,13 +381,17 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
 
         # === PRAGMATIC CONVENIENCE COPIES ===
         # For performance/visualization (optional, matches workflow_history.details)
-        "job_status": status,
         "analysis_report": report,
         "error_logs": error_logs if error_logs else state.get('error_logs', []),
         "retry_guidance": retry_guidance,
     }
+    if mapped_status:
+        updates["job_status"] = mapped_status
 
-    logger.info(f"✅ Analysis complete: {status}")
+    logger.info(f"Analysis complete: {status}")
+    logger.info("-" * 80)
+    logger.info("Analysis node complete")
+    logger.info("-" * 80)
     return updates
 
 

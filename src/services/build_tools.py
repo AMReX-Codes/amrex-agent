@@ -56,7 +56,7 @@ def compile_amrex(
     is_pele_code = is_pele_case_path(case_dir)
 
     if is_pele_code:
-        logger.info("Detected Pele code - using TPL targets")
+        logger.debug("Detected Pele code - using TPL targets")
         commands = [
             ["make", "TPLrealclean"] + make_flags,
             ["make", "realclean"],
@@ -64,7 +64,7 @@ def compile_amrex(
             ["nice", "make", f"-j{jobs}"] + make_flags,
         ]
     else:
-        logger.info("Detected non-Pele AMReX code - skipping TPL targets")
+        logger.debug("Detected non-Pele AMReX code - skipping TPL targets")
         commands = [
             ["make", "realclean"],
             ["nice", "make", f"-j{jobs}"] + make_flags,

@@ -568,10 +568,12 @@ Success Criteria:
 # =============================================================================
 
 @pytest.mark.integration
+@pytest.mark.requires_indices("faiss")
+@pytest.mark.requires_solver("PeleC")
 class TestIntegrationWithRealIndex:
     """Integration test with actual FAISS index (if available)."""
     
-    def test_can_load_and_query_real_index(self):
+    def test_can_load_and_query_real_index_pelec(self):
         """
         Given: Real FAISS index exists
         When:  Loading and querying
@@ -628,3 +630,59 @@ class TestIntegrationWithRealIndex:
         print(f"  Results returned: {len(result['results'])}")
         print(f"  Top result: {top_result['content'][:80]}...")
         print(f"  Score: {top_result['score']:.3f}")
+
+
+# =============================================================================
+# Test 5: Embedding Retry Policy
+# =============================================================================
+
+class TestEmbeddingRetryPolicy:
+    """Verify embedding retries only on retryable status codes."""
+
+    @pytest.mark.parametrize("status_code", [429, 500])
+    def test_retries_on_rate_limit_and_server_error(self, status_code):
+        class RateLimitError(Exception):
+            def __init__(self, code):
+                self.status_code = code
+
+        mock_embeddings = Mock()
+        mock_embeddings.embed_documents = Mock(side_effect=[
+            RateLimitError(status_code),
+            [[0.0]],
+        ])
+
+        config = AMReXAgentConfig()
+        config.faiss_cache_enabled = False
+        config.embedding_rate_limit_rpm = 0
+        config.embedding_retry_max_attempts = 2
+
+        with patch.object(EmbeddingService, "_init_embeddings",
+                          lambda self: setattr(self, "embeddings", mock_embeddings)), \
+             patch("src.services.embedding.time.sleep", return_value=None):
+            service = EmbeddingService(config)
+            embeddings = service.embed_texts(["hello"])
+
+        assert embeddings == [[0.0]]
+        assert mock_embeddings.embed_documents.call_count == 2
+
+    def test_does_not_retry_on_non_retryable_status(self):
+        class BadRequestError(Exception):
+            def __init__(self):
+                self.status_code = 400
+
+        mock_embeddings = Mock()
+        mock_embeddings.embed_documents = Mock(side_effect=BadRequestError())
+
+        config = AMReXAgentConfig()
+        config.faiss_cache_enabled = False
+        config.embedding_rate_limit_rpm = 0
+        config.embedding_retry_max_attempts = 3
+
+        with patch.object(EmbeddingService, "_init_embeddings",
+                          lambda self: setattr(self, "embeddings", mock_embeddings)), \
+             patch("src.services.embedding.time.sleep", return_value=None):
+            service = EmbeddingService(config)
+            with pytest.raises(BadRequestError):
+                service.embed_texts(["hello"])
+
+        assert mock_embeddings.embed_documents.call_count == 1

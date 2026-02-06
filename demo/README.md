@@ -74,6 +74,8 @@ export ERF_REPO_PATH=/path/to/ERF
 export AMREX_REPO_PATH=/path/to/amrex
 ```
 
+If you want `--clone-missing` to pull specific forks/branches/commits, edit `.dependencies.json` in the repo root. This is only for cloning missing repos; normal runs use the sibling repos or the `AMREX_HOME` / `*_REPO_PATH` overrides you provide.
+
 ### 4. Build Database Indices
 
 ```bash
@@ -81,6 +83,7 @@ bash demo/setup_demo_database.sh
 ```
 
 This extracts parameter schemas and builds FAISS indices from the source repositories.
+If prebuilt schemas/indices are already present in `database/schemas` and `database/faiss`, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash recorded in `.dependencies.json` with the commit in your local repo if you need to validate you’re using the same version.
 
 To build indices for a single code only:
 
@@ -150,6 +153,10 @@ python amrex_agent.py \
   --save-workflow \
   --verbose
 ```
+
+Note: This prompt-file demo can hit the reviewer retry limit if parameter
+resolution fails. For a more reliable run, use the inline prompt or the
+config override example instead.
 
 Example user requirements file format (`demo/amrex/user_requirement.txt`):
 ```
@@ -227,11 +234,12 @@ python amrex_agent.py \
   --output-dir /tmp/amrex_e2e_runs \
   --indexing-strategy simple \
   --baseline-override AMReX/Tests/Amr/Advection_AmrCore/Exec \
-  --dry-run \
+  --run-mode dry \
   --save-workflow
 ```
 
 For PeleC-specific examples, see `demo/pelec/README.md`.
+For Superfacility (SFAPI) Perlmutter notes, see `demo/superfacility/README.md`.
 
 ## Command Line Options
 
@@ -245,6 +253,7 @@ Optional:
   --save-workflow           Save workflow_history.json
   --save-transcript         Save agent reasoning log
   --verbose, -v             Enable debug output
+  --run-mode MODE           Run strategy: dry, stage, submit, full (default: full)
   --indexing-strategy       Choose "simple", "hierarchical", or "override_static"
   --inputs-file-strategy    Choose inputs selection: oldest/newest/smallest/llm_compare/override
   --inputs-file-override    Explicit inputs file (absolute path or relative to case dir)

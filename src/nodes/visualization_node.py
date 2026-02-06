@@ -77,9 +77,9 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates with visualization metadata and artifacts.
     """
-    logger.debug("\n" + "="*80)
-    logger.debug("VISUALIZATION NODE - Multi-Backend Plotfile Visualization")
-    logger.debug("="*80)
+    logger.info("=" * 80)
+    logger.info("Starting Visualization node")
+    logger.info("=" * 80)
 
     config = state["config"]
     iteration = state.get("iteration", 0)
@@ -367,6 +367,10 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
     # RETURN STATE UPDATES (LangGraph PATTERN)
     # ========================================
 
+    logger.info(f"Visualization complete: {viz_status}")
+    logger.info("-" * 80)
+    logger.info("Visualization node complete")
+    logger.info("-" * 80)
     return {
         "mode": "proceed",
         "iteration": iteration,
@@ -409,7 +413,25 @@ def _build_vis_config(
     if not isinstance(vis_config, dict):
         vis_config = {'plots': []}
 
-    # If no plots specified, build default set
+    # Validate requested plots against available fields when possible
+    if vis_config.get('plots'):
+        try:
+            fields = viz_service.backend.get_field_list(plotfiles[-1]) if plotfiles else []
+        except Exception as exc:
+            fields = []
+            logger.debug(f"  [WARN] Field detection failed: {exc}")
+        if fields:
+            requested = vis_config.get('plots', [])
+            filtered = [p for p in requested if p.get('field') in fields]
+            if len(filtered) != len(requested):
+                missing = [p.get('field') for p in requested if p.get('field') not in fields]
+                logger.info(
+                    "Requested visualization fields not available: %s; falling back to available fields.",
+                    ", ".join([m for m in missing if m])
+                )
+                vis_config['plots'] = filtered
+
+    # If no plots specified (or all were filtered out), build default set
     if not vis_config.get('plots'):
         vis_config['plots'] = []
 

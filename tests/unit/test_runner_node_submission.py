@@ -50,6 +50,7 @@ class TestRunnerNodeSubmission:
                 "script_path": "/tmp/run/submit.sh",
                 "job_status": "completed"
             }
+            instance.monitor.return_value = "COMPLETED"
             yield MockCls
 
     @pytest.fixture
@@ -62,6 +63,7 @@ class TestRunnerNodeSubmission:
         return {
             "config": Mock(
                 dry_run=False,
+                run_mode="full",
                 environment="perlmutter",
                 slurm_account="m999",
                 slurm_qos="regular",

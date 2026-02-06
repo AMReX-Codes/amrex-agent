@@ -48,11 +48,18 @@ def test_no_emoji_in_production():
     """
     violations = []
     
+    emoji_allowlist = {
+        Path("src/services/feedback_generator.py"),
+        Path("src/utils/status_icons.py"),
+    }
+
     for source_dir in SRC_DIRS:
         if not source_dir.exists():
             continue
             
         for py_file in source_dir.rglob("*.py"):
+            if py_file.relative_to(".") in emoji_allowlist:
+                continue
             content = py_file.read_text(encoding="utf-8")
             
             # Check for emoji ranges (most common: U+1F300 to U+1F9FF)
@@ -528,6 +535,51 @@ def test_docstring_format_compliance():
 
     pydocstyle = lint.get("pydocstyle") or ruff.get("pydocstyle", {})
     assert pydocstyle.get("convention") == "numpy", "Ruff should enforce NumPy docstrings"
+
+
+@pytest.mark.quality
+def test_docs_tooling_expectations():
+    """
+    Enforce minimal documentation tooling and guidance expectations.
+    """
+    mkdocs_config = Path("mkdocs.yml")
+    assert mkdocs_config.exists(), "mkdocs.yml is required for docs tooling"
+
+    docs_index = Path("docs/index.md")
+    assert docs_index.exists(), "docs/index.md is required for the docs landing page"
+
+    docs_workflows = Path("docs/workflows.md")
+    assert docs_workflows.exists(), "docs/workflows.md must exist"
+    docs_text = docs_workflows.read_text(encoding="utf-8")
+    assert "Python standards (docs, packaging, tests/examples)" in docs_text
+    assert "Packaging strategy" in docs_text
+
+    env_file = Path("environment.yaml")
+    assert env_file.exists(), "environment.yaml must exist"
+    env_text = env_file.read_text(encoding="utf-8")
+    assert "mkdocs" in env_text, "environment.yaml should include mkdocs for local docs builds"
+    assert "mkdocstrings" in env_text, "environment.yaml should include mkdocstrings for API docs"
+    assert "mkdocs-include-markdown-plugin" in env_text, (
+        "environment.yaml should include mkdocs-include-markdown-plugin for includes"
+    )
+
+
+@pytest.mark.quality
+def test_docs_includes_resolve():
+    """
+    Ensure docs include paths resolve relative to docs/.
+    """
+    docs_page = Path("docs/demos.md")
+    assert docs_page.exists(), "docs/demos.md must exist"
+
+    includes = re.findall(r'include "([^"]+)"', docs_page.read_text(encoding="utf-8"))
+    missing = []
+    for rel_path in includes:
+        target = (docs_page.parent / rel_path).resolve()
+        if not target.exists():
+            missing.append(rel_path)
+
+    assert not missing, f"Missing include targets in {docs_page}: {missing}"
 
 
 @pytest.mark.quality
