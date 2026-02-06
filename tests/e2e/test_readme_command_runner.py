@@ -1,0 +1,102 @@
+import os
+
+import pytest
+
+from tests.e2e.readme_command_runner import run_commands_by_file
+
+
+@pytest.mark.e2e
+def test_readme_command_runner_dry_run() -> None:
+    repo_root = __import__("pathlib").Path(__file__).resolve().parents[2]
+    results = run_commands_by_file(repo_root, dry_run=True)
+
+    assert results, "No README commands discovered for dry-run execution"
+
+    for path, entries in results.items():
+        assert entries, f"No commands for {path}"
+        for entry in entries:
+            assert entry["status"] == "dry_run", f"Unexpected status for {entry['id']}"
+
+
+@pytest.mark.e2e
+def test_readme_command_runner_execute() -> None:
+    if not _assets_available():
+        pytest.skip("Required repos/schemas/indices not available for README execution.")
+    if not _llm_available():
+        pytest.skip("LLM API key not available for README execution.")
+
+    repo_root = __import__("pathlib").Path(__file__).resolve().parents[2]
+    file_filter = [
+        "README.md",
+        "demo/amrex/README.md",
+        "demo/pelec/README.md",
+        "demo/pelelmex/README.md",
+        "demo/erf/README.md",
+    ]
+    results = run_commands_by_file(
+        repo_root,
+        file_filter=file_filter,
+        dry_run=False,
+        timeout_seconds=30,
+        stop_on_failure=True,
+        entry_filter=_is_executable_readme_command,
+        command_transform=_force_dry_run,
+    )
+
+    failures = [
+        (path, entry)
+        for path, entries in results.items()
+        for entry in entries
+        if entry["status"] in {"failed", "timeout"}
+    ]
+    if failures:
+        lines = ["README command execution failures:"]
+        for path, entry in failures[:20]:
+            lines.append(
+                f"  - {path} :: {entry['id']} ({entry['status']}, rc={entry.get('returncode')})"
+            )
+        if len(failures) > 20:
+            lines.append(f"  - ... and {len(failures) - 20} more")
+        pytest.fail("\n".join(lines))
+
+
+def _assets_available() -> bool:
+    from tests.conftest import _indices_available, _repos_available, _schemas_available
+
+    solvers = ("PeleC", "PeleLMeX", "ERF", "AMReX")
+    if not _repos_available(solvers):
+        return False
+    if not _schemas_available(solvers):
+        return False
+    if not _indices_available(("faiss", "level0", "level1", "level2")):
+        return False
+    return True
+
+
+def _llm_available() -> bool:
+    from tests.conftest import _has_cborg_key
+
+    if _has_cborg_key():
+        return True
+    if os.getenv("OPENAI_API_KEY"):
+        return True
+    if os.getenv("ANTHROPIC_API_KEY"):
+        return True
+    if os.getenv("ALCF_API_KEY"):
+        return True
+    return False
+
+
+def _force_dry_run(command: str) -> str:
+    if "amrex_agent.py" not in command:
+        return command
+    if "--run-mode" in command or "--dry-run" in command:
+        return command
+    return f"{command} --run-mode dry"
+
+
+def _is_executable_readme_command(entry: dict) -> bool:
+    text = entry["text"]
+    if "amrex_agent.py" not in text:
+        return False
+    return "--baseline-override" in text
