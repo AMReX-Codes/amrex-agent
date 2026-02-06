@@ -14,6 +14,7 @@ from src.models.state_transitions import (
     skip_review,
 )
 from src.services.reviewer import ReviewerOrchestrator
+from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -78,9 +79,30 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
 
     config = state["config"]
     iteration = state.get("iteration", 0)
+
+    gate_result = run_preconfirm_gate(
+        node_name="reviewer",
+        summary_lines=[
+            "This step validates the plan before writing inputs.",
+        ],
+        options=[{"label": "Proceed with validation", "value": "proceed"}],
+        enabled=getattr(config, "preconfirm_gate", False),
+        allow_cancel=True,
+    )
+    gate_entry = gate_result.get("history_entry")
+    if gate_entry:
+        gate_entry["iteration"] = iteration
+    if gate_result["action"] == "cancel":
+        return {
+            "mode": "terminal",
+            "error": "User canceled at pre-confirm gate.",
+            "workflow_history": state.get("workflow_history", []) + ([gate_entry] if gate_entry else []),
+        }
     retry_count = state.get("retry_count", 0)
     max_retries = state.get("max_retries", 3)
     workflow_history = state.get("workflow_history", [])
+    if gate_entry:
+        workflow_history = workflow_history + [gate_entry]
 
     # ========================================
     # PARAMETER RESOLUTION CHECK (from input_writer via workflow_history)

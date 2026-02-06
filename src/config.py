@@ -375,6 +375,19 @@ class AMReXAgentConfig(BaseModel):
         description="If True, use LLM assistance to refine retry guidance for inputs/baseline switching."
     )
 
+    llm_gate_strategy: Literal[
+        "off",
+        "default",
+        "feedback",
+        "gate-major",
+        "gate-all",
+        "gate-major-prompt",
+        "gate-all-prompt",
+    ] = Field(
+        default="off",
+        description="LLM prompt gate strategy: off, default, feedback, gate-major, gate-all."
+    )
+
     baseline_switch_after_retries: int = Field(
         default=3,
         ge=1,
@@ -392,6 +405,11 @@ class AMReXAgentConfig(BaseModel):
     dry_run: bool = Field(
         default=False,
         description="If True, generate scripts without executing external runs."
+    )
+
+    preconfirm_gate: bool = Field(
+        default=False,
+        description="If True, pause in terminal for a pre-confirmation gate before validation."
     )
 
     # === Phase 4: Container and Analysis Configuration ===
@@ -665,21 +683,24 @@ def get_llm_client(config: AMReXAgentConfig):
                 config.llm_model = available[0]
                 logger.info(f" Using first available model: {config.llm_model}")
         
-        return client
+        return _wrap_llm_client_if_needed(client, config)
     
     elif config.llm_provider == "alcf":
         if not config.alcf_api_key:
             raise ValueError("ALCF_API_KEY not set")
         base_url = resolve_alcf_base_url(config)
-        return OpenAI(
+        return _wrap_llm_client_if_needed(
+            OpenAI(
             api_key=config.alcf_api_key,
             base_url=base_url
+            ),
+            config,
         )
 
     elif config.llm_provider == "openai":
         if not config.openai_api_key:
             raise ValueError("OPENAI_API_KEY not set")
-        return OpenAI(api_key=config.openai_api_key)
+        return _wrap_llm_client_if_needed(OpenAI(api_key=config.openai_api_key), config)
     
     elif config.llm_provider == "anthropic":
         # TODO: Implement Anthropic client wrapper
@@ -687,6 +708,83 @@ def get_llm_client(config: AMReXAgentConfig):
     
     else:
         raise ValueError(f"Unknown LLM provider: {config.llm_provider}")
+
+
+def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
+    strategy = getattr(config, "llm_gate_strategy", "off") or "off"
+    if strategy == "off":
+        return client
+    return _LLMGateClient(client, strategy)
+
+
+class _LLMGateClient:
+    def __init__(self, client, strategy: str):
+        self._client = client
+        self._strategy = strategy
+        self.chat = _LLMGateChat(client.chat, strategy)
+
+    def __getattr__(self, name: str):
+        return getattr(self._client, name)
+
+
+class _LLMGateChat:
+    def __init__(self, chat_resource, strategy: str):
+        self._chat = chat_resource
+        self._strategy = strategy
+        self.completions = _LLMGateCompletions(chat_resource.completions, strategy)
+
+    def __getattr__(self, name: str):
+        return getattr(self._chat, name)
+
+
+class _LLMGateCompletions:
+    def __init__(self, completions_resource, strategy: str):
+        self._completions = completions_resource
+        self._strategy = strategy
+
+    def create(self, *args, **kwargs):
+        from src.utils.gate import run_llm_post_gate, run_llm_pre_gate
+
+        prompt_text = _extract_prompt_text(kwargs.get("messages"))
+        if self._strategy in {"default"}:
+            strategy = "feedback"
+        else:
+            strategy = self._strategy
+
+        if prompt_text and not run_llm_pre_gate(prompt_text, strategy):
+            raise RuntimeError("LLM call canceled by user at prompt gate.")
+
+        response = self._completions.create(*args, **kwargs)
+
+        output_text = _extract_response_text(response)
+        if output_text:
+            run_llm_post_gate(output_text, strategy)
+
+        return response
+
+
+def _extract_prompt_text(messages: list[dict[str, str]] | None) -> str:
+    if not messages:
+        return ""
+    parts = []
+    for msg in messages:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        parts.append(f"[{role}] {content}")
+    return "\n".join(parts)
+
+
+def _extract_response_text(response) -> str:
+    try:
+        choices = getattr(response, "choices", None)
+        if not choices:
+            return ""
+        message = getattr(choices[0], "message", None)
+        if message and getattr(message, "content", None):
+            return message.content
+        return ""
+    except Exception:
+        return ""
 
 
 # Example usage

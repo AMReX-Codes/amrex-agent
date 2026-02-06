@@ -38,10 +38,13 @@ python database/scripts/build_schema.py ../amrex --solver amrex
 
 If you keep AMReX elsewhere, use that path (or set `AMREX_REPO_PATH` / `AMReX_HOME` / `AMREX_HOME`).
 
-5) Run a prompt (CLI), for example:
+5) Run a prompt (CLI), for example (targeted baseline):
 
 ```bash
-python amrex_agent.py --prompt "Run AMReX Advection_AmrCore with a 64x64 grid and 2 AMR levels"
+python amrex_agent.py \
+  --prompt "AMReX Advection_AmrCore with a 64x64 grid and 2 AMR levels" \
+  --baseline-override AMReX/Tests/Amr/Advection_AmrCore/Exec \
+  --indexing-strategy override_static
 ```
 
 For more scenarios, see `demo/README.md`.
@@ -68,6 +71,14 @@ python amrex_agent.py --prompt "Run AMReX Advection_AmrCore with a 64x64 grid" -
 - `--indexing-strategy override_static` (targeted mode):
   - Skip dynamic indexing and rely on explicit baseline selection.
   - Intended for tightly scoped changes on a known case rather than exploratory search.
+
+- `--preconfirm`:
+  - Enables terminal pre-confirmation gates before each workflow node and before compile/run steps.
+  - Useful when you want a pause to confirm actions at each stage.
+
+- `--llm-gate-strategy`:
+  - Controls prompt gating for LLM calls (pre-send and post-output checks).
+  - Values: `off`, `default`, `feedback`, `gate-major`, `gate-all`, `gate-major-prompt`, `gate-all-prompt`.
 
 Option 0 (override everything: baseline + inputs):
 

@@ -21,6 +21,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.visualization import VisualizationService
+from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,27 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
     iteration = state.get("iteration", 0)
     workflow_history = state.get("workflow_history", [])
     error_logs = state.get("error_logs", [])
+
+    gate_result = run_preconfirm_gate(
+        node_name="visualization",
+        summary_lines=[
+            "This step generates plots or images from simulation output.",
+        ],
+        options=[{"label": "Proceed with visualization", "value": "proceed"}],
+        enabled=getattr(config, "preconfirm_gate", False),
+        allow_cancel=True,
+    )
+    gate_entry = gate_result.get("history_entry")
+    if gate_entry:
+        gate_entry["iteration"] = iteration
+        workflow_history = workflow_history + [gate_entry]
+    if gate_result["action"] == "cancel":
+        return {
+            "mode": "terminal",
+            "job_status": "skipped",
+            "visualization_status": "skipped",
+            "workflow_history": workflow_history,
+        }
 
     # Get run_directory and analysis_report from canonical/pragmatic paths
     run_dir, analysis_report = get_run_directory_and_analysis(state)

@@ -17,6 +17,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.architect import ArchitectService
+from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -318,6 +319,38 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             "retry_count": new_retry_count
         }
 
+    preconfirm_action = "proceed"
+    preconfirm_selection = None
+    gate_entry = None
+    if getattr(config, "preconfirm_gate", False):
+        options = _build_baseline_options(plan_result)
+        summary_lines = [
+            f"Solver: {plan_result.selected_solver}",
+            f"Selected case: {plan_result.selected_case}",
+            f"Planned modifications: {len(plan_result.modifications)}",
+            "Note: Selecting an alternative keeps the current modification plan.",
+        ]
+        gate_result = run_preconfirm_gate(
+            node_name="architect",
+            summary_lines=summary_lines,
+            options=options,
+            enabled=True,
+            allow_cancel=True,
+        )
+        preconfirm_action = gate_result["action"]
+        preconfirm_selection = gate_result.get("selection")
+        gate_entry = gate_result.get("history_entry")
+        if gate_entry:
+            gate_entry["iteration"] = new_iteration
+        if preconfirm_selection:
+            plan_result.selected_case = preconfirm_selection["case"]
+            if preconfirm_selection.get("score") is not None:
+                plan_result.baseline_confidence = preconfirm_selection["score"]
+            plan_result.reasoning = (
+                f"{plan_result.reasoning}\n"
+                f"User selected alternative baseline at pre-confirm gate: {plan_result.selected_case}"
+            )
+
     # ========================================
     # COMPONENT 9e: WORKFLOW HISTORY LOGGING (CANONICAL PATH)
     # ========================================
@@ -392,6 +425,10 @@ def architect_node(state: GraphState) -> dict[str, Any]:
 
     # Append to history (immutable - create new list)
     new_history = workflow_history + [history_entry]
+    if gate_entry:
+        gate_entry["details"]["selection"] = preconfirm_selection
+        gate_entry["details"]["options_count"] = len(_build_baseline_options(plan_result))
+        new_history = new_history + [gate_entry]
 
     logger.debug(f"History entry appended: {history_entry['action']} at iteration {new_iteration}")
     if baseline:
@@ -420,6 +457,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         "mode": "proceed",              # Control flow (Reviewer will override)
         "iteration": new_iteration,     # Total steps taken (all nodes)
         "retry_count": new_retry_count, # Reflexion loop count (architect retries only)
+        "preconfirm_action": preconfirm_action,
 
         # === EXCLUSION STATE (FOR RETRY LOOP) ===
         "excluded_cases": excluded_cases,           # Cumulative excluded baselines
@@ -451,7 +489,36 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     if hasattr(plan_result, "timestamp") and plan_result.timestamp:
         updates["timestamp_plan_created"] = plan_result.timestamp
 
+    if preconfirm_action == "cancel":
+        updates["mode"] = "terminal"
+        updates["error"] = "User canceled at pre-confirm gate."
+
     logger.info(f"✅ Iteration {new_iteration}, Retry {new_retry_count}, Mode: proceed")
 
     # Return updates dict (LangGraph will merge into state)
     return updates
+
+
+def _build_baseline_options(plan_result, max_options: int = 4) -> list[dict[str, Any]]:
+    options: list[dict[str, Any]] = []
+    seen = set()
+
+    def add_option(case: str | None, score: float | None) -> None:
+        if not case or case in seen:
+            return
+        label = f"{case}"
+        if score is not None:
+            label += f" (score {score:.2f})"
+        if case == plan_result.selected_case:
+            label += " [current]"
+        options.append({"case": case, "score": score, "label": label, "value": case})
+        seen.add(case)
+
+    add_option(plan_result.selected_case, plan_result.baseline_confidence)
+    for candidate in plan_result.case_candidates or []:
+        case = candidate.get("case") or candidate.get("metadata", {}).get("repo_path")
+        add_option(case, candidate.get("score"))
+        if len(options) >= max_options:
+            break
+
+    return options
