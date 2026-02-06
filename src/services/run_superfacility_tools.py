@@ -979,8 +979,8 @@ def download_remote_file(
     if nersc_session["type"] != "oauth":
         headers = {"Authorization": f"Bearer {nersc_session['token']}"}
 
-    def _do_download(path: str) -> requests.Response:
-        params = {"file": path}
+    def _do_download(remote_path_param: str) -> requests.Response:
+        params = {"file": remote_path_param}
         if nersc_session["type"] == "oauth":
             response = nersc_session["session"].get(
                 api_url,

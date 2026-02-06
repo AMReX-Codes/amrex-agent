@@ -16,6 +16,8 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+from src.utils.status_icons import status_label
+
 class AnalysisService:
     """AMReX simulation log analysis and metrics extraction.
 
@@ -669,16 +671,7 @@ class AnalysisService:
         logger.debug(f"{'='*80}")
 
         status = report['status']
-        status_label = {
-            'success': '[SUCCESS]',
-            'failed': '[FAILED]',
-            'unstable': '[WARN]',
-            'completed_with_warnings': '[WARN]',
-            'incomplete': '[INCOMPLETE]',
-            'no_log_file': '[NO_LOG]'
-        }
-
-        logger.debug(f"\nStatus: {status_label.get(status, '[UNKNOWN]')} {status.upper()}")
+        logger.debug(f"\nStatus: {status_label(status)} {status.upper()}")
 
         if report.get('total_steps'):
             logger.debug(f"Total steps: {report['total_steps']}")

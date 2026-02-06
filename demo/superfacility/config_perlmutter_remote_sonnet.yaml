@@ -1,4 +1,5 @@
 # Superfacility (SFAPI) config overrides for Perlmutter (remote staging)
+# Sonnet model preset
 
 # Environment selection
 environment: perlmutter
@@ -9,6 +10,9 @@ output_dir: /tmp/amrex_agent_runs
 # Demo overrides (baseline + inputs)
 baseline_override: AMReX/Tests/Amr/Advection_AmrCore/Exec
 inputs_file_override: inputs
+
+# LLM model
+llm_model: claude-sonnet-4-5
 
 # Remote destination for staged runs
 remote_output_dir: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility

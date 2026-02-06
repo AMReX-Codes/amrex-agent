@@ -91,7 +91,7 @@ python amrex_agent.py \
 # export SBATCH_ACCOUNT=m4106
 python amrex_agent.py \
   --prompt-path demo/pelelmex/user_requirements_test_DNS.txt \
-  --baseline-override PeleLMeX/Exec/RegTests/JetInCrossFlow \
+  --baseline-override PeleLMeX/Exec/Production/JetInCrossflow \
   --config demo/superfacility/config_perlmutter_remote.yaml \
   --environment perlmutter \
   --verbose
@@ -100,6 +100,8 @@ python amrex_agent.py \
 ## Notes
 
 - The SFAPI path assumes the executable and inputs are already on Perlmutter.
+- In `remote_executable_template`, `{solver_name}` is currently the same as the repo name
+  (e.g., `PeleLMeX`), and `{case_dir}` is the repo-relative case path.
 - The generated submission script uses `srun` (no container).
 - If `sfapi_client` is unavailable, the code falls back to REST token auth.
 - These example paths are SFAPI-specific and targeted at NERSC systems.

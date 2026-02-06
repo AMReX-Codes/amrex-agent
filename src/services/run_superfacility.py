@@ -122,6 +122,21 @@ class SuperfacilityRunner:
         """
         if not case_dir.exists():
             return None
+        executables = list(case_dir.glob("*.ex"))
+        if not executables:
+            return None
+
+        for exe in executables:
+            name_lower = exe.name.lower()
+            has_mpi = "mpi" in name_lower
+            has_cuda = "cuda" in name_lower
+            if require_mpi and not has_mpi:
+                continue
+            if require_cuda and not has_cuda:
+                continue
+            return exe
+
+        return executables[0]
 
     def _resolve_remote_executable(
         self,
@@ -154,6 +169,8 @@ class SuperfacilityRunner:
                 rendered = template.format(
                     case_dir=case_dir_value,
                     case_dir_name=case_dir_name,
+                    repo_name=repo_name,
+                    solver_name=repo_name,
                 )
             except KeyError as exc:
                 raise ValueError(f"remote_executable_template missing key: {exc}") from exc
@@ -161,7 +178,7 @@ class SuperfacilityRunner:
             rendered_path = Path(rendered)
             if rendered_path.suffix == ".ex":
                 return rendered_path
-            if getattr(self.config, "remote_executable_find", True):
+            if getattr(self.config, "remote_executable_find", False):
                 found = find_remote_executable(
                     remote_case_dir=str(rendered_path),
                     system=system,
@@ -169,7 +186,7 @@ class SuperfacilityRunner:
                 return Path(found) if found else None
             return None
 
-        if not getattr(self.config, "remote_executable_find", True):
+        if not getattr(self.config, "remote_executable_find", False):
             return None
 
         account = os.getenv("SBATCH_ACCOUNT")
@@ -184,29 +201,8 @@ class SuperfacilityRunner:
         )
         return Path(found) if found else None
 
-        # Find all .ex files
-        executables = list(case_dir.glob('*.ex'))
-
-        if not executables:
-            return None
-
-        # Filter by requirements
-        for exe in executables:
-            name_lower = exe.name.lower()
-
-            # Check MPI
-            if require_mpi and 'mpi' not in name_lower:
-                continue
-
-            # Check CUDA
-            if require_cuda and 'cuda' not in name_lower:
-                continue
-
-            # Match!
-            return exe
-
         # No exact match - return first executable if any
-        return executables[0] if executables else None
+        return None
 
     def setup_job(self,
                   inputs_path: str | Path | None = None,
@@ -267,11 +263,15 @@ class SuperfacilityRunner:
             if case_dir is None:
                 raise ValueError("Must provide either executable_path or case_dir")
 
-            if (
+            remote_resolution_enabled = bool(
                 getattr(self.config, "remote_executable_path", None)
                 or getattr(self.config, "remote_executable_template", None)
-                or getattr(self.config, "remote_executable_find", True)
-            ):
+                or getattr(self.config, "remote_executable_find", False)
+            )
+            if getattr(self.config, "environment", None) in {"local", None}:
+                remote_resolution_enabled = False
+
+            if remote_resolution_enabled:
                 logger.info(" Skipping local compile; remote executable resolution enabled.")
                 executable_path = None
             else:

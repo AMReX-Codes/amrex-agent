@@ -153,24 +153,36 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         # Submit job (Runner Node: Script Generation)
         # Use the ACTUAL run directory returned by setup, not the parent
-        if config.environment == "local":
-            submit_result = runner.submit(
-                run_directory=actual_run_dir,
-                nodes=getattr(config, "mpi_ranks", 1),
-                run_mode=run_mode,
-                dry_run=getattr(config, "dry_run", False),
-            )
-        else:
-            submit_result = runner.submit(
-                run_directory=actual_run_dir,
-                run_mode=run_mode,
-                dry_run=getattr(config, "dry_run", False),
-                case_dir=case_dir,
-            )
+        submit_kwargs = {"run_directory": actual_run_dir}
+        submit_sig = None
+        try:
+            submit_sig = inspect.signature(runner.submit)
+        except (TypeError, ValueError):
+            submit_sig = None
+
+        if submit_sig:
+            params = submit_sig.parameters
+            if "nodes" in params:
+                submit_kwargs["nodes"] = getattr(config, "mpi_ranks", 1)
+            if "run_mode" in params:
+                submit_kwargs["run_mode"] = run_mode
+            if "dry_run" in params:
+                submit_kwargs["dry_run"] = getattr(config, "dry_run", False)
+            if "case_dir" in params:
+                submit_kwargs["case_dir"] = case_dir
+
+        submit_result = runner.submit(**submit_kwargs)
+
+        if config.environment != "local":
+            monitor_enabled = getattr(config, "monitor_job", True)
+            job_status = submit_result.get("job_status")
+            monitor_states = {None, "queued", "pending", "running", "submitted"}
             if (
                 not getattr(config, "dry_run", False)
-                and getattr(config, "monitor_job", True)
+                and monitor_enabled
                 and submit_result.get("job_id")
+                and job_status in monitor_states
+                and hasattr(runner, "monitor")
             ):
                 final_state = runner.monitor(
                     job_id=submit_result["job_id"],
@@ -196,9 +208,11 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         final_state = None
         method = submit_result.get("method")
-        if run_mode == "full" and method not in {"dry_run", "stage_only"}:
+        if final_state is None and run_mode == "full" and method not in {"dry_run", "stage_only"}:
             job_id = submit_result.get("job_id")
-            if job_id and hasattr(runner, "monitor"):
+            job_status = submit_result.get("job_status")
+            monitor_states = {None, "queued", "pending", "running", "submitted"}
+            if job_id and hasattr(runner, "monitor") and job_status in monitor_states:
                 final_state = runner.monitor(job_id, method=method or "sbatch")
 
         # ========================================

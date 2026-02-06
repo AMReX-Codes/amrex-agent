@@ -514,7 +514,10 @@ class AMReXAgentConfig(BaseModel):
     )
     remote_executable_template: Optional[str] = Field(
         default=None,
-        description="Template for remote executable path (supports {case_dir} and {case_dir_name})."
+        description=(
+            "Template for remote executable path "
+            "(supports {case_dir}, {case_dir_name}, {repo_name}, {solver_name})."
+        )
     )
     remote_executable_find: bool = Field(
         default=True,
