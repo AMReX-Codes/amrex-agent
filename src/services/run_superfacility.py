@@ -79,18 +79,18 @@ class SuperfacilityRunner:
             Path to the selected executable.
         """
         case_dir = Path(case_dir)
-        logger.info(f" Finding executable in {case_dir}")
+        logger.debug(f" Finding executable in {case_dir}")
 
         # Try to find existing executable (ONLY in case_dir, no fallback!)
         if not force_recompile:
             exe = self._find_exe_in_dir(case_dir, require_mpi, require_cuda)
 
             if exe:
-                logger.info(f"[ OK ] Found existing executable: {exe.name}")
+                logger.debug(f"[ OK ] Found existing executable: {exe.name}")
                 return str(exe)
 
         # No executable found - compile it
-        logger.info(" No suitable executable found, compiling...")
+        logger.info("No suitable executable found, compiling...")
         logger.debug(f"       MPI: {require_mpi}, CUDA: {require_cuda}")
 
         success = compile_amrex(
@@ -108,7 +108,7 @@ class SuperfacilityRunner:
         if not exe:
             raise RuntimeError(f"Compiled but no executable found in {case_dir}")
 
-        logger.info(f"[ OK ] Compiled: {exe.name}")
+        logger.info(f"Compiled: {exe.name}")
         return str(exe)
 
 
@@ -249,14 +249,14 @@ class SuperfacilityRunner:
         output_dir_path = Path(output_dir) if output_dir else None
         if output_dir_path and output_dir_path.exists() and (output_dir_path / "inputs").exists():
             run_dir = output_dir_path
-            logger.info(f" Using existing run directory: {run_dir}")
+            logger.debug(f" Using existing run directory: {run_dir}")
         else:
             # Create run directory
             run_dir = setup_run_directory.invoke({
                 'base_name': base_name,
                 'base_dir': str(output_dir) if output_dir else None
             })
-            logger.info(f" Run directory: {run_dir}")
+            logger.debug(f" Run directory: {run_dir}")
 
         # Find/compile executable if not provided
         if executable_path is None:
@@ -272,7 +272,7 @@ class SuperfacilityRunner:
                 remote_resolution_enabled = False
 
             if remote_resolution_enabled:
-                logger.info(" Skipping local compile; remote executable resolution enabled.")
+                logger.debug(" Skipping local compile; remote executable resolution enabled.")
                 executable_path = None
             else:
                 executable_path = self.find_or_compile_executable(
@@ -302,7 +302,7 @@ class SuperfacilityRunner:
         else:
             raise ValueError("Must provide either inputs_path or case_dir")
 
-        logger.info(f"[ OK ] Copied {len(files)} files to run directory")
+        logger.debug(f"[ OK ] Copied {len(files)} files to run directory")
 
         return {
             'run_dir': run_dir_str,
@@ -381,9 +381,9 @@ class SuperfacilityRunner:
 
         # Generate SLURM script
         if remote_executable_path:
-            logger.info(f" Using remote executable: {remote_executable_path}")
+            logger.info(f"Using remote executable: {remote_executable_path}")
         else:
-            logger.info(f" Using local executable: {executable}")
+            logger.info(f"Using local executable: {executable}")
 
         params = {
             'nodes': nodes,
@@ -436,7 +436,7 @@ class SuperfacilityRunner:
         script_path = run_dir / 'submit.sh'
         script_path.write_text(script)
         script_path.chmod(0o755)
-        logger.info(f" Generated submit script: {script_path.name}")
+        logger.debug(f" Generated submit script: {script_path.name}")
 
         if effective_mode == "dry":
             return {
@@ -484,7 +484,7 @@ class SuperfacilityRunner:
             config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 
-        logger.info(f"[ OK ] Job submitted: {job_id} (via {method})")
+        logger.info(f"Job submitted: {job_id} (via {method})")
 
         return {
             'job_id': job_id,
@@ -532,7 +532,7 @@ class SuperfacilityRunner:
             config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 
-        logger.info(f"[ OK ] Final state: {state}")
+        logger.info(f"Final state: {state}")
         return state
 
     def run_simulation(self,

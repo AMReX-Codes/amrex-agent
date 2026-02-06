@@ -178,7 +178,7 @@ class RuleEngine:
                 # Apply auto-correction
                 config_model = rule.auto_correct(config_model, violation)
 
-                logger.info(f"Auto-corrected: {violation.message}")
+                logger.debug(f"Auto-corrected: {violation.message}")
 
             except Exception as e:
                 # Auto-correction failed

@@ -199,10 +199,10 @@ class ArchitectService:
             return SolverSelection(None, 0.0)
 
         # Query Level 0 index
-        logger.info(f" Level0 searching for: '{query}'")
+        logger.debug(f" Level0 searching for: '{query}'")
         results = self.level0_searcher.search(query, top_k=1)
 
-        logger.info(f" Level0 results: {[(r['code'], r['score']) for r in results]}")
+        logger.debug(f" Level0 results: {[(r['code'], r['score']) for r in results]}")
 
         if not results:
             logger.error("No solver found for query: %s", query)
@@ -271,7 +271,7 @@ class ArchitectService:
         # Execute search (FR-3: search all 7 doc indices)
         results = searcher.search_all_docs(query, top_k=5)
 
-        logger.info(
+        logger.debug(
             "Retrieved %d context documents for %s",
             len(results),
             solver_name
@@ -333,7 +333,7 @@ class ArchitectService:
         # Filter excluded cases
         excluded_cases = excluded_cases or []
         if excluded_cases:
-            logger.info(f"Filtering {len(excluded_cases)} excluded cases: {excluded_cases}")
+            logger.debug(f"Filtering {len(excluded_cases)} excluded cases: {excluded_cases}")
             candidates = [
                 c for c in candidates
                 if c.get('case') not in excluded_cases
@@ -402,7 +402,7 @@ class ArchitectService:
             solver_name = solver_code or baseline.get('metadata', {}).get('solver')
             if not solver_name:
                 raise ValueError("Cannot determine solver: missing from baseline metadata and no solver_code provided")
-            logger.info(f"[Level2] Using solver: {solver_name}")
+            logger.debug(f"[Level2] Using solver: {solver_name}")
             index_dir = self.config.faiss_db_path / "level2"
             self.level2_searcher = Level2Searcher(
                 code=solver_name,
@@ -413,7 +413,7 @@ class ArchitectService:
         baseline_content = baseline.get('metadata', {}).get('inputs_content', {})
         baseline_case = baseline.get('case', 'unknown')
 
-        logger.info(f"[Level2] Searching for parameter patterns matching: {query}")
+        logger.debug(f"[Level2] Searching for parameter patterns matching: {query}")
 
         # Search Level 2 indices
         matches = self.level2_searcher.search_all_cases(query, top_k=3)
@@ -447,7 +447,7 @@ class ArchitectService:
             diff = self._calculate_diff(baseline_content, target_content)
 
             if diff:
-                logger.info(f"[Level2] Found {len(diff)} modifications from {case_name}")
+                logger.debug(f"[Level2] Found {len(diff)} modifications from {case_name}")
                 modifications.extend(diff)
                 evidence.append(case_name)
 
@@ -470,7 +470,7 @@ class ArchitectService:
             )
             modifications.extend(llm_result.get('modifications', []))
             modifications = list(dict.fromkeys(modifications))
-        logger.info(f"[Level2] Returning {len(modifications)} modifications")
+        logger.debug(f"[Level2] Returning {len(modifications)} modifications")
 
         return {
             "modifications": modifications,
@@ -575,19 +575,19 @@ class ArchitectService:
                     excluded_inputs_files=excluded_inputs_files,
                     parameter_resolution_feedback=parameter_resolution_feedback
                 )
-                logger.info("Hierarchical indexing succeeded")
+                logger.debug("Hierarchical indexing succeeded")
                 return plan
             except Exception as e:
                 logger.warning(f"Hierarchical indexing failed: {e}")
                 if getattr(self.config, 'fallback_to_simple_on_error', True):
-                    logger.info("Falling back to simple indexing")
+                    logger.debug("Falling back to simple indexing")
                     strategy = "simple"
                 else:
                     raise
 
         # Simple strategy
         plan = self.create_plan(user_prompt=user_prompt, **kwargs)
-        logger.info("Simple indexing succeeded")
+        logger.debug("Simple indexing succeeded")
         return plan
 
 
@@ -624,8 +624,8 @@ class ArchitectService:
         repo_path = baseline_info['repo_path']
         local_path = baseline_info['local_path']
 
-        logger.info(f"[Override] Parsed: {code_name}/{case_path}")
-        logger.info(f"[Override] Local path: {local_path}")
+        logger.debug(f"[Override] Parsed: {code_name}/{case_path}")
+        logger.debug(f"[Override] Local path: {local_path}")
 
         # === Step 2: Validate local path exists ===
         if not local_path.exists():
@@ -775,7 +775,7 @@ class ArchitectService:
 
         # Retrieve context (L1) using override solver
         docs = self.retrieve_context(user_prompt, solver_config)
-        logger.info(f"[Override] Retrieved {len(docs)} docs for {code_name}")
+        logger.debug(f"[Override] Retrieved {len(docs)} docs for {code_name}")
 
         # Extract modifications from user prompt against baseline
         case_path = baseline_result['selected_case']['case']
@@ -790,7 +790,7 @@ class ArchitectService:
         cbr_plan['baseline_case'] = case_path
         cbr_plan['override'] = True
 
-        logger.info(f"[Override] Extracted {len(cbr_plan.get('modifications', []))} modifications")
+        logger.debug(f"[Override] Extracted {len(cbr_plan.get('modifications', []))} modifications")
 
         # Build plan using factory
         return SimulationPlanFactory.create_from_rag(
@@ -925,7 +925,7 @@ class ArchitectService:
 
         # Collect static docs from documentation_map (no embeddings)
         docs = self._collect_static_docs(solver_config, repo_path=repo_path)
-        logger.info(f"[Override] Collected {len(docs)} static docs for {code_name}")
+        logger.debug(f"[Override] Collected {len(docs)} static docs for {code_name}")
 
         # Extract modifications from user prompt against baseline
         cbr_plan = self.extract_physics_modifications(
@@ -1002,7 +1002,7 @@ class ArchitectService:
         )
         modifications = llm_result.get('modifications', [])
 
-        logger.info(f"[Override] Extracted {len(modifications)} modifications")
+        logger.debug(f"[Override] Extracted {len(modifications)} modifications")
 
         # Plan visualization and analysis (still useful for override)
         visualization = self._plan_visualization(requirements, baseline)
@@ -1233,7 +1233,7 @@ class ArchitectService:
                 "Baseline override must contain '/'. Format: 'SolverName/Path'"
             )
 
-        logger.info(f"Override parsed: {code_name}/{case_path}")
+        logger.debug(f"Override parsed: {code_name}/{case_path}")
 
         # Build baseline result dict (mimics L2 output)
         repo_path = getattr(self.config, f'{code_name.lower()}_repo_path', None)
@@ -1279,15 +1279,15 @@ class ArchitectService:
                     solver_config = configs.get(code_name)
                     if not solver_config:
                         raise ValueError(f"No config found for override solver {code_name}")
-                    logger.info(f"[Override] Using {code_name} config for context retrieval")
+                    logger.debug(f"[Override] Using {code_name} config for context retrieval")
 
                 # Retrieve context (L1) - uses override solver config
                 docs = self.retrieve_context(user_prompt, solver_config)
-                logger.info(f"[Override] Retrieved {len(docs)} docs for {code_name}")
+                logger.debug(f"[Override] Retrieved {len(docs)} docs for {code_name}")
 
                 # Skip modifications for baseline override
                 # User specified exact baseline - use it as-is
-                logger.info("[Override] Skipping modifications - using baseline as-is")
+                logger.debug("[Override] Skipping modifications - using baseline as-is")
                 cbr_plan = {
                     'modifications': [],  # No modifications
                     'evidence': [],
@@ -1679,9 +1679,9 @@ class ArchitectService:
         if isinstance(inputs_content, dict):
             inputs_content = "\n".join(f"{k} = {v}" for k, v in inputs_content.items())
 
-        logger.info(f"[LLM] extract_physics_modifications called with feedback: {parameter_resolution_feedback is not None}")
+        logger.debug(f"[LLM] extract_physics_modifications called with feedback: {parameter_resolution_feedback is not None}")
         if parameter_resolution_feedback:
-            logger.info(f"[LLM] Feedback contains: {list(parameter_resolution_feedback.keys())}")
+            logger.debug(f"[LLM] Feedback contains: {list(parameter_resolution_feedback.keys())}")
 
         # If we have explicit remap guidance, apply it directly (skip LLM)
         if parameter_resolution_feedback:
@@ -1692,7 +1692,7 @@ class ArchitectService:
                 for param, value in unresolved:
                     target = remap_mapping.get(param, param)
                     remapped.append((target, value))
-                logger.info(f"[LLM] Using remap_mapping for {len(remapped)} parameters")
+                logger.debug(f"[LLM] Using remap_mapping for {len(remapped)} parameters")
                 return {
                     "modifications": remapped,
                     "confidence": 1.0,
@@ -1709,7 +1709,7 @@ class ArchitectService:
             suggested = parameter_resolution_feedback.get('suggested_params', {})
             available = parameter_resolution_feedback.get('available_schema_params', [])
 
-            logger.info(
+            logger.debug(
                 f"[LLM] Parameter resolution feedback: "
                 f"{len(unresolved)} failed, {len(available)} valid params available"
             )
@@ -1770,14 +1770,14 @@ The following parameters were NOT recognized in a previous attempt:
                     fallback_level=fallback_level,
                     solver_config=solver_config,
                 )
-                logger.info(f"[LLM] Retrying with fallback level {fallback_level}, {len(param_chunks)} chunks")
+                logger.debug(f"[LLM] Retrying with fallback level {fallback_level}, {len(param_chunks)} chunks")
 
             # Process each chunk separately
             chunk_results = []
             chunk_errors = []
 
             for chunk_idx, param_guidance in enumerate(param_chunks):
-                logger.info(f"[LLM] Processing chunk {chunk_idx+1}/{len(param_chunks)}")
+                logger.debug(f"[LLM] Processing chunk {chunk_idx+1}/{len(param_chunks)}")
 
                 result = self._call_llm_for_modifications(
                     case_description=case_description,
@@ -1890,7 +1890,7 @@ The following parameters were NOT recognized in a previous attempt:
 
         merged = list(seen.items())
 
-        logger.info(
+        logger.debug(
             f"[LLM] Merged {sum(len(c) for c in chunk_results)} total modifications "
             f"from {len(chunk_results)} chunks into {len(merged)} unique parameters"
         )
@@ -1949,7 +1949,7 @@ Examples for this category:
 
                 chunks.append(chunk)
 
-            logger.info(f"[LLM] Created {len(chunks)} category-based chunks: {list(grouped.keys())}")
+            logger.debug(f"[LLM] Created {len(chunks)} category-based chunks: {list(grouped.keys())}")
             return chunks
 
         elif fallback_level == 1:
@@ -1978,7 +1978,7 @@ MATCHING INSTRUCTIONS:
 
 CRITICAL: Use exact names only."""
 
-            logger.info(f"[LLM] Created 1 suggested-params chunk with {len(params_to_show)} params")
+            logger.debug(f"[LLM] Created 1 suggested-params chunk with {len(params_to_show)} params")
             return [chunk]
 
         else:
@@ -2013,7 +2013,7 @@ CRITICAL: Use exact names only."""
 
                 chunks.append(chunk)
 
-            logger.info(f"[LLM] Created {len(chunks)} fixed-size chunks of {chunk_size} params each")
+            logger.debug(f"[LLM] Created {len(chunks)} fixed-size chunks of {chunk_size} params each")
             return chunks
 
     def _call_llm_for_modifications(
@@ -2072,7 +2072,7 @@ CRITICAL: Use exact names only."""
 
             # Log reasoning for debugging
             logger.debug(f"[LLM] Working: {result.working}")
-            logger.info(f"[LLM] Extracted {len(modifications)} modifications")
+            logger.debug(f"[LLM] Extracted {len(modifications)} modifications")
 
             return {"success": True, "modifications": modifications}
 
@@ -2095,7 +2095,7 @@ CRITICAL: Use exact names only."""
 
                 # Log reasoning from fallback mode too
                 logger.debug(f"[LLM] Working: {result.get('working', 'N/A')}")
-                logger.info(f"[LLM] Extracted {len(modifications)} modifications")
+                logger.debug(f"[LLM] Extracted {len(modifications)} modifications")
 
                 return {"success": True, "modifications": modifications}
             except Exception as e:
@@ -2458,14 +2458,14 @@ Answer with the solver name and brief justification."""
         # Determine if using FAISS (5-bucket) or traditional (4-bucket)
         num_buckets = 5 if weights.get('faiss_semantic', 0) > 0 and self.embeddings and self.embeddings.indices_available() else 4
 
-        logger.info(f" Baseline selection with {num_buckets} scoring approaches")
+        logger.debug(f" Baseline selection with {num_buckets} scoring approaches")
         weights_msg = (f"       Weights: KB={weights['kb_relevance']:.0%}, "
                        f"Metrics={weights['metrics']:.0%}, "
                        f"Path={weights['path_heuristics']:.0%}, "
                        f"Domain={weights['domain_specific']:.0%}")
         if num_buckets == 5:
             weights_msg += f", FAISS={weights.get('faiss_semantic', 0):.0%}"
-        logger.info(weights_msg)
+        logger.debug(weights_msg)
 
         # === Get code and cases (keep existing logic) ===
 
@@ -2477,7 +2477,7 @@ Answer with the solver name and brief justification."""
                     self.llm_client,
                     prefer_quality=prefer_quality
                 )
-                logger.info(f" LLM selected code: {code_name}")
+                logger.debug(f" LLM selected code: {code_name}")
             except Exception as e:
                 logger.warning(f"[WARN] LLM failed: {e}")
                 code_name = requirements.get('solver')
@@ -2498,7 +2498,7 @@ Answer with the solver name and brief justification."""
             logger.warning(f"[WARN] No cases found for {code_name}")
             return None
 
-        logger.info(f" Scoring {len(case_list)} {code_name} cases...")
+        logger.debug(f" Scoring {len(case_list)} {code_name} cases...")
 
         # === Get code definition and repo path ONCE ===
         code_def = self.cases.get_code_info(code_name)
@@ -2673,7 +2673,7 @@ Solver: {code_name}"""
 
             # === FAISS PATH: Convert sources to scores ===
             if 'sources' in answer and 'scores' not in answer:
-                logger.info(" Using FAISS semantic scores")
+                logger.debug(" Using FAISS semantic scores")
                 scores = {}
                 case_path = None  # Initialize to prevent UnboundLocalError
 
@@ -2694,11 +2694,11 @@ Solver: {code_name}"""
                     if case not in scores:
                         scores[case] = 0.0  # Not retrieved = not relevant
 
-                logger.info(f" FAISS scored {len(scores)} cases")
+                logger.debug(f" FAISS scored {len(scores)} cases")
 
                 # Show top FAISS scores
                 top = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:5]
-                logger.info(" Top FAISS scores:")
+                logger.debug(" Top FAISS scores:")
                 for case, score in top:
                     case_name = case.split('/')[-1]
                     logger.debug(f"  {score:.3f} - {case_name}")
@@ -2707,7 +2707,7 @@ Solver: {code_name}"""
 
             # === LLM PATH: Parse JSON scores ===
             elif 'answer' in answer:
-                logger.info(" Using LLM JSON scores")
+                logger.debug(" Using LLM JSON scores")
                 import json
                 import re
 
@@ -2741,7 +2741,7 @@ Solver: {code_name}"""
                                     case_path, problem_type, requirements
                                 )
 
-                    logger.info(f" LLM scored {len(result)} cases")
+                    logger.debug(f" LLM scored {len(result)} cases")
                     return result
                 else:
                     raise ValueError("No JSON in LLM response")

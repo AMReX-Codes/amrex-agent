@@ -25,7 +25,7 @@ class LocalRunner:
 
     def __init__(self, config):
         self.config = config
-        logger.info("LocalRunner initialized for local execution")
+        logger.debug("LocalRunner initialized for local execution")
 
     def find_or_compile_executable(
         self,
@@ -56,18 +56,18 @@ class LocalRunner:
             Path to the selected executable.
         """
         case_dir = Path(case_dir)
-        logger.info(f" Finding executable in {case_dir}")
+        logger.debug(f" Finding executable in {case_dir}")
 
         # Try to find existing executable
         if not force_recompile:
             exe = self._find_exe_in_dir(case_dir, require_mpi, require_cuda=False)
 
             if exe:
-                logger.info(f"[ OK ] Found existing executable: {exe.name}")
+                logger.debug(f"[ OK ] Found existing executable: {exe.name}")
                 return str(exe)
 
         # No executable found - compile it (FORCE CPU for local)
-        logger.info(" No suitable executable found, compiling (CPU-only)...")
+        logger.info("No suitable executable found, compiling (CPU-only)...")
         logger.debug(f"       MPI: {require_mpi}, CUDA: False (forced for local)")
 
         success = compile_amrex(
@@ -85,7 +85,7 @@ class LocalRunner:
         if not exe:
             raise RuntimeError(f"Compiled but no executable found in {case_dir}")
 
-        logger.info(f"[ OK ] Compiled: {exe.name}")
+        logger.info(f"Compiled: {exe.name}")
         return str(exe)
 
     def _find_exe_in_dir(
@@ -163,14 +163,14 @@ class LocalRunner:
         if output_path.name.startswith('run_'):
             # Already a run directory - use it directly
             run_dir = str(output_path)
-            logger.info(f" Using existing run directory: {run_dir}")
+            logger.debug(f" Using existing run directory: {run_dir}")
         else:
             # Create new run directory
             run_dir = setup_run_directory.invoke({
                 'base_name': base_name,
                 'base_dir': str(output_dir) if output_dir else None
             })
-            logger.info(f" Run directory: {run_dir}")
+            logger.debug(f" Run directory: {run_dir}")
 
         # Find/compile executable if not provided
         if executable_path is None:
@@ -201,7 +201,7 @@ class LocalRunner:
         else:
             raise ValueError("Must provide either inputs_path or case_dir")
 
-        logger.info(f"[ OK ] Copied {len(files)} files to run directory")
+        logger.debug(f"[ OK ] Copied {len(files)} files to run directory")
 
         return {
             'run_dir': run_dir,
@@ -281,11 +281,11 @@ class LocalRunner:
             f.write(f"cd {run_path}\n")
             f.write(f"{' '.join(cmd)}\n")
         script_path.chmod(0o755)
-        logger.info(f" Generated script: {script_path.name}")
+        logger.debug(f" Generated script: {script_path.name}")
 
         effective_mode = run_mode or ("dry" if dry_run else "full")
         if effective_mode in {"dry", "stage"}:
-            logger.info(f"[DRY RUN] Would execute: {' '.join(cmd)}")
+            logger.debug(f"[DRY RUN] Would execute: {' '.join(cmd)}")
             return {
                 'script_path': str(script_path),
                 'run_dir': str(run_path),
@@ -308,7 +308,7 @@ class LocalRunner:
                 stderr=stderr_file
             )
 
-            logger.info(f"[ OK ] Process started with PID: {proc.pid}")
+            logger.debug(f"[ OK ] Process started with PID: {proc.pid}")
 
             # WAIT for process to complete (BLOCKING)
             logger.info("Waiting for job to complete...")

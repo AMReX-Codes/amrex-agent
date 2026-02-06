@@ -32,7 +32,9 @@ def runner_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing job execution results.
     """
-    logger.info("Executing Runner Node")
+    logger.info("=" * 80)
+    logger.info("Starting Runner node")
+    logger.info("=" * 80)
 
     # ========================================
     # COMPONENT 11a: STATE VALIDATION
@@ -265,6 +267,9 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 actual_status = state_str.lower()
         exit_code = submit_result.get("exit_code", 0)
 
+        logger.info("-" * 80)
+        logger.info(f"Runner node complete ({actual_status})")
+        logger.info("-" * 80)
         return {
             "mode": "proceed",
             "executable_path": setup_result.get("executable"),  # Propagate discovered executable (Fix 4)

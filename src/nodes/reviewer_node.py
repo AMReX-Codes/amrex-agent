@@ -72,9 +72,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing review decisions and guidance.
     """
-    logger.debug("="*80)
-    logger.debug("REVIEWER NODE - Pre-Execution Validation")
-    logger.debug("="*80 + "\n")
+    logger.info("=" * 80)
+    logger.info("Starting Reviewer node")
+    logger.info("=" * 80)
 
     config = state["config"]
     iteration = state.get("iteration", 0)
@@ -597,6 +597,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     }
 
     logger.info(f"Review complete: {next_mode} (errors: {len(errors_current)})")
+    logger.info("-" * 80)
+    logger.info("Reviewer node complete")
+    logger.info("-" * 80)
     return updates
 
 

@@ -84,9 +84,9 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing analysis results.
     """
-    logger.debug("\n" + "="*80)
-    logger.debug("ANALYSIS NODE - Post-Execution Analysis")
-    logger.debug("="*80)
+    logger.info("=" * 80)
+    logger.info("Starting Analysis node")
+    logger.info("=" * 80)
 
     config = state["config"]
     iteration = state.get("iteration", 0)
@@ -211,16 +211,16 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
     # Determine action based on status
     if status == 'success':
         action = "analysis_success"
-        logger.info("\n[PASS] Simulation completed successfully")
+        logger.info("[PASS] Simulation completed successfully")
     elif status == 'unstable':
         action = "analysis_unstable"
-        logger.warning("\n[WARN] Simulation UNSTABLE")
+        logger.warning("[WARN] Simulation UNSTABLE")
     elif status == 'failed':
         action = "analysis_failed"
-        logger.error("\n[ERROR] Simulation FAILED")
+        logger.error("[ERROR] Simulation FAILED")
     else:
         action = "analysis_unknown"
-        logger.warning(f"\n[QUERY] Status: {status}")
+        logger.warning("[QUERY] Status: %s", status)
 
     # Retry guidance for inputs/baseline adjustments
     retry_guidance = None
@@ -362,6 +362,9 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
         updates["job_status"] = mapped_status
 
     logger.info(f"Analysis complete: {status}")
+    logger.info("-" * 80)
+    logger.info("Analysis node complete")
+    logger.info("-" * 80)
     return updates
 
 

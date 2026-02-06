@@ -51,7 +51,7 @@ class EmbeddingService:
         self._faiss_cache: dict[str, FAISS] = {}
 
         if self._disabled:
-            logger.info("[Config] Embeddings disabled via disable_embeddings")
+            logger.debug("[Config] Embeddings disabled via disable_embeddings")
             return
 
         # Initialize embedding model
@@ -121,7 +121,7 @@ class EmbeddingService:
                 base_url=base_url,
                 manifest_url=manifest_url,
             )
-            logger.info(f"Downloaded {downloaded} FAISS artifact files")
+            logger.debug(f"Downloaded {downloaded} FAISS artifact files")
         except Exception as e:
             logger.debug(f"Warning: Failed to download FAISS artifacts: {e}")
 

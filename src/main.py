@@ -687,7 +687,7 @@ def main(args: list[str] | None = None) -> None:
             try:
                 transcript_lines = ["=== Agent Transcript ===\n\n"]
                 transcript_lines.append(f"User Prompt:\n{user_requirement}\n\n")
-                transcript_lines.append("=" * 60 + "\n\n")
+                transcript_lines.append("=" * 80 + "\n\n")
 
                 for entry in result.get('workflow_history', []):
                     if not isinstance(entry, dict):
@@ -943,7 +943,9 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
     # 1. Initialize State
     try:
         initial_state = initialize_state(user_requirement, config)
+        logger.info("=" * 80)
         logger.info("Starting AMReXAgent workflow")
+        logger.info("=" * 80)
         logger.debug(f"Prompt: {user_requirement[:50]}...")
     except Exception as e:
         logger.error(f"State initialization failed: {e}")
@@ -977,7 +979,9 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
         final_state = app.invoke(initial_state, run_config)
 
         status = final_state.get("job_status", "unknown")
-        logger.info(f"Workflow execution complete. Status: {status}")
+        logger.info("-" * 80)
+        logger.info(f"Workflow complete. Status: {status}")
+        logger.info("-" * 80)
         return final_state
 
     except GraphRecursionError:

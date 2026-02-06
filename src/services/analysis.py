@@ -129,7 +129,7 @@ class AnalysisService:
             return report
 
         # Parse log file
-        logger.info(f" Parsing log file: {log_file.name}")
+        logger.debug(f" Parsing log file: {log_file.name}")
         log_data = self.parse_log(log_file)
 
         # Merge log data into report
@@ -190,7 +190,7 @@ class AnalysisService:
         report_path = run_dir / "analysis_report.json"
         try:
             report_path.write_text(json.dumps(report, indent=2))
-            logger.info(f"Analysis report saved to {report_path}")
+            logger.debug(f"Analysis report saved to {report_path}")
         except Exception as exc:
             logger.warning(f"Failed to write analysis report to {report_path}: {exc}")
 

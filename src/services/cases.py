@@ -84,7 +84,7 @@ class AMReXCasesService:
 
             # Log discovery
             status = "[LOCAL]" if code.local_path else "[REMOTE]"
-            logger.info(f" {status} {code.name}: {code.inputs_quality}, {len(code.common_cases)} cases")
+            logger.debug(f" {status} {code.name}: {code.inputs_quality}, {len(code.common_cases)} cases")
 
         return available
 
@@ -162,10 +162,10 @@ class AMReXCasesService:
 
         # Check if already exists
         if target_dir.exists():
-            logger.info(f" Directory already exists: {target_dir}")
+            logger.debug(f" Directory already exists: {target_dir}")
 
             if (target_dir / '.git').exists():
-                logger.info("[ OK ] Already cloned")
+                logger.debug("[ OK ] Already cloned")
                 return target_dir
             else:
                 logger.error("[ERROR] Directory exists but is not a git repo")
@@ -194,7 +194,7 @@ class AMReXCasesService:
                 logger.debug(result.stderr)
                 return None
 
-            logger.info("[ OK ] Cloned successfully")
+            logger.debug("[ OK ] Cloned successfully")
 
             # Verify submodules
             result = subprocess.run(
@@ -206,7 +206,7 @@ class AMReXCasesService:
             )
 
             submodules = [line for line in result.stdout.split('\n') if line.strip()]
-            logger.info(f"[ OK ] {len(submodules)} submodules initialized\n")
+            logger.debug(f"[ OK ] {len(submodules)} submodules initialized\n")
 
             return target_dir
 
@@ -248,7 +248,7 @@ class AMReXCasesService:
         if code_name in repo_map and repo_map[code_name]:
             path = repo_map[code_name]
             if path.exists():
-                logger.info(f"[ OK ] Found in config: {path}")
+                logger.debug(f"[ OK ] Found in config: {path}")
                 return path
 
         # Check 2: Standard locations
@@ -260,11 +260,11 @@ class AMReXCasesService:
 
         for path in search_paths:
             if path.exists() and (path / 'Source' or path / 'Exec').exists():
-                logger.info(f"[ OK ] Found locally: {path}")
+                logger.debug(f"[ OK ] Found locally: {path}")
                 return path
 
         # Not found - clone it
-        logger.info(f" {code_name} not found locally")
+        logger.debug(f" {code_name} not found locally")
 
         return self.clone_code(code_name)
 
@@ -314,7 +314,7 @@ class AMReXCasesService:
             return self._scan_local(code)
 
         # Use hardcoded common cases as fallback
-        logger.info(f" {code.name}: Using {len(code.common_cases)} known cases")
+        logger.debug(f" {code.name}: Using {len(code.common_cases)} known cases")
         return code.common_cases
 
     def _scan_local(self, code) -> list[str]:
@@ -421,13 +421,13 @@ class AMReXCasesService:
                 # Fuzzy match case
                 for case in all_cases[code_match]:
                     if case_match and (case_match in case or case in case_match):
-                        logger.info(f" LLM selected: {code_match}/{case}")
+                        logger.debug(f" LLM selected: {code_match}/{case}")
                         return (code_match, case)
 
                 # Try to recover from prompt (no default fallback)
                 prompt_case = self._match_case_from_prompt(user_prompt, all_cases[code_match])
                 if prompt_case:
-                    logger.info(f" Matched case from prompt: {code_match}/{prompt_case}")
+                    logger.debug(f" Matched case from prompt: {code_match}/{prompt_case}")
                     return (code_match, prompt_case)
 
                 raise ValueError(
@@ -588,23 +588,23 @@ class AMReXCasesService:
 
         # === Strategy 1: Local Clone (REUSE _scan_local) ===
         if code_def.local_path and code_def.local_path.exists():
-            logger.info(f" Checking local {code} clone...")
+            logger.debug(f" Checking local {code} clone...")
             result = self._fetch_from_local(example_name, code_def, save_dir)
             if result:
                 return result
-            logger.info(" Not found locally, trying GitHub...")
+            logger.debug(" Not found locally, trying GitHub...")
 
         # === Strategy 2: Known Examples (REUSE common_cases) ===
         # Try to match against common_cases
         case_path = self._find_case_path_in_common(example_name, code_def)
         if case_path:
-            logger.info(f" Matched common case: {case_path}")
+            logger.debug(f" Matched common case: {case_path}")
             return self._fetch_from_github_path(
                 code_def, case_path, example_name, save_dir, version
             )
 
         # === Strategy 3: Auto-Discovery (NEW - EXPAND capability) ===
-        logger.info(f" Unknown example, browsing GitHub for '{example_name}'...")
+        logger.debug(f" Unknown example, browsing GitHub for '{example_name}'...")
         return self._fetch_from_github_discovery(
             code_def, example_name, save_dir, version
         )
@@ -645,7 +645,7 @@ class AMReXCasesService:
         else:
             result_path = inputs_file
 
-        logger.info(f"[ OK ] Found locally: {case_path}")
+        logger.debug(f"[ OK ] Found locally: {case_path}")
         return {
             'local_path': str(result_path),
             'example_name': example_name,
@@ -704,7 +704,7 @@ class AMReXCasesService:
                     import hashlib
                     checksum = hashlib.sha256(content.encode()).hexdigest()[:8]
 
-                    logger.info(f"[ OK ] Downloaded from GitHub: {case_path}/{item.name}")
+                    logger.debug(f"[ OK ] Downloaded from GitHub: {case_path}/{item.name}")
                     return {
                         'local_path': str(save_path),
                         'example_name': example_name,
@@ -773,7 +773,7 @@ class AMReXCasesService:
                                     import hashlib
                                     checksum = hashlib.sha256(content.encode()).hexdigest()[:8]
 
-                                    logger.info(f"[ OK ] Auto-discovered: {item.path}/{file.name}")
+                                    logger.debug(f"[ OK ] Auto-discovered: {item.path}/{file.name}")
                                     return {
                                         'local_path': str(save_path),
                                         'example_name': example_name,

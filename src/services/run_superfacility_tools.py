@@ -1238,7 +1238,7 @@ def monitor_job(
             if parsed:
                 client_id, secret = parsed
         if client_id and secret:
-            logger.info("Monitoring via sfapi_client")
+            logger.debug("Monitoring via sfapi_client")
         if not nersc_session:
             clients = find_nersc_clients()
             if clients:
@@ -1247,7 +1247,7 @@ def monitor_job(
                     if nersc_session:
                         break
         if nersc_session and not (client_id and secret):
-            logger.info("Monitoring via REST API (token/OAuth)")
+            logger.debug("Monitoring via REST API (token/OAuth)")
 
     for _ in range(max_polls):
         try:
