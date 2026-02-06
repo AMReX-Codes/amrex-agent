@@ -11,6 +11,6 @@ mkdocs serve
 
 ## Documentation layout
 
-- `docs/README.md` holds design and workflow notes.
+- `docs/workflows.md` holds design and workflow notes.
 - `README.md` covers quick start and usage examples.
 - `demo/README.md` contains example scenarios and configs.

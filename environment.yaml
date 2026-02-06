@@ -40,6 +40,9 @@ dependencies:
 
   # === Documentation ===
   - mkdocs>=1.5
+  - mkdocstrings>=0.24
+  - mkdocstrings-python>=1.0
+  - mkdocs-include-markdown-plugin>=6.2
   
   # === Testing & Quality (Gate 0) ===
   - pytest>=7.4.0

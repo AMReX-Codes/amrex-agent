@@ -5,7 +5,7 @@ docs_dir: docs
 
 nav:
   - Home: index.md
-  - Notes: README.md
+  - Workflows: workflows.md
   - Integration: integration.md
   - Demos: demos.md
 

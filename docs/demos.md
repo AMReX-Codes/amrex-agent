@@ -4,20 +4,20 @@ This page mirrors the quickstart and demo READMEs directly so the docs stay in s
 
 ```markdown
 {%
-  include "README.md"
-  start="^## Quick start"
-  end="^## Tests"
+  include "../README.md"
+  start="## Quick start"
+  end="## Tests"
 %}
 ```
 
 ```markdown
 {%
-  include "demo/README.md"
+  include "../demo/README.md"
 %}
 ```
 
 ```markdown
 {%
-  include "demo/amrex/README.md"
+  include "../demo/amrex/README.md"
 %}
 ```
