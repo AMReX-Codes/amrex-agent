@@ -44,7 +44,7 @@ class PeleKnowledgeService:
         self.embeddings = get_embedding_service(config)
 
         if self.embeddings.embeddings:
-            logger.info(" [OK] FAISS embeddings initialized for knowledge service")
+            logger.debug(" [OK] FAISS embeddings initialized for knowledge service")
         else:
             logger.warning("[WARN] FAISS embeddings not available")
             logger.debug("       Will use knowledge backend only")
@@ -60,8 +60,8 @@ class PeleKnowledgeService:
     def _load_knowledge(self):
         """Load knowledge base."""
         kb_path = self.config.knowledge_base_path
-        logger.info(f" Knowledge base path: {kb_path.resolve()}")
-        logger.info(f" Knowledge base exists: {kb_path.exists()}")
+        logger.debug(f" Knowledge base path: {kb_path.resolve()}")
+        logger.debug(f" Knowledge base exists: {kb_path.exists()}")
 
         if not kb_path.exists():
             logger.warning(f"[WARN] Knowledge base not found at {kb_path}")
@@ -74,7 +74,7 @@ class PeleKnowledgeService:
 
         try:
             self._invoke_tool(tools["load"], {})
-            logger.info(f" [OK] Knowledge base loaded from {kb_path}")
+            logger.debug(f" [OK] Knowledge base loaded from {kb_path}")
         except Exception as e:
             logger.warning(f"[WARN] knowledge load failed: {e}")
 
@@ -103,7 +103,7 @@ class PeleKnowledgeService:
 
             # If FAISS has high confidence, return it directly
             if faiss_result and faiss_result.get('confidence', 0) > 0.8:
-                logger.info(f" Using FAISS result (confidence: {faiss_result['confidence']:.2f})")
+                logger.debug(f" Using FAISS result (confidence: {faiss_result['confidence']:.2f})")
                 return faiss_result
 
         tools, solver_config = self._get_tools_for_context(context)
@@ -165,7 +165,7 @@ class PeleKnowledgeService:
 
             # Return FAISS result if available as fallback
             if faiss_result:
-                logger.info(" Using FAISS result as fallback after LLM failure")
+                logger.debug(" Using FAISS result as fallback after LLM failure")
                 return faiss_result
 
             return {
@@ -338,10 +338,10 @@ class PeleKnowledgeService:
 
         # If one is significantly better, use it
         if faiss_conf > llm_conf + 0.2:
-            logger.info(f" Using FAISS result (conf: {faiss_conf:.2f} vs LLM: {llm_conf:.2f})")
+            logger.debug(f" Using FAISS result (conf: {faiss_conf:.2f} vs LLM: {llm_conf:.2f})")
             return faiss_result
         elif llm_conf > faiss_conf + 0.5:
-            logger.info(f" Using LLM result (conf: {llm_conf:.2f} vs FAISS: {faiss_conf:.2f})")
+            logger.debug(f" Using LLM result (conf: {llm_conf:.2f} vs FAISS: {faiss_conf:.2f})")
             return llm_result
 
         # Otherwise, combine (FAISS provides context, LLM provides reasoning)

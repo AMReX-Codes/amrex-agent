@@ -73,12 +73,12 @@ class AMReXInputsService:
         if not inputs_path.exists():
             raise FileNotFoundError(f"Inputs file not found: {inputs_path}")
 
-        logger.info(f" Reading {inputs_path}")
+        logger.debug(f" Reading {inputs_path}")
         params = parse_amrex_inputs(str(inputs_path), source_info)
 
         n_groups = len(params)
         n_total = sum(len(v) if isinstance(v, dict) else 1 for v in params.values())
-        logger.info(f"[ OK ] Parsed {n_groups} groups, {n_total} parameters")
+        logger.debug(f"[ OK ] Parsed {n_groups} groups, {n_total} parameters")
 
         return params
 
@@ -106,7 +106,7 @@ class AMReXInputsService:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f" Writing {output_path}")
+        logger.debug(f" Writing {output_path}")
 
         # dict_to_pele_inputs signature: (inputs_dict, output_path, base_inputs_dict)
         base_dict = None
@@ -114,7 +114,7 @@ class AMReXInputsService:
             base_dict = parse_amrex_inputs(str(template_path))
 
         dict_to_pele_inputs(params, str(output_path), base_dict)
-        logger.info(f"[ OK ] Wrote {output_path}")
+        logger.debug(f"[ OK ] Wrote {output_path}")
 
     def fetch_example(self, example_name: str,
                       code: str | None = None,
@@ -149,7 +149,7 @@ class AMReXInputsService:
             if not code:
                 raise ValueError("No default solver configured for example fetch")
 
-        logger.info(f" Fetching example: {example_name} ({code})")
+        logger.debug(f" Fetching example: {example_name} ({code})")
 
         code_registry = self.config.get_code_registry()
         config_cls = code_registry.get(code)
@@ -169,7 +169,7 @@ class AMReXInputsService:
             logger.error(f"[ERROR] Failed to fetch: {example_name}")
             return {}
 
-        logger.info(f"[ OK ] Fetched: {result.get('local_path', example_name)}")
+        logger.debug(f"[ OK ] Fetched: {result.get('local_path', example_name)}")
 
         # Add case_dir if we have repo path
         if 'repo_path' in result and repo_root:
@@ -181,7 +181,7 @@ class AMReXInputsService:
             if case_dir.exists():
                 result['case_dir'] = str(case_dir)
                 result['case_dir_exists'] = True
-                logger.info(f" Case directory: {case_dir}")
+                logger.debug(f" Case directory: {case_dir}")
             else:
                 result['case_dir'] = str(case_dir)
                 result['case_dir_exists'] = False
@@ -276,14 +276,14 @@ class AMReXInputsService:
         """
         inputs_path = Path(inputs_path)
 
-        logger.info(f" Validating {inputs_path}")
+        logger.debug(f" Validating {inputs_path}")
         tool = None
         solver_name = solver_name or self.config.default_solver
         if solver_name and is_pele_solver(solver_name):
             tool = _resolve_pele_validation_tool()
 
         if tool is None:
-            logger.info("[WARN] No solver-specific validator available; using generic validation")
+            logger.debug("[WARN] No solver-specific validator available; using generic validation")
             if hasattr(validate_amrex_inputs, "invoke"):
                 return validate_amrex_inputs.invoke({"inputs_file": str(inputs_path)})
             return validate_amrex_inputs(str(inputs_path))
@@ -296,7 +296,7 @@ class AMReXInputsService:
         if "ERROR" in report or "error" in report.lower():
             logger.warning("[WARN] Validation found issues")
         else:
-            logger.info("[ OK ] Validation passed")
+            logger.debug("[ OK ] Validation passed")
 
         return report
 
@@ -332,7 +332,7 @@ class AMReXInputsService:
 
         from src.services.file_generation import FileGenerationService
 
-        logger.info(f" Writing simulation files to {output_dir}")
+        logger.debug(f" Writing simulation files to {output_dir}")
         generator = FileGenerationService(self.config)
         files = generator.write_simulation_files(
             config_json=config_json,
@@ -342,7 +342,7 @@ class AMReXInputsService:
             system=system,
         )
 
-        logger.info(f"[ OK ] Created simulation in {output_dir}")
+        logger.debug(f"[ OK ] Created simulation in {output_dir}")
         return json.dumps(files, indent=2)
 
     def extract_key_params(self, params: dict, selected_solver: str | None = None) -> dict[str, Any]:

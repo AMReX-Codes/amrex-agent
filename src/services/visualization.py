@@ -68,7 +68,7 @@ class VisualizationService:
         for name, backend_class in backends:
             backend = backend_class(self.config)
             if backend.available():
-                logger.info(f" Selected visualization backend: {name}")
+                logger.debug(f" Selected visualization backend: {name}")
                 return backend
 
         raise RuntimeError("No visualization backend available")
@@ -95,7 +95,7 @@ class VisualizationService:
         plotfiles = sorted(run_dir.glob('plt*'))
         plotfiles = [p for p in plotfiles if p.is_dir()]
 
-        logger.info(f" Found {len(plotfiles)} plotfiles in {run_dir}")
+        logger.debug(f" Found {len(plotfiles)} plotfiles in {run_dir}")
         return plotfiles
 
     def load_latest(self, run_dir: Path):
@@ -121,7 +121,7 @@ class VisualizationService:
             raise FileNotFoundError(f"No plotfiles found in {run_dir}")
 
         latest = plotfiles[-1]
-        logger.info(f" Loading plotfile: {latest.name}")
+        logger.debug(f" Loading plotfile: {latest.name}")
         ds = yt.load(str(latest))
         return ds
 
@@ -161,7 +161,7 @@ class VisualizationService:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         logger.debug(f"\n[INFO] Creating standard plots -> {output_dir}")
-        logger.info(f" Using backend: {self.backend.__class__.__name__}")
+        logger.debug(f" Using backend: {self.backend.__class__.__name__}")
         logger.debug("vis_config: %s", vis_config)
 
         # Container mode uses extraction + rendering (yt backend only)
@@ -308,7 +308,7 @@ class VisualizationService:
                     else:
                         grp.attrs[field_key] = value
 
-        logger.info(f"[ OK ] Extracted data saved to {output_file.name}")
+        logger.debug(f"[ OK ] Extracted data saved to {output_file.name}")
         logger.debug(f"       File size: {output_file.stat().st_size / 1024 / 1024:.2f} MB")
 
         return output_file
@@ -398,7 +398,7 @@ class VisualizationService:
                     except Exception as e:
                         logger.debug(f"   Failed to render {key}: {e}")
 
-        logger.info(f"[ OK ] Rendered {len(images)} images")
+        logger.debug(f"[ OK ] Rendered {len(images)} images")
 
         return images
 
@@ -444,7 +444,7 @@ class VisualizationService:
 
         This is the workflow for podman-hpc/shifter environments.
         """
-        logger.info(" Container mode: Using extraction + rendering workflow")
+        logger.debug(" Container mode: Using extraction + rendering workflow")
 
         plotfiles = self.find_plotfiles(run_dir)
         if not plotfiles:
