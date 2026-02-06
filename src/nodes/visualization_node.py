@@ -92,7 +92,7 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
             "This step generates plots or images from simulation output.",
         ],
         options=[{"label": "Proceed with visualization", "value": "proceed"}],
-        enabled=getattr(config, "preconfirm_gate", False),
+        enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
     )
     gate_entry = gate_result.get("history_entry")

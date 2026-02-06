@@ -86,7 +86,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             "This step validates the plan before writing inputs.",
         ],
         options=[{"label": "Proceed with validation", "value": "proceed"}],
-        enabled=getattr(config, "preconfirm_gate", False),
+        enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
     )
     gate_entry = gate_result.get("history_entry")

@@ -85,7 +85,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             "This step analyzes simulation output for errors and metrics.",
         ],
         options=[{"label": "Proceed with analysis", "value": "proceed"}],
-        enabled=getattr(config, "preconfirm_gate", False),
+        enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
     )
     gate_entry = gate_result.get("history_entry")

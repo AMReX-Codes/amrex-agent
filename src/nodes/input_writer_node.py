@@ -49,7 +49,7 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
             "This step writes inputs and prepares the run directory.",
         ],
         options=[{"label": "Proceed with input writing", "value": "proceed"}],
-        enabled=getattr(config, "preconfirm_gate", False),
+        enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
     )
     gate_entry = gate_result.get("history_entry")

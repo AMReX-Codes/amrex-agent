@@ -322,7 +322,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     preconfirm_action = "proceed"
     preconfirm_selection = None
     gate_entry = None
-    if getattr(config, "preconfirm_gate", False):
+    if getattr(config, "preconfirm_gate", False) is True:
         options = _build_baseline_options(plan_result)
         summary_lines = [
             f"Solver: {plan_result.selected_solver}",
@@ -334,7 +334,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             node_name="architect",
             summary_lines=summary_lines,
             options=options,
-            enabled=True,
+            enabled=getattr(config, "preconfirm_gate", False) is True,
             allow_cancel=True,
         )
         preconfirm_action = gate_result["action"]

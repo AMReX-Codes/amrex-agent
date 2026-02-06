@@ -122,7 +122,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 {"label": "Compile and run", "value": "compile_and_run"},
                 {"label": "Compile only (skip run)", "value": "compile_only"},
             ],
-            enabled=getattr(config, "preconfirm_gate", False),
+            enabled=getattr(config, "preconfirm_gate", False) is True,
             allow_cancel=True,
         )
         compile_gate_entry = compile_gate.get("history_entry")
@@ -137,7 +137,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             }
 
         run_after_compile = True
-        if compile_gate.get("selection", {}).get("value") == "compile_only":
+        compile_selection = compile_gate.get("selection") or {}
+        if compile_selection.get("value") == "compile_only":
             run_after_compile = False
 
         # Select runner based on environment
@@ -205,7 +206,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 f"Run directory: {actual_run_dir}",
             ],
             options=[{"label": "Submit run", "value": "run_now"}],
-            enabled=getattr(config, "preconfirm_gate", False),
+            enabled=getattr(config, "preconfirm_gate", False) is True,
             allow_cancel=True,
         )
         run_gate_entry = run_gate.get("history_entry")

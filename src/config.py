@@ -738,11 +738,11 @@ class _LLMGateChat:
 
 
 class _LLMGateCompletions:
-    def __init__(self, completions_resource, strategy: str):
+    def __init__(self, completions_resource, strategy: str) -> None:
         self._completions = completions_resource
         self._strategy = strategy
 
-    def create(self, *args, **kwargs):
+    def create(self, *args: Any, **kwargs: Any) -> Any:
         from src.utils.gate import run_llm_post_gate, run_llm_pre_gate
 
         prompt_text = _extract_prompt_text(kwargs.get("messages"))
