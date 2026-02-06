@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        level: [integration_l1, integration_l2, integration_l3, integration_l4]
+        level: [integration_l1, integration_l2, integration_l3, integration_l4, integration_full]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -13,10 +13,10 @@
 - [ ] includes docs updates (code/docs), if appropriate
 - [ ] none of the above
 
-## Tests run (CI runs: `pytest tests/unit`, `pytest tests/quality`)
+## Tests run (CI runs: `pytest tests/unit`, `pytest tests/quality`, `pytest tests/integration -m "integration_l1 or integration_l2 or integration_l3 or integration_l4 or integration_full"`)
 - [ ] tests/unit: `pytest tests/unit`
 - [ ] tests/quality: `pytest tests/quality`
-- [ ] tests/integration (if applicable): `pytest tests/integration`
+- [ ] integration ladder (CI): `pytest tests/integration -m "integration_l1 or integration_l2 or integration_l3 or integration_l4 or integration_full"`
 - [ ] other (list):
 - Output/summary:
 - If tests require repos/schemas/indices or real services, note markers used.
@@ -27,14 +27,14 @@ Examples:
 ```bash
 pytest tests/unit --tb=short -q
 pytest tests/quality --tb=short -q
-pytest tests/integration --tb=short -q
+pytest tests/integration -m "integration_l1 or integration_l2 or integration_l3 or integration_l4 or integration_full" --tb=short -q
 pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py --tb=short -q
 ```
 
 ## Tests not run in CI (required if any)
-- CI only runs `tests/unit` and `tests/quality` via micromamba; list anything else here.
+- CI runs `tests/unit`, `tests/quality`, and `tests/integration` with `integration_l1..l4` + `integration_full` markers via micromamba; list anything else not covered by CI here.
 - [ ] None
-- [ ] tests/integration
+- [ ] tests/e2e
 - [ ] other (list):
 - Reason for skip:
 - Risk/mitigation:
@@ -45,13 +45,8 @@ pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py --tb=short -q
 - Results or logs:
 
 ## Integration/E2E markers (optional, manual, may require API key)
-- Note: `tests/e2e` runs only when selected by path or `-m e2e`.
-- [ ] integration_l1: `pytest -m integration_l1 -v`
-- [ ] integration_l2: `pytest -m integration_l2 -v`
-- [ ] integration_l3: `pytest -m integration_l3 -v`
-- [ ] integration_l4: `pytest -m integration_l4 -v`
-- [ ] integration_full: `pytest -m integration_full -v`
-- [ ] e2e demo: `pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py`
+- Note: integration ladder runs in CI; `tests/e2e` runs only when selected by path or `-m e2e`.
+- [ ] e2e demo (workflow_dispatch): `pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py`
 - [ ] other (markers: use_real_services, requires_repos, requires_schema):
 
 ## Notes (optional)
