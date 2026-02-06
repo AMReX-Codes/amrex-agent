@@ -10,12 +10,12 @@ Tests command-line interface:
 
 These tests validate the user-facing interface.
 """
-import pytest
-from pathlib import Path
-from unittest.mock import patch
-from src.main import parse_arguments, load_prompt_content, main
-import sys
 from io import StringIO
+from unittest.mock import patch
+
+import pytest
+
+from src.main import load_prompt_content, main, parse_arguments
 
 
 @pytest.mark.integration_full
@@ -93,13 +93,13 @@ class TestCLIInterface:
 
         assert content == "Stdin prompt"
 
-    def test_main_success_exit_code(self, tmp_path, monkeypatch):
+    def test_main_success_exit_code(self, tmp_path):
         """
         Test 6: main() returns 0 on success
 
         Given: Successful workflow
         When: main() executes
-        Then: sys.exit(0) or no exception
+        Then: no exception
         """
         # Mock run_agent to return success
         with patch("src.main.run_agent") as mock_run:
@@ -108,12 +108,7 @@ class TestCLIInterface:
                 "mode": "proceed"
             }
 
-            # Capture sys.exit
-            with pytest.raises(SystemExit) as exc_info:
-                main(["--prompt", "Test", "--output-dir", str(tmp_path)])
-
-            # Should not exit with error
-            # (In practice, success doesn't call sys.exit, so this may not raise)
+            main(["--prompt", "Test", "--output-dir", str(tmp_path)])
 
     def test_main_failure_exit_code(self, tmp_path):
         """
@@ -151,10 +146,7 @@ class TestCLIInterface:
                 "job_id": "test_123"
             }
 
-            try:
-                main(["--prompt", "Test", "--output-dir", str(tmp_path), "--json"])
-            except SystemExit:
-                pass
+            main(["--prompt", "Test", "--output-dir", str(tmp_path), "--json"])
 
             captured = capsys.readouterr()
 

@@ -10,18 +10,47 @@ Tests complete workflow execution:
 Mocked: LLM calls, ReviewerOrchestrator, actual job submission, visualization
 Real: Graph orchestration, all nodes, state flow, file I/O
 """
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-from src.main import create_amrex_agent_graph, run_agent, initialize_state
+from unittest.mock import patch
+
+import pytest
+
 from src.config import AMReXAgentConfig
-from langgraph.graph import END
+from src.main import create_amrex_agent_graph, initialize_state, run_agent
+from src.services.plan import SimulationPlan
+from src.services.rules.base import RuleViolation
+from src.services.validation_result import ValidationResult
 
 
 @pytest.mark.integration_full
 @pytest.mark.slow
 class TestFullGraphExecution:
     """Level 5: Complete graph execution tests."""
+
+    def _plan(self, selected_case: str, selected_solver: str, modifications: list[tuple[str, str]]):
+        return SimulationPlan(
+            selected_solver=selected_solver,
+            selected_case=selected_case,
+            modifications=modifications,
+            reasoning="Test reasoning",
+            baseline_confidence=0.9,
+        )
+
+    def _validation_result(self, mode: str, errors: list[str] | None = None) -> ValidationResult:
+        violations = [
+            RuleViolation(
+                rule_name="TestRule",
+                severity="error",
+                message=msg,
+            )
+            for msg in (errors or [])
+        ]
+        return ValidationResult(
+            mode=mode,
+            violations=violations,
+            summary="test",
+            available_schema_params=[],
+        )
 
     def test_happy_path_full_workflow(self, mock_baseline_dir, tmp_path):
         """
@@ -39,59 +68,74 @@ class TestFullGraphExecution:
         """
         config = AMReXAgentConfig()
         config.output_dir = tmp_path
+        config.environment = "perlmutter"
+        config.repositories = {"PeleC": tmp_path / "PeleC"}
+        (tmp_path / "PeleC").mkdir(exist_ok=True)
 
         # Mock all heavy components
-        with patch("src.nodes.architect_node.ArchitectService") as MockArch, \
+        class DummyEmbeddingService:
+            embeddings = None
+
+        class DummyInputWriterService:
+            def __init__(self, _config):
+                self.cases_svc = None
+
+            def apply_plan(self, selected_case, modifications, baseline, reasoning, output_dir):
+                run_dir = Path(output_dir)
+                run_dir.mkdir(parents=True, exist_ok=True)
+                inputs_path = run_dir / "inputs"
+                inputs_path.write_text("# inputs")
+                return {
+                    "run_dir": str(run_dir),
+                    "inputs_path": str(inputs_path),
+                    "inputs_file_selected": str(inputs_path),
+                    "inputs_file_strategy": "newest",
+                    "inputs_file_override": None,
+                    "inputs_candidates": [],
+                    "status": "success",
+                }
+
+        class DummyRunner:
+            def __init__(self, _config):
+                pass
+
+            def setup_job(self, output_dir, case_dir, inputs_path=None):
+                return {
+                    "run_dir": output_dir,
+                    "executable": "AMReX.ex",
+                }
+
+            def submit(self, run_directory, nodes=None, run_mode=None, dry_run=None, case_dir=None):
+                return {
+                    "job_id": "full_test_123",
+                    "method": "sbatch",
+                    "script_path": str(Path(run_directory) / "submit.sh"),
+                    "job_status": "completed",
+                }
+
+        with patch("src.services.embedding_service_factory.get_embedding_service", return_value=DummyEmbeddingService()), \
+             patch("src.nodes.architect_node.ArchitectService") as MockArch, \
              patch("src.nodes.reviewer_node.ReviewerOrchestrator") as MockRev, \
-             patch("src.services.run_superfacility.SuperfacilityRunner.submit") as MockSubmit, \
-             patch("src.nodes.analysis_node.AnalysisService") as MockAnalysis, \
-             patch("src.nodes.visualization_node.VisualizationService") as MockViz:
+             patch("src.services.cases.AMReXCasesService", return_value=object()), \
+             patch("src.nodes.input_writer_node.InputWriterService", DummyInputWriterService), \
+             patch("src.nodes.runner_node.SuperfacilityRunner", DummyRunner), \
+             patch("src.nodes.analysis_node.AnalysisService") as MockAnalysis:
 
-            # Architect returns valid plan
-            MockArch.return_value.create_plan_rag.return_value = {
-                "selected_case": "PeleC/Exec/RegTests/PMF",
-                "modifications": [
-                    {"section": "amr", "parameter": "n_cell", "value": "64 64 64"}
-                ],
-                "reasoning": "Test reasoning",
-                "case_candidates": [],
-                "baseline_confidence": 0.9
-            }
+            MockArch.return_value.execute_planning.return_value = self._plan(
+                selected_case="PeleC/Exec/RegTests/PMF",
+                selected_solver="PeleC",
+                modifications=[("amr.n_cell", "64 64 64")],
+            )
 
-            # Reviewer approves
-            MockRev.return_value.review_plan.return_value = {
-                "approved": True,
-                "errors": [],
-                "warnings": []
-            }
-            MockRev.return_value.estimate_resources.return_value = {
-                "memory_gb": 4.0,
-                "recommended_nodes": 1,
-                "total_cells": 262144
-            }
+            MockRev.return_value.validate_plan.return_value = self._validation_result("proceed")
 
-            # Runner submits successfully
-            MockSubmit.return_value = {
-                "job_id": "full_test_123",
-                "method": "dry_run",
-                "script_path": str(tmp_path / "run_001" / "submit.sh")
-            }
-
-            # Analysis succeeds
             MockAnalysis.return_value.analyze_simulation.return_value = {
                 "status": "success",
                 "total_steps": 100,
                 "final_time": 1.0,
                 "issues": [],
                 "warnings": [],
-                "completed": True
-            }
-
-            # Visualization succeeds
-            MockViz.return_value.generate_visualizations.return_value = {
-                "status": "success",
-                "images": [str(tmp_path / "viz_001.png")],
-                "backend": "matplotlib"
+                "completed": True,
             }
 
             # Execute full workflow
@@ -133,25 +177,20 @@ class TestFullGraphExecution:
         config = AMReXAgentConfig()
         config.output_dir = tmp_path
 
-        with patch("src.nodes.architect_node.ArchitectService") as MockArch, \
+        with patch("src.services.embedding_service_factory.get_embedding_service", return_value=object()), \
+             patch("src.nodes.architect_node.ArchitectService") as MockArch, \
              patch("src.nodes.reviewer_node.ReviewerOrchestrator") as MockRev:
 
-            # Architect always returns plan
-            MockArch.return_value.create_plan_rag.return_value = {
-                "selected_case": "PeleC/Test",
-                "modifications": [],
-                "reasoning": "Test"
-            }
+            MockArch.return_value.execute_planning.return_value = self._plan(
+                selected_case="PeleC/Test",
+                selected_solver="PeleC",
+                modifications=[],
+            )
 
-            # Reviewer always rejects (infinite loop)
-            MockRev.return_value.review_plan.return_value = {
-                "approved": False,
-                "errors": ["Permanent error"],
-                "warnings": []
-            }
-            MockRev.return_value.suggest_fixes.return_value = {
-                "modifications": []
-            }
+            MockRev.return_value.validate_plan.return_value = self._validation_result(
+                "retry",
+                errors=["Permanent error"],
+            )
 
             # Execute
             final_state = run_agent(
@@ -160,8 +199,7 @@ class TestFullGraphExecution:
             )
 
         # Verify failure mode
-        assert final_state["job_status"] == "failed"
-        assert "recursion" in final_state["error"].lower()
+        assert final_state["mode"] in {"terminal", "fail"}
 
     def test_graph_compilation_success(self):
         """
