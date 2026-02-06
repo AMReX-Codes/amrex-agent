@@ -17,7 +17,7 @@
 #   bash demo/setup_demo_database.sh --mock             # Use mock embeddings (no API calls)
 #   bash demo/setup_demo_database.sh --clone-missing    # Clone missing repos (requires network)
 #
-# Solvers referenced for generalization: PeleC, PeleLMeX, ERF, WarpX, incflo.
+# Solvers referenced for generalization: PeleC, PeleLMeX, ERF, WarpX, incflo, REMORA.
 
 set -euo pipefail
 
@@ -91,10 +91,10 @@ schema_exists() {
 
 if [[ "$TARGET_CODE" != "all" ]]; then
   case "$TARGET_CODE" in
-    pelec|pelelmex|erf|amrex)
+    pelec|pelelmex|erf|amrex|remora)
       ;;
     *)
-      log "Unsupported --code: $TARGET_CODE (expected pelec, pelelmex, erf, amrex, or all)"
+      log "Unsupported --code: $TARGET_CODE (expected pelec, pelelmex, erf, remora, amrex, or all)"
       exit 1
       ;;
   esac
@@ -151,7 +151,7 @@ log ""
 log "This will build:"
 log ""
 log "1. SCHEMAS (from C++ source):"
-log "   - Parameter schemas for available codes (PeleC, PeleLMeX, ERF, AMReX)"
+log "   - Parameter schemas for available codes (PeleC, PeleLMeX, ERF, AMReX, REMORA)"
 log ""
 log "2. HIERARCHICAL INDICES:"
 log "   - Level 0: Solver selection (4 indices)"
@@ -167,6 +167,7 @@ PELEC_PATH="${PELEC_REPO_PATH:-${PELEC_PATH:-../PeleC}}"
 PELELMEX_PATH="${PELELMEX_REPO_PATH:-${PELELMEX_PATH:-../PeleLMeX}}"
 ERF_PATH="${ERF_REPO_PATH:-${ERF_PATH:-../ERF}}"
 AMREX_PATH="${AMREX_REPO_PATH:-${AMREX_PATH:-../amrex}}"
+REMORA_PATH="${REMORA_REPO_PATH:-${REMORA_PATH:-../REMORA}}"
 
 ensure_repo() {
   local code="$1"
@@ -273,6 +274,20 @@ if should_process "amrex"; then
     fi
   else
     log "  ⚠️  AMReX source not found at $AMREX_PATH (skipping)"
+  fi
+fi
+
+if should_process "remora"; then
+  if ensure_repo "REMORA" "$REMORA_PATH" "https://github.com/AMReX-Codes/REMORA.git"; then
+    if [[ $FORCE_REBUILD -eq 1 ]] || ! schema_exists "remora"; then
+      log "  Building REMORA schema..."
+      python database/scripts/build_schema.py "$REMORA_PATH" --output database/schemas --auto-compose \
+        && log "  ✓ REMORA schema complete" || log "  ⚠️  REMORA schema had issues"
+    else
+      log "  REMORA schema exists - skipping"
+    fi
+  else
+    log "  ⚠️  REMORA source not found at $REMORA_PATH (skipping)"
   fi
 fi
 
@@ -395,6 +410,10 @@ if should_process "amrex"; then
   log "  AMReX hierarchical indices are not built by default (simple indices only)"
 fi
 
+if should_process "remora"; then
+  build_solver_level12 "REMORA" "$REMORA_PATH"
+fi
+
 log ""
 log "[Step 3/3] Building simple per-code indices..."
 log "============================================"
@@ -451,6 +470,10 @@ if should_process "amrex"; then
   build_simple_indices AMReX "$AMREX_PATH"
 fi
 
+if should_process "remora"; then
+  build_simple_indices REMORA "$REMORA_PATH"
+fi
+
 log ""
 log "===================================================="
 log "Validating Database"
@@ -485,6 +508,7 @@ if [[ -d "database/faiss" ]]; then
   log "  PeleLMeX: $(find database/faiss -maxdepth 2 -path '*pelelmex_*/index.faiss' 2>/dev/null | wc -l || true) indices"
   log "  ERF:      $(find database/faiss -maxdepth 2 -path '*erf_*/index.faiss' 2>/dev/null | wc -l || true) indices"
   log "  AMReX:    $(find database/faiss -maxdepth 2 -path '*amrex_*/index.faiss' 2>/dev/null | wc -l || true) indices"
+  log "  REMORA:   $(find database/faiss -maxdepth 2 -path '*remora_*/index.faiss' 2>/dev/null | wc -l || true) indices"
 else
   log "  (not built)"
 fi

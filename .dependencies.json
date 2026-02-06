@@ -19,6 +19,11 @@
       "url": "https://github.com/erf-model/ERF.git",
       "branch": "26.02",
       "commit": "eb2717130c9f68cd5175388be721a30373343103"
+    },
+    "remora": {
+      "url": "https://github.com/AMReX-Codes/REMORA.git",
+      "branch": "development",
+      "commit": "db65ce07f5c37f04f2801963ca59f5a4f8a4a884"
     }
   }
 }

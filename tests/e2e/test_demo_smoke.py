@@ -54,6 +54,10 @@ def _resolve_erf_repo() -> Path | None:
 def _resolve_amrex_repo() -> Path | None:
     return _resolve_repo_path("AMREX_REPO_PATH", "amrex")
 
+
+def _resolve_remora_repo() -> Path | None:
+    return _resolve_repo_path("REMORA_REPO_PATH", "REMORA")
+
 def _find_run_directory(output_dir: Path, stdout: str, stderr: str) -> Path | None:
     run_dirs = sorted(output_dir.glob("run_*"))
     if run_dirs:
@@ -183,6 +187,63 @@ def test_demo_prompt_file_erf(tmp_path: Path) -> None:
     )
     inputs_files = list(run_dir.rglob("inputs"))
     assert inputs_files, "No ERF inputs file created"
+
+
+@pytest.mark.e2e
+@pytest.mark.demo
+@pytest.mark.use_real_services
+@pytest.mark.indexing_simple
+@pytest.mark.requires_solver("REMORA")
+@pytest.mark.requires_repos("REMORA")
+@pytest.mark.requires_schema("REMORA")
+@pytest.mark.requires_indices("faiss")
+def test_demo_inline_prompt_remora(tmp_path: Path) -> None:
+    repo_path = _resolve_remora_repo()
+    if not repo_path:
+        pytest.skip("REMORA repo not available")
+    baseline_dir = repo_path / "Exec" / "Channel_Test"
+    if not baseline_dir.exists():
+        pytest.skip("REMORA Channel_Test baseline not available")
+    baseline_override = "REMORA/Exec/Channel_Test"
+
+    output_dir = tmp_path / "runs"
+    cmd = [
+        sys.executable,
+        str(REPO_ROOT / "amrex_agent.py"),
+        "--prompt",
+        (
+            "Run a REMORA ocean channel simulation with 20x60x50 cells, "
+            "periodic boundaries in x-direction, and GLS vertical mixing for 100 steps"
+        ),
+        "--output-dir",
+        str(output_dir),
+        "--indexing-strategy",
+        "simple",
+        "--baseline-override",
+        baseline_override,
+        "--dry-run",
+        "--save-workflow",
+    ]
+
+    env = os.environ.copy()
+    env["REMORA_REPO_PATH"] = str(repo_path)
+
+    result = _run_cli(cmd, env)
+
+    assert result.returncode == 0, (
+        "REMORA smoke run failed.\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    run_dir = _find_run_directory(output_dir, result.stdout, result.stderr)
+    assert run_dir, (
+        "No REMORA run directory created.\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+    inputs_files = list(run_dir.rglob("inputs"))
+    assert inputs_files, "No REMORA inputs file created"
 
 
 @pytest.mark.e2e

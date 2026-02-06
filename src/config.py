@@ -161,7 +161,7 @@ class AMReXAgentConfig(BaseModel):
     """
     
     # === LLM Configuration ===
-    llm_provider: Literal["cborg", "alcf", "openai", "anthropic"] = Field(
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl"] = Field(
         default="cborg",
         description="LLM provider to use"
     )
@@ -224,6 +224,20 @@ class AMReXAgentConfig(BaseModel):
         description="Anthropic API key"
     )
     
+    # === PNNL AI API ===
+    pnnl_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("LLM_API_KEY"),
+        description="PNNL AI API key (from LLM_API_KEY env var)"
+    )
+    pnnl_base_url: str = Field(
+        default="https://ai-incubator-api.pnnl.gov",
+        description="PNNL AI API base URL"
+    )
+    pnnl_default_model: str = Field(
+        default="claude-haiku-4-5-20251001-v1-birthright",
+        description="Default model for PNNL AI API"
+    )
+    
     pelec_executable: Optional[Path] = Field(
         default_factory=lambda: Path(os.getenv("PELEC_EXECUTABLE", "")),
         description="Path to PeleC executable"
@@ -256,6 +270,12 @@ class AMReXAgentConfig(BaseModel):
     incflo_repo_path: Optional[Path] = Field(
         default_factory=lambda: _repo_path_from_env("INCFLO_REPO_PATH", "incflo"),
         description="Path to incflo repository (incompressible flow)"
+    )
+
+    # Ocean modeling
+    remora_repo_path: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("REMORA_REPO_PATH", "REMORA"),
+        description="Path to REMORA repository (Regional Ocean Modeling with AMReX)"
     )
 
     # Tutorials (best for learning)
@@ -421,7 +441,7 @@ class AMReXAgentConfig(BaseModel):
     )
 
     inputs_default_precedence: Literal["default_first", "strategy_first"] = Field(
-        default="default_first",
+        default="strategy_first",
         description="Precedence between config default inputs and strategy selection. "
                     "'default_first' uses default_inputs_path before strategy selection; "
                     "'strategy_first' tries strategy first and only falls back to defaults."
@@ -694,6 +714,7 @@ class AMReXAgentConfig(BaseModel):
             'ERF': self.erf_repo_path,
             'WarpX': self.warpx_repo_path,
             'incflo': self.incflo_repo_path,
+            'REMORA': self.remora_repo_path,
             'amrex-tutorials': self.amrex_tutorials_repo_path,
             'AMReX': self.amrex_repo_path,
         }
@@ -856,6 +877,20 @@ def get_llm_client(config: AMReXAgentConfig):
     elif config.llm_provider == "anthropic":
         # TODO: Implement Anthropic client wrapper
         raise NotImplementedError("Anthropic provider not yet implemented")
+    
+    elif config.llm_provider == "pnnl":
+        if not config.pnnl_api_key:
+            raise ValueError("LLM_API_KEY environment variable not set for PNNL AI API")
+        
+        # Use default model if not explicitly set
+        if not config.llm_model:
+            config.llm_model = config.pnnl_default_model
+            logger.info(f" Using PNNL default model: {config.llm_model}")
+        
+        return OpenAI(
+            api_key=config.pnnl_api_key,
+            base_url=config.pnnl_base_url
+        )
     
     else:
         raise ValueError(f"Unknown LLM provider: {config.llm_provider}")

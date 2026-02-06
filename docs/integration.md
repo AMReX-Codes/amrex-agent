@@ -8,7 +8,8 @@ assumes you already have a working AMReX code with a test suite.
 Add a configuration entry that points to your repo and test suite. You can
 follow the existing config patterns in `database/configs`. If you create a new
 config class, register it in `database/configs/__init__.py` so
-`discover_code_configs()` can find it.
+`discover_code_configs()` can find it. Also wire the repo path into
+`src/config.py` so baseline overrides and indexing can resolve your repo.
 
 Minimal config template:
 
@@ -29,7 +30,9 @@ __all__ = [
 ```
 
 Checklist:
-- Repo path (local or environment variable)
+- Create config class in `database/configs/` and import it in `database/configs/__init__.py`
+- Add a repo path field + env var in `src/config.py` (for example `MYCODE_REPO_PATH`)
+- Provide a config YAML override if you want a non-default repo location
 - GitHub search paths (`github_search_paths`) for baseline discovery
 - Physics domains (used for routing)
 - Solver/code name and GitHub repo name
@@ -40,6 +43,7 @@ Start from an existing template (for example `database/configs/pelec_config.py`)
 and tailor:
 - Default inputs and baseline locations
 - Input schema rules (AMR constraints, solver-specific limits)
+- `priority_cases` and `faiss_indices` for indexing
 - Optional validation hooks for custom fields
 
 The goal is to reuse the existing validation framework while encoding your
@@ -51,7 +55,43 @@ Run the indexing scripts against your repo to build the searchable baseline
 library. This reuses the same test suite you already trust:
 
 ```bash
-bash demo/setup_demo_database.sh --code <your_code>
+bash demo/setup_demo_database.sh --code <your_code> --force-rebuild
+```
+
+If your repo has dependencies (git submodules), use auto-compose to build a
+combined schema first:
+
+```bash
+python database/scripts/build_schema.py /path/to/your/repo --output database/schemas --auto-compose
+```
+
+If you want `--clone-missing` to work for your solver, add it to
+`.dependencies.json` with the repo URL/branch/commit.
+
+If you need finer control (for example new index names), use:
+
+```bash
+python database/scripts/build_index.py \
+  --config <your_code> \
+  --type case_structure \
+  --source /path/to/your/repo
+```
+
+For hierarchical indices (L0/L1/L2), use:
+
+```bash
+python database/scripts/build_all_indices.py --level 1 --repo /path/to/your/repo --output database/faiss
+python database/scripts/build_all_indices.py --level 2 --repo /path/to/your/repo --output database/faiss
+```
+
+## Step 4: Smoke check baseline overrides
+
+Verify that a baseline override resolves against your repo path:
+
+```bash
+python amrex_agent.py \
+  --config /path/to/your/config.yaml \
+  --baseline-override "MyCode/Exec/Problem"
 ```
 
 ## Why this works

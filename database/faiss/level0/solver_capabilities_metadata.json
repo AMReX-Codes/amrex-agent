@@ -160,5 +160,11 @@
     "capability_type": "specific",
     "chunk_parent": 23,
     "chunk_index": 23
+  },
+  {
+    "code_name": "REMORA",
+    "capability_type": "description",
+    "chunk_parent": 24,
+    "chunk_index": 24
   }
 ]

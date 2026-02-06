@@ -1,0 +1,5295 @@
+{
+  "metadata": {
+    "solver": "REMORA",
+    "composed_from": [
+      "amrex",
+      "REMORA"
+    ],
+    "composition_method": "auto-compose (gitmodules)",
+    "total_parameters": 447
+  },
+  "parameters": {
+    "amr.regrid_on_restart": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Check for command line flags."
+    },
+    "amr.force_regrid_level_zero": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.use_efficient_regrid": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plotfile_on_restart": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.insitu_on_restart": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.checkpoint_on_restart": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.compute_new_dt_on_regrid": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.mffile_nstreams": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.probinit_natonce": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!NO_PROBINIT"
+      ],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.file_name_digits": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 5,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.initial_grid_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.regrid_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.message_int": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.run_log": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.run_log_terse": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.grid_log": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.data_log": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.probin_file": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!NO_PROBINIT"
+      ],
+      "default": "\"probin\"",
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.restart": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.restart_from_plotfile": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "If set, then restart from plotfile."
+    },
+    "amr.regrid_int": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.loadbalance_with_workestimates": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.loadbalance_level0_int": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 2,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.loadbalance_max_fac": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 1.5,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.nosub": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.subcycling_mode": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "\"Auto\"",
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.subcycling_iterations": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.checkpoint_files_output": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_files_output": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_nfiles": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.checkpoint_nfiles": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.check_file": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.check_int": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.check_per": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": -1.0,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_file": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Plotfile name and frequency"
+    },
+    "amr.plot_int": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Plotfile name and frequency"
+    },
+    "amr.plot_per": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": -1.0,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_log_per": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": -1.0,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_max_level": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "max_level",
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.small_plot_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "\"smallplt\"",
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.small_plot_int": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": -1,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.small_plot_per": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": -1.0,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.small_plot_log_per": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": -1.0,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.write_plotfile_with_checkpoint": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "true",
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.stream_max_tries": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 4,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.abort_on_stream_retry_failure": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.precreateDirectories": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.prereadFAHeaders": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_headerversion": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.checkpoint_headerversion": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_Amr.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_vars": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Amr/AMReX_AmrLevel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.derive_plot_vars": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": "= \"ALL\") {\n                amrex::Amr::fillStatePlotVarList()",
+      "source_file": "Src/Amr/AMReX_AmrLevel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.small_plot_vars": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": "= \"ALL\") {\n                amrex::Amr::fillDerivePlotVarList()",
+      "source_file": "Src/Amr/AMReX_AmrLevel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.derive_small_plot_vars": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": "= \"ALL\") {\n                amrex::Amr::fillStateSmallPlotVarList()",
+      "source_file": "Src/Amr/AMReX_AmrLevel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.max_grid_size": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 64,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.extend_domain_face": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "true",
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.num_coarsen_opt": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.geom_type": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.box_lo": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.box_hi": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.box_has_fluid_inside": {
+      "type": "bool",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.cylinder_center": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.cylinder_radius": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.cylinder_height": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": -1.0,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.cylinder_direction": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.cylinder_has_fluid_inside": {
+      "type": "bool",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.plane_point": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.plane_normal": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.sphere_center": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.sphere_radius": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.sphere_has_fluid_inside": {
+      "type": "bool",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.torus_center": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.torus_small_radius": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.torus_large_radius": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.parser_function": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.stl_file": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.stl_scale": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "1._rt",
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.stl_center": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.stl_reverse_normal": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.stl_use_bvh": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "true",
+      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.test_marching_cubes": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Src/EB/AMReX_EB2_Level_STL.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.v": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Verbosity"
+    },
+    "amr.verbose": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.max_level": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier2",
+      "description": "Default max_level to 0 if not in file"
+    },
+    "amr.n_proper": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "(rather than the amrex default of 1)."
+    },
+    "amr.grid_eff": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.n_error_buf": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.n_error_buf_x": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.n_error_buf_y": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.n_error_buf_z": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.ref_ratio_vect": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.ref_ratio": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.max_grid_size": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 2048,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.max_grid_size_x": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.max_grid_size_y": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.max_grid_size_z": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.blocking_factor": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 1,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier2",
+      "description": "the user to override it in the inputs file or on command line"
+    },
+    "amr.blocking_factor_x": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.blocking_factor_y": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.blocking_factor_z": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.n_cell": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier1",
+      "description": null
+    },
+    "amr.refine_grid_layout": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "chop up grids to have the number of grids be no less the number of procs"
+    },
+    "amr.refine_grid_layout_x": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Set the refine_grid_layout flags to (NGROW-1,NGROW-1,0) by default"
+    },
+    "amr.refine_grid_layout_y": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Set the refine_grid_layout flags to (NGROW-1,NGROW-1,0) by default"
+    },
+    "amr.refine_grid_layout_z": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.check_input": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.max_grid_iterations": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.use_bittree": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "USE_BITTREE"
+      ],
+      "default": null,
+      "source_file": "Src/AmrCore/AMReX_AmrMesh.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.particles_nfiles": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_TracerParticles.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.nreaders": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "Max_Readers_def",
+      "source_file": "Src/Particle/AMReX_ParticleContainerBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.nparts_per_read": {
+      "type": "Long",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "Max_Particles_Per_Read_def",
+      "source_file": "Src/Particle/AMReX_ParticleContainerBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.aggregation_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "\"None\"",
+      "source_file": "Src/Particle/AMReX_ParticleContainerBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.aggregation_buffer": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 2,
+      "source_file": "Src/Particle/AMReX_ParticleContainerBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.parmparse.v": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_ParmParse.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.parmparse.verbose": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_ParmParse.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.async_out": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Src/Base/AMReX_AsyncOut.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.async_out_nfiles": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 64,
+      "source_file": "Src/Base/AMReX_AsyncOut.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.forkjoin.verbose": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_ForkJoin.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.team.use_gpu_aware_mpi": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!BL_AMRPROF"
+      ],
+      "default": "(bool) MPIX_Query_cuda_support()",
+      "source_file": "Src/Base/AMReX_ParallelDescriptor.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.team.size": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!BL_AMRPROF"
+      ],
+      "default": 1,
+      "source_file": "Src/Base/AMReX_ParallelDescriptor.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.team.reduce": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!BL_AMRPROF"
+      ],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_ParallelDescriptor.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_arena_init_size": {
+      "type": "AMREX_USE_SYCL",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "Gpu::Device::totalGlobalMem() / Gpu::Device::numDevicePartners() / 4L * 3L",
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_device_arena_init_size": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_managed_arena_init_size": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_pinned_arena_init_size": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_comms_arena_init_size": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_arena_release_threshold": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_device_arena_release_threshold": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_managed_arena_release_threshold": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_pinned_arena_release_threshold": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_comms_arena_release_threshold": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_arena_defragmentation": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_device_arena_defragmentation": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_managed_arena_defragmentation": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_pinned_arena_defragmentation": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_comms_arena_defragmentation": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.the_arena_is_managed": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.abort_on_out_of_gpu_memory": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Arena.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.v": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.headerversion": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.groupsets": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.setbuf": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.usesingleread": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.usesinglewrite": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.checkfilepositions": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.usepersistentifstreams": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.usesynchronousreads": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.usedynamicsetselection": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.iobuffersize": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.allowsparsewrites": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.noflushafterwrite": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "vismf.barrierafterlevel": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_VisMF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.v": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!BL_AMRPROF"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.verbose": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!BL_AMRPROF"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.init_snan": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!BL_AMRPROF"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.regtest_reduction": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.signal_handling": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.throw_exception": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.call_addr2line": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.abort_on_unused_inputs": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.handle_sigsegv": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.handle_sigterm": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.handle_sigint": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.handle_sigabrt": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.handle_sigfpe": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.handle_sigill": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.fpe_trap_invalid": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "false, divbyzero=false, overflow=false",
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.fpe_trap_zero": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "false, overflow=false",
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.fpe_trap_overflow": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.init_hypre": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "USE_HYPRE"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.hypre_spgemm_use_vendor": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "USE_HYPRE"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.hypre_spmv_use_vendor": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "USE_HYPRE"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.hypre_sptrans_use_vendor": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "USE_HYPRE"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.memory_log": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "\"memlog\"",
+      "source_file": "Src/Base/AMReX_MemProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.max_gpu_streams": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.v": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.verbose": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.numThreads.x": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.numThreads.y": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.numThreads.z": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.numBlocks.x": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.numBlocks.y": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.numBlocks.z": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.graph_init": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "device.graph_init_nodes": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 10000,
+      "source_file": "Src/Base/AMReX_GpuDevice.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "tiny_profiler.device_synchronize_around_region": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TinyProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "tiny_profiler.v": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TinyProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "tiny_profiler.verbose": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TinyProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "tiny_profiler.print_threshold": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TinyProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "that the \"Other\" section in the output can have (default\u00a01%)"
+    },
+    "tiny_profiler.enabled": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TinyProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "tiny_profiler.memprof_enabled": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TinyProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "tiny_profiler.output_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TinyProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.vector_growth_factor": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "min_factor",
+      "source_file": "Src/Base/AMReX_PODVector.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.pout_int": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "BL_USE_MPI"
+      ],
+      "default": 1,
+      "source_file": "Src/Base/AMReX_parstream.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "DistributionMapping.v": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_DistributionMapping.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "DistributionMapping.verbose": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_DistributionMapping.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "DistributionMapping.efficiency": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "0.9_rt",
+      "source_file": "Src/Base/AMReX_DistributionMapping.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "DistributionMapping.sfc_threshold": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "std::min(n,1)",
+      "source_file": "Src/Base/AMReX_DistributionMapping.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "DistributionMapping.node_size": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_DistributionMapping.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "DistributionMapping.verbose_mapper": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_DistributionMapping.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "DistributionMapping.strategy": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_DistributionMapping.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.prof_nfiles": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "BL_PROFILING"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_BLProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.prof_csflushsize": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "BL_PROFILING"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_BLProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.prof_traceflushsize": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "BL_PROFILING"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_BLProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.prof_flushinterval": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "BL_PROFILING"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_BLProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.prof_flushtimeinterval": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "BL_PROFILING"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_BLProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.prof_flushprint": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "BL_PROFILING"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_BLProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.use_profiler_syncs": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_BLProfiler.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.omp_threads": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "\"system\"",
+      "source_file": "Src/Base/AMReX_OpenMP.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "fab.format": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_FArrayBox.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "This block can legitimately set FAB output format."
+    },
+    "fab.ordering": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_FArrayBox.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "fab.initval": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "std::numeric_limits<Real>::has_quiet_NaN\n            ? std::numeric_limits<Real>::quiet_NaN()\n            : std::numeric_limits<Real>::max()",
+      "source_file": "Src/Base/AMReX_FArrayBox.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "fab.do_initval": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_FArrayBox.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "fabarray.mfiter_tile_size": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": [
+        1024000,
+        1024000,
+        1024000
+      ],
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "fabarray.comm_tile_size": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_FabArrayBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "fabarray.maxcomp": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_FabArrayBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amrex.mf.alloc_single_chunk": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_FabArrayBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "geometry.coord_sys": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "= -1) {\n        c_sys = gg->Coord()",
+      "source_file": "Src/Base/AMReX_Geometry.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "geometry.prob_lo": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "geometry.prob_hi": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "geometry.prob_extent": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_Geometry.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "geometry.is_periodic": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "enabled": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/SENSEI/AMReX_InSituBridge.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "config": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/SENSEI/AMReX_InSituBridge.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "frequency": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/SENSEI/AMReX_InSituBridge.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "pin_mesh": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/SENSEI/AMReX_InSituBridge.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "hypre_solver": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "hypre_preconditioner": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "recompute_preconditioner": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "write_matrix_files": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "overwrite_existing_matrix_files": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "adjust_singular_matrix": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "bamg_non_galerkin_level_levels": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "bamg_non_galerkin_level_tols": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "bamg_smooth_type": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "bamg_euclid_file": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "bamg_use_old_default": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "true",
+      "source_file": "Src/Extern/HYPRE/AMReX_HypreIJIface.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.small_volfrac": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "1.e-5_rt",
+      "source_file": "Src/EB/AMReX_EB2_Level.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.cover_multiple_cuts": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Src/EB/AMReX_EB2_Level.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "eb2.maxiter": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 32,
+      "source_file": "Src/EB/AMReX_EB2_Level.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.do_tiling": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_ParticleContainerI.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.tile_size": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_ParticleContainerI.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.use_prepost": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_ParticleContainerI.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "\"Particle type must be standard layout and trivial.\");"
+    },
+    "particles.do_unlink": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_ParticleContainerI.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.do_mem_efficient_sort": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_ParticleContainerI.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.use_comms_arena": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_ParticleContainerI.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.datadigits_read": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!PARTICLEIO_H"
+      ],
+      "default": null,
+      "source_file": "Src/Particle/AMReX_ParticleIO.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "plot.niter": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!PARMPARSE_H_"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_ParmParse.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "if (!pp.query(\"niter\",niter)) niter = 20;"
+    },
+    "plot.cell_size": {
+      "type": "Real",
+      "required": true,
+      "is_array": true,
+      "build_flags": [
+        "!PARMPARSE_H_"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_ParmParse.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "pp.getarr(\"cell_size\",dx,0,nx);"
+    },
+    "plot.var": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [
+        "!PARMPARSE_H_"
+      ],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_ParmParse.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "pp.getkth(\"var\",k,var_name,0);"
+    },
+    "val": {
+      "type": "T",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!PARMPARSE_H_"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_ParmParse.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.use_adaptive_time_step": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.time_step": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.use_adaptive_fast_time_step": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.fast_time_step": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.rel_tol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.abs_tol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.fast_rel_tol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.fast_abs_tol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Src/Base/AMReX_IntegratorBase.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.type": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!TIME_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_TimeIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.rk.type": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!RK_INTEGRATOR_H"
+      ],
+      "default": 0,
+      "source_file": "Src/Base/AMReX_RKIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Read an integrator type, if not recognized, then read weights/nodes/butcher tableau"
+    },
+    "integration.rk.weights": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [
+        "!RK_INTEGRATOR_H"
+      ],
+      "default": [
+        1.0,
+        6.0,
+        1.0,
+        3.0,
+        1.0,
+        3.0,
+        1.0,
+        6.0
+      ],
+      "source_file": "Src/Base/AMReX_RKIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Read weights/nodes/butcher tableau"
+    },
+    "integration.rk.extended_weights": {
+      "type": "weights",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!RK_INTEGRATOR_H"
+      ],
+      "default": [],
+      "source_file": "Src/Base/AMReX_RKIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Read weights/nodes/butcher tableau"
+    },
+    "integration.rk.nodes": {
+      "type": "int",
+      "required": true,
+      "is_array": true,
+      "build_flags": [
+        "!RK_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_RKIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.rk.tableau": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [
+        "!RK_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Base/AMReX_RKIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.method": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.method_e": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.method_i": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.fast_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.fast_method": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.nonlinear_solver": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.max_nonlinear_iters": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.fast_nonlinear_solver": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.fast_max_nonlinear_iters": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.linear_solver": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.max_linear_iters": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.fast_linear_solver": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.fast_max_linear_iters": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.stop_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "integration.sundials.max_num_steps": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!SUNDIALS_INTEGRATOR_H"
+      ],
+      "default": null,
+      "source_file": "Src/Extern/SUNDIALS/AMReX_SundialsIntegrator.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.max_step": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.stop_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.remora.max_step": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.remora.stop_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.check_int_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.expand_plotvars_to_unif_rr": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.start_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.sum_interval": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Frequency of diagnostic output"
+    },
+    "amr.sum_period": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Frequency of diagnostic output"
+    },
+    "amr.file_min_digits": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.cfl": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Time step controls"
+    },
+    "amr.change_max": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Time step controls"
+    },
+    "amr.fixed_dt": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.fixed_fast_dt": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.fixed_ndtfast_ratio": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.do_substep": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_int_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.plot_staggered_vels": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Should we plot the staggered face velocities (without averaging to cell centers)"
+    },
+    "amr.plotfile_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "\"amrex\"",
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Output format"
+    },
+    "amr.write_history_file": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.chunk_history_file": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.steps_per_history_file": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.nc_bdry_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "We only read boundary data at level 0"
+    },
+    "amr.nc_frc_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Also only read forcings at level 0 (for now)"
+    },
+    "amr.nc_river_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Get river file"
+    },
+    "amr.nc_clim_his_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Read in file names for climatology history and nudging weights"
+    },
+    "amr.nc_clim_coeff_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Read in file names for climatology history and nudging weights"
+    },
+    "amr.bdy_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.bdy_temp_time_varname": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.bdy_salt_time_varname": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.bdy_u_time_varname": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.bdy_v_time_varname": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.bdy_ubar_time_varname": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.bdy_vbar_time_varname": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.bdy_zeta_time_varname": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.frc_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.riv_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.clim_ubar_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.clim_vbar_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.clim_u_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.clim_v_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.clim_salt_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "amr.clim_temp_time_varname": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_NETCDF"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.n_cell": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "This allows a REMORA user to use the remora. prefix for some AMReX-specific options"
+    },
+    "remora.v": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.prob_lo": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.prob_hi": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.is_periodic": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.omp_tile_size": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": [
+        1024000,
+        1024000,
+        1024000
+      ],
+      "source_file": "Source/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "refinement_indicators": {
+      "type": null,
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "max_level": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "in_box_lo": {
+      "type": "Real",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "in_box_hi": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "start_time": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "end_time": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "value_greater": {
+      "type": "Real",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "field_name": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "value_less": {
+      "type": "Real",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "adjacent_difference_greater": {
+      "type": "Real",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/REMORA_Tagging.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "initial_distribution_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_PARTICLES"
+      ],
+      "default": "REMORAParticleInitializations::init_box_uniform",
+      "source_file": "Source/Particles/REMORA_PC_Init.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particle_box_lo": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_PARTICLES"
+      ],
+      "default": null,
+      "source_file": "Source/Particles/REMORA_PC_Init.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particle_box_hi": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_PARTICLES"
+      ],
+      "default": null,
+      "source_file": "Source/Particles/REMORA_PC_Init.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "place_randomly_in_cells": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_PARTICLES"
+      ],
+      "default": "true",
+      "source_file": "Source/Particles/REMORA_PC_Init.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "but can override this for regression testing"
+    },
+    "initial_particles_per_cell": {
+      "type": "int",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_PARTICLES"
+      ],
+      "default": 1,
+      "source_file": "Source/Particles/REMORA_PC_Init.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "advect_with_flow": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "REMORA_USE_PARTICLES"
+      ],
+      "default": "(m_name == REMORAParticleNames::tracers ? true : false)",
+      "source_file": "Source/Particles/REMORA_PC_Init.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.velocity": {
+      "type": "Real",
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Initialization/REMORA_init_bcs.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.scalar": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": 0.0,
+      "source_file": "Source/Initialization/REMORA_init_bcs.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "remora.type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "\"null\"",
+      "source_file": "Source/Initialization/REMORA_init_bcs.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Default z directions to slipwall"
+    },
+    "remora.boundary_per_variable": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Source/Initialization/REMORA_init_bcs.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "flat_bathymetry": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "tracer_horizontal_advection_scheme": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"upstream3\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Which horizontal advection scheme for tracers"
+    },
+    "uv_horizontal_advection_scheme": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"upstream3\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Which horizontal advection scheme"
+    },
+    "rdrag": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "rdrag2": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Zos": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Zob": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Cdb_max": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Cdb_min": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "use_salt": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Include salinity?"
+    },
+    "use_coriolis": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Include Coriolis forcing?"
+    },
+    "use_prestep": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Include prestep / lagged predictor / corrections"
+    },
+    "use_uv3dmix": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "This affect forcing and some of the mixing terms for velocity"
+    },
+    "use_barotropic": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "This accounts for the main 2d loop but may not include coupling and copying properly"
+    },
+    "do_rivers": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "have to be momentum sources."
+    },
+    "do_rivers_temp": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "do_rivers_salt": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "do_rivers_scalar": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "init_l1ad_h": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "init_l1ad_T": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "init_ana_h": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "init_ana_T": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "init_l0int_h": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "init_l0int_T": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "eos_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"linear\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Tcoef": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Scoef": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "R0": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "S0": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "T0": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "rho0": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "bulk_fluxes": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "air_pressure": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "air_temperature": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "air_humidity": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "surface_radiation_flux": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "srflx_from_netcdf": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "cloud": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "rain": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "blk_ZQ": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "blk_ZT": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "blk_ZW": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "eminusp": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "eminusp_correct_ssh": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Tair_from_netcdf": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Control flags for loading atmospheric variables from NetCDF"
+    },
+    "qair_from_netcdf": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Control flags for loading atmospheric variables from NetCDF"
+    },
+    "qair_is_percent": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Pair_from_netcdf": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "rain_from_netcdf": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "cloud_from_netcdf": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "EminusP_from_netcdf": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "theta_s": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Grid stretching"
+    },
+    "theta_b": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Grid stretching"
+    },
+    "tcline": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "coriolis_f0": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "coriolis factor"
+    },
+    "coriolis_beta": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "coriolis factor"
+    },
+    "Akv_bak": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Akt_bak": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "grid_scale_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"constant\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "ic_bc_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"analytic\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "ic_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"analytic\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "coupling_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"TwoWay\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Which type of refinement"
+    },
+    "coriolis_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"beta_plane\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "smflux_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"analytic\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "wind_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"analytic\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "mask_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"none\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "bottom_stress_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"linear\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "horizontal_mixing_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"analytic\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "visc2": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "tnu2_salt": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "amrex::Real(0.0)",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "tnu2_temp": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "amrex::Real(0.0)",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "tnu2_scalar": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "amrex::Real(0.0)",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Akk_bak": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "Akp_bak": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "vertical_mixing_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"analytic\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_stability_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "\"Canuto_A\"",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_P": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Read in GLS params"
+    },
+    "gls_M": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_N": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_Kmin": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_Pmin": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_cmu0": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_c1": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_c2": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_c3m": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_c3p": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_sigk": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "gls_sigp": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "tnudg": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "amrex::Real(0.0)",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "znudg": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "amrex::Real(0.0)",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "m2nudg": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "amrex::Real(0.0)",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "m3nudg": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": "amrex::Real(0.0)",
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "obcfac": {
+      "type": "Real",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "do_m3_clim_nudg": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "do_m2_clim_nudg": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "do_temp_clim_nudg": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "do_salt_clim_nudg": {
+      "type": "bool",
+      "required": false,
+      "is_array": true,
+      "build_flags": [
+        "!_REMORA_DATA_STRUCT_H_"
+      ],
+      "default": null,
+      "source_file": "Source/REMORA_DataStruct.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    }
+  }
+}

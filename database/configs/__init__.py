@@ -14,6 +14,7 @@ from .erf_config import ERFConfig
 from .incflo_config import IncfloConfig
 from .pelec_config import PeleCConfig
 from .pelelmex_config import PeleLMeXConfig
+from .remora_config import REMORAConfig
 from .warpx_config import WarpXConfig
 
 __all__ = [
@@ -25,6 +26,7 @@ __all__ = [
     "IncfloConfig",
     "WarpXConfig",
     "ERFConfig",
+    "REMORAConfig",
 ]
 
 
@@ -50,7 +52,7 @@ def discover_code_configs():
         IncfloConfig,  # Non-combustion test case (validates architecture flexibility)
         WarpXConfig,
         ERFConfig,
-        # Future: ERFConfig, WarpXConfig, etc.
+        REMORAConfig,
     ]
 
 
@@ -75,6 +77,8 @@ def get_config_for_path(path_text: str):
         return PeleLMeXConfig
     elif 'erf' in path_lower:
         return ERFConfig
+    elif 'remora' in path_lower:
+        return REMORAConfig
     elif 'amrex' in path_lower:
         return AMReXConfig
     elif 'incflo' in path_lower:

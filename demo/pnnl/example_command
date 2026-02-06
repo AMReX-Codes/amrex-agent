@@ -1,0 +1,5 @@
+conda activate amrex-agent-dev
+
+python database/scripts/build_schema.py /global/cfs/cdirs/m4304/enuss/amrex --solver amrex
+
+python amrex_agent.py --config demo/pnnl/config_pnnl.yaml --baseline-override "AMReX/Tests/Amr/Advection_AmrCore/Exec" --prompt "2D advection test"
