@@ -163,6 +163,7 @@ COMP = gnu
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 3
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Act: Build physics_parameters index
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
@@ -282,6 +283,7 @@ geometry.dims = 3
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 2
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Act: Build with WarpX config
         builder = Level2Builder(config=WarpXConfig, embedder=mock_embedder)
@@ -340,6 +342,7 @@ amr.n_cell = 64 64 64
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384]
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=FutureSolver, embedder=mock_embedder)
         output_dir = tmp_path / "level2"

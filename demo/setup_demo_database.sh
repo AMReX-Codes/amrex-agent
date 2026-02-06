@@ -330,16 +330,11 @@ if level == "1":
     doc_map = getattr(config, "documentation_map", {}) or {}
     print(len(doc_map))
 elif level == "2":
-    base_keys = [
-        "physics_parameters",
-        "grid_specifications",
-        "development_activity",
-        "configuration_complexity",
-        "path_hierarchy",
-        "domain_models",
-        "resource_requirements",
-    ]
-    base = len(base_keys)
+    try:
+        from database.indexing.level2_constants import LEVEL2_BASE_KEYS
+        base = len(LEVEL2_BASE_KEYS)
+    except Exception:
+        base = 7
     additional = len(getattr(config, "additional_level2_indices", {}) or {})
     print(base + additional)
 else:

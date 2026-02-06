@@ -25,6 +25,7 @@ import numpy as np
 from database.configs import BaseAMReXConfig
 from database.scripts.dependency_discovery import DependencyDiscovery
 from database.scripts.utils import find_case_directories, tokenize
+from database.indexing.level2_constants import LEVEL2_WEIGHTS
 
 
 logger = logging.getLogger(__name__)
@@ -33,15 +34,7 @@ class Level2Builder:
     """Builds Level 2 case metadata indices."""
     
     # PRD Section 5.4: Exact weights
-    WEIGHTS = {
-        'physics_parameters': 0.30,        # Physics parameters (reduced from 0.35)
-        'grid_specifications': 0.20,        # AMR settings
-        'development_activity': 0.10,       # Git health (split from git_metrics)
-        'configuration_complexity': 0.10,   # Customization level (split from git_metrics)
-        'path_hierarchy': 0.15,             # Path quality
-        'domain_models': 0.10,       # Domain-specific features
-        'resource_requirements': 0.05,      # Runtime estimates
-    }
+    WEIGHTS = LEVEL2_WEIGHTS
     # Total: 1.00 (7 indices - Indexing Engine: Path Hierarchy Weights)
     
     def __init__(self, config: Type[BaseAMReXConfig], embedder):

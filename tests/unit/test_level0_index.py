@@ -37,6 +37,7 @@ class TestLevel0TaxonomyStructure:
         # Arrange: Mock embedding service
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 10  # Mock embeddings
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Act: Build Level 0 indices
         builder = Level0Builder(embedder=mock_embedder)
@@ -71,6 +72,7 @@ class TestLevel0TaxonomyStructure:
         # Arrange
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 20
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Get actual codes from registry
         codes = discover_code_configs()
@@ -129,6 +131,7 @@ class TestLevel0TaxonomyStructure:
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 5
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Act
         builder = Level0Builder(

@@ -56,6 +56,7 @@ max_step = 100
         # Mock embedder
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 10
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Act: Build Level 2 indices
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
@@ -130,6 +131,7 @@ class TestLevel2AmendmentCCompliance:
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 5
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Act: Build indices
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
@@ -204,6 +206,7 @@ amr.use_typ_vals_chem = 1
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 3
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"
@@ -269,6 +272,7 @@ class TestLevel2PortableKeys:
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 3
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"
@@ -334,6 +338,7 @@ amr.riemann_solver = HLLC
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 2
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         # Act: Should not crash
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
@@ -476,6 +481,7 @@ class TestLevel2Integration:
         # Builder should use same function
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384]
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
         
@@ -514,6 +520,7 @@ class TestLevel2Integration:
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384]
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
         

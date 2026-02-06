@@ -48,6 +48,7 @@ checkpoint.frequency = 100
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 15
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=ExtendedConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"
@@ -131,6 +132,7 @@ bc.hi = outflow
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 20
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=MultiIndexConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"
@@ -196,6 +198,7 @@ beams.species = electrons
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 20
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=WarpXConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"

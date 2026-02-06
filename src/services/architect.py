@@ -32,6 +32,7 @@ from src.services.cases import AMReXCasesService
 from src.services.config_model_factory import ConfigModelFactory
 from src.services.knowledge import PeleKnowledgeService
 from src.services.plan import SimulationPlan, SimulationPlanFactory
+from database.indexing.level2_constants import LEVEL2_BASE_KEYS
 
 
 class ParameterModification(BaseModel):
@@ -1097,7 +1098,7 @@ class ArchitectService:
             indices.append("domain_models")
 
         if not indices:
-            indices.append("physics_parameters")
+            indices.append(LEVEL2_BASE_KEYS[0])
 
         # If indices exist on disk, filter to available types but keep a fallback.
         available_types = set()

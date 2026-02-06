@@ -75,14 +75,14 @@ logger = logging.getLogger(__name__)
 
 # Load config for API keys
 try:
-    PELE_CONFIG = ConfigService().initialize()
-    key = PELE_CONFIG.cborg_api_key
+    AGENT_CONFIG = ConfigService().initialize()
+    key = AGENT_CONFIG.cborg_api_key
     logger.debug(f"[DEBUG] Config has cborg_api_key: {bool(key)}, type: {type(key)}")
 except Exception as e:
     logger.debug(f"[DEBUG] Config loading FAILED: {e}")
     import traceback
     traceback.print_exc()
-    PELE_CONFIG = None
+    AGENT_CONFIG = None
 
 def get_embedding_model(provider: str = "openai", model_name: str = "text-embedding-3-small"):
     """
@@ -105,7 +105,7 @@ def get_embedding_model(provider: str = "openai", model_name: str = "text-embedd
     embeddings = create_embeddings(
         provider=provider,
         model_name=model_name,
-        config=PELE_CONFIG,
+        config=AGENT_CONFIG,
     )
     if embeddings is None:
         raise RuntimeError(f"Failed to initialize {provider} embeddings")
@@ -160,7 +160,7 @@ def get_embedding_model(provider: str = "openai", model_name: str = "text-embedd
                 expanded_meta.append(meta)
             return chunked_docs, expanded_meta
 
-    return EmbeddingAdapter(embeddings, PELE_CONFIG)
+    return EmbeddingAdapter(embeddings, AGENT_CONFIG)
 
 
 def _maybe_chunk_documents(documents: list[Document], embedding_model) -> list[Document]:
