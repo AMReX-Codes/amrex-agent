@@ -141,7 +141,8 @@ class TestInputWriterPipelineIntegration:
         
         # Verify expected parameters exist
         assert 'amr.n_cell' in params, "Missing amr.n_cell in schema"
-        assert 'amr.cfl' in params, "Missing amr.cfl in schema"
+        cfl_param = PeleCConfig.cfl_param_name
+        assert cfl_param in params, f"Missing {cfl_param} in schema"
         assert len(params) > 100, f"Schema too small: {len(params)} params"
     
     # ========================================================================
