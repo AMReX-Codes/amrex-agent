@@ -141,14 +141,15 @@ class TestInputWriterPipelineIntegration:
         
         # Verify expected parameters exist
         assert 'amr.n_cell' in params, "Missing amr.n_cell in schema"
-        assert 'amr.cfl' in params, "Missing amr.cfl in schema"
+        cfl_param = PeleCConfig.cfl_param_name
+        assert cfl_param in params, f"Missing {cfl_param} in schema"
         assert len(params) > 100, f"Schema too small: {len(params)} params"
     
     # ========================================================================
     # Test 2: Full Pipeline
     # ========================================================================
     
-    def test_full_pipeline_load_modify_write(
+    def test_full_pipeline_load_modify_write_pelec(
         self, 
         pelec_schema, 
         build_config,
@@ -214,7 +215,7 @@ class TestInputWriterPipelineIntegration:
     # Test 3: Hydration from Dict
     # ========================================================================
     
-    def test_hydration_from_dict_pattern(
+    def test_hydration_from_dict_pattern_pelec(
         self,
         pelec_schema,
         build_config,
@@ -261,7 +262,7 @@ class TestInputWriterPipelineIntegration:
     # Test 4: Schema Validation (Hallucination Detection)
     # ========================================================================
     
-    def test_schema_rejects_hallucinated_parameters(
+    def test_schema_rejects_hallucinated_parameters_pelec(
         self,
         pelec_schema,
         build_config
@@ -319,7 +320,7 @@ class TestInputWriterPipelineIntegration:
     # Test 5: Rule Engine Auto-Correction
     # ========================================================================
     
-    def test_rule_engine_auto_correction(
+    def test_rule_engine_auto_correction_pelec(
         self,
         pelec_schema,
         build_config
@@ -372,7 +373,7 @@ class TestInputWriterPipelineIntegration:
     # Test 6: Build Flag Constraints
     # ========================================================================
     
-    def test_build_flag_constraints(self, pelec_schema):
+    def test_build_flag_constraints_pelec(self, pelec_schema):
         """
         Given: Schema with USE_EB-dependent parameters
         When:  Model created with USE_EB=FALSE
@@ -410,7 +411,7 @@ class TestInputWriterPipelineIntegration:
     # Test 7: Ghostwriter Format Preservation
     # ========================================================================
     
-    def test_ghostwriter_format_preservation(
+    def test_ghostwriter_format_preservation_pelec(
         self,
         pelec_schema,
         build_config,
@@ -468,4 +469,7 @@ class TestInputWriterPipelineIntegration:
 
 
 # Test marker
-pytestmark = pytest.mark.integration
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.requires_schema("PeleC"),
+]

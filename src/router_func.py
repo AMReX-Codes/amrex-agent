@@ -39,7 +39,10 @@ def route_after_architect(state: GraphState) -> str:
     Returns:
         Next node name: 'reviewer'
     """
-    logger.debug("\n[ROUTE] Router: Architect → Reviewer (pre-execution validation)")
+    if state.get("preconfirm_action") == "cancel":
+        logger.warning("[ROUTE] Pre-confirm gate canceled → END")
+        return END
+    logger.debug("[ROUTE] Router: Architect → Reviewer (pre-execution validation)")
     return "reviewer"
 
 
@@ -55,7 +58,10 @@ def route_after_input_writer(state: GraphState) -> str:
     Returns:
         Next node name: 'runner'
     """
-    logger.debug("\n[ROUTE] Router: Input Writer → Runner")
+    if state.get("mode") == "terminal":
+        logger.warning("[ROUTE] Input Writer terminal mode → END")
+        return END
+    logger.debug("[ROUTE] Router: Input Writer → Runner")
     return "runner"
 
 
@@ -89,6 +95,10 @@ def route_after_runner(state: GraphState) -> str:
         logger.error(f"[ROUTE] Terminal mode → END: {error}")
         return END
 
+    if state.get("job_status") == "skipped":
+        logger.warning("[ROUTE] Runner skipped → END")
+        return END
+
     # Terminal system failures (cannot be fixed by changing inputs)
     terminal_errors = [
         "Compilation failed",
@@ -111,7 +121,7 @@ def route_after_runner(state: GraphState) -> str:
         return "analysis"
 
     # Success case
-    logger.debug("\n[ROUTE] Router: Runner → Analysis (execution succeeded)")
+    logger.debug("[ROUTE] Router: Runner → Analysis (execution succeeded)")
     return "analysis"
 
 
@@ -128,6 +138,9 @@ def route_after_reviewer(state: GraphState) -> str:
     retry_count = state.get("retry_count", 0)
     max_retries = state.get("max_retries", 3)
     
+    if mode == "terminal":
+        logger.warning("[ROUTE] Reviewer → END (Terminal mode)")
+        return END
     if mode == "proceed":
         logger.debug("[ROUTE] Reviewer → Input Writer (Approved)")
         return "input_writer"
@@ -143,6 +156,8 @@ def route_after_reviewer(state: GraphState) -> str:
     else:  # mode == "fail" or unknown
         logger.warning(f"[ROUTE] Reviewer → END (Validation Failed: {mode})")
         return END
+
+
 def route_after_analysis(state: GraphState) -> str:
     """
     Route after analysis node.
@@ -157,19 +172,23 @@ def route_after_analysis(state: GraphState) -> str:
     Returns:
         Next node name: 'visualization' or 'reviewer'
     """
+    if state.get("mode") == "terminal":
+        logger.warning("[ROUTE] Analysis terminal mode → END")
+        return END
+
     analysis_report = state.get("analysis_report", {})
     status = analysis_report.get("status", "unknown")
 
     if status == "failed":
         issues = analysis_report.get("issues", [])
-        logger.debug("\n[ROUTE] Router: Analysis → Reviewer (simulation failed)")
+        logger.debug("[ROUTE] Router: Analysis → Reviewer (simulation failed)")
         logger.debug(f"   Issues: {len(issues)}")
         if len(issues) == 0:
             logger.warning("[ROUTE] Analysis failure without actionable issues → Reviewer")
         state["mode"] = "retry"  # Signal post-execution retry
         return "reviewer"
 
-    logger.debug("\n[ROUTE] Router: Analysis → Visualization (simulation passed)")
+    logger.debug("[ROUTE] Router: Analysis → Visualization (simulation passed)")
     return "visualization"
 
 
@@ -186,7 +205,7 @@ def route_after_visualization(state: GraphState) -> str:
         Next node name: END
     """
     images = state.get("visualization_images", [])
-    logger.debug(f"\n[ROUTE] Router: Visualization → END ({len(images)} images generated)")
+    logger.debug(f"[ROUTE] Router: Visualization → END ({len(images)} images generated)")
     return END
 
 

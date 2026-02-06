@@ -50,5 +50,44 @@ def test_submit_dry_run_writes_script(tmp_path, monkeypatch):
 
     script_path = Path(result["script_path"])
     assert result["method"] == "dry_run"
+    assert result["job_status"] == "completed"
     assert script_path.exists()
     assert "echo test" in script_path.read_text()
+
+
+def test_submit_stage_only_stages_without_submitting(tmp_path, monkeypatch):
+    run_dir = tmp_path / "run_sf"
+    run_dir.mkdir()
+    exe = run_dir / "solver.MPI.CUDA.ex"
+    exe.write_text("binary")
+
+    monkeypatch.setattr(
+        "src.services.run_superfacility.generate_slurm_script",
+        lambda params, run_dir, config=None: "#!/bin/bash\necho stage\n",
+    )
+
+    staged = {"called": False}
+
+    def fake_stage_run_directory(**kwargs):
+        staged["called"] = True
+
+    monkeypatch.setattr("src.services.run_superfacility.stage_run_directory", fake_stage_run_directory)
+    monkeypatch.setattr(
+        "src.services.run_superfacility.submit_job",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("submit_job should not be called")),
+    )
+    monkeypatch.setattr("src.config.detect_environment", lambda: "local")
+
+    config = SimpleNamespace(
+        default_solver="PeleC",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        environment="perlmutter",
+    )
+    runner = SuperfacilityRunner(config)
+
+    result = runner.submit(run_dir, nodes=1, run_mode="stage")
+
+    assert staged["called"] is True
+    assert result["method"] == "stage_only"
+    assert result["job_status"] == "completed"

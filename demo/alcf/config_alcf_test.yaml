@@ -1,5 +1,8 @@
 llm_provider: alcf
+llm_model: meta-llama/Meta-Llama-3.1-70B-Instruct
 embedding_provider: alcf
 alcf_cluster: sophia
 faiss_embedding_model: mistralai/Mistral-7B-Instruct-v0.3-embed
 vector_store_backend: faiss_local
+indexing_strategy: override_static
+baseline_override: AMReX/Tests/Amr/Advection_AmrCore/Exec

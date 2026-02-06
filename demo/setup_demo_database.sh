@@ -103,6 +103,27 @@ fi
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+dep_value() {
+  local code="$1"
+  local key="$2"
+  local deps_file="$PROJECT_ROOT/.dependencies.json"
+  if [[ ! -f "$deps_file" ]]; then
+    return 0
+  fi
+  python - "$deps_file" "$code" "$key" <<'PY'
+import json
+import sys
+
+path, code, key = sys.argv[1:]
+try:
+    data = json.load(open(path))
+    value = data.get("repos", {}).get(code, {}).get(key, "") or ""
+    print(value)
+except Exception:
+    pass
+PY
+}
+
 log "===================================================="
 log "Demo Database Setup"
 log "===================================================="
@@ -152,6 +173,25 @@ ensure_repo() {
   local code="$1"
   local path="$2"
   local url="$3"
+  local branch="${4:-}"
+  local commit="${5:-}"
+
+  local dep_url
+  local dep_branch
+  local dep_commit
+  dep_url="$(dep_value "$code" "url")"
+  dep_branch="$(dep_value "$code" "branch")"
+  dep_commit="$(dep_value "$code" "commit")"
+  if [[ -n "$dep_url" ]]; then
+    url="$dep_url"
+  fi
+  if [[ -n "$dep_branch" ]]; then
+    branch="$dep_branch"
+  fi
+  if [[ -n "$dep_commit" ]]; then
+    commit="$dep_commit"
+  fi
+
   if [[ -d "$path" ]]; then
     return 0
   fi
@@ -164,6 +204,12 @@ ensure_repo() {
   fi
   log "  Cloning $code into $path..."
   if git clone --recursive "$url" "$path"; then
+    if [[ -n "$commit" ]]; then
+      git -C "$path" checkout "$commit" >/dev/null 2>&1 || true
+    elif [[ -n "$branch" ]]; then
+      git -C "$path" checkout "$branch" >/dev/null 2>&1 || true
+    fi
+    git -C "$path" submodule update --init --recursive >/dev/null 2>&1 || true
     log "  ✓ $code clone complete"
     return 0
   fi
@@ -277,22 +323,75 @@ build_solver_level12() {
     return
   fi
 
-  local flag_var="${name^^}_L1"
+  expected_count() {
+    local code="$1"
+    local level="$2"
+    python - "$code" "$level" <<'PY'
+import sys
+from database.configs import discover_code_configs
+
+code = sys.argv[1].lower()
+level = sys.argv[2]
+config = None
+for cfg in discover_code_configs():
+    if cfg.code_name.lower() == code or getattr(cfg, "github_repo", "").lower() == code:
+        config = cfg
+        break
+if not config:
+    print(0)
+    raise SystemExit
+
+if level == "1":
+    doc_map = getattr(config, "documentation_map", {}) or {}
+    print(len(doc_map))
+elif level == "2":
+    try:
+        from database.indexing.level2_constants import LEVEL2_BASE_KEYS
+        base = len(LEVEL2_BASE_KEYS)
+    except Exception:
+        base = 7
+    additional = len(getattr(config, "additional_level2_indices", {}) or {})
+    print(base + additional)
+else:
+    print(0)
+PY
+  }
+
   local count_l1
   local count_l2
+  local expected_l1
+  local expected_l2
   count_l1=$(find database/faiss/level1 -name "${name,,}_*.faiss" 2>/dev/null | wc -l || true)
   count_l2=$(find database/faiss/level2 -name "${name,,}_*.faiss" 2>/dev/null | wc -l || true)
+  expected_l1=$(expected_count "${name,,}" "1")
+  expected_l2=$(expected_count "${name,,}" "2")
 
-  if [[ $FORCE_REBUILD -eq 0 && $count_l1 -gt 0 && $count_l2 -gt 0 ]]; then
-    log "  ${name} Level 1 & 2 indices exist - skipping"
+  local build_l1=1
+  local build_l2=1
+  if [[ $FORCE_REBUILD -eq 0 ]]; then
+    if [[ $expected_l1 -gt 0 && $count_l1 -ge $expected_l1 ]]; then
+      build_l1=0
+      log "  ${name} Level 1 indices exist (${count_l1}/${expected_l1}) - skipping"
+    fi
+    if [[ $expected_l2 -gt 0 && $count_l2 -ge $expected_l2 ]]; then
+      build_l2=0
+      log "  ${name} Level 2 indices exist (${count_l2}/${expected_l2}) - skipping"
+    fi
+  fi
+
+  if [[ $build_l1 -eq 0 && $build_l2 -eq 0 ]]; then
     return
   fi
 
   log "  Building ${name} Level 1 & 2 indices..."
-  python database/scripts/build_all_indices.py --level 1 --repo "$repo" --output database/faiss "${MOCK_ARGS[@]}" \
-    && log "    ✓ ${name} Level 1 complete" || log "    ⚠️  ${name} Level 1 had issues"
-  python database/scripts/build_all_indices.py --level 2 --repo "$repo" --output database/faiss "${MOCK_ARGS[@]}" \
-    && log "    ✓ ${name} Level 2 complete" || log "    ⚠️  ${name} Level 2 had issues"
+  if [[ $build_l1 -eq 1 ]]; then
+    python database/scripts/build_all_indices.py --level 1 --repo "$repo" --output database/faiss "${MOCK_ARGS[@]}" \
+      && log "    ✓ ${name} Level 1 complete" || log "    ⚠️  ${name} Level 1 had issues"
+  fi
+  if [[ $build_l2 -eq 1 ]]; then
+    python database/scripts/build_all_indices.py --level 2 --repo "$repo" --output database/faiss "${MOCK_ARGS[@]}" \
+      && log "    ✓ ${name} Level 2 complete" || log "    ⚠️  ${name} Level 2 had issues"
+  fi
 }
 
 if should_process "pelec"; then
@@ -431,9 +530,9 @@ if [[ $UPLOAD_OPENAI -eq 1 ]]; then
   log ""
 fi
 log "Next steps:"
-log "  1. Run the demo examples:"
-log "     bash demo/run_examples.sh"
+log "  1. Try a quick run (Option 0 in README.md):"
+log "     python amrex_agent.py --prompt \"Use the AMReX Advection_AmrCore baseline as-is\" --baseline-override AMReX/Tests/Amr/Advection_AmrCore/Exec --inputs-file-strategy override --inputs-file-override inputs --indexing-strategy simple"
 log ""
-log "  2. Monitor progress:"
-log "     tail -f examples/*/generation.log"
+log "  2. Review solver-specific guidance:"
+log "     demo/<solver>/README.md (e.g., demo/pelelmex/README.md)"
 log ""

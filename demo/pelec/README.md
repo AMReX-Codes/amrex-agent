@@ -12,6 +12,8 @@ Build schema + indices for PeleC:
 bash demo/setup_demo_database.sh --code pelec
 ```
 
+If `database/schemas` and `database/faiss` already contain the prebuilt PeleC artifacts, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash in `.dependencies.json` with your local repo if you need to validate you’re on the same version.
+
 Ensure the PeleC repo is available (or set `PELEC_REPO_PATH`):
 
 ```bash
@@ -26,7 +28,7 @@ python amrex_agent.py \
   --output-dir /tmp/pele_e2e_runs \
   --indexing-strategy simple \
   --baseline-override PeleC/Exec/RegTests/PMF \
-  --dry-run \
+  --run-mode dry \
   --save-workflow
 ```
 

@@ -37,6 +37,7 @@ class TestLevel2GitMetricsSplit:
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 10
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"
@@ -76,6 +77,7 @@ class TestLevel2GitMetricsSplit:
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 10
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"
@@ -251,6 +253,7 @@ class TestLevel2SevenIndices:
         
         mock_embedder = Mock()
         mock_embedder.embed_texts.return_value = [[0.1] * 384] * 15
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
         
         builder = Level2Builder(config=TestConfig, embedder=mock_embedder)
         output_dir = tmp_path / "level2"

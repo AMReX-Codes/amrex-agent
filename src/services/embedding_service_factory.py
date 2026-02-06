@@ -12,7 +12,7 @@ Usage:
     self.embeddings = embedding_service.embeddings  # May be None
 
     if self.embeddings:
-        logger.info(" [OK] FAISS embeddings available")
+        logger.debug(" [OK] FAISS embeddings available")
     else:
         logger.warning("[WARN] FAISS embeddings not available")
 """

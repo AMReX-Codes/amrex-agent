@@ -53,7 +53,7 @@ class ValidationService:
         dict
             Dict with validity, errors, warnings, and completeness flags.
         """
-        logger.info(" Validating configuration...")
+        logger.debug(" Validating configuration...")
 
         # Convert Path objects to strings
         def path_to_str(obj):
@@ -98,16 +98,16 @@ class ValidationService:
         }
 
         if result['valid'] and result['complete']:
-            logger.info("[ OK ] Configuration valid and complete")
+            logger.debug("[ OK ] Configuration valid and complete")
         elif result['valid']:
-            logger.info("[ OK ] Configuration valid but incomplete (missing required sections)")
+            logger.debug("[ OK ] Configuration valid but incomplete (missing required sections)")
         else:
             logger.warning(f"[WARN] Found {len(result['errors'])} errors")
             for err in result['errors'][:5]:
                 logger.debug(f"       - {err}")
 
             if result.get('warnings'):
-                logger.info(f" {len(result['warnings'])} warnings")
+                logger.debug(f" {len(result['warnings'])} warnings")
                 for warn in result['warnings'][:3]:
                     logger.debug(f"       - {warn}")
 
@@ -158,7 +158,7 @@ class ValidationService:
         dict
             Dict with validity and warnings.
         """
-        logger.info(" Validating executable for job requirements...")
+        logger.debug(" Validating executable for job requirements...")
 
         result = validate_executable_for_job(
             executable_path=executable_path,
@@ -168,7 +168,7 @@ class ValidationService:
         )
 
         if result['valid']:
-            logger.info(f"[ OK ] Executable is {result['executable_type']}")
+            logger.debug(f"[ OK ] Executable is {result['executable_type']}")
         else:
             logger.warning("[WARN] Executable validation failed:")
             for w in result['warnings']:
@@ -196,7 +196,7 @@ class ValidationService:
         dict
             Recommended nodes, memory, and walltime.
         """
-        logger.info(" Estimating resource requirements...")
+        logger.debug(" Estimating resource requirements...")
 
         config_dict = parse_pele_inputs(inputs_file)
         result_json = estimate_resources(
@@ -204,7 +204,7 @@ class ValidationService:
         )
         result = json.loads(result_json)
 
-        logger.info(f"[ OK ] Recommended: {result['recommended_nodes']} nodes")
+        logger.debug(f"[ OK ] Recommended: {result['recommended_nodes']} nodes")
         logger.debug(f"       Grid: {result['grid_dims']}")
         logger.debug(f"       Cells/GPU: {result['cells_per_gpu']:,}")
 

@@ -17,6 +17,7 @@ from collections import defaultdict
 from database.configs.registry import get_feedback_physics_prefixes
 
 from src.services.rules.base import RuleViolation
+from src.utils.status_icons import icon_for_severity
 
 logger = logging.getLogger(__name__)
 
@@ -168,9 +169,9 @@ class FeedbackGenerator:
         -------
             Formatted markdown string
         """
-        icon = self._get_icon(v.severity)
+        icon = icon_for_severity(v.severity, use_emoji=True)
 
-        # Format: - 🔴 **param**: Message.
+        # Format: - [CRITICAL] **param**: Message.
         msg = f"- {icon} "
 
         if v.parameter:
@@ -183,21 +184,3 @@ class FeedbackGenerator:
             msg += f"  \n  *Suggestion:* `{v.suggested_fix}`"
 
         return msg
-
-    def _get_icon(self, severity: str) -> str:
-        """
-        Get visual icon for severity level.
-
-        Args:
-            severity: Severity string (critical, error, warning, info)
-
-        Returns
-        -------
-            Emoji icon
-        """
-        return {
-            "critical": "🔴",
-            "error": "❌",
-            "warning": "⚠️",
-            "info": "ℹ️"
-        }.get(severity.lower(), "•")

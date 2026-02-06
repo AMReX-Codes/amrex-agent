@@ -11,6 +11,8 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.run_superfacility import SuperfacilityRunner
+from src.services.run_superfacility_tools import stage_out_outputs
+from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,9 @@ def runner_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing job execution results.
     """
-    logger.info("🚀 Executing Runner Node")
+    logger.info("=" * 80)
+    logger.info("Starting Runner node")
+    logger.info("=" * 80)
 
     # ========================================
     # COMPONENT 11a: STATE VALIDATION
@@ -89,7 +93,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "error": f"Inputs file not found: {inputs_file_path}"
         }
 
-    logger.info(f"✅ Validation passed: {run_dir_path.name}")
+    logger.info(f"Validation passed: {run_dir_path.name}")
 
     # ========================================
     # COMPONENT 11b: SERVICE ORCHESTRATION
@@ -107,7 +111,45 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "error": "Missing baseline path (plan or baseline.local_path required)"
         }
 
+    compile_gate_entry = None
+    run_gate_entry = None
     try:
+        run_mode = getattr(config, "run_mode", None)
+        if run_mode is None or run_mode == "full":
+            if getattr(config, "dry_run", False):
+                run_mode = "dry"
+            else:
+                run_mode = run_mode or "full"
+        compile_gate = run_preconfirm_gate(
+            node_name="runner_compile",
+            summary_lines=[
+                "This step compiles/links the executable and prepares the run directory.",
+                f"Run directory: {run_directory}",
+                f"Inputs file: {inputs_file_path}",
+            ],
+            options=[
+                {"label": "Compile and run", "value": "compile_and_run"},
+                {"label": "Compile only (skip run)", "value": "compile_only"},
+            ],
+            enabled=getattr(config, "preconfirm_gate", False) is True,
+            allow_cancel=True,
+        )
+        compile_gate_entry = compile_gate.get("history_entry")
+        if compile_gate_entry:
+            compile_gate_entry["iteration"] = state.get("iteration", 0)
+        if compile_gate["action"] == "cancel":
+            return {
+                "mode": "terminal",
+                "error": "User canceled at pre-confirm gate.",
+                "job_status": "skipped",
+                "workflow_history": state.get("workflow_history", []) + ([compile_gate_entry] if compile_gate_entry else []),
+            }
+
+        run_after_compile = True
+        compile_selection = compile_gate.get("selection") or {}
+        if compile_selection.get("value") == "compile_only":
+            run_after_compile = False
+
         # Select runner based on environment
         if config.environment == "local":
             from src.services.run_local import LocalRunner
@@ -140,20 +182,118 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         # Extract actual run directory from setup (may be nested)
         actual_run_dir = setup_result.get('run_dir')
-        logger.info(f"✅ Job setup complete: {setup_result.get('executable')}")
+        logger.info(f"Job setup complete: {setup_result.get('executable')}")
         logger.debug(f"   Using run directory: {actual_run_dir}")
+
+        if not run_after_compile:
+            history_entry = {
+                "node": "runner",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "action": "compile_only",
+                "iteration": state.get("iteration", 0),
+                "details": {
+                    "run_dir": actual_run_dir,
+                    "executable": setup_result.get("executable"),
+                },
+            }
+            workflow_history = state.get("workflow_history", [])
+            if compile_gate_entry:
+                workflow_history = workflow_history + [compile_gate_entry]
+            return {
+                "mode": "terminal",
+                "job_status": "skipped",
+                "executable_path": setup_result.get("executable"),
+                "workflow_history": workflow_history + [history_entry],
+            }
 
         # Submit job (Runner Node: Script Generation)
         # Use the ACTUAL run directory returned by setup, not the parent
-        if config.environment == "local":
-            submit_result = runner.submit(
-                run_directory=actual_run_dir,
-                nodes=getattr(config, "mpi_ranks", 1)
-            )
-        else:
-            submit_result = runner.submit(
-                run_directory=actual_run_dir
-            )
+        run_gate = run_preconfirm_gate(
+            node_name="runner_submit",
+            summary_lines=[
+                "This step submits the job to run.",
+                f"Run directory: {actual_run_dir}",
+            ],
+            options=[{"label": "Submit run", "value": "run_now"}],
+            enabled=getattr(config, "preconfirm_gate", False) is True,
+            allow_cancel=True,
+        )
+        run_gate_entry = run_gate.get("history_entry")
+        if run_gate_entry:
+            run_gate_entry["iteration"] = state.get("iteration", 0)
+        if run_gate["action"] == "cancel":
+            workflow_history = state.get("workflow_history", [])
+            if compile_gate_entry:
+                workflow_history = workflow_history + [compile_gate_entry]
+            if run_gate_entry:
+                workflow_history = workflow_history + [run_gate_entry]
+            return {
+                "mode": "terminal",
+                "error": "User canceled at pre-confirm gate.",
+                "job_status": "skipped",
+                "workflow_history": workflow_history,
+            }
+        submit_kwargs = {"run_directory": actual_run_dir}
+        submit_sig = None
+        try:
+            submit_sig = inspect.signature(runner.submit)
+        except (TypeError, ValueError):
+            submit_sig = None
+
+        if submit_sig:
+            params = submit_sig.parameters
+            if "nodes" in params:
+                submit_kwargs["nodes"] = getattr(config, "mpi_ranks", 1)
+            if "run_mode" in params:
+                submit_kwargs["run_mode"] = run_mode
+            if "dry_run" in params:
+                submit_kwargs["dry_run"] = getattr(config, "dry_run", False)
+            if "case_dir" in params:
+                submit_kwargs["case_dir"] = case_dir
+
+        submit_result = runner.submit(**submit_kwargs)
+
+        if config.environment != "local":
+            monitor_enabled = getattr(config, "monitor_job", True)
+            job_status = submit_result.get("job_status")
+            monitor_states = {None, "queued", "pending", "running", "submitted"}
+            if (
+                not getattr(config, "dry_run", False)
+                and monitor_enabled
+                and submit_result.get("job_id")
+                and job_status in monitor_states
+                and hasattr(runner, "monitor")
+            ):
+                final_state = runner.monitor(
+                    job_id=submit_result["job_id"],
+                    method=submit_result.get("method", "sbatch"),
+                )
+                submit_result["job_status"] = final_state
+                submit_result["final_state"] = final_state
+                if (
+                    getattr(config, "stage_out_outputs", True)
+                    and submit_result.get("remote_run_dir")
+                ):
+                    stage_out_result = stage_out_outputs(
+                        remote_run_dir=submit_result["remote_run_dir"],
+                        local_run_dir=actual_run_dir,
+                        system=getattr(config, "environment", "perlmutter"),
+                    )
+                    submit_result["stage_out"] = stage_out_result
+                    if stage_out_result.get("errors"):
+                        logger.warning(
+                            "Stage-out completed with errors: %s",
+                            stage_out_result["errors"],
+                        )
+
+        final_state = None
+        method = submit_result.get("method")
+        if final_state is None and run_mode == "full" and method not in {"dry_run", "stage_only"}:
+            job_id = submit_result.get("job_id")
+            job_status = submit_result.get("job_status")
+            monitor_states = {None, "queued", "pending", "running", "submitted"}
+            if job_id and hasattr(runner, "monitor") and job_status in monitor_states:
+                final_state = runner.monitor(job_id, method=method or "sbatch")
 
         # ========================================
         # COMPONENT 11e: OUTPUT MAPPING (Complete)
@@ -162,21 +302,58 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         job_id = submit_result.get("job_id") or "dry_run_placeholder"
 
         # Create structured history entry (Fix 11 - canonical format)
+        action = "job_submitted"
+        if run_mode == "dry":
+            action = "job_dry_run"
+        elif run_mode == "stage":
+            action = "job_staged"
         history_entry = {
             "node": "runner",
             "timestamp": datetime.utcnow().isoformat() + "Z",
-            "action": "job_submitted",
+            "action": action,
             "iteration": state.get("iteration", 0),
             "details": {
                 "job_id": job_id,
-                "script_path": submit_result.get("script_path")
+                "script_path": submit_result.get("script_path"),
+                "run_directory": str(actual_run_dir),
             }
         }
 
         # Get actual job status from submit result
         actual_status = submit_result.get("job_status", "completed")
+        if final_state:
+            state_str = str(final_state).upper()
+            failed_states = {
+                "FAILED",
+                "CANCELLED",
+                "TIMEOUT",
+                "NODE_FAIL",
+                "OUT_OF_MEMORY",
+                "BOOT_FAIL",
+                "DEADLINE",
+                "PREEMPTED",
+            }
+            completed_states = {"COMPLETED", "COMPLETING", "DONE", "SUCCESS"}
+            running_states = {"RUNNING", "PENDING", "CONFIGURING"}
+            if state_str in failed_states:
+                actual_status = "failed"
+            elif state_str in completed_states:
+                actual_status = "completed"
+            elif state_str in running_states:
+                actual_status = "running"
+            else:
+                actual_status = state_str.lower()
         exit_code = submit_result.get("exit_code", 0)
 
+        workflow_history = state.get("workflow_history", [])
+        if compile_gate_entry:
+            workflow_history = workflow_history + [compile_gate_entry]
+        if run_gate_entry:
+            workflow_history = workflow_history + [run_gate_entry]
+
+        logger.info("-" * 80)
+        logger.info(f"Runner node complete ({actual_status})")
+        logger.info("-" * 80)
         return {
             "mode": "proceed",
             "executable_path": setup_result.get("executable"),  # Propagate discovered executable (Fix 4)
@@ -185,7 +362,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "job_submission_time": datetime.utcnow().isoformat() + "Z",  # Track submission time
             "job_status": actual_status,  # Use actual status from submit (completed or failed)
             "exit_code": exit_code,
-            "workflow_history": state.get("workflow_history", []) + [history_entry]
+            "workflow_history": workflow_history + [history_entry]
         }
 
     except (FileNotFoundError, PermissionError) as e:
@@ -201,10 +378,15 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             }
         }
 
+        workflow_history = state.get("workflow_history", [])
+        if compile_gate_entry:
+            workflow_history = workflow_history + [compile_gate_entry]
+        if run_gate_entry:
+            workflow_history = workflow_history + [run_gate_entry]
         return {
             "mode": "fail",
             "error": f"Executable resolution failed: {str(e)}",
-            "workflow_history": state.get("workflow_history", []) + [history_entry]
+            "workflow_history": workflow_history + [history_entry]
         }
     except Exception as e:
         logger.exception("Runner execution failed")
@@ -227,10 +409,15 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             }
         }
 
+        workflow_history = state.get("workflow_history", [])
+        if compile_gate_entry:
+            workflow_history = workflow_history + [compile_gate_entry]
+        if run_gate_entry:
+            workflow_history = workflow_history + [run_gate_entry]
         return {
             "mode": "terminal" if is_compilation_error else "analysis",
             "error": f"Runner execution failed: {error_str}",
             "compilation_failed": is_compilation_error,
             "run_status": "failed",
-            "workflow_history": state.get("workflow_history", []) + [history_entry]
+            "workflow_history": workflow_history + [history_entry]
         }

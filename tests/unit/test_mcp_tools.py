@@ -254,7 +254,7 @@ def test_mcp_run_simulation_dry_run_local(tmp_path, mcp_server_module):
         }
     )
 
-    assert result["job_status"] == "dry_run"
+    assert result["job_status"] == "completed"
     assert Path(result["run_directory"]).exists()
     assert Path(result["script_path"]).exists()
 

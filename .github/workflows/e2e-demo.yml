@@ -1,0 +1,35 @@
+name: e2e-demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: "Run e2e demo tests (requires CBORG_API_KEY and local assets)"
+        type: boolean
+        default: false
+
+jobs:
+  e2e-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: >
+      inputs.run_e2e == 'true' &&
+      secrets.CBORG_API_KEY != ''
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yaml
+          environment-name: amrex-agent-dev
+          cache-environment: true
+          cache-downloads: true
+
+      - name: Run e2e demo tests
+        env:
+          CBORG_API_KEY: ${{ secrets.CBORG_API_KEY }}
+        run: |
+          micromamba run -n amrex-agent-dev \
+            pytest -m "e2e and demo" tests/e2e/test_demo_smoke.py --tb=short -q

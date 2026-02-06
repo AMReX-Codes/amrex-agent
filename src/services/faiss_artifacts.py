@@ -91,7 +91,7 @@ def ensure_faiss_indices(
         with urlopen(download_url) as response:
             target_path.write_bytes(response.read())
         downloaded += 1
-        logger.info(f"Downloaded {rel_path}")
+        logger.debug(f"Downloaded {rel_path}")
 
     return downloaded
 

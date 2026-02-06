@@ -12,6 +12,8 @@ Features:
 """
 
 import logging
+import random
+import time
 from typing import Any
 
 from langchain_community.vectorstores import FAISS
@@ -37,14 +39,20 @@ class EmbeddingService:
             config: Agent configuration instance with FAISS settings
         """
         self.config = config
+        self._disabled = bool(getattr(config, "disable_embeddings", False))
         self.embeddings = None
         self._indices_loaded = False
         self._vector_backend = self._init_vector_backend()
         self._use_faiss_local = self._vector_backend is None
         self._faiss_download_enabled = self._should_download_faiss()
+        self._last_embed_request_ts: float | None = None
 
         # Instance-based FAISS cache (replaces global)
         self._faiss_cache: dict[str, FAISS] = {}
+
+        if self._disabled:
+            logger.debug("[Config] Embeddings disabled via disable_embeddings")
+            return
 
         # Initialize embedding model
         self._init_embeddings()
@@ -113,7 +121,7 @@ class EmbeddingService:
                 base_url=base_url,
                 manifest_url=manifest_url,
             )
-            logger.info(f"Downloaded {downloaded} FAISS artifact files")
+            logger.debug(f"Downloaded {downloaded} FAISS artifact files")
         except Exception as e:
             logger.debug(f"Warning: Failed to download FAISS artifacts: {e}")
 
@@ -217,7 +225,150 @@ class EmbeddingService:
         """
         if self.embeddings is None:
             raise RuntimeError("No embeddings initialized. Cannot embed texts.")
-        return self.embeddings.embed_documents(texts)
+        if not texts:
+            return []
+
+        rate_limit_rpm = getattr(self.config, "embedding_rate_limit_rpm", 0) or 0
+        max_attempts = getattr(self.config, "embedding_retry_max_attempts", 1) or 1
+
+        return self._embed_documents_with_policy(
+            texts,
+            rate_limit_rpm=rate_limit_rpm,
+            max_attempts=max_attempts
+        )
+
+    def expand_documents(
+        self,
+        documents: list[str],
+        metadata: list[dict[str, Any]] | None = None
+    ) -> tuple[list[str], list[dict[str, Any]]]:
+        """
+        Expand documents via chunking while keeping metadata aligned.
+        """
+        chunk_size = getattr(self.config, "embedding_chunk_size_chars", 0) or 0
+        if chunk_size <= 0 or not documents:
+            return documents, metadata or []
+
+        chunked_docs: list[str] = []
+        parent_indices: list[int] = []
+        logged = 0
+        for idx, text in enumerate(documents):
+            if len(text) <= chunk_size:
+                chunked_docs.append(text)
+                parent_indices.append(idx)
+                if logged < 5:
+                    logger.debug(
+                        "Embedding chunk (doc %s): 1 chunk, size=%s",
+                        idx,
+                        len(text),
+                    )
+                    logged += 1
+                continue
+            start = 0
+            text_len = len(text)
+            chunk_count = 0
+            while start < text_len:
+                end = min(start + chunk_size, text_len)
+                chunked_docs.append(text[start:end])
+                parent_indices.append(idx)
+                chunk_count += 1
+                if end >= text_len:
+                    break
+                start = end
+            if logged < 5:
+                logger.debug(
+                    "Embedding chunk (doc %s): %s chunks, size=%s",
+                    idx,
+                    chunk_count,
+                    chunk_size,
+                )
+                logged += 1
+
+        if not parent_indices:
+            return documents, metadata or []
+
+        base_meta = metadata or [{} for _ in documents]
+        expanded_meta: list[dict[str, Any]] = []
+        for chunk_idx, parent_idx in enumerate(parent_indices):
+            parent = base_meta[parent_idx] if parent_idx < len(base_meta) else {}
+            meta = dict(parent) if isinstance(parent, dict) else {}
+            meta["chunk_parent"] = parent_idx
+            meta["chunk_index"] = chunk_idx
+            expanded_meta.append(meta)
+        return chunked_docs, expanded_meta
+
+    def _embed_documents_with_policy(
+        self,
+        texts: list[str],
+        rate_limit_rpm: int,
+        max_attempts: int,
+    ) -> list[list[float]]:
+        batch_size = 64  # conservative default to avoid oversized requests
+        all_embeddings: list[list[float]] = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            batch_idx = (i // batch_size) + 1
+            batch_total = (len(texts) + batch_size - 1) // batch_size
+            sample = (batch[0][:10] if batch and isinstance(batch[0], str) else "")
+            if rate_limit_rpm > 0:
+                min_interval = 60.0 / rate_limit_rpm
+                now = time.monotonic()
+                if self._last_embed_request_ts is not None:
+                    elapsed = now - self._last_embed_request_ts
+                    if elapsed < min_interval:
+                        time.sleep(min_interval - elapsed)
+                self._last_embed_request_ts = time.monotonic()
+
+            attempt = 0
+            while True:
+                attempt += 1
+                try:
+                    all_embeddings.extend(self.embeddings.embed_documents(batch))
+                    if attempt > 1:
+                        logger.info(
+                            "Embedding batch %s/%s recovered after %s attempt(s) (sample='%s')",
+                            batch_idx,
+                            batch_total,
+                            attempt,
+                            sample,
+                        )
+                    break
+                except Exception as e:
+                    status_code = self._get_http_status(e)
+                    retryable = status_code in {429, 500}
+                    if not retryable or attempt >= max_attempts:
+                        raise
+                    base_delay = 1.0
+                    max_delay = 20.0
+                    backoff = 2.0
+                    delay = min(max_delay, base_delay * (backoff ** (attempt - 1)))
+                    delay += random.uniform(0.0, delay * 0.1)
+                    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                    logger.warning(
+                        "[%s] Embedding batch %s/%s failed (attempt %s/%s, status %s, sample='%s'): %s",
+                        timestamp,
+                        batch_idx,
+                        batch_total,
+                        attempt,
+                        max_attempts,
+                        status_code,
+                        sample,
+                        e,
+                    )
+                    time.sleep(delay)
+        return all_embeddings
+
+    @staticmethod
+    def _get_http_status(error: Exception) -> int | None:
+        for attr in ("status_code", "http_status"):
+            value = getattr(error, attr, None)
+            if isinstance(value, int):
+                return value
+        response = getattr(error, "response", None)
+        status = getattr(response, "status_code", None)
+        if isinstance(status, int):
+            return status
+        return None
 
     def retrieve_faiss(
         self,

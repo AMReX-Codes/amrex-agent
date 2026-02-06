@@ -56,10 +56,10 @@ class ConfigService:
         """
         # If key already set, return as-is
         if config.llm_provider == "cborg" and config.cborg_api_key:
-            logger.info(" Using CBORG_API_KEY from environment")
+            logger.debug(" Using CBORG_API_KEY from environment")
             return config
         if config.llm_provider == "alcf" and config.alcf_api_key:
-            logger.info(" Using ALCF_API_KEY from environment")
+            logger.debug(" Using ALCF_API_KEY from environment")
             return config
         
         if config.llm_provider == "cborg":
@@ -68,7 +68,7 @@ class ConfigService:
             if key_file.exists():
                 try:
                     api_key = key_file.read_text().strip()
-                    logger.info(f" Loaded CBORG_API_KEY from {key_file}")
+                    logger.debug(f" Loaded CBORG_API_KEY from {key_file}")
                     # Return new config with updated key
                     return config.model_copy(update={'cborg_api_key': api_key})
                 except Exception as e:
@@ -88,7 +88,7 @@ class ConfigService:
                 from inference_auth_token import get_access_token  # type: ignore
                 api_key = get_access_token()
                 if api_key:
-                    logger.info(" Loaded ALCF_API_KEY from inference_auth_token helper")
+                    logger.debug(" Loaded ALCF_API_KEY from inference_auth_token helper")
                     return config.model_copy(update={'alcf_api_key': api_key})
             except Exception as e:
                 logger.debug(f" ALCF helper not available or failed: {e}")
@@ -129,15 +129,18 @@ class ConfigService:
         if config.llm_provider == "cborg":
             env_model = os.getenv("CBORG_MODEL")
             if env_model:
-                logger.info(f" Using CBORG_MODEL from environment: {env_model}")
+                logger.debug(f" Using CBORG_MODEL from environment: {env_model}")
+                logger.info("Using LLM model: %s/%s", config.llm_provider, env_model)
                 return config.model_copy(update={'llm_model': env_model})
         if config.llm_provider == "alcf":
             env_model = os.getenv("ALCF_MODEL")
             if env_model:
-                logger.info(f" Using ALCF_MODEL from environment: {env_model}")
+                logger.debug(f" Using ALCF_MODEL from environment: {env_model}")
+                logger.info("Using LLM model: %s/%s", config.llm_provider, env_model)
                 return config.model_copy(update={'llm_model': env_model})
         # If model already set, use it
         if config.llm_model:
+            logger.info("Using LLM model: %s/%s", config.llm_provider, config.llm_model)
             return config
 
         # Discover and select best model
@@ -154,11 +157,11 @@ class ConfigService:
                     api_key=config.alcf_api_key,
                     base_url=base_url
                 )
-            logger.info(" Discovering available models...")
+            logger.debug(" Discovering available models...")
             models = client.models.list()
             available_models = [model.id for model in models]
 
-            logger.info(f"[ OK ] Found {len(available_models)} models")
+            logger.debug(f"[ OK ] Found {len(available_models)} models")
 
             # Prefer LBL models > Llama > Claude > GPT
             if config.llm_provider == "cborg":
@@ -195,7 +198,7 @@ class ConfigService:
                 selected_model = available_models[0]
 
             if selected_model:
-                logger.info(f" Auto-selected model: {selected_model}")
+                logger.info("Using LLM model: %s/%s", config.llm_provider, selected_model)
                 if config.llm_provider == "cborg":
                     logger.debug("       (Prefer LBL models > Anthropic > GPT)")
                 else:
@@ -255,16 +258,16 @@ class ConfigService:
             except Exception:
                 prompt = prompt
 
-            logger.info(" Testing API connection...")
+            logger.debug(" Testing API connection...")
             response = client.chat.completions.create(
                 model=config.llm_model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=5
             )
             if config.llm_provider == "cborg":
-                logger.info("[ OK ] CBORG API connection successful")
+                logger.debug("[ OK ] CBORG API connection successful")
             else:
-                logger.info("[ OK ] ALCF API connection successful")
+                logger.debug("[ OK ] ALCF API connection successful")
             logger.debug(f"       Response: {response.choices[0].message.content}")
             return True
 
@@ -291,32 +294,32 @@ class ConfigService:
         # Set PELE_REPORTS_DIR for utils.pele_tools
         if config.knowledge_base_path.exists():
             os.environ['PELE_REPORTS_DIR'] = str(config.knowledge_base_path.resolve())
-            logger.info(f" Set PELE_REPORTS_DIR={os.environ['PELE_REPORTS_DIR']}")
+            logger.debug(f" Set PELE_REPORTS_DIR={os.environ['PELE_REPORTS_DIR']}")
 
         # Set CBORG_API_KEY for utils.pele_tools (ask_pele_question uses it)
         if config.cborg_api_key:
             os.environ['CBORG_API_KEY'] = config.cborg_api_key
-            logger.info(" Set CBORG_API_KEY for pele_tools")
+            logger.debug(" Set CBORG_API_KEY for pele_tools")
 
         if config.alcf_api_key:
             os.environ['ALCF_API_KEY'] = config.alcf_api_key
-            logger.info(" Set ALCF_API_KEY for pele_tools")
+            logger.debug(" Set ALCF_API_KEY for pele_tools")
 
         if config.alcf_cluster:
             os.environ['ALCF_CLUSTER'] = config.alcf_cluster
-            logger.info(f" Set ALCF_CLUSTER={config.alcf_cluster}")
+            logger.debug(f" Set ALCF_CLUSTER={config.alcf_cluster}")
 
         if config.alcf_api_key or config.alcf_cluster or config.alcf_base_url:
             base_url = resolve_alcf_base_url(config)
             os.environ['ALCF_BASE_URL'] = base_url
-            logger.info(f" Set ALCF_BASE_URL={base_url}")
+            logger.debug(f" Set ALCF_BASE_URL={base_url}")
         # Set CBORG_MODEL if available
         if config.llm_model and config.llm_provider == "cborg":
             os.environ['CBORG_MODEL'] = config.llm_model
-            logger.info(f" Set CBORG_MODEL={config.llm_model}")
+            logger.debug(f" Set CBORG_MODEL={config.llm_model}")
         if config.llm_model and config.llm_provider == "alcf":
             os.environ['ALCF_MODEL'] = config.llm_model
-            logger.info(f" Set ALCF_MODEL={config.llm_model}")
+            logger.debug(f" Set ALCF_MODEL={config.llm_model}")
     def _load_config_file(self, config_path: Path) -> dict:
         """Load config overrides from JSON or YAML file."""
         if not config_path.exists():
@@ -385,12 +388,15 @@ class ConfigService:
         if config_path:
             overrides = self._load_config_file(Path(config_path))
             config = self._apply_overrides(config, overrides)
+            config.model_post_init(None)
 
         # Load API keys
         config = self.load_api_keys(config)
 
         # Auto-detect model
         config = self.auto_detect_model(config)
+        if config.llm_provider not in {"cborg", "alcf"} and config.llm_model:
+            logger.info("Using LLM model: %s/%s", config.llm_provider, config.llm_model)
 
         # Test connection
         self.test_llm_connection(config)

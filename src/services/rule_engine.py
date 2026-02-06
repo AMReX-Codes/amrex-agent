@@ -11,10 +11,10 @@ Architecture:
   • Auto-corrects when possible (Amendment C)
 
 Design Decisions:
-  ✅ Warn on missing validation_rules (don't crash)
-  ✅ Single-pass enforcement (not iterative)
-  ✅ Log warnings for unknown rules
-  ✅ Return corrected BaseModel from enforce()
+  - Warn on missing validation_rules (don't crash)
+  - Single-pass enforcement (not iterative)
+  - Log warnings for unknown rules
+  - Return corrected BaseModel from enforce()
 """
 
 import logging
@@ -178,7 +178,7 @@ class RuleEngine:
                 # Apply auto-correction
                 config_model = rule.auto_correct(config_model, violation)
 
-                logger.info(f"Auto-corrected: {violation.message}")
+                logger.debug(f"Auto-corrected: {violation.message}")
 
             except Exception as e:
                 # Auto-correction failed

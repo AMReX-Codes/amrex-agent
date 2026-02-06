@@ -49,7 +49,7 @@ class InputWriterService:
         self.embeddings = get_embedding_service(config)
 
         if self.embeddings.embeddings:
-            logger.info(" [OK] FAISS embeddings initialized for input writer")
+            logger.debug(" [OK] FAISS embeddings initialized for input writer")
         else:
             logger.warning("[WARN] FAISS embeddings not available")
             logger.debug("       Template retrieval will be disabled")
@@ -176,7 +176,7 @@ class InputWriterService:
         dict
             Result payload with paths and status.
         """
-        logger.info("[Input Writer] Starting Load-Modify-Write pipeline")
+        logger.debug("[Input Writer] Starting Load-Modify-Write pipeline")
 
         # Validate inputs per contract line 127-130
         if not baseline or not baseline.get("local_path"):
@@ -220,7 +220,7 @@ class InputWriterService:
 
             # 2. LOAD: Get baseline text using baseline metadata
             # Use baseline.local_path to find the inputs file
-            logger.info(f"[1/5] Loading baseline: {baseline_case}")
+            logger.debug(f"[1/5] Loading baseline: {baseline_case}")
 
             baseline_text = ""
             local_path = Path(baseline.get("local_path", ""))
@@ -364,7 +364,7 @@ class InputWriterService:
                 }
 
             # 3. HYDRATE: Create Pydantic model from text (Input Writer: Config Model Factory)
-            logger.info(f"[2/5] Creating Pydantic model for {code_name}")
+            logger.debug(f"[2/5] Creating Pydantic model for {code_name}")
 
             # Get build config
             build_config = self._get_build_config(code_name)
@@ -400,10 +400,10 @@ class InputWriterService:
                 # Extract 'parameters' section if present, otherwise use entire schema
                 if isinstance(raw_schema, dict) and 'parameters' in raw_schema:
                     schema = raw_schema['parameters']
-                    logger.info(f"Loaded schema with {len(schema)} parameters from {schema_path.name}")
+                    logger.debug(f"Loaded schema with {len(schema)} parameters from {schema_path.name}")
                 else:
                     schema = raw_schema
-                    logger.info(f"Loaded schema with {len(schema)} entries from {schema_path.name}")
+                    logger.debug(f"Loaded schema with {len(schema)} entries from {schema_path.name}")
 
             except Exception as e:
                 logger.error(f"Failed to load schema: {e}")
@@ -430,8 +430,8 @@ class InputWriterService:
                 raise
 
             # 4. MODIFY: Apply modifications (Input Writer: Config Model Factory extension)
-            logger.info(f"[InputWriter] Step 3/5: Applying {len(modifications)} modification(s)")
-            logger.info(f"[InputWriter] Modifications to apply: {modifications}")
+            logger.debug(f"[InputWriter] Step 3/5: Applying {len(modifications)} modification(s)")
+            logger.debug(f"[InputWriter] Modifications to apply: {modifications}")
 
             baseline_params = [
                 line.split('=')[0].strip()
@@ -455,11 +455,11 @@ class InputWriterService:
             remap_mapping = modification_result.get("remap_mapping", {})
             applied_params = set(modification_result.get("applied_params", []))
 
-            logger.info("📊 [DATA TRANSFER] Received result from ConfigModelFactory")
-            logger.info(f"📊 [DATA TRANSFER] Result keys: {list(modification_result.keys())}")
-            logger.info(f"📊 [DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
-            logger.info(f"📊 [DATA TRANSFER]   - available_schema_params: {len(available_params)}")
-            logger.info(f"📊 [DATA TRANSFER]   - remap_success_count: {remap_count}")
+            logger.debug("[DATA TRANSFER] Received result from ConfigModelFactory")
+            logger.debug(f"[DATA TRANSFER] Result keys: {list(modification_result.keys())}")
+            logger.debug(f"[DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
+            logger.debug(f"[DATA TRANSFER]   - available_schema_params: {len(available_params)}")
+            logger.debug(f"[DATA TRANSFER]   - remap_success_count: {remap_count}")
 
             # Check if we have unresolved parameters that need architect attention
             if unresolved:
@@ -468,12 +468,12 @@ class InputWriterService:
                     f"(remap fixed {remap_count}): {[p[0] for p in unresolved]}"
                 )
 
-            logger.info("[InputWriter] Applied modifications completed")
+            logger.debug("[InputWriter] Applied modifications completed")
 
             # 5. ENFORCE: Validate and auto-correct (Input Writer: Rule Engine Orchestrator)
             # SKIP for 0 modifications
             if modifications:
-                logger.info("[InputWriter] Step 4/5: Validating with RuleEngine")
+                logger.debug("[InputWriter] Step 4/5: Validating with RuleEngine")
                 code_registry = {}
                 if hasattr(self.config, "get_code_registry"):
                     code_registry = self.config.get_code_registry()
@@ -489,10 +489,10 @@ class InputWriterService:
                     build_config=build_config
                 )
             else:
-                logger.info("[InputWriter] Step 4/5: Skipping RuleEngine (0 modifications)")
+                logger.debug("[InputWriter] Step 4/5: Skipping RuleEngine (0 modifications)")
 
             # 6. SERIALIZE: Write output (Input Writer: Inputs File Writer)
-            logger.info("[5/5] Serializing to inputs file")
+            logger.debug("[5/5] Serializing to inputs file")
 
             serialize_kwargs = {
                 "original_text": baseline_text,  # Preserve formatting
@@ -508,7 +508,7 @@ class InputWriterService:
             # Write to file
             inputs_path = output_dir / "inputs"
             inputs_path.write_text(output_text)
-            logger.info(f"Wrote {len(output_text)} bytes to {inputs_path}")
+            logger.debug(f"Wrote {len(output_text)} bytes to {inputs_path}")
 
             # Copy auxiliary files if method exists
             if hasattr(self, '_copy_auxiliary_files'):
@@ -517,7 +517,7 @@ class InputWriterService:
                 baseline_info = {'path': baseline_case, 'code': code_name}
                 self._copy_auxiliary_files(baseline_info, output_dir)
 
-            logger.info("[Input Writer] Pipeline complete ✓")
+            logger.debug("[Input Writer] Pipeline complete")
 
             result = {
                 'inputs_path': str(inputs_path),
@@ -535,9 +535,9 @@ class InputWriterService:
             # Add resolution feedback if there were unresolved parameters
             if unresolved:
                 result['requires_parameter_resolution'] = True
-                logger.info("📊 [DATA TRANSFER] Adding resolution feedback to result")
-                logger.info(f"📊 [DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
-                logger.info(f"📊 [DATA TRANSFER]   - available_schema_params: {len(available_params)}")
+                logger.debug("[DATA TRANSFER] Adding resolution feedback to result")
+                logger.debug(f"[DATA TRANSFER]   - unresolved_parameters: {len(unresolved)}")
+                logger.debug(f"[DATA TRANSFER]   - available_schema_params: {len(available_params)}")
                 feedback = ConfigModelFactory.build_parameter_resolution_feedback(
                     unresolved_params=unresolved,
                     config_service=self.config,

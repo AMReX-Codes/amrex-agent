@@ -13,21 +13,15 @@ import faiss
 import numpy as np
 import logging
 
+from database.indexing.level2_constants import LEVEL2_WEIGHTS
+
 logger = logging.getLogger(__name__)
 
 class Level2Searcher:
     """Multi-index case metadata searcher."""
     
     # PRD Section 5.4: Exact weights
-    WEIGHTS = {
-        'physics_parameters': 0.30,
-        'grid_specifications': 0.20,
-        'development_activity': 0.10,
-        'configuration_complexity': 0.10,
-        'path_hierarchy': 0.15,
-        'domain_models': 0.10,
-        'resource_requirements': 0.05,
-    }
+    WEIGHTS = LEVEL2_WEIGHTS
     
     def __init__(self, code: str, index_dir: Path, embedder=None):
         """
