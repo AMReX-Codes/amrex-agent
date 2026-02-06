@@ -10,6 +10,23 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
+    """Decide if runs need remote staging based on target vs detected environment."""
+    if target_env is not None:
+        target_env = target_env.strip().lower()
+    if detected_env is not None:
+        detected_env = detected_env.strip().lower()
+    if target_env != "perlmutter":
+        return False
+    if detected_env is None:
+        return False
+    return detected_env != "perlmutter"
+def _default_superfacility_account() -> str:
+    return (
+        os.getenv("SBATCH_ACCOUNT")
+        or "mp111_g"
+    )
+
 def detect_environment(env: dict = None) -> str:
     """Detect if running on Perlmutter, locally, or as MCP.
     
@@ -35,6 +52,28 @@ def detect_environment(env: dict = None) -> str:
         return 'mcp'
     else:
         return 'local'
+
+
+def detect_hpc_system() -> tuple[str, str]:
+    """Detect HPC site/system using environment and hostname hints."""
+    import socket
+
+    nersc_host = os.environ.get("NERSC_HOST")
+    if nersc_host and nersc_host in ["perlmutter", "alvarez", "muller"]:
+        return "nersc", "perlmutter"
+
+    if os.environ.get("LMOD_SITE_NAME") == "OLCF":
+        host_name = socket.getfqdn()
+        if "frontier" in host_name:
+            return "olcf", "frontier"
+        if "crusher" in host_name:
+            return "olcf", "crusher"
+
+    fqdn = socket.getfqdn()
+    if "alcf.anl.gov" in fqdn and "polaris" in fqdn:
+        return "alcf", "polaris"
+
+    return "unknown", "unknown"
 
 
 def resolve_database_path(relative_path: str) -> Path:
@@ -375,6 +414,11 @@ class AMReXAgentConfig(BaseModel):
         description="If True, use LLM assistance to refine retry guidance for inputs/baseline switching."
     )
 
+    disable_embeddings: bool = Field(
+        default=False,
+        description="Disable embedding initialization and FAISS usage (forces non-embedding paths)."
+    )
+
     baseline_switch_after_retries: int = Field(
         default=3,
         ge=1,
@@ -392,6 +436,12 @@ class AMReXAgentConfig(BaseModel):
     dry_run: bool = Field(
         default=False,
         description="If True, generate scripts without executing external runs."
+    )
+
+    run_mode: Literal["dry", "stage", "submit", "full"] = Field(
+        default="full",
+        description="Run execution strategy: dry (scripts only), stage (stage inputs only), "
+                    "submit (submit job only), full (stage + submit)."
     )
 
     # === Phase 4: Container and Analysis Configuration ===
@@ -432,7 +482,10 @@ class AMReXAgentConfig(BaseModel):
 
     # === Superfacility API ===
     # Superfacility
-    superfacility_account: str = "mp111_g"  # Default NERSC account
+    superfacility_account: str = Field(
+        default_factory=_default_superfacility_account,
+        description="Default NERSC account to use for submission."
+    )
     
     superfacility_client_id: Optional[str] = Field(
         default_factory=lambda: os.getenv("SUPERFACILITY_CLIENT_ID"),
@@ -445,6 +498,43 @@ class AMReXAgentConfig(BaseModel):
     superfacility_endpoint: str = Field(
         default="https://api.nersc.gov/api/v1.2",
         description="Superfacility API endpoint"
+    )
+
+    remote_output_dir: Optional[Path] = Field(
+        default=None,
+        description="Remote output directory for staged runs (defaults to output_dir)."
+    )
+    remote_run_dir: Optional[Path] = Field(
+        default=None,
+        description="Optional fixed remote run directory (overrides remote_output_dir/run_name)."
+    )
+    remote_executable_path: Optional[Path] = Field(
+        default=None,
+        description="Absolute path to a prebuilt executable on the remote system."
+    )
+    remote_executable_template: Optional[str] = Field(
+        default=None,
+        description=(
+            "Template for remote executable path "
+            "(supports {case_dir}, {case_dir_name}, {repo_name}, {solver_name})."
+        )
+    )
+    remote_executable_find: bool = Field(
+        default=True,
+        description="If True, attempt to discover a remote executable when template/path are not set."
+    )
+    remote_staging_method: str = Field(
+        default="auto",
+        description="Remote staging method: auto (sfapi_client then REST upload), "
+                    "sfapi_client, or rest_upload."
+    )
+    monitor_job: bool = Field(
+        default=True,
+        description="Monitor remote submissions until completion."
+    )
+    stage_out_outputs: bool = Field(
+        default=True,
+        description="Stage back output logs and plotfiles after remote completion."
     )
     
     # === Workflow Settings ===
@@ -501,6 +591,16 @@ class AMReXAgentConfig(BaseModel):
         from database.configs import discover_code_configs
         return {c.code_name: c for c in discover_code_configs()}
 
+    def detect_hpc_system(self) -> tuple[str, str]:
+        """Detect HPC site/system using shared config helper."""
+        return detect_hpc_system()
+
+    def should_stage_run(self, detected_env: str | None = None) -> bool:
+        """Decide if a run should be staged based on target vs detected environment."""
+        if detected_env is None:
+            detected_env = detect_environment()
+        return should_stage_run(getattr(self, "environment", None), detected_env)
+
     @property
     def amrex_agent_root(self) -> Path:
         """Root directory of amrex_agent (where src/ is).
@@ -518,6 +618,40 @@ class AMReXAgentConfig(BaseModel):
 
     def model_post_init(self, __context):
         """Populate repositories dict from individual paths."""
+        fields_set = getattr(self, "model_fields_set", set())
+        if self.indexing_strategy == "override_static":
+            if "disable_embeddings" not in fields_set and not self.disable_embeddings:
+                self.disable_embeddings = True
+                logger.info("[Config] override_static sets disable_embeddings=True by default")
+            elif "disable_embeddings" in fields_set and not self.disable_embeddings:
+                logger.warning(
+                    "[Config] override_static with disable_embeddings=False; embeddings may initialize unexpectedly"
+                )
+        elif "disable_embeddings" in fields_set and self.disable_embeddings:
+            logger.warning(
+                "[Config] disable_embeddings=True while indexing_strategy=%s; embeddings will be disabled",
+                self.indexing_strategy,
+            )
+
+        allowed_run_modes = {"dry", "stage", "submit", "full"}
+        run_mode = getattr(self, "run_mode", "full")
+        if run_mode not in allowed_run_modes:
+            raise ValueError(f"Invalid run_mode: {run_mode}")
+        run_mode_set = "run_mode" in fields_set
+        dry_run_set = "dry_run" in fields_set
+        if run_mode_set:
+            if run_mode == "dry" and not self.dry_run:
+                self.dry_run = True
+            elif run_mode != "dry" and self.dry_run:
+                if dry_run_set:
+                    logger.warning(
+                        "[Config] dry_run=True ignored because run_mode=%s",
+                        run_mode,
+                    )
+                self.dry_run = False
+        elif self.dry_run:
+            self.run_mode = "dry"
+
         self.repositories = {
             'PeleC': self.pelec_repo_path,
             'PeleLMeX': self.pelelmex_repo_path,

@@ -151,6 +151,10 @@ python amrex_agent.py \
   --verbose
 ```
 
+Note: This prompt-file demo can hit the reviewer retry limit if parameter
+resolution fails. For a more reliable run, use the inline prompt or the
+config override example instead.
+
 Example user requirements file format (`demo/amrex/user_requirement.txt`):
 ```
 AMReX advection test
@@ -227,11 +231,12 @@ python amrex_agent.py \
   --output-dir /tmp/amrex_e2e_runs \
   --indexing-strategy simple \
   --baseline-override AMReX/Tests/Amr/Advection_AmrCore/Exec \
-  --dry-run \
+  --run-mode dry \
   --save-workflow
 ```
 
 For PeleC-specific examples, see `demo/pelec/README.md`.
+For Superfacility (SFAPI) Perlmutter notes, see `demo/superfacility/README.md`.
 
 ## Command Line Options
 
@@ -245,6 +250,7 @@ Optional:
   --save-workflow           Save workflow_history.json
   --save-transcript         Save agent reasoning log
   --verbose, -v             Enable debug output
+  --run-mode MODE           Run strategy: dry, stage, submit, full (default: full)
   --indexing-strategy       Choose "simple", "hierarchical", or "override_static"
   --inputs-file-strategy    Choose inputs selection: oldest/newest/smallest/llm_compare/override
   --inputs-file-override    Explicit inputs file (absolute path or relative to case dir)

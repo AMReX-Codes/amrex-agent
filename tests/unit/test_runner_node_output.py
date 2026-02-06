@@ -53,7 +53,7 @@ class TestRunnerNodeOutputMapping:
         (run_dir / "inputs").touch()
         
         return {
-            "config": Mock(dry_run=False, environment="perlmutter"),
+            "config": Mock(dry_run=False, run_mode="full", environment="perlmutter"),
             "ready_to_run": True,
             "run_directory": str(run_dir),
             "inputs_file_path": str(run_dir / "inputs"),

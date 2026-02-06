@@ -241,6 +241,10 @@ def setup_logging(parsed_args) -> None:
         os.getenv("ALCF_API_KEY"),
         os.getenv("OPENAI_API_KEY"),
         os.getenv("ANTHROPIC_API_KEY"),
+        os.getenv("SUPERFACILITY_CLIENT_ID"),
+        os.getenv("SUPERFACILITY_SECRET"),
+        os.getenv("NERSC_API_TOKEN"),
+        os.getenv("SFAPI_TOKEN"),
     ]
     redactor = RedactingFilter(secrets)
     handler.addFilter(redactor)
@@ -397,6 +401,12 @@ def parse_arguments(args=None):
         type=str,
         help='Path to custom configuration file'
     )
+    parser.add_argument(
+        '--environment',
+        type=str,
+        choices=['local', 'perlmutter', 'mcp'],
+        help='Override environment detection (local, perlmutter, mcp)'
+    )
 
     # Flags
     parser.add_argument(
@@ -412,7 +422,12 @@ def parse_arguments(args=None):
     parser.add_argument(
         '--dry-run',
         action='store_true',
-        help='Generate scripts but do not submit job'
+        help='Generate scripts but do not submit job (deprecated; use --run-mode dry)'
+    )
+    parser.add_argument(
+        '--run-mode',
+        choices=['dry', 'stage', 'submit', 'full'],
+        help='Run execution strategy: dry, stage, submit, full'
     )
     parser.add_argument(
         '--save-workflow',
@@ -600,8 +615,15 @@ def main(args=None):
         if parsed_args.output_dir:
             config.output_dir = Path(parsed_args.output_dir)
 
-        if parsed_args.dry_run:
+        if parsed_args.run_mode:
+            config.run_mode = parsed_args.run_mode
+            config.dry_run = parsed_args.run_mode == "dry"
+        elif parsed_args.dry_run:
             config.dry_run = True
+            config.run_mode = "dry"
+
+        if parsed_args.environment:
+            config.environment = parsed_args.environment
 
         if hasattr(parsed_args, 'indexing_strategy') and parsed_args.indexing_strategy:
             config.indexing_strategy = parsed_args.indexing_strategy
@@ -651,7 +673,7 @@ def main(args=None):
                     workflow_path = base_dir / f"workflow_history_{timestamp}.json"
                 with open(workflow_path, 'w') as f:
                     json.dump(result.get('workflow_history', []), f, indent=2, default=str)
-                logger.info(f"📝 Workflow history saved to {workflow_path}")
+                logger.info(f"Workflow history saved to {workflow_path}")
             except Exception as e:
                 logger.warning(f"Failed to save workflow history: {e}")
 
@@ -720,7 +742,7 @@ def main(args=None):
 
                 with open(transcript_path, 'w') as f:
                     f.writelines(transcript_lines)
-                logger.info(f"📝 Agent transcript saved to {transcript_path}")
+                logger.info(f"Agent transcript saved to {transcript_path}")
             except Exception as e:
                 logger.warning(f"Failed to save transcript: {e}")
 
@@ -730,22 +752,22 @@ def main(args=None):
         else:
             status = result.get("job_status", "unknown")
             if status == "completed":
-                logger.info("✅ Workflow completed successfully")
+                logger.info("Workflow completed successfully")
             elif status == "failed":
-                logger.error(f"❌ Workflow failed: {result.get('error', 'Unknown error')}")
+                logger.error(f"Workflow failed: {result.get('error', 'Unknown error')}")
 
         # Exit code based on status
         if result.get("job_status") == "failed":
             sys.exit(1)
 
     except FileNotFoundError as e:
-        logger.error(f"❌ {str(e)}")
+        logger.error(str(e))
         sys.exit(1)
     except ValueError as e:
-        logger.error(f"❌ {str(e)}")
+        logger.error(str(e))
         sys.exit(1)
     except Exception as e:
-        logger.error(f"❌ Error: {str(e)}")
+        logger.error(f"Error: {str(e)}")
         if parsed_args.verbose:
             import traceback
             traceback.print_exc()
@@ -918,7 +940,7 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
     # 1. Initialize State
     try:
         initial_state = initialize_state(user_requirement, config)
-        logger.info("🚀 Starting AMReXAgent Workflow")
+        logger.info("Starting AMReXAgent workflow")
         logger.debug(f"Prompt: {user_requirement[:50]}...")
     except Exception as e:
         logger.error(f"State initialization failed: {e}")
@@ -952,12 +974,12 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
         final_state = app.invoke(initial_state, run_config)
 
         status = final_state.get("job_status", "unknown")
-        logger.info(f"✅ Workflow execution complete. Status: {status}")
+        logger.info(f"Workflow execution complete. Status: {status}")
         return final_state
 
     except GraphRecursionError:
         error_msg = "Workflow exceeded recursion limit (Infinite Loop Detected)"
-        logger.error(f"❌ {error_msg}")
+        logger.error(error_msg)
         return {
             **initial_state,
             "error": error_msg,
@@ -965,7 +987,7 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
             "mode": "fail"
         }
     except Exception as e:
-        logger.exception("❌ Unhandled workflow error")
+        logger.exception("Unhandled workflow error")
         return {
             **initial_state,
             "error": str(e),

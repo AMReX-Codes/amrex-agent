@@ -48,6 +48,7 @@ class TestCLIEntryPoint:
             config = Mock()
             config.output_dir = Path("/default/output")
             config.dry_run = False
+            config.run_mode = "full"
             mock.return_value = config
             yield mock
 
@@ -122,7 +123,7 @@ class TestCLIEntryPoint:
         """
         GIVEN: --dry-run flag
         WHEN: CLI invoked
-        THEN: Config.dry_run = True
+        THEN: Config.dry_run = True and run_mode = dry
         """
         from src.main import main
         
@@ -131,6 +132,24 @@ class TestCLIEntryPoint:
         
         config_arg = mock_run_agent.call_args[0][1]
         assert config_arg.dry_run is True
+        assert config_arg.run_mode == "dry"
+
+    def test_run_mode_flag_sets_config(self, mock_run_agent, mock_load_config):
+        """
+        GIVEN: --run-mode flag
+        WHEN: CLI invoked
+        THEN: Config.run_mode set and dry_run reflects it
+        """
+        from src.main import main
+
+        with patch('sys.argv', ['amrex_agent', '--prompt', 'test', '--run-mode', 'stage']):
+            main()
+
+        config_arg = mock_run_agent.call_args[0][1]
+        assert config_arg.run_mode == "stage"
+        assert config_arg.dry_run is False
+
+
 
     def test_verbose_flag_enables_debug_logging(self, mock_run_agent, mock_load_config):
         """

@@ -6,6 +6,7 @@ This is ONE way to run - alternatives: run_local.py, run_container.py.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,11 @@ from amrex_tools import copy_to_rundir, setup_run_directory
 from src.services.build_tools import compile_amrex
 from src.services.run_superfacility_tools import (
     generate_slurm_script,
+    _load_sfapi_key_file,
+    find_remote_executable,
     monitor_job,
+    stage_out_outputs,
+    stage_run_directory,
     submit_job,
 )
 
@@ -117,30 +122,87 @@ class SuperfacilityRunner:
         """
         if not case_dir.exists():
             return None
-
-        # Find all .ex files
-        executables = list(case_dir.glob('*.ex'))
-
+        executables = list(case_dir.glob("*.ex"))
         if not executables:
             return None
 
-        # Filter by requirements
         for exe in executables:
             name_lower = exe.name.lower()
-
-            # Check MPI
-            if require_mpi and 'mpi' not in name_lower:
+            has_mpi = "mpi" in name_lower
+            has_cuda = "cuda" in name_lower
+            if require_mpi and not has_mpi:
                 continue
-
-            # Check CUDA
-            if require_cuda and 'cuda' not in name_lower:
+            if require_cuda and not has_cuda:
                 continue
-
-            # Match!
             return exe
 
+        return executables[0]
+
+    def _resolve_remote_executable(
+        self,
+        case_dir: str | Path | None,
+        system: str = "perlmutter",
+    ) -> Path | None:
+        if case_dir is None:
+            return None
+
+        case_dir_path = Path(case_dir)
+        relative_case_dir = None
+        repo_name = None
+        for repo_path in getattr(self.config, "repositories", {}).values():
+            if not repo_path:
+                continue
+            try:
+                rel = case_dir_path.resolve().relative_to(Path(repo_path).resolve())
+            except (ValueError, FileNotFoundError):
+                continue
+            relative_case_dir = str(rel)
+            repo_name = Path(repo_path).name
+            break
+
+        case_dir_value = relative_case_dir or case_dir_path.name
+        case_dir_name = case_dir_path.name
+
+        template = getattr(self.config, "remote_executable_template", None)
+        if template:
+            try:
+                rendered = template.format(
+                    case_dir=case_dir_value,
+                    case_dir_name=case_dir_name,
+                    repo_name=repo_name,
+                    solver_name=repo_name,
+                )
+            except KeyError as exc:
+                raise ValueError(f"remote_executable_template missing key: {exc}") from exc
+            rendered = os.path.expandvars(rendered)
+            rendered_path = Path(rendered)
+            if rendered_path.suffix == ".ex":
+                return rendered_path
+            if getattr(self.config, "remote_executable_find", False):
+                found = find_remote_executable(
+                    remote_case_dir=str(rendered_path),
+                    system=system,
+                )
+                return Path(found) if found else None
+            return None
+
+        if not getattr(self.config, "remote_executable_find", False):
+            return None
+
+        account = os.getenv("SBATCH_ACCOUNT")
+        user = os.getenv("USER")
+        if not account or not user or not repo_name or not relative_case_dir:
+            return None
+
+        remote_case_dir = Path("/global/cfs/cdirs") / account / user / repo_name / relative_case_dir
+        found = find_remote_executable(
+            remote_case_dir=str(remote_case_dir),
+            system=system,
+        )
+        return Path(found) if found else None
+
         # No exact match - return first executable if any
-        return executables[0] if executables else None
+        return None
 
     def setup_job(self,
                   inputs_path: str | Path | None = None,
@@ -184,37 +246,57 @@ class SuperfacilityRunner:
         if output_dir is None:
             output_dir = self.config.output_dir
 
-        # Create run directory
-        run_dir = setup_run_directory.invoke({
-            'base_name': base_name,
-            'base_dir': str(output_dir) if output_dir else None
-        })
-        logger.info(f" Run directory: {run_dir}")
+        output_dir_path = Path(output_dir) if output_dir else None
+        if output_dir_path and output_dir_path.exists() and (output_dir_path / "inputs").exists():
+            run_dir = output_dir_path
+            logger.info(f" Using existing run directory: {run_dir}")
+        else:
+            # Create run directory
+            run_dir = setup_run_directory.invoke({
+                'base_name': base_name,
+                'base_dir': str(output_dir) if output_dir else None
+            })
+            logger.info(f" Run directory: {run_dir}")
 
         # Find/compile executable if not provided
         if executable_path is None:
             if case_dir is None:
                 raise ValueError("Must provide either executable_path or case_dir")
 
-            executable_path = self.find_or_compile_executable(
-                case_dir,
-                require_mpi=True,  # Default: assume multi-rank
-                require_cuda=True  # Default: assume GPU
+            remote_resolution_enabled = bool(
+                getattr(self.config, "remote_executable_path", None)
+                or getattr(self.config, "remote_executable_template", None)
+                or getattr(self.config, "remote_executable_find", False)
             )
+            if getattr(self.config, "environment", None) in {"local", None}:
+                remote_resolution_enabled = False
+
+            if remote_resolution_enabled:
+                logger.info(" Skipping local compile; remote executable resolution enabled.")
+                executable_path = None
+            else:
+                executable_path = self.find_or_compile_executable(
+                    case_dir,
+                    require_mpi=True,  # Default: assume multi-rank
+                    require_cuda=True  # Default: assume GPU
+                )
+
+        run_dir_str = str(run_dir)
 
         # Copy files to run directory
+        executable_arg = executable_path or ""
         if inputs_path:
             # Explicit inputs file
             files = copy_to_rundir.invoke({
-                'run_dir': run_dir,
-                'executable_path': executable_path,
+                'run_dir': run_dir_str,
+                'executable_path': executable_arg,
                 'inputs_path': str(inputs_path)
             })
         elif case_dir:
             # Auto-find inputs in case_dir
             files = copy_to_rundir.invoke({
-                'run_dir': run_dir,
-                'executable_path': executable_path,
+                'run_dir': run_dir_str,
+                'executable_path': executable_arg,
                 'inputs_dir': str(case_dir)
             })
         else:
@@ -223,7 +305,7 @@ class SuperfacilityRunner:
         logger.info(f"[ OK ] Copied {len(files)} files to run directory")
 
         return {
-            'run_dir': run_dir,
+            'run_dir': run_dir_str,
             'executable': executable_path,
             'inputs': files.get('inputs'),
             'files': files
@@ -237,7 +319,9 @@ class SuperfacilityRunner:
                qos: str = "regular",
                constraint: str = "gpu&hbm40g",
                system: str = "perlmutter",
-               dry_run: bool = False) -> dict[str, Any]:
+               dry_run: bool = False,
+               run_mode: str | None = None,
+               case_dir: str | Path | None = None) -> dict[str, Any]:
         """
         Submit job via Superfacility API (with sbatch fallback).
 
@@ -261,6 +345,8 @@ class SuperfacilityRunner:
             System name (perlmutter).
         dry_run : bool, optional
             If True, generate script but don't submit.
+        run_mode : str or None, optional
+            Execution strategy (dry/stage/submit/full). Overrides dry_run when set.
 
         Returns
         -------
@@ -274,27 +360,76 @@ class SuperfacilityRunner:
         # Use config account if not provided
         if account is None:
             account = self.config.superfacility_account or "mp111_g"
+        account = os.path.expandvars(str(account))
 
         # Find executable in run directory
         exe_files = list(run_dir.glob("*.ex"))
-        if not exe_files:
-            raise FileNotFoundError(f"No executable found in {run_dir}")
-
-        executable = exe_files[0].name
+        executable = exe_files[0].name if exe_files else None
+        remote_executable_path = getattr(self.config, "remote_executable_path", None)
+        if remote_executable_path:
+            remote_executable_path = Path(os.path.expandvars(str(remote_executable_path)))
+        elif getattr(self.config, "remote_executable_template", None) or getattr(self.config, "remote_executable_find", True):
+            remote_executable_path = self._resolve_remote_executable(
+                case_dir=case_dir,
+                system=system,
+            )
+        if remote_executable_path is None and executable is None:
+            raise FileNotFoundError(
+                f"No executable found in {run_dir} and remote executable could not be resolved. "
+                "Set remote_executable_path or remote_executable_template."
+            )
 
         # Generate SLURM script
+        if remote_executable_path:
+            logger.info(f" Using remote executable: {remote_executable_path}")
+        else:
+            logger.info(f" Using local executable: {executable}")
+
         params = {
             'nodes': nodes,
             'walltime': walltime,
             'account': account,
             'qos': qos,
             'constraint': constraint,
-            'executable': executable
+            'executable': str(remote_executable_path) if remote_executable_path else executable
         }
 
+        effective_mode = run_mode or ("dry" if dry_run else "full")
+
+        try:
+            if hasattr(self.config, "should_stage_run"):
+                remote_staging = self.config.should_stage_run()
+            else:
+                from src.config import detect_environment, should_stage_run
+                remote_staging = should_stage_run(
+                    getattr(self.config, "environment", None),
+                    detect_environment(),
+                )
+        except Exception:
+            remote_staging = False
+        remote_run_dir = None
+        exclude_names = None
+        if remote_staging:
+            remote_output_dir = getattr(self.config, "remote_output_dir", None)
+            if remote_output_dir is None:
+                remote_output_dir = self.config.output_dir
+                logger.warning(
+                    "[Config] remote_output_dir not set; defaulting staging target to %s",
+                    remote_output_dir,
+                )
+            remote_output_dir = Path(os.path.expandvars(str(remote_output_dir)))
+            fixed_remote_run_dir = getattr(self.config, "remote_run_dir", None)
+            if fixed_remote_run_dir:
+                remote_run_dir = Path(os.path.expandvars(str(fixed_remote_run_dir)))
+            else:
+                remote_run_dir = Path(remote_output_dir) / run_dir.name
+            if remote_executable_path and executable:
+                exclude_names = [Path(executable).name]
+
+        run_dir_for_script = remote_run_dir if remote_run_dir else run_dir
         script = generate_slurm_script(
             params=params,
-            run_dir=str(run_dir),
+            run_dir=str(run_dir_for_script),
         )
 
         # Write script
@@ -303,18 +438,50 @@ class SuperfacilityRunner:
         script_path.chmod(0o755)
         logger.info(f" Generated submit script: {script_path.name}")
 
-        if dry_run:
+        if effective_mode == "dry":
             return {
                 'script_path': str(script_path),
                 'run_dir': str(run_dir),
                 'method': 'dry_run',
-                'submitted': False
+                'submitted': False,
+                'job_status': 'completed'
+            }
+
+        if remote_staging and effective_mode in {"stage", "submit", "full"}:
+            cfg = self.config.model_dump() if hasattr(self.config, "model_dump") else {}
+            client_id = cfg.get("superfacility_client_id")
+            secret = cfg.get("superfacility_secret")
+            if not client_id or not secret:
+                parsed = _load_sfapi_key_file()
+                if parsed:
+                    client_id, secret = parsed
+            staging_method = getattr(self.config, "remote_staging_method", "auto")
+            stage_run_directory(
+                local_run_dir=run_dir,
+                remote_run_dir=str(remote_run_dir),
+                client_id=client_id,
+                secret=secret,
+                method=staging_method,
+                exclude_names=exclude_names,
+            )
+
+            script_path = remote_run_dir / 'submit.sh'
+
+        if effective_mode == "stage":
+            return {
+                'script_path': str(script_path),
+                'run_dir': str(run_dir),
+                'method': 'stage_only',
+                'submitted': False,
+                'job_status': 'completed'
             }
 
         # Submit job (API with sbatch fallback)
         job_id, method = submit_job(
             script_path=str(script_path),
             system=system,
+            is_path=remote_staging,
+            config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 
         logger.info(f"[ OK ] Job submitted: {job_id} (via {method})")
@@ -324,7 +491,9 @@ class SuperfacilityRunner:
             'method': method,
             'run_dir': str(run_dir),
             'script_path': str(script_path),
-            'params': params
+            'remote_run_dir': str(remote_run_dir) if remote_run_dir else None,
+            'params': params,
+            'job_status': 'queued'
         }
 
     def monitor(self,
@@ -360,6 +529,7 @@ class SuperfacilityRunner:
             method=method,
             poll_interval=poll_interval,
             max_polls=max_polls,
+            config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 
         logger.info(f"[ OK ] Final state: {state}")
@@ -415,7 +585,8 @@ class SuperfacilityRunner:
         job_result = self.submit(
             run_dir=setup_result['run_dir'],
             nodes=nodes,
-            walltime=walltime
+            walltime=walltime,
+            case_dir=case_dir,
         )
 
         # Monitor (optional)

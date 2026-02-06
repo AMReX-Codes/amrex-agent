@@ -11,10 +11,10 @@ Architecture:
   • Auto-corrects when possible (Amendment C)
 
 Design Decisions:
-  ✅ Warn on missing validation_rules (don't crash)
-  ✅ Single-pass enforcement (not iterative)
-  ✅ Log warnings for unknown rules
-  ✅ Return corrected BaseModel from enforce()
+  - Warn on missing validation_rules (don't crash)
+  - Single-pass enforcement (not iterative)
+  - Log warnings for unknown rules
+  - Return corrected BaseModel from enforce()
 """
 
 import logging

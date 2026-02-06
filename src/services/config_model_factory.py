@@ -1112,9 +1112,9 @@ If no match exists, set "to": null."""
             if isinstance(modifications, dict)
             else list(modifications)
         )
-        logger.info("📊 [DATA TRANSFER] apply_modifications called")
-        logger.info(f"📊 [DATA TRANSFER]   - modifications count: {len(modifications_list)}")
-        logger.info(f"📊 [DATA TRANSFER]   - config type: {type(config).__name__}")
+        logger.debug("[DATA TRANSFER] apply_modifications called")
+        logger.debug(f"[DATA TRANSFER]   - modifications count: {len(modifications_list)}")
+        logger.debug(f"[DATA TRANSFER]   - config type: {type(config).__name__}")
 
         logger.info(f"[ConfigFactory] Applying {len(modifications_list)} modifications")
         logger.debug(f"[ConfigFactory] Modifications: {modifications_list}")
@@ -1255,10 +1255,10 @@ If no match exists, set "to": null."""
             remap_mapping
         )
         #Note not returning a downselected parameters here, but the full schema list
-        logger.info("📊 [DATA TRANSFER] Returning dict with:")
-        logger.info(f"📊 [DATA TRANSFER]   - unresolved_parameters: {len(unresolved_params)}")
-        logger.info(f"📊 [DATA TRANSFER]   - available_schema_params: {len(list(alias_map.keys()))}")
-        logger.info(f"📊 [DATA TRANSFER]   - suggested_params: {len(suggested_params)} mappings")
+        logger.debug("[DATA TRANSFER] Returning dict with:")
+        logger.debug(f"[DATA TRANSFER]   - unresolved_parameters: {len(unresolved_params)}")
+        logger.debug(f"[DATA TRANSFER]   - available_schema_params: {len(list(alias_map.keys()))}")
+        logger.debug(f"[DATA TRANSFER]   - suggested_params: {len(suggested_params)} mappings")
 
         return {
             "config": config,

@@ -385,6 +385,7 @@ class ConfigService:
         if config_path:
             overrides = self._load_config_file(Path(config_path))
             config = self._apply_overrides(config, overrides)
+            config.model_post_init(None)
 
         # Load API keys
         config = self.load_api_keys(config)

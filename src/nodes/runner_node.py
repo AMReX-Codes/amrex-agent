@@ -11,6 +11,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.run_superfacility import SuperfacilityRunner
+from src.services.run_superfacility_tools import stage_out_outputs
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates containing job execution results.
     """
-    logger.info("🚀 Executing Runner Node")
+    logger.info("Executing Runner Node")
 
     # ========================================
     # COMPONENT 11a: STATE VALIDATION
@@ -89,7 +90,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "error": f"Inputs file not found: {inputs_file_path}"
         }
 
-    logger.info(f"✅ Validation passed: {run_dir_path.name}")
+    logger.info(f"Validation passed: {run_dir_path.name}")
 
     # ========================================
     # COMPONENT 11b: SERVICE ORCHESTRATION
@@ -108,6 +109,13 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         }
 
     try:
+        run_mode = getattr(config, "run_mode", None)
+        if run_mode is None or run_mode == "full":
+            if getattr(config, "dry_run", False):
+                run_mode = "dry"
+            else:
+                run_mode = run_mode or "full"
+
         # Select runner based on environment
         if config.environment == "local":
             from src.services.run_local import LocalRunner
@@ -140,20 +148,72 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         # Extract actual run directory from setup (may be nested)
         actual_run_dir = setup_result.get('run_dir')
-        logger.info(f"✅ Job setup complete: {setup_result.get('executable')}")
+        logger.info(f"Job setup complete: {setup_result.get('executable')}")
         logger.debug(f"   Using run directory: {actual_run_dir}")
 
         # Submit job (Runner Node: Script Generation)
         # Use the ACTUAL run directory returned by setup, not the parent
-        if config.environment == "local":
-            submit_result = runner.submit(
-                run_directory=actual_run_dir,
-                nodes=getattr(config, "mpi_ranks", 1)
-            )
-        else:
-            submit_result = runner.submit(
-                run_directory=actual_run_dir
-            )
+        submit_kwargs = {"run_directory": actual_run_dir}
+        submit_sig = None
+        try:
+            submit_sig = inspect.signature(runner.submit)
+        except (TypeError, ValueError):
+            submit_sig = None
+
+        if submit_sig:
+            params = submit_sig.parameters
+            if "nodes" in params:
+                submit_kwargs["nodes"] = getattr(config, "mpi_ranks", 1)
+            if "run_mode" in params:
+                submit_kwargs["run_mode"] = run_mode
+            if "dry_run" in params:
+                submit_kwargs["dry_run"] = getattr(config, "dry_run", False)
+            if "case_dir" in params:
+                submit_kwargs["case_dir"] = case_dir
+
+        submit_result = runner.submit(**submit_kwargs)
+
+        if config.environment != "local":
+            monitor_enabled = getattr(config, "monitor_job", True)
+            job_status = submit_result.get("job_status")
+            monitor_states = {None, "queued", "pending", "running", "submitted"}
+            if (
+                not getattr(config, "dry_run", False)
+                and monitor_enabled
+                and submit_result.get("job_id")
+                and job_status in monitor_states
+                and hasattr(runner, "monitor")
+            ):
+                final_state = runner.monitor(
+                    job_id=submit_result["job_id"],
+                    method=submit_result.get("method", "sbatch"),
+                )
+                submit_result["job_status"] = final_state
+                submit_result["final_state"] = final_state
+                if (
+                    getattr(config, "stage_out_outputs", True)
+                    and submit_result.get("remote_run_dir")
+                ):
+                    stage_out_result = stage_out_outputs(
+                        remote_run_dir=submit_result["remote_run_dir"],
+                        local_run_dir=actual_run_dir,
+                        system=getattr(config, "environment", "perlmutter"),
+                    )
+                    submit_result["stage_out"] = stage_out_result
+                    if stage_out_result.get("errors"):
+                        logger.warning(
+                            "Stage-out completed with errors: %s",
+                            stage_out_result["errors"],
+                        )
+
+        final_state = None
+        method = submit_result.get("method")
+        if final_state is None and run_mode == "full" and method not in {"dry_run", "stage_only"}:
+            job_id = submit_result.get("job_id")
+            job_status = submit_result.get("job_status")
+            monitor_states = {None, "queued", "pending", "running", "submitted"}
+            if job_id and hasattr(runner, "monitor") and job_status in monitor_states:
+                final_state = runner.monitor(job_id, method=method or "sbatch")
 
         # ========================================
         # COMPONENT 11e: OUTPUT MAPPING (Complete)
@@ -162,19 +222,47 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         job_id = submit_result.get("job_id") or "dry_run_placeholder"
 
         # Create structured history entry (Fix 11 - canonical format)
+        action = "job_submitted"
+        if run_mode == "dry":
+            action = "job_dry_run"
+        elif run_mode == "stage":
+            action = "job_staged"
         history_entry = {
             "node": "runner",
             "timestamp": datetime.utcnow().isoformat() + "Z",
-            "action": "job_submitted",
+            "action": action,
             "iteration": state.get("iteration", 0),
             "details": {
                 "job_id": job_id,
-                "script_path": submit_result.get("script_path")
+                "script_path": submit_result.get("script_path"),
+                "run_directory": str(actual_run_dir),
             }
         }
 
         # Get actual job status from submit result
         actual_status = submit_result.get("job_status", "completed")
+        if final_state:
+            state_str = str(final_state).upper()
+            failed_states = {
+                "FAILED",
+                "CANCELLED",
+                "TIMEOUT",
+                "NODE_FAIL",
+                "OUT_OF_MEMORY",
+                "BOOT_FAIL",
+                "DEADLINE",
+                "PREEMPTED",
+            }
+            completed_states = {"COMPLETED", "COMPLETING", "DONE", "SUCCESS"}
+            running_states = {"RUNNING", "PENDING", "CONFIGURING"}
+            if state_str in failed_states:
+                actual_status = "failed"
+            elif state_str in completed_states:
+                actual_status = "completed"
+            elif state_str in running_states:
+                actual_status = "running"
+            else:
+                actual_status = state_str.lower()
         exit_code = submit_result.get("exit_code", 0)
 
         return {

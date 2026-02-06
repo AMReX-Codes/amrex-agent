@@ -38,6 +38,8 @@ class VisualizationService:
 
     def __init__(self, config):
         self.config = config
+        logging.getLogger("matplotlib").setLevel(logging.WARNING)
+        logging.getLogger("matplotlib.font_manager").setLevel(logging.WARNING)
         self.container_mode = getattr(config, 'container_mode', False)
         self.backend = self._select_backend()
 

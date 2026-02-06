@@ -26,7 +26,7 @@ python amrex_agent.py \
   --output-dir /tmp/pele_e2e_runs \
   --indexing-strategy simple \
   --baseline-override PeleC/Exec/RegTests/PMF \
-  --dry-run \
+  --run-mode dry \
   --save-workflow
 ```
 

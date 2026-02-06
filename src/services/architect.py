@@ -480,19 +480,19 @@ class ArchitectService:
 
     def _interactive_approve_modifications(self, mods: list, baseline: dict, evidence: list) -> list:
         """Show Level 2 evidence and get user approval."""
-        print(f"\n{'='*70}")
-        print("🔍 LEVEL 2: PARAMETER PATTERNS")
-        print(f"{'='*70}")
-        print(f"\nFound {len(mods)} modifications from {len(evidence)} similar cases:")
-        print(f"Evidence: {', '.join(evidence[:3])}")
+        logger.info("\n" + "=" * 70)
+        logger.info("LEVEL 2: PARAMETER PATTERNS")
+        logger.info("=" * 70)
+        logger.info(f"\nFound {len(mods)} modifications from {len(evidence)} similar cases:")
+        logger.info(f"Evidence: {', '.join(evidence[:3])}")
 
-        print("\nProposed changes:")
+        logger.info("\nProposed changes:")
         for i, (param, value) in enumerate(mods, 1):
             old = baseline.get(param, '<not set>')
-            print(f"  {i:2d}. {param:40s}")
-            print(f"      {old} → {value}")
+            logger.info(f"  {i:2d}. {param:40s}")
+            logger.info(f"      {old} -> {value}")
 
-        print(f"\n{'='*70}")
+        logger.info("\n" + "=" * 70)
         choice = input("Accept? [Y/n/s=select specific]: ").strip().lower()
 
         if choice == 'n':
@@ -1943,8 +1943,8 @@ MATCHING INSTRUCTIONS:
 
 CRITICAL: Parameter names are case-sensitive and must include the full prefix.
 Examples for this category:
-  ✓ "{params[0] if params else 'example'}"
-  ✗ Wrong case, missing prefix, or invented names"""
+  [OK] "{params[0] if params else 'example'}"
+  [BAD] Wrong case, missing prefix, or invented names"""
 
                 chunks.append(chunk)
 
@@ -2024,6 +2024,19 @@ CRITICAL: Use exact names only."""
             client=None
     ) -> dict:
         """Call LLM to extract modifications. Returns dict with 'success', 'modifications' or 'error'."""
+        def _normalize_llm_value(value: str) -> str:
+            if not isinstance(value, str):
+                return value
+            trimmed = value.strip()
+            if trimmed.startswith("[") and trimmed.endswith("]"):
+                inner = trimmed[1:-1].strip()
+                if inner:
+                    return " ".join(part.strip() for part in inner.split(","))
+                return ""
+            if "," in trimmed and all(part.strip().replace("-", "").replace(".", "").isdigit() for part in trimmed.split(",")):
+                return " ".join(part.strip() for part in trimmed.split(","))
+            return value
+
         prompt_template = self._resolve_llm_prompt_template(
             solver_config,
             "modification_extraction",
@@ -2054,7 +2067,7 @@ CRITICAL: Use exact names only."""
                 temperature=0.1
             )
 
-            modifications = [(m.parameter, m.value) for m in result.modifications]
+            modifications = [(m.parameter, _normalize_llm_value(m.value)) for m in result.modifications]
 
             # Log reasoning for debugging
             logger.debug(f"[LLM] Working: {result.working}")
@@ -2074,7 +2087,10 @@ CRITICAL: Use exact names only."""
                     temperature=0.1
                 )
                 result = json.loads(response.choices[0].message.content)
-                modifications = [(m['parameter'], m['value']) for m in result.get('modifications', [])]
+                modifications = [
+                    (m['parameter'], _normalize_llm_value(m.get('value', '')))
+                    for m in result.get('modifications', [])
+                ]
 
                 # Log reasoning from fallback mode too
                 logger.debug(f"[LLM] Working: {result.get('working', 'N/A')}")
