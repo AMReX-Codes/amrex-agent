@@ -43,6 +43,34 @@ pytest tests/quality
 pytest tests/e2e -m e2e -k pelec
 ```
 
+## README Command Parity + Runner
+
+We track README bash blocks and `amrex_agent.py` calls in
+`tests/e2e/readme_command_registry.json`. The E2E test
+`tests/e2e/test_readme_command_registry.py` ensures the registry stays complete.
+
+The README runner supports dry-run or actual execution, grouped by file.
+Example usage:
+```bash
+python -m tests.e2e.readme_command_runner --dry-run
+python -m tests.e2e.readme_command_runner --file demo/README.md
+python -m tests.e2e.readme_command_runner --file README.md --file demo/amrex/README.md
+python -m tests.e2e.readme_command_runner --file demo/README.md --timeout-seconds 60
+```
+
+The dry-run test is `tests/e2e/test_readme_command_runner.py` and is E2E-only.
+The execute test (amrex-agent-only) auto-skips if required repos, schemas, or FAISS indices are missing.
+It only runs commands from these READMEs:
+`README.md`, `demo/amrex/README.md`, `demo/pelec/README.md`,
+`demo/pelelmex/README.md`, `demo/erf/README.md`.
+Execution is limited to commands that include `amrex_agent.py`, with a 30s
+per-command timeout. The execute test appends `--run-mode dry` when missing and
+uses all `amrex_agent.py` commands in those files. It also skips if no LLM API
+key is available.
+
+There is also a manual-only E2E test that runs all commands from
+`demo/README.md`, but it is skipped by default.
+
 ## Coverage
 
 Coverage defaults are configured in `pyproject.toml`. For local runs:
