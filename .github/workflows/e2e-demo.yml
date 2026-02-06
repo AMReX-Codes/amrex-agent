@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: >
-      inputs.run_e2e == 'true' &&
-      secrets.CBORG_API_KEY != ''
+      inputs.run_e2e == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +25,15 @@ jobs:
           environment-name: amrex-agent-dev
           cache-environment: true
           cache-downloads: true
+
+      - name: Skip if CBORG_API_KEY missing
+        env:
+          CBORG_API_KEY: ${{ secrets.CBORG_API_KEY }}
+        run: |
+          if [ -z "$CBORG_API_KEY" ]; then
+            echo "CBORG_API_KEY not set; skipping e2e demo tests."
+            exit 0
+          fi
 
       - name: Run e2e demo tests
         env:
