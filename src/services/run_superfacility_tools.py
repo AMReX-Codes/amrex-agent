@@ -913,35 +913,26 @@ def _download_remote_file_sfapi(
     local_path = Path(local_path)
     local_path.parent.mkdir(parents=True, exist_ok=True)
 
-    method_names = ("download", "download_file", "get_file", "get")
     with Client(client_id=client_id, secret=secret) as client:
         perlmutter = client.compute(Machine.perlmutter)
-        for name in method_names:
-            if not hasattr(perlmutter, name):
-                continue
-            method = getattr(perlmutter, name)
-            try:
-                result = method(remote_path, str(local_path))
-                return True
-            except TypeError:
-                try:
-                    result = method(remote_path)
-                except Exception:
-                    continue
-                if result is None:
-                    continue
-                if isinstance(result, (bytes, bytearray)):
-                    local_path.write_bytes(result)
-                    return True
-                if isinstance(result, str):
-                    local_path.write_text(result)
-                    return True
-                if hasattr(result, "read"):
-                    local_path.write_bytes(result.read())
-                    return True
-            except Exception:
-                continue
-    return False
+        try:
+            [file_obj] = perlmutter.ls(remote_path)
+        except Exception:
+            return False
+        if not hasattr(file_obj, "download"):
+            return False
+        try:
+            handle = file_obj.download()
+        except Exception:
+            return False
+        if hasattr(handle, "read"):
+            data = handle.read()
+            if isinstance(data, str):
+                local_path.write_text(data)
+            else:
+                local_path.write_bytes(data)
+            return True
+        return False
 
 
 def download_remote_file(
