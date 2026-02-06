@@ -1,0 +1,23 @@
+site_name: AMReXAgent
+site_description: AI agent for AMReX-based simulation setup
+site_url: https://amrex-agent.readthedocs.io
+docs_dir: docs
+
+nav:
+  - Home: index.md
+  - Workflows: workflows.md
+  - Integration: integration.md
+  - Demos: demos.md
+
+theme:
+  name: readthedocs
+
+plugins:
+  - search
+  - include-markdown
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+            - database/scripts
