@@ -55,8 +55,18 @@ Run the indexing scripts against your repo to build the searchable baseline
 library. This reuses the same test suite you already trust:
 
 ```bash
-bash demo/setup_demo_database.sh --code <your_code>
+bash demo/setup_demo_database.sh --code <your_code> --force-rebuild
 ```
+
+If your repo has dependencies (git submodules), use auto-compose to build a
+combined schema first:
+
+```bash
+python database/scripts/build_schema.py /path/to/your/repo --output database/schemas --auto-compose
+```
+
+If you want `--clone-missing` to work for your solver, add it to
+`.dependencies.json` with the repo URL/branch/commit.
 
 If you need finer control (for example new index names), use:
 
@@ -65,6 +75,13 @@ python database/scripts/build_index.py \
   --config <your_code> \
   --type case_structure \
   --source /path/to/your/repo
+```
+
+For hierarchical indices (L0/L1/L2), use:
+
+```bash
+python database/scripts/build_all_indices.py --level 1 --repo /path/to/your/repo --output database/faiss
+python database/scripts/build_all_indices.py --level 2 --repo /path/to/your/repo --output database/faiss
 ```
 
 ## Step 4: Smoke check baseline overrides
