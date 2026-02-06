@@ -441,7 +441,7 @@ class AMReXAgentConfig(BaseModel):
     )
 
     inputs_default_precedence: Literal["default_first", "strategy_first"] = Field(
-        default="default_first",
+        default="strategy_first",
         description="Precedence between config default inputs and strategy selection. "
                     "'default_first' uses default_inputs_path before strategy selection; "
                     "'strategy_first' tries strategy first and only falls back to defaults."

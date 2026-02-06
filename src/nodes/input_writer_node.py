@@ -162,12 +162,19 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     try:
         from src.services.cases import AMReXCasesService
         cases_service = AMReXCasesService(config)
-        if _should_prefer_strategy_on_retry(state):
+        baseline_override = getattr(config, "baseline_override", None)
+        if baseline_override:
+            config.inputs_default_precedence = "strategy_first"
+            logger.info(
+                "[InputWriter] Baseline override detected; using strategy_first precedence "
+                "for inputs selection"
+            )
+        elif _should_prefer_strategy_on_retry(state):
             config.inputs_default_precedence = "strategy_first"
             logger.info("[InputWriter] Retry context suggests varying inputs base; "
                         "using strategy_first precedence for inputs selection")
         else:
-            config.inputs_default_precedence = "default_first"
+            config.inputs_default_precedence = "strategy_first"
         service = InputWriterService(config)
         # Ensure cases_service is available
         if not hasattr(service, 'cases_svc') or not service.cases_svc:

@@ -270,11 +270,19 @@ class InputWriterService:
                         try:
                             default_inputs_path.relative_to(local_path)
                         except ValueError:
-                            logger.warning(
-                                "Default inputs path is outside selected case directory: %s (case: %s)",
-                                default_inputs_path,
-                                local_path
-                            )
+                            if inputs_default_precedence == "strategy_first":
+                                logger.info(
+                                    "Default inputs path is outside selected case directory; "
+                                    "strategy_first will ignore it: %s (case: %s)",
+                                    default_inputs_path,
+                                    local_path
+                                )
+                            else:
+                                logger.warning(
+                                    "Default inputs path is outside selected case directory: %s (case: %s)",
+                                    default_inputs_path,
+                                    local_path
+                                )
 
                     if inputs_default_precedence == "default_first" and default_inputs_path:
                         if default_inputs_path.exists() and default_inputs_path.is_file():
