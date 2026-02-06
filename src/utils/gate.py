@@ -4,9 +4,11 @@ Terminal gating helpers for pre-confirm pauses and LLM prompt checks.
 from __future__ import annotations
 
 import logging
+import os
+import re
 import sys
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +52,14 @@ def run_preconfirm_gate(
     print("\n" + "=" * 72)
     print(f"Pre-confirmation Gate: {node_name}")
     print("=" * 72)
+    redactor = _redactor()
     for line in summary_lines:
-        print(line)
+        print(redactor(line))
     print("")
     print("Options:")
     for idx, option in enumerate(options, 1):
-        print(f"{idx}) {option.get('label', option.get('value', 'option'))}")
+        label = option.get('label', option.get('value', 'option'))
+        print(f"{idx}) {redactor(str(label))}")
     if allow_cancel:
         print("c) Cancel")
     print("")
@@ -141,11 +145,12 @@ def run_llm_pre_gate(prompt: str, strategy: str) -> bool:
     if not should_gate_prompt(prompt, strategy):
         return True
 
+    redactor = _redactor()
     preview = prompt if len(prompt) <= 2000 else prompt[:2000] + "\n...[truncated]..."
     print("\n" + "=" * 72)
     print("LLM Prompt Gate")
     print("=" * 72)
-    print(preview)
+    print(redactor(preview))
     print("")
     choice = input("Send this prompt? [Y/n]: ").strip().lower()
     return choice in {"", "y", "yes"}
@@ -160,12 +165,35 @@ def run_llm_post_gate(response_text: str, strategy: str) -> None:
     if strategy not in {"feedback", "default", "gate-all", "gate-all-prompt", "gate-major", "gate-major-prompt"}:
         return
 
+    redactor = _redactor()
     preview = response_text if len(response_text) <= 1200 else response_text[:1200] + "\n...[truncated]..."
     print("\n" + "=" * 72)
     print("LLM Output Check")
     print("=" * 72)
-    print(preview)
+    print(redactor(preview))
     print("")
     choice = input("Is this output useful? [Y/n]: ").strip().lower()
     if choice in {"n", "no"}:
         logger.info("LLM output marked as not useful by user.")
+
+
+def _redactor() -> Callable[[str], str]:
+    secrets = [
+        os.getenv("CBORG_API_KEY"),
+        os.getenv("ALCF_API_KEY"),
+        os.getenv("OPENAI_API_KEY"),
+        os.getenv("ANTHROPIC_API_KEY"),
+        os.getenv("NERSC_API_TOKEN"),
+        os.getenv("SFAPI_TOKEN"),
+    ]
+    bearer_re = re.compile(r"(Authorization:\s*Bearer\s+)[^\s]+", re.IGNORECASE)
+
+    def redact(text: str) -> str:
+        if not text:
+            return text
+        for secret in secrets:
+            if secret and secret in text:
+                text = text.replace(secret, "[REDACTED]")
+        return bearer_re.sub(r"\1[REDACTED]", text)
+
+    return redact
