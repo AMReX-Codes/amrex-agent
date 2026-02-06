@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: >
-      inputs.run_e2e &&
+      inputs.run_e2e == 'true' &&
       secrets.CBORG_API_KEY != ''
     steps:
       - name: Checkout

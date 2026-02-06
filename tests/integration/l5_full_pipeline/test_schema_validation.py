@@ -1,13 +1,17 @@
 """
 Level 5 Integration: GraphState Schema Validation
 
-Tests data contract compliance:
-- Required fields present
-- Type correctness
-- Optional fields handled gracefully
-- No schema drift
+Scope:
+- Enforces alignment between the canonical GraphState contract and the
+  state keys used by the current graph nodes.
+- Cross-checks that fields referenced in tests/contracts remain present
+  in the canonical schema (GraphState TypedDict).
+- Ensures expected fields are consistent with PRD expectations in docs/PRD/PRD*
+  (prompt/config inputs, workflow control fields, and run/output metadata).
 
-Validates that GraphState.__annotations__ matches actual usage.
+These tests are intentionally conservative: they only assert for keys that are
+required across the current node implementations and the documented contract,
+so the schema does not silently drift as nodes evolve.
 """
 from pathlib import Path
 from typing import Any, Dict, List, get_type_hints
