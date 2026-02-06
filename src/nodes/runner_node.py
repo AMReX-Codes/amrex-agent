@@ -12,6 +12,7 @@ from typing import Any
 from src.models import GraphState
 from src.services.run_superfacility import SuperfacilityRunner
 from src.services.run_superfacility_tools import stage_out_outputs
+from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +111,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "error": "Missing baseline path (plan or baseline.local_path required)"
         }
 
+    compile_gate_entry = None
+    run_gate_entry = None
     try:
         run_mode = getattr(config, "run_mode", None)
         if run_mode is None or run_mode == "full":
@@ -117,6 +120,35 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 run_mode = "dry"
             else:
                 run_mode = run_mode or "full"
+        compile_gate = run_preconfirm_gate(
+            node_name="runner_compile",
+            summary_lines=[
+                "This step compiles/links the executable and prepares the run directory.",
+                f"Run directory: {run_directory}",
+                f"Inputs file: {inputs_file_path}",
+            ],
+            options=[
+                {"label": "Compile and run", "value": "compile_and_run"},
+                {"label": "Compile only (skip run)", "value": "compile_only"},
+            ],
+            enabled=getattr(config, "preconfirm_gate", False) is True,
+            allow_cancel=True,
+        )
+        compile_gate_entry = compile_gate.get("history_entry")
+        if compile_gate_entry:
+            compile_gate_entry["iteration"] = state.get("iteration", 0)
+        if compile_gate["action"] == "cancel":
+            return {
+                "mode": "terminal",
+                "error": "User canceled at pre-confirm gate.",
+                "job_status": "skipped",
+                "workflow_history": state.get("workflow_history", []) + ([compile_gate_entry] if compile_gate_entry else []),
+            }
+
+        run_after_compile = True
+        compile_selection = compile_gate.get("selection") or {}
+        if compile_selection.get("value") == "compile_only":
+            run_after_compile = False
 
         # Select runner based on environment
         if config.environment == "local":
@@ -153,8 +185,54 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         logger.info(f"Job setup complete: {setup_result.get('executable')}")
         logger.debug(f"   Using run directory: {actual_run_dir}")
 
+        if not run_after_compile:
+            history_entry = {
+                "node": "runner",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "action": "compile_only",
+                "iteration": state.get("iteration", 0),
+                "details": {
+                    "run_dir": actual_run_dir,
+                    "executable": setup_result.get("executable"),
+                },
+            }
+            workflow_history = state.get("workflow_history", [])
+            if compile_gate_entry:
+                workflow_history = workflow_history + [compile_gate_entry]
+            return {
+                "mode": "terminal",
+                "job_status": "skipped",
+                "executable_path": setup_result.get("executable"),
+                "workflow_history": workflow_history + [history_entry],
+            }
+
         # Submit job (Runner Node: Script Generation)
         # Use the ACTUAL run directory returned by setup, not the parent
+        run_gate = run_preconfirm_gate(
+            node_name="runner_submit",
+            summary_lines=[
+                "This step submits the job to run.",
+                f"Run directory: {actual_run_dir}",
+            ],
+            options=[{"label": "Submit run", "value": "run_now"}],
+            enabled=getattr(config, "preconfirm_gate", False) is True,
+            allow_cancel=True,
+        )
+        run_gate_entry = run_gate.get("history_entry")
+        if run_gate_entry:
+            run_gate_entry["iteration"] = state.get("iteration", 0)
+        if run_gate["action"] == "cancel":
+            workflow_history = state.get("workflow_history", [])
+            if compile_gate_entry:
+                workflow_history = workflow_history + [compile_gate_entry]
+            if run_gate_entry:
+                workflow_history = workflow_history + [run_gate_entry]
+            return {
+                "mode": "terminal",
+                "error": "User canceled at pre-confirm gate.",
+                "job_status": "skipped",
+                "workflow_history": workflow_history,
+            }
         submit_kwargs = {"run_directory": actual_run_dir}
         submit_sig = None
         try:
@@ -267,6 +345,12 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 actual_status = state_str.lower()
         exit_code = submit_result.get("exit_code", 0)
 
+        workflow_history = state.get("workflow_history", [])
+        if compile_gate_entry:
+            workflow_history = workflow_history + [compile_gate_entry]
+        if run_gate_entry:
+            workflow_history = workflow_history + [run_gate_entry]
+
         logger.info("-" * 80)
         logger.info(f"Runner node complete ({actual_status})")
         logger.info("-" * 80)
@@ -278,7 +362,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             "job_submission_time": datetime.utcnow().isoformat() + "Z",  # Track submission time
             "job_status": actual_status,  # Use actual status from submit (completed or failed)
             "exit_code": exit_code,
-            "workflow_history": state.get("workflow_history", []) + [history_entry]
+            "workflow_history": workflow_history + [history_entry]
         }
 
     except (FileNotFoundError, PermissionError) as e:
@@ -294,10 +378,15 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             }
         }
 
+        workflow_history = state.get("workflow_history", [])
+        if compile_gate_entry:
+            workflow_history = workflow_history + [compile_gate_entry]
+        if run_gate_entry:
+            workflow_history = workflow_history + [run_gate_entry]
         return {
             "mode": "fail",
             "error": f"Executable resolution failed: {str(e)}",
-            "workflow_history": state.get("workflow_history", []) + [history_entry]
+            "workflow_history": workflow_history + [history_entry]
         }
     except Exception as e:
         logger.exception("Runner execution failed")
@@ -320,10 +409,15 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             }
         }
 
+        workflow_history = state.get("workflow_history", [])
+        if compile_gate_entry:
+            workflow_history = workflow_history + [compile_gate_entry]
+        if run_gate_entry:
+            workflow_history = workflow_history + [run_gate_entry]
         return {
             "mode": "terminal" if is_compilation_error else "analysis",
             "error": f"Runner execution failed: {error_str}",
             "compilation_failed": is_compilation_error,
             "run_status": "failed",
-            "workflow_history": state.get("workflow_history", []) + [history_entry]
+            "workflow_history": workflow_history + [history_entry]
         }

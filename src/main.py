@@ -433,6 +433,25 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
         help='Run execution strategy: dry, stage, submit, full'
     )
     parser.add_argument(
+        '--preconfirm',
+        action='store_true',
+        help='Pause for a pre-confirmation gate before validation'
+    )
+    parser.add_argument(
+        '--llm-gate-strategy',
+        choices=[
+            'off',
+            'default',
+            'feedback',
+            'gate-major',
+            'gate-all',
+            'gate-major-prompt',
+            'gate-all-prompt',
+        ],
+        dest='llm_gate_strategy',
+        help='LLM prompt gate strategy: off, default, feedback, gate-major, gate-all'
+    )
+    parser.add_argument(
         '--save-workflow',
         action='store_true',
         help='Save workflow_history.json to run directory'
@@ -627,6 +646,12 @@ def main(args: list[str] | None = None) -> None:
 
         if parsed_args.environment:
             config.environment = parsed_args.environment
+
+        if parsed_args.preconfirm:
+            config.preconfirm_gate = True
+
+        if parsed_args.llm_gate_strategy:
+            config.llm_gate_strategy = parsed_args.llm_gate_strategy
 
         if hasattr(parsed_args, 'indexing_strategy') and parsed_args.indexing_strategy:
             config.indexing_strategy = parsed_args.indexing_strategy

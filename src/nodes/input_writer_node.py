@@ -11,6 +11,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.input_writer import InputWriterService
+from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +45,31 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
         logger.error("Missing required 'config' in state")
         raise ValueError("Input Writer Node requires 'config' in state")
 
+    gate_result = run_preconfirm_gate(
+        node_name="input_writer",
+        summary_lines=[
+            "This step writes inputs and prepares the run directory.",
+        ],
+        options=[{"label": "Proceed with input writing", "value": "proceed"}],
+        enabled=getattr(config, "preconfirm_gate", False) is True,
+        allow_cancel=True,
+    )
+    gate_entry = gate_result.get("history_entry")
+    if gate_entry:
+        gate_entry["iteration"] = state.get("iteration", 0)
+    if gate_result["action"] == "cancel":
+        return {
+            "mode": "terminal",
+            "error": "User canceled at pre-confirm gate.",
+            "workflow_history": state.get("workflow_history", []) + ([gate_entry] if gate_entry else []),
+        }
+
     # === CRITICAL: Read plan from workflow_history, NOT top-level state ===
     # Per contract line 12-18: Extract plan by searching workflow_history
     # for architect entry, then read from details (canonical location)
     workflow_history = state.get("workflow_history", [])
+    if gate_entry:
+        workflow_history = workflow_history + [gate_entry]
 
     architect_entry = None
     try:

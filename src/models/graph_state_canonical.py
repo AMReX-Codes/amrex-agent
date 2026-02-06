@@ -158,6 +158,7 @@ class GraphState(TypedDict, total=False):
     errors_found: List[str]         # All errors discovered (historical)
     errors_fixed: List[str]         # Errors successfully resolved
     error_logs: List[str]           # Runtime error messages from execution/analysis
+    preconfirm_action: Optional[str]            # "proceed" | "cancel"
 
     # ========================================
     # OBSERVABILITY (Immutable Audit Log)
