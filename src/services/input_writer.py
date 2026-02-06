@@ -338,6 +338,31 @@ class InputWriterService:
                 logger.warning(f"Empty baseline for {baseline_case} at {local_path}")
                 baseline_text = "# Empty baseline\n"
 
+            if not modifications and baseline_text and selected_inputs_path:
+                logger.info("[2/5] Skipping model hydration (no modifications)")
+                inputs_path = output_dir / "inputs"
+                inputs_path.write_text(baseline_text)
+                logger.info(f"Wrote {len(baseline_text)} bytes to {inputs_path}")
+
+                if hasattr(self, "_copy_auxiliary_files"):
+                    logger.debug("Copying auxiliary files...")
+                    baseline_info = {"path": baseline_case, "code": code_name}
+                    self._copy_auxiliary_files(baseline_info, output_dir)
+
+                return {
+                    "inputs_path": str(inputs_path),
+                    "output_dir": str(output_dir),
+                    "run_dir": str(output_dir),
+                    "modifications_applied": 0,
+                    "inputs_file_selected": selected_inputs_path,
+                    "inputs_file_strategy": inputs_file_strategy,
+                    "inputs_file_override": inputs_file_override,
+                    "inputs_candidates": [str(p) for p in inputs_candidates],
+                    "solver": code_name,
+                    "status": "success",
+                    "requires_parameter_resolution": False,
+                }
+
             # 3. HYDRATE: Create Pydantic model from text (Input Writer: Config Model Factory)
             logger.info(f"[2/5] Creating Pydantic model for {code_name}")
 

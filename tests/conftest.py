@@ -166,6 +166,7 @@ def _repo_env_and_dir(repo_name: str) -> tuple[str | None, str | None]:
         "PeleLMeX": ("PELELMEX_REPO_PATH", "PeleLMeX"),
         "ERF": ("ERF_REPO_PATH", "ERF"),
         "AMReX": ("AMREX_REPO_PATH", "amrex"),
+        "REMORA": ("REMORA_REPO_PATH", "REMORA"),
     }
     return repo_map.get(repo_name, (None, None))
 
