@@ -2025,6 +2025,8 @@ CRITICAL: Use exact names only."""
             client=None
     ) -> dict:
         """Call LLM to extract modifications. Returns dict with 'success', 'modifications' or 'error'."""
+        from src.utils.gate import _redactor
+
         def _normalize_llm_value(value: str) -> str:
             if not isinstance(value, str):
                 return value
@@ -2076,6 +2078,10 @@ CRITICAL: Use exact names only."""
             # Log reasoning for debugging
             logger.debug(f"[LLM] Working: {result.working}")
             logger.debug(f"[LLM] Extracted {len(modifications)} modifications")
+            if not modifications:
+                redactor = _redactor()
+                raw = result.model_dump_json() if hasattr(result, "model_dump_json") else str(result)
+                logger.debug("[LLM] Empty modifications (raw response): %s", redactor(raw))
 
             return {"success": True, "modifications": modifications}
 
@@ -2090,7 +2096,8 @@ CRITICAL: Use exact names only."""
                     response_format={"type": "json_object"},
                     temperature=0.1
                 )
-                result = json.loads(response.choices[0].message.content)
+                raw_content = response.choices[0].message.content
+                result = json.loads(raw_content)
                 modifications = [
                     (m['parameter'], _normalize_llm_value(m.get('value', '')))
                     for m in result.get('modifications', [])
@@ -2099,6 +2106,9 @@ CRITICAL: Use exact names only."""
                 # Log reasoning from fallback mode too
                 logger.debug(f"[LLM] Working: {result.get('working', 'N/A')}")
                 logger.debug(f"[LLM] Extracted {len(modifications)} modifications")
+                if not modifications:
+                    redactor = _redactor()
+                    logger.debug("[LLM] Empty modifications (raw response): %s", redactor(raw_content))
 
                 return {"success": True, "modifications": modifications}
             except Exception as e:
