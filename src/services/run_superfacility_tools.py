@@ -763,6 +763,30 @@ def list_remote_files(
     import logging
     import requests
 
+    logger = logging.getLogger(__name__)
+    client_id, secret = _resolve_sfapi_credentials()
+    if client_id and secret:
+        try:
+            from sfapi_client import Client
+            from sfapi_client.compute import Machine
+        except Exception:
+            client_id = None
+            secret = None
+        else:
+            if system == "perlmutter":
+                try:
+                    with Client(client_id=client_id, secret=secret) as client:
+                        perlmutter = client.compute(Machine.perlmutter)
+                        entries = perlmutter.ls(remote_dir, directory=True)
+                        names: list[str] = []
+                        for entry in entries:
+                            name = getattr(entry, "name", None) or getattr(entry, "path", None)
+                            if name:
+                                names.append(str(name))
+                        return names
+                except Exception as exc:
+                    logger.warning("sfapi_client ls failed for %s: %s", remote_dir, exc)
+
     if nersc_session is None:
         clients = find_nersc_clients()
         if clients:
@@ -788,7 +812,6 @@ def list_remote_files(
         )
 
     result = response.json()
-    logger = logging.getLogger(__name__)
     names: list[str] = []
     items: list = []
     if isinstance(result, list):

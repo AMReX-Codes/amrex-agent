@@ -421,30 +421,49 @@ LLM analysis:
         prompt = prompt_template.format(user_prompt=user_prompt)
 
         try:
-            response = llm_client.chat.completions.create(
-                model=self.config.llm_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
-                max_tokens=500
-            )
+            try:
+                import instructor
+                from pydantic import BaseModel, Field
+                from src.config import unwrap_llm_client, wrap_llm_client
 
-            # Parse JSON response
-            content = response.choices[0].message.content.strip()
+                class QuestionList(BaseModel):
+                    questions: list[str] = Field(description="List of short questions")
 
-            # Extract JSON array (handle markdown code blocks)
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0].strip()
+                base_client = unwrap_llm_client(llm_client)
+                client = instructor.from_openai(base_client)
+                client = wrap_llm_client(client, self.config)
+                result = client.chat.completions.create(
+                    model=self.config.llm_model,
+                    response_model=QuestionList,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.3,
+                    max_retries=2,
+                )
+                return result.questions
+            except (ImportError, ModuleNotFoundError):
+                response = llm_client.chat.completions.create(
+                    model=self.config.llm_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.3,
+                    max_tokens=500
+                )
 
-            questions = json.loads(content)
+                # Parse JSON response
+                content = response.choices[0].message.content.strip()
 
-            if isinstance(questions, list):
-                return questions
-            else:
-                logger.warning(f"[WARN] LLM returned non-list: {questions}")
-                return []
+                # Extract JSON array (handle markdown code blocks)
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
 
+                questions = json.loads(content)
+
+                if isinstance(questions, list):
+                    return questions
+                else:
+                    logger.warning(f"[WARN] LLM returned non-list: {questions}")
+                    return []
         except Exception as e:
             logger.error(f"[ERROR] Failed to generate questions: {e}")
             return self._get_knowledge_fallback_questions()

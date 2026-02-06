@@ -2050,7 +2050,7 @@ CRITICAL: Use exact names only."""
 
         try:
             import instructor
-            from src.config import get_llm_client
+            from src.config import get_llm_client, unwrap_llm_client, wrap_llm_client
             from pydantic import BaseModel, Field
 
             class Modification(BaseModel):
@@ -2060,7 +2060,10 @@ CRITICAL: Use exact names only."""
             class ModificationExtraction(BaseModel):
                 working: str = Field(description="Step-by-step reasoning showing parameter mapping and unit conversions")
                 modifications: list[Modification]
-            client = client or instructor.from_openai(get_llm_client(self.config))
+            if client is None:
+                base_client = unwrap_llm_client(get_llm_client(self.config))
+                client = instructor.from_openai(base_client)
+                client = wrap_llm_client(client, self.config)
             result = client.chat.completions.create(
                 model=self.config.llm_model,
                 response_model=ModificationExtraction,
@@ -3783,9 +3786,12 @@ Solver: {code_name}"""
             import instructor
 
             from src.services.plan import SimulationPlan
+            from src.config import unwrap_llm_client, wrap_llm_client
 
             # Wrap LLM client with instructor
-            client = instructor.from_openai(self.llm_client)
+            base_client = unwrap_llm_client(self.llm_client)
+            client = instructor.from_openai(base_client)
+            client = wrap_llm_client(client, self.config)
 
             # Extract solver from baseline metadata
             solver_name = baseline.get('metadata', {}).get('solver')

@@ -793,9 +793,11 @@ If no match exists, set "to": null."""
 
         try:
             import instructor
-            from src.config import get_llm_client
+            from src.config import get_llm_client, unwrap_llm_client, wrap_llm_client
 
-            client = instructor.from_openai(get_llm_client(config_service))
+            base_client = unwrap_llm_client(get_llm_client(config_service))
+            client = instructor.from_openai(base_client)
+            client = wrap_llm_client(client, config_service)
 
             result = client.chat.completions.create(
                 model=config_service.llm_model,
