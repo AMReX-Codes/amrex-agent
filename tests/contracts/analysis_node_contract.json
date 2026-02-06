@@ -105,7 +105,7 @@
         ]
       },
       "assertions": [
-        "result['job_status'] in ['completed', 'failed']",
+        "result['job_status'] in ['completed', 'failed', 'cancelled', 'timeout', 'skipped']",
         "result['workflow_history'][-1]['node'] == 'analysis'",
         "result['workflow_history'][-1]['action'] == 'analysis_completed'",
         "result['workflow_history'][-1]['details']['analysis_report']",

@@ -115,7 +115,7 @@
       "assertions": [
         "result['mode'] == 'proceed'",
         "result['job_id']",
-        "result['job_status'] in ['queued', 'running', 'completed', 'failed']",
+        "result['job_status'] in ['queued', 'running', 'completed', 'failed', 'cancelled', 'timeout', 'skipped']",
         "result['workflow_history'][-1]['node'] == 'runner'",
         "result['workflow_history'][-1]['action'] == 'job_submitted'",
         "result['workflow_history'][-1]['details']['submission_status'] == 'submitted'"
@@ -126,7 +126,7 @@
     {
       "field": "job_id and job_status",
       "requirement": "MUST be at top level for control flow and polling",
-      "canonical_format": "job_id: str, job_status: one of queued/running/completed/failed",
+      "canonical_format": "job_id: str, job_status: one of queued/running/completed/failed/cancelled/timeout/skipped",
       "violation_consequence": "Cannot track job execution or poll for completion"
     },
     {

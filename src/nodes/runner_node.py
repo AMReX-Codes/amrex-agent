@@ -321,22 +321,36 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         # Get actual job status from submit result
         actual_status = submit_result.get("job_status", "completed")
+        if isinstance(actual_status, str):
+            status_upper = actual_status.upper()
+            status_map = {
+                "CANCELLED": "cancelled",
+                "PREEMPTED": "cancelled",
+                "TIMEOUT": "timeout",
+                "FAILED": "failed",
+                "NODE_FAIL": "failed",
+                "OUT_OF_MEMORY": "failed",
+                "BOOT_FAIL": "failed",
+                "DEADLINE": "failed",
+            }
+            if status_upper in status_map:
+                actual_status = status_map[status_upper]
         if final_state:
             state_str = str(final_state).upper()
-            failed_states = {
-                "FAILED",
-                "CANCELLED",
-                "TIMEOUT",
-                "NODE_FAIL",
-                "OUT_OF_MEMORY",
-                "BOOT_FAIL",
-                "DEADLINE",
-                "PREEMPTED",
+            status_map = {
+                "CANCELLED": "cancelled",
+                "PREEMPTED": "cancelled",
+                "TIMEOUT": "timeout",
+                "FAILED": "failed",
+                "NODE_FAIL": "failed",
+                "OUT_OF_MEMORY": "failed",
+                "BOOT_FAIL": "failed",
+                "DEADLINE": "failed",
             }
             completed_states = {"COMPLETED", "COMPLETING", "DONE", "SUCCESS"}
             running_states = {"RUNNING", "PENDING", "CONFIGURING"}
-            if state_str in failed_states:
-                actual_status = "failed"
+            if state_str in status_map:
+                actual_status = status_map[state_str]
             elif state_str in completed_states:
                 actual_status = "completed"
             elif state_str in running_states:
