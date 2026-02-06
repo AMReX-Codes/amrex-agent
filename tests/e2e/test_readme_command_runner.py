@@ -19,7 +19,7 @@ def test_readme_command_runner_dry_run() -> None:
 
 
 @pytest.mark.e2e
-def test_readme_command_runner_execute() -> None:
+def test_readme_command_runner_execute_amrex_agent_only() -> None:
     if not _assets_available():
         pytest.skip("Required repos/schemas/indices not available for README execution.")
     if not _llm_available():
@@ -51,6 +51,37 @@ def test_readme_command_runner_execute() -> None:
     ]
     if failures:
         lines = ["README command execution failures:"]
+        for path, entry in failures[:20]:
+            lines.append(
+                f"  - {path} :: {entry['id']} ({entry['status']}, rc={entry.get('returncode')})"
+            )
+        if len(failures) > 20:
+            lines.append(f"  - ... and {len(failures) - 20} more")
+        pytest.fail("\n".join(lines))
+
+
+@pytest.mark.e2e
+@pytest.mark.skip(reason="Manual-only: run full README commands when needed.")
+def test_readme_command_runner_execute_full_file_manual() -> None:
+    repo_root = __import__("pathlib").Path(__file__).resolve().parents[2]
+    file_filter = ["demo/README.md"]
+    results = run_commands_by_file(
+        repo_root,
+        file_filter=file_filter,
+        dry_run=False,
+        timeout_seconds=60,
+        stop_on_failure=True,
+        command_transform=_force_dry_run,
+    )
+
+    failures = [
+        (path, entry)
+        for path, entries in results.items()
+        for entry in entries
+        if entry["status"] in {"failed", "timeout"}
+    ]
+    if failures:
+        lines = ["Full README command execution failures:"]
         for path, entry in failures[:20]:
             lines.append(
                 f"  - {path} :: {entry['id']} ({entry['status']}, rc={entry.get('returncode')})"
@@ -97,6 +128,4 @@ def _force_dry_run(command: str) -> str:
 
 def _is_executable_readme_command(entry: dict) -> bool:
     text = entry["text"]
-    if "amrex_agent.py" not in text:
-        return False
-    return "--baseline-override" in text
+    return "amrex_agent.py" in text

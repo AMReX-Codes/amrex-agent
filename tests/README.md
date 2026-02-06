@@ -59,14 +59,17 @@ python -m tests.e2e.readme_command_runner --file demo/README.md --timeout-second
 ```
 
 The dry-run test is `tests/e2e/test_readme_command_runner.py` and is E2E-only.
-The execute test auto-skips if required repos, schemas, or FAISS indices are missing.
+The execute test (amrex-agent-only) auto-skips if required repos, schemas, or FAISS indices are missing.
 It only runs commands from these READMEs:
 `README.md`, `demo/amrex/README.md`, `demo/pelec/README.md`,
 `demo/pelelmex/README.md`, `demo/erf/README.md`.
 Execution is limited to commands that include `amrex_agent.py`, with a 30s
 per-command timeout. The execute test appends `--run-mode dry` when missing and
-only runs commands that include `--baseline-override`. It also skips if no LLM
-API key is available.
+uses all `amrex_agent.py` commands in those files. It also skips if no LLM API
+key is available.
+
+There is also a manual-only E2E test that runs all commands from
+`demo/README.md`, but it is skipped by default.
 
 ## Coverage
 
