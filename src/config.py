@@ -816,22 +816,24 @@ def get_llm_client(config: AMReXAgentConfig):
             if not config.llm_model and available:
                 config.llm_model = available[0]
                 logger.info(f" Using first available model: {config.llm_model}")
-        
+
         return client
     
     elif config.llm_provider == "alcf":
         if not config.alcf_api_key:
             raise ValueError("ALCF_API_KEY not set")
         base_url = resolve_alcf_base_url(config)
-        return OpenAI(
+        client = OpenAI(
             api_key=config.alcf_api_key,
             base_url=base_url
         )
+        return client
 
     elif config.llm_provider == "openai":
         if not config.openai_api_key:
             raise ValueError("OPENAI_API_KEY not set")
-        return OpenAI(api_key=config.openai_api_key)
+        client = OpenAI(api_key=config.openai_api_key)
+        return client
     
     elif config.llm_provider == "anthropic":
         # TODO: Implement Anthropic client wrapper

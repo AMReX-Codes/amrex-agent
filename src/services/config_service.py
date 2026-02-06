@@ -130,14 +130,17 @@ class ConfigService:
             env_model = os.getenv("CBORG_MODEL")
             if env_model:
                 logger.debug(f" Using CBORG_MODEL from environment: {env_model}")
+                logger.info("Using LLM model: %s/%s", config.llm_provider, env_model)
                 return config.model_copy(update={'llm_model': env_model})
         if config.llm_provider == "alcf":
             env_model = os.getenv("ALCF_MODEL")
             if env_model:
                 logger.debug(f" Using ALCF_MODEL from environment: {env_model}")
+                logger.info("Using LLM model: %s/%s", config.llm_provider, env_model)
                 return config.model_copy(update={'llm_model': env_model})
         # If model already set, use it
         if config.llm_model:
+            logger.info("Using LLM model: %s/%s", config.llm_provider, config.llm_model)
             return config
 
         # Discover and select best model
@@ -195,7 +198,7 @@ class ConfigService:
                 selected_model = available_models[0]
 
             if selected_model:
-                logger.debug(f" Auto-selected model: {selected_model}")
+                logger.info("Using LLM model: %s/%s", config.llm_provider, selected_model)
                 if config.llm_provider == "cborg":
                     logger.debug("       (Prefer LBL models > Anthropic > GPT)")
                 else:
