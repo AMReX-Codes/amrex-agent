@@ -541,9 +541,9 @@ def test_docs_tooling_expectations():
     docs_index = Path("docs/index.md")
     assert docs_index.exists(), "docs/index.md is required for the docs landing page"
 
-    docs_readme = Path("docs/README.md")
-    assert docs_readme.exists(), "docs/README.md must exist"
-    docs_text = docs_readme.read_text(encoding="utf-8")
+    docs_workflows = Path("docs/workflows.md")
+    assert docs_workflows.exists(), "docs/workflows.md must exist"
+    docs_text = docs_workflows.read_text(encoding="utf-8")
     assert "Python standards (docs, packaging, tests/examples)" in docs_text
     assert "Packaging strategy" in docs_text
 
