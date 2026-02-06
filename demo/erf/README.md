@@ -15,6 +15,8 @@ export ERF_REPO_PATH=/path/to/ERF
 bash demo/setup_demo_database.sh --code erf
 ```
 
+If `database/schemas` and `database/faiss` already contain the prebuilt ERF artifacts, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash in `.dependencies.json` with your local repo if you need to validate you’re on the same version.
+
 Auto-clone missing ERF repo (requires git + network):
 
 ```bash

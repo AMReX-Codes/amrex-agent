@@ -122,7 +122,7 @@ class TeeStream:
 
     _ansi_re = None
 
-    def __init__(self, primary, secondary, strip_secondary: bool = False):
+    def __init__(self, primary: Any, secondary: Any, strip_secondary: bool = False) -> None:
         self._primary = primary
         self._secondary = secondary
         self._strip_secondary = strip_secondary
@@ -130,7 +130,7 @@ class TeeStream:
             import re
             TeeStream._ansi_re = re.compile(r"\x1b\\[[0-9;]*m")
 
-    def write(self, data):
+    def write(self, data: str) -> None:
         """
         Write data to the primary stream and optionally to the secondary.
 
@@ -151,7 +151,7 @@ class TeeStream:
             # Secondary may be closed during interpreter shutdown.
             self._secondary.write(data)
 
-    def flush(self):
+    def flush(self) -> None:
         """
         Flush the primary and secondary streams.
 
@@ -170,7 +170,7 @@ class TeeStream:
             # Secondary may be closed during interpreter shutdown.
             self._secondary.flush()
 
-    def isatty(self):
+    def isatty(self) -> bool:
         """
         Report whether the primary stream is a TTY.
 
@@ -210,7 +210,7 @@ def _should_color_logs(mode: str) -> bool:
     return sys.stderr.isatty()
 
 
-def setup_logging(parsed_args) -> None:
+def setup_logging(parsed_args: argparse.Namespace) -> None:
     """
     Configure logging based on parsed CLI arguments.
 
@@ -259,7 +259,7 @@ def setup_logging(parsed_args) -> None:
         logging.getLogger(name).addFilter(redactor)
 
 
-def start_log_capture(parsed_args):
+def start_log_capture(parsed_args: argparse.Namespace) -> dict[str, Any] | None:
     """
     Start capturing console output to a timestamped log file.
 
@@ -292,7 +292,10 @@ def start_log_capture(parsed_args):
     }
 
 
-def finalize_log_capture(capture, result=None):
+def finalize_log_capture(
+    capture: dict[str, Any] | None,
+    result: dict[str, Any] | None = None,
+) -> None:
     """
     Restore console streams and persist captured logs if available.
 
@@ -354,7 +357,7 @@ def baseline_override_help() -> str:
     return "Force specific baseline case (e.g., <Solver>/Exec/RegTests/<Case>)"
 
 
-def parse_arguments(args=None):
+def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
     """
     Parse command line arguments for the CLI.
 
@@ -508,7 +511,7 @@ def parse_arguments(args=None):
     return parser.parse_args(args)
 
 
-def load_prompt_content(args):
+def load_prompt_content(args: argparse.Namespace) -> str:
     """
     Load a prompt from inline text, a file, or stdin.
 
@@ -575,7 +578,7 @@ def _warn_if_schema_missing(config: AMReXAgentConfig, baseline_override: str | N
     logging.getLogger(__name__).warning("Schema missing for %s. Run: %s", solver_name, schema_cmd)
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """
     Run the AMReXAgent CLI workflow.
 
@@ -836,7 +839,7 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
     }
 
 
-def create_amrex_agent_graph(checkpointer=None) -> StateGraph:
+def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     """
     Build the AMReXAgent workflow graph with Phase 4 nodes.
 

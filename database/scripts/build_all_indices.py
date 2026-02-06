@@ -122,7 +122,10 @@ def create_embedder(use_real: bool = True):
                 list
                     Embedding vectors.
                 """
-                return self.service.embeddings.embed_documents(texts)
+                return self.service.embed_texts(texts)
+
+            def expand_documents(self, documents, metadata=None):
+                return self.service.expand_documents(documents, metadata)
 
         if embedder.embeddings is None:
             raise RuntimeError("Embedding service loaded without embeddings")

@@ -362,6 +362,24 @@ class AMReXAgentConfig(BaseModel):
                     "Set to False to require FAISS indices (fail if unavailable)."
     )
 
+    embedding_chunk_size_chars: int = Field(
+        default=2000,
+        ge=0,
+        description="Chunk size in characters for embedding documents (0 disables chunking)."
+    )
+
+    embedding_rate_limit_rpm: int = Field(
+        default=20,
+        ge=0,
+        description="Rate limit for embedding batches in requests per minute (0 disables)."
+    )
+
+    embedding_retry_max_attempts: int = Field(
+        default=50,
+        ge=1,
+        description="Max retry attempts for embedding batches (1 disables retries)."
+    )
+
     faiss_semantic_weight: float = Field(
         default=0.5,
         ge=0.0,

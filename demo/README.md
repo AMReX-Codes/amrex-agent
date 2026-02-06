@@ -74,6 +74,8 @@ export ERF_REPO_PATH=/path/to/ERF
 export AMREX_REPO_PATH=/path/to/amrex
 ```
 
+If you want `--clone-missing` to pull specific forks/branches/commits, edit `.dependencies.json` in the repo root. This is only for cloning missing repos; normal runs use the sibling repos or the `AMREX_HOME` / `*_REPO_PATH` overrides you provide.
+
 ### 4. Build Database Indices
 
 ```bash
@@ -81,6 +83,7 @@ bash demo/setup_demo_database.sh
 ```
 
 This extracts parameter schemas and builds FAISS indices from the source repositories.
+If prebuilt schemas/indices are already present in `database/schemas` and `database/faiss`, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash recorded in `.dependencies.json` with the commit in your local repo if you need to validate you’re using the same version.
 
 To build indices for a single code only:
 

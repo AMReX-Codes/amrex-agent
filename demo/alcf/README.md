@@ -61,6 +61,10 @@ Model notes:
 - Default Sophia model in `config_alcf_test.yaml` is `meta-llama/Meta-Llama-3.1-70B-Instruct` (aligns with CBORG auto-select preference for `llama-3.1-70b-instruct`).
 - For Metis, set `llm_model: openai/gpt-oss-120b` and `alcf_cluster: metis`.
 
+- ALCF-compatible embeddings are not currently stored, and using `--embedding alcf` with
+`--embedding-model mistralai/Mistral-7B-Instruct-v0.3-embed` in the RAG index builders
+is not fully exercised.
+
 ## 3) Override-static test path (first-class)
 
 Baseline override only:

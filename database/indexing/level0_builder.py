@@ -280,6 +280,9 @@ class Level0Builder:
         if not documents:
             logger.warning(f"[WARN]  No documents for {index_type}")
             return
+
+        if hasattr(self.embedder, "expand_documents"):
+            documents, metadata = self.embedder.expand_documents(documents, metadata)
         
         # Embed documents
         embeddings = self.embedder.embed_texts(documents)
