@@ -140,10 +140,10 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 # Log each unresolved parameter with suggestions
                 for param_name, value in unresolved:
                     suggestions = suggested.get(param_name, [])[:5]
-            logger.debug(
-                f"  - '{param_name}' (value: {value}) → "
-                f"suggestions: {suggestions if suggestions else 'none'}"
-            )
+                    logger.debug(
+                        f"  - '{param_name}' (value: {value}) → "
+                        f"suggestions: {suggestions if suggestions else 'none'}"
+                    )
 
                 parameter_resolution_feedback = {
                     "unresolved_parameters": unresolved,

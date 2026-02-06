@@ -95,14 +95,14 @@ class ConfigModelFactory:
         # Handle nested format (preferred)
         if isinstance(schema_data, dict) and 'parameters' in schema_data:
             schema = schema_data.get('parameters', {})
-            logger.info(
+            logger.debug(
                 f"Loaded nested schema with {len(schema)} parameters "
                 f"from {schema_path.name}"
             )
             return schema
 
         # Handle flat format (legacy)
-        logger.info(
+        logger.debug(
             f"Loaded flat schema with {len(schema_data)} entries "
             f"from {schema_path.name}"
         )
@@ -361,13 +361,13 @@ class ConfigModelFactory:
         # Reuse Metadata Schema parser
         from database.configs.base_amrex_config import BaseAMReXConfig
 
-        logger.info("[HYDRATE] Starting baseline hydration with AMReX-aware coercion")
+        logger.debug("[HYDRATE] Starting baseline hydration with AMReX-aware coercion")
 
         raw_dict = BaseAMReXConfig.parse_inputs(inputs_text)
-        logger.info(f"[HYDRATE] Parsed {len(raw_dict)} parameters from inputs")
+        logger.debug(f"[HYDRATE] Parsed {len(raw_dict)} parameters from inputs")
 
         # Log model structure
-        logger.info(f"[HYDRATE] Model has {len(model_class.model_fields)} fields")
+        logger.debug(f"[HYDRATE] Model has {len(model_class.model_fields)} fields")
 
         # ===== AMReX-AWARE COERCION FOR ALL VALUES =====
         # Per Amendment C/D: Handle flexible AMReX formats
@@ -440,7 +440,7 @@ class ConfigModelFactory:
                     f"[HYDRATE] Type unchanged {key}: {value!r} ({original_type})"
                 )
 
-        logger.info(
+        logger.debug(
             f"[HYDRATE] Coercion summary: {coercion_count} type changes, "
             f"{none_fields} None values, {unknown_fields} unknown fields"
         )
@@ -452,20 +452,20 @@ class ConfigModelFactory:
             'amr_blocking_factor',
             'amr_n_cell'
         ]
-        logger.info("[HYDRATE] Verifying critical fields in coerced_dict (before Pydantic):")
+        logger.debug("[HYDRATE] Verifying critical fields in coerced_dict (before Pydantic):")
         for field in test_fields:
             # Check with dot notation (as keys in coerced_dict)
             dot_key = field.replace('_', '.')
             if dot_key in coerced_dict:
                 value = coerced_dict[dot_key]
-                logger.info(
+                logger.debug(
                     f"[HYDRATE]   {dot_key} = {value!r} (type: {type(value).__name__})"
                 )
 
         # Pass dotted keys directly to Pydantic
         # populate_by_name=True allows Pydantic to accept both "amr.n_cell" and "amr_n_cell"
         # By passing dotted keys, model_dump(by_alias=True) will use aliases correctly
-        logger.info(f"[HYDRATE] Creating Pydantic model instance with {len(coerced_dict)} dotted keys...")
+        logger.debug(f"[HYDRATE] Creating Pydantic model instance with {len(coerced_dict)} dotted keys...")
         try:
             config = model_class(**coerced_dict)
         except Exception as exc:
@@ -481,15 +481,15 @@ class ConfigModelFactory:
             raise RuntimeError(message) from exc
 
         # Final verification after model creation
-        logger.info("[HYDRATE] Final verification after model instantiation:")
+        logger.debug("[HYDRATE] Final verification after model instantiation:")
         for field in test_fields:
             if hasattr(config, field):
                 value = getattr(config, field)
-                logger.info(
+                logger.debug(
                     f"[HYDRATE]   config.{field} = {value!r} (type: {type(value).__name__})"
                 )
 
-        logger.info("[HYDRATE] Complete - baseline hydration successful")
+        logger.debug("[HYDRATE] Complete - baseline hydration successful")
         return config
 
 
@@ -660,7 +660,7 @@ class ConfigModelFactory:
 
         if force_append or merge_strategy == "append":
             merged = ConfigModelFactory._flatten_values(values)
-            logger.info(
+            logger.debug(
                 f"[ConfigFactory] Appended {len(values)} values for array param {param}: {merged}"
             )
             return merged
@@ -808,7 +808,7 @@ If no match exists, set "to": null."""
                 temperature=0.1
             )
 
-            logger.info(f"[Remap] LLM response: {len(result.mappings)} mappings")
+            logger.debug(f"[Remap] LLM response: {len(result.mappings)} mappings")
 
             transforms = {
                 'divide_by_2': lambda v: v / 2 if isinstance(v, (int, float)) else v,
@@ -909,7 +909,7 @@ If no match exists, set "to": null."""
             for original, normalized in normalization_map.items():
                 remap_mapping[original] = remap_mapping.get(normalized, normalized)
 
-            logger.info(f"[Remap] Remapped {len(remapped)}/{len(normalized_failed_mods)} failed parameters")
+            logger.debug(f"[Remap] Remapped {len(remapped)}/{len(normalized_failed_mods)} failed parameters")
             if return_mapping and return_details:
                 return remapped, remap_mapping, remap_details
             if return_mapping:
@@ -1116,7 +1116,7 @@ If no match exists, set "to": null."""
         logger.debug(f"[DATA TRANSFER]   - modifications count: {len(modifications_list)}")
         logger.debug(f"[DATA TRANSFER]   - config type: {type(config).__name__}")
 
-        logger.info(f"[ConfigFactory] Applying {len(modifications_list)} modifications")
+        logger.debug(f"[ConfigFactory] Applying {len(modifications_list)} modifications")
         logger.debug(f"[ConfigFactory] Modifications: {modifications_list}")
 
         # Build alias → field name mapping using dedicated method
@@ -1213,7 +1213,7 @@ If no match exists, set "to": null."""
             try:
                 old_value = getattr(config, field_name, None)
                 setattr(config, field_name, coerced_value)
-                logger.info(
+                logger.debug(
                     f"[ConfigFactory] Set {field_name}: {old_value} → {coerced_value} "
                     f"(type: {type(coerced_value).__name__})"
                 )
@@ -1226,7 +1226,7 @@ If no match exists, set "to": null."""
         remap_details: list[RemapResult] = []
         solver_config = baseline_params if hasattr(baseline_params, "parameter_format_hints") else None
         if unresolved_params and config_service:
-            logger.info(f"[ConfigFactory] Attempting remap for {len(unresolved_params)} unresolved params")
+            logger.debug(f"[ConfigFactory] Attempting remap for {len(unresolved_params)} unresolved params")
             resolution_attempted = True
             remapped, remap_mapping, remap_details = ConfigModelFactory.remap_failed_modifications(
                 unresolved_params,
@@ -1238,13 +1238,13 @@ If no match exists, set "to": null."""
                 remap_strategy=merge_strategy,
             )
             remap_count = len(remapped)
-            logger.info(f"[Remap] Remapped {remap_count}/{len(unresolved_params)} failed parameters")
+            logger.debug(f"[Remap] Remapped {remap_count}/{len(unresolved_params)} failed parameters")
 
             # Remove successfully remapped from unresolved list
             # (remap_failed_modifications applies them directly to config)
             # For now, keep original list - remap success is tracked separately
 
-        logger.info("[ConfigFactory] Completed applying modifications")
+        logger.debug("[ConfigFactory] Completed applying modifications")
 
         if not return_details:
             return config

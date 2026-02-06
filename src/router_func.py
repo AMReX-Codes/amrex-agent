@@ -162,7 +162,7 @@ def route_after_analysis(state: GraphState) -> str:
 
     if status == "failed":
         issues = analysis_report.get("issues", [])
-    logger.debug("[ROUTE] Router: Analysis → Reviewer (simulation failed)")
+        logger.debug("[ROUTE] Router: Analysis → Reviewer (simulation failed)")
         logger.debug(f"   Issues: {len(issues)}")
         if len(issues) == 0:
             logger.warning("[ROUTE] Analysis failure without actionable issues → Reviewer")
