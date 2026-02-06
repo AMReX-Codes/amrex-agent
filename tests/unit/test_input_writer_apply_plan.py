@@ -68,7 +68,7 @@ def test_apply_plan_writes_inputs(tmp_path, mock_baseline_dir, monkeypatch):
     monkeypatch.setattr(
         input_writer_module.InputsFileWriter,
         "serialize",
-        lambda config_model, original_text: "amr.n_cell = 64 64 64\n",
+        lambda config_model, original_text, modified_keys=None: "amr.n_cell = 64 64 64\n",
     )
 
     service = InputWriterService(DummyConfig())

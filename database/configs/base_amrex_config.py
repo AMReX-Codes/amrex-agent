@@ -1232,16 +1232,8 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
             metadata['description'] = cls.description
 
         # 3. Parse inputs file (Amendment C)
-        inputs_file = case_path / 'inputs'
-        if not inputs_file.exists():
-            # Try alternative names
-            for name in ['inputs.2d', 'inputs.3d', 'inputs*']:
-                matches = list(case_path.glob(name))
-                if matches:
-                    inputs_file = matches[0]
-                    break
-
-        if inputs_file.exists():
+        inputs_file = cls._find_inputs_file(case_path)
+        if inputs_file and inputs_file.exists():
             try:
                 inputs_text = inputs_file.read_text()
 
@@ -1348,8 +1340,11 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         -------
             Path to inputs file, or None if not found
         """
-        # Try common input file patterns
-        for pattern in ['inputs*', '*.inp', 'probin*']:
+        # Try configured input file patterns
+        patterns = list(getattr(cls, "inputs_file_patterns", []))
+        if not patterns:
+            patterns = ['inputs*']
+        for pattern in patterns:
             files = list(case_path.glob(pattern))
             if files:
                 # Prefer files named exactly "inputs" or shortest match

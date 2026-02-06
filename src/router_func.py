@@ -95,8 +95,8 @@ def route_after_runner(state: GraphState) -> str:
         logger.error(f"[ROUTE] Terminal mode → END: {error}")
         return END
 
-    if state.get("job_status") == "skipped":
-        logger.warning("[ROUTE] Runner skipped → END")
+    if state.get("job_status") in {"skipped", "cancelled", "timeout"}:
+        logger.warning("[ROUTE] Runner %s → END", state.get("job_status"))
         return END
 
     # Terminal system failures (cannot be fixed by changing inputs)

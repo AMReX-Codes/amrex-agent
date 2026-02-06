@@ -398,23 +398,52 @@ class AMReXCasesService:
         )
 
         try:
-            response = llm_client.chat.completions.create(
-                model=self.config.llm_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=100
-            )
-
-            content = response.choices[0].message.content.strip()
-
-            # Parse
             code_match = None
             case_match = None
-            for line in content.split('\n'):
-                if line.startswith("CODE:"):
-                    code_match = line.split("CODE:")[1].strip()
-                elif line.startswith("CASE:"):
-                    case_match = line.split("CASE:")[1].strip()
+            use_plain = False
+            try:
+                import instructor
+                from pydantic import BaseModel, Field
+                from src.config import unwrap_llm_client, wrap_llm_client
+
+                class CaseSelection(BaseModel):
+                    code: str = Field(description="Code name from the available list")
+                    case: str = Field(description="Case path from the selected code")
+
+                base_client = unwrap_llm_client(llm_client)
+                client = instructor.from_openai(base_client)
+                client = wrap_llm_client(client, self.config)
+                result = client.chat.completions.create(
+                    model=self.config.llm_model,
+                    response_model=CaseSelection,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.1,
+                    max_retries=2,
+                )
+                code_match = result.code.strip()
+                case_match = result.case.strip()
+            except (ImportError, ModuleNotFoundError):
+                use_plain = True
+            except Exception as exc:
+                logger.warning("LLM structured selection failed: %s", exc)
+                use_plain = True
+
+            if use_plain:
+                response = llm_client.chat.completions.create(
+                    model=self.config.llm_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.1,
+                    max_tokens=100
+                )
+
+                content = response.choices[0].message.content.strip()
+
+                # Parse
+                for line in content.split('\n'):
+                    if line.startswith("CODE:"):
+                        code_match = line.split("CODE:")[1].strip()
+                    elif line.startswith("CASE:"):
+                        case_match = line.split("CASE:")[1].strip()
 
             # Validate
             if code_match in all_cases:

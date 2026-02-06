@@ -259,13 +259,33 @@ class InputsFileSelector:
         prompt = prompt.format(case_name=case_hint, candidates="\n\n".join(summaries))
 
         try:
-            response = client.chat.completions.create(
-                model=config.llm_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                max_tokens=50
-            )
-            content = response.choices[0].message.content.strip()
+            try:
+                import instructor
+                from pydantic import BaseModel, Field
+                from src.config import unwrap_llm_client, wrap_llm_client
+
+                class InputsSelection(BaseModel):
+                    filename: str = Field(description="Selected inputs filename")
+
+                base_client = unwrap_llm_client(client)
+                instr_client = instructor.from_openai(base_client)
+                instr_client = wrap_llm_client(instr_client, config)
+                result = instr_client.chat.completions.create(
+                    model=config.llm_model,
+                    response_model=InputsSelection,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.0,
+                    max_retries=2,
+                )
+                content = result.filename.strip()
+            except (ImportError, ModuleNotFoundError):
+                response = client.chat.completions.create(
+                    model=config.llm_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.0,
+                    max_tokens=50
+                )
+                content = response.choices[0].message.content.strip()
         except Exception as exc:
             logger.debug(f"LLM compare failed: {exc}")
             return None

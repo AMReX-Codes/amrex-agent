@@ -868,6 +868,18 @@ def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
     return _LLMGateClient(client, strategy)
 
 
+def wrap_llm_client(client, config: AMReXAgentConfig):
+    """Public helper to apply LLM gating to an existing client instance."""
+    return _wrap_llm_client_if_needed(client, config)
+
+
+def unwrap_llm_client(client):
+    """Return the underlying client if wrapped by the LLM gate."""
+    if isinstance(client, _LLMGateClient):
+        return client._client
+    return client
+
+
 class _LLMGateClient:
     def __init__(self, client, strategy: str):
         self._client = client

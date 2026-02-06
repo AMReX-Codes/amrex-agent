@@ -20,9 +20,9 @@ remote_staging: true
 remote_staging_method: sfapi_client
 remote_run_dir: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility/run_test_1
 superfacility_account: $SBATCH_ACCOUNT
-# Remote executable discovery (finds *.ex, prefers CUDA)
-remote_executable_template: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility/{solver_name}/{case_dir}
-remote_executable_find: true
+# Remote executable discovery (explicit path template)
+remote_executable_template: /global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility/{repo_name}/{case_dir}/PeleLMeX3d.gnu.MPI.CUDA.ex
+remote_executable_find: false
 
 # Repo path (optional; follows normal priority if unset)
 # amrex_repo_path: /path/to/amrex

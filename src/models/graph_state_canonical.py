@@ -113,7 +113,7 @@ class GraphState(TypedDict, total=False):
 
     job_submission_time: Optional[str]          # Job submission timestamp (ISO 8601) (Fix 6)
 
-    job_status: str                 # Execution status
+    job_status: str                 # Execution status (queued/running/completed/failed/cancelled/timeout/skipped)
                                     # Values: "queued", "running", "completed", "failed"
 
     script_path: Optional[str]      # Path to submit script

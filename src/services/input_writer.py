@@ -471,9 +471,8 @@ class InputWriterService:
 
             serialize_kwargs = {
                 "original_text": baseline_text,  # Preserve formatting
+                "modified_keys": applied_params,
             }
-            if applied_params:
-                serialize_kwargs["modified_keys"] = applied_params
 
             output_text = InputsFileWriter.serialize(
                 config_model,
