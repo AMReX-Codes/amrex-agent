@@ -76,9 +76,9 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates with visualization metadata and artifacts.
     """
-    logger.debug("\n" + "="*80)
-    logger.debug("VISUALIZATION NODE - Multi-Backend Plotfile Visualization")
-    logger.debug("="*80)
+    logger.info("=" * 80)
+    logger.info("Starting Visualization node")
+    logger.info("=" * 80)
 
     config = state["config"]
     iteration = state.get("iteration", 0)
@@ -345,6 +345,10 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
     # RETURN STATE UPDATES (LangGraph PATTERN)
     # ========================================
 
+    logger.info(f"Visualization complete: {viz_status}")
+    logger.info("-" * 80)
+    logger.info("Visualization node complete")
+    logger.info("-" * 80)
     return {
         "mode": "proceed",
         "iteration": iteration,

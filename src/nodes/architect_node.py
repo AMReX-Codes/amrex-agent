@@ -37,7 +37,9 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates with selected case, modifications, and workflow metadata.
     """
-    logger.info("Executing Architect Node")
+    logger.info("=" * 80)
+    logger.info("Starting Architect node")
+    logger.info("=" * 80)
 
     # ========================================
     # COMPONENT 9d: ITERATION SAFETY
@@ -96,7 +98,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     parameter_resolution_feedback: dict[str, Any] | None = None  # Initialize for both modes
 
     if mode == "retry":
-        logger.info("Retry mode detected - extracting feedback")
+        logger.debug("Retry mode detected - extracting feedback")
 
         # Extract feedback from workflow_history (canonical source)
         workflow_history_temp = state.get("workflow_history", [])
@@ -138,10 +140,10 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 # Log each unresolved parameter with suggestions
                 for param_name, value in unresolved:
                     suggestions = suggested.get(param_name, [])[:5]
-                    logger.info(
-                        f"  - '{param_name}' (value: {value}) → "
-                        f"suggestions: {suggestions if suggestions else 'none'}"
-                    )
+            logger.debug(
+                f"  - '{param_name}' (value: {value}) → "
+                f"suggestions: {suggestions if suggestions else 'none'}"
+            )
 
                 parameter_resolution_feedback = {
                     "unresolved_parameters": unresolved,
@@ -201,7 +203,9 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 "retry_count": retry_count
             }
 
-            logger.info(f"Feedback: {len(errors)} errors, rejected baseline: {rejected_case}, inputs: {rejected_inputs}")
+            logger.debug(
+                f"Feedback: {len(errors)} errors, rejected baseline: {rejected_case}, inputs: {rejected_inputs}"
+            )
 
             # ----------------------------------------
             # 9c-iii: CONVERT SCHEMA ERRORS TO PARAMETER RESOLUTION FEEDBACK
@@ -228,20 +232,20 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                             "suggested_params": {},
                         }
                         logger.debug(f"[DATA TRANSFER] Built parameter_resolution_feedback from {len(unresolved)} schema errors")
-                        logger.info(f"Built parameter_resolution_feedback from {len(unresolved)} schema errors")
+                        logger.debug(f"Built parameter_resolution_feedback from {len(unresolved)} schema errors")
 
         else:
             if not parameter_resolution_feedback:
                 logger.warning("Retry mode but no errors_active or parameter_resolution_feedback in state")
     else:
-        logger.info(f"Mode: {mode} (initial planning)")
+        logger.debug(f"Mode: {mode} (initial planning)")
 
     # Optional solver hint
     selected_solvers = state.get("selected_solvers")
     solver_hint = None
     if selected_solvers:
         solver_hint = selected_solvers[0][0] if selected_solvers else None
-        logger.info(f"Using solver hint: {solver_hint}")
+        logger.debug(f"Using solver hint: {solver_hint}")
 
     # ========================================
     # COMPONENT 9b: SERVICE ORCHESTRATION
@@ -281,16 +285,16 @@ def architect_node(state: GraphState) -> dict[str, Any]:
 
         if rejected_case and rejected_case not in excluded_cases:
             excluded_cases.append(rejected_case)
-            logger.info(f"Excluding baseline: {rejected_case}")
+            logger.debug(f"Excluding baseline: {rejected_case}")
 
         if rejected_inputs and rejected_inputs not in excluded_inputs_files:
             excluded_inputs_files.append(rejected_inputs)
-            logger.info(f"Excluding inputs file: {rejected_inputs}")
+            logger.debug(f"Excluding inputs file: {rejected_inputs}")
 
         if retry_guidance.get("baseline_base_action") == "switch" and rejected_case:
             if rejected_case not in excluded_cases:
                 excluded_cases.append(rejected_case)
-            logger.info(f"Retry guidance suggests switching baseline: {rejected_case}")
+            logger.debug(f"Retry guidance suggests switching baseline: {rejected_case}")
 
     logger.debug(f"Total exclusions: {len(excluded_cases)} cases, {len(excluded_inputs_files)} inputs files")
 
@@ -452,6 +456,9 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         updates["timestamp_plan_created"] = plan_result.timestamp
 
     logger.info(f"Iteration {new_iteration}, Retry {new_retry_count}, Mode: proceed")
+    logger.info("-" * 80)
+    logger.info("Architect node complete")
+    logger.info("-" * 80)
 
     # Return updates dict (LangGraph will merge into state)
     return updates

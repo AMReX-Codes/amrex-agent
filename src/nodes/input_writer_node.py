@@ -31,7 +31,9 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     dict
         State updates including run directory and input file metadata.
     """
-    logger.info("Executing Input Writer Node")
+    logger.info("=" * 80)
+    logger.info("Starting Input Writer node")
+    logger.info("=" * 80)
 
     # ========================================
     # COMPONENT 10a: STATE VALIDATION & PLAN EXTRACTION FROM WORKFLOW_HISTORY
@@ -73,8 +75,8 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     baseline = plan_details.get("baseline")
     reasoning = plan_details.get("reasoning", "")
 
-    logger.info(f"[InputWriter] Plan extracted from workflow_history: {selected_case}")
-    logger.info(f"[InputWriter] Extracted {len(modifications)} modifications: {modifications[:3]}...")
+    logger.debug(f"[InputWriter] Plan extracted from workflow_history: {selected_case}")
+    logger.debug(f"[InputWriter] Extracted {len(modifications)} modifications: {modifications[:3]}...")
     logger.debug(f"[InputWriter] Baseline: {baseline}")
 
     def _should_prefer_strategy_on_retry(state: GraphState) -> bool:
@@ -370,5 +372,8 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     )
     logger.debug(f"  Inputs written: {result.get('inputs_path')}")
     logger.debug(f"  Run directory: {result.get('run_dir')}")
+    logger.info("-" * 80)
+    logger.info("Input Writer node complete")
+    logger.info("-" * 80)
 
     return updates
