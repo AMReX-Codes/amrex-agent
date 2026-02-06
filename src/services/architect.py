@@ -575,19 +575,19 @@ class ArchitectService:
                     excluded_inputs_files=excluded_inputs_files,
                     parameter_resolution_feedback=parameter_resolution_feedback
                 )
-                logger.info("Hierarchical indexing succeeded")
+                logger.debug("Hierarchical indexing succeeded")
                 return plan
             except Exception as e:
                 logger.warning(f"Hierarchical indexing failed: {e}")
                 if getattr(self.config, 'fallback_to_simple_on_error', True):
-                    logger.info("Falling back to simple indexing")
+                    logger.debug("Falling back to simple indexing")
                     strategy = "simple"
                 else:
                     raise
 
         # Simple strategy
         plan = self.create_plan(user_prompt=user_prompt, **kwargs)
-        logger.info("Simple indexing succeeded")
+        logger.debug("Simple indexing succeeded")
         return plan
 
 
@@ -2741,7 +2741,7 @@ Solver: {code_name}"""
                                     case_path, problem_type, requirements
                                 )
 
-                    logger.info(f" LLM scored {len(result)} cases")
+                    logger.debug(f" LLM scored {len(result)} cases")
                     return result
                 else:
                     raise ValueError("No JSON in LLM response")

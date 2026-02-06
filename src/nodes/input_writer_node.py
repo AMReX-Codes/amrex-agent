@@ -208,7 +208,7 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     logger.debug("[DATA TRANSFER] Checking InputWriterService result")
     logger.debug(f"[DATA TRANSFER] Service result keys: {list(result.keys())}")
     if result.get("requires_parameter_resolution"):
-        logger.info("[DATA TRANSFER] Service flagged parameter resolution required")
+        logger.debug("[DATA TRANSFER] Service flagged parameter resolution required")
         unresolved = result.get("unresolved_parameters", [])
         guidance = result.get("resolution_guidance", "")
         available = result.get("available_schema_params", [])

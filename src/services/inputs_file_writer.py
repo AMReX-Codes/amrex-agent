@@ -160,8 +160,8 @@ class InputsFileWriter:
                 formatted_value = InputsFileWriter._format_value(value)
                 output.append(f"{key} = {formatted_value}")
 
-        logger.info(f"[DEBUG] Seen {len(seen_keys)} keys in original")
-        logger.info(f"[DEBUG] Sample seen keys: {list(seen_keys)[:10]}")
+        logger.debug(f"[DEBUG] Seen {len(seen_keys)} keys in original")
+        logger.debug(f"[DEBUG] Sample seen keys: {list(seen_keys)[:10]}")
 
         return '\n'.join(output)
 

@@ -395,7 +395,7 @@ class ConfigService:
 
         # Auto-detect model
         config = self.auto_detect_model(config)
-        if config.llm_model:
+        if config.llm_provider not in {"cborg", "alcf"} and config.llm_model:
             logger.info("Using LLM model: %s/%s", config.llm_provider, config.llm_model)
 
         # Test connection
