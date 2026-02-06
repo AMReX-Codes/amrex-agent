@@ -85,6 +85,18 @@ python amrex_agent.py \
   --environment perlmutter
 ```
 
+## PeleLMeX DNS example (JetInCrossFlow)
+
+```bash
+# export SBATCH_ACCOUNT=m4106
+python amrex_agent.py \
+  --prompt-path demo/pelelmex/user_requirements_test_DNS.txt \
+  --baseline-override PeleLMeX/Exec/RegTests/JetInCrossFlow \
+  --config demo/superfacility/config_perlmutter_remote.yaml \
+  --environment perlmutter \
+  --verbose
+```
+
 ## Notes
 
 - The SFAPI path assumes the executable and inputs are already on Perlmutter.
