@@ -1,6 +1,7 @@
 # Superfacility (SFAPI) Demo
 
 Notes and example configuration for submitting AMReXAgent runs to NERSC via SFAPI.
+For full usage docs, see `docs/sfapi.md`.
 
 ## Prerequisites
 
