@@ -152,6 +152,7 @@ class TestGetLlmClient:
     - alcf: OpenAI client pointing to ALCF endpoint
     - openai: OpenAI client with OpenAI API
     - anthropic: Not implemented (raises NotImplementedError)
+    - litellm: OpenAI client pointing at LiteLLM proxy
     
     PELE-SPECIFIC: Model preference order in CBORG auto-detection
     
@@ -363,6 +364,34 @@ class TestGetLlmClient:
         )
         assert result == mock_client
 
+    @patch('openai.OpenAI')
+    def test_returns_litellm_client(self, mock_openai_class):
+        """
+        Given: Config with litellm provider and base URL
+        When:  get_llm_client() is called
+        Then:  Should return OpenAI client configured for LiteLLM proxy
+        """
+        # Arrange
+        mock_client = MagicMock()
+        mock_openai_class.return_value = mock_client
+
+        config = AMReXAgentConfig(
+            llm_provider="litellm",
+            llm_model="gpt-4o-mini",
+            litellm_base_url="http://localhost:4000/v1",
+            litellm_api_key="test-litellm-key"
+        )
+
+        # Act
+        result = get_llm_client(config)
+
+        # Assert
+        mock_openai_class.assert_called_once_with(
+            api_key="test-litellm-key",
+            base_url="http://localhost:4000/v1"
+        )
+        assert result == mock_client
+
     def test_alcf_raises_error_when_no_api_key(self, monkeypatch):
         """
         Given: ALCF config without API key
@@ -407,6 +436,24 @@ class TestGetLlmClient:
             get_llm_client(config)
         
         assert "OPENAI_API_KEY not set" in str(exc_info.value)
+
+    def test_litellm_raises_error_when_no_base_url(self):
+        """
+        Given: LiteLLM config without base URL
+        When:  get_llm_client() is called
+        Then:  Should raise ValueError
+        """
+        # Arrange
+        config = AMReXAgentConfig(
+            llm_provider="litellm",
+            llm_model="gpt-4o-mini"
+        )
+
+        # Act & Assert
+        with pytest.raises(ValueError) as exc_info:
+            get_llm_client(config)
+
+        assert "LITELLM_BASE_URL not set" in str(exc_info.value)
     
     def test_anthropic_raises_not_implemented(self):
         """

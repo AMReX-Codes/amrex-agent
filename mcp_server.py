@@ -37,7 +37,7 @@ try:
     HAS_MCP = True
 except ImportError:
     HAS_MCP = False
-    print("[WARN] MCP library not available. Install with: pip install mcp")
+    print("[WARN] MCP library not available. Install with: pip install mcp", file=sys.stderr)
 
 # Initialize AMReXAgent
 try:
@@ -73,10 +73,10 @@ except ModuleNotFoundError:
 # Global config (loaded once at startup)
 config = AMReXAgentConfig()
 
-print("[MCP] AMReXAgent starting...")
-print(f"[MCP] Environment: {config.environment}")
-print(f"[MCP] FAISS DB path: {config.faiss_db_path}")
-print(f"[MCP] Knowledge base path: {config.knowledge_base_path}")
+print("[MCP] AMReXAgent starting...", file=sys.stderr)
+print(f"[MCP] Environment: {config.environment}", file=sys.stderr)
+print(f"[MCP] FAISS DB path: {config.faiss_db_path}", file=sys.stderr)
+print(f"[MCP] Knowledge base path: {config.knowledge_base_path}", file=sys.stderr)
 
 SIMULATION_PLAN_ESSENTIAL_FIELDS = {
     "selected_solver",
@@ -626,8 +626,8 @@ def mcp_generate_visualizations(payload: dict) -> dict:
 # ============================================================================
 
 if not HAS_MCP:
-    print("[ERROR] MCP library required for server mode")
-    print("        Install with: pip install mcp")
+    print("[ERROR] MCP library required for server mode", file=sys.stderr)
+    print("        Install with: pip install mcp", file=sys.stderr)
     sys.exit(1)
 
 app = Server("pele-agent")
@@ -642,8 +642,10 @@ async def list_tools():
     List[Dict[str, Any]]
         Tool specifications for the MCP client.
     """
+    from mcp import Tool
+
     available_solvers = config.available_solvers
-    return [
+    tool_specs = [
         {
             "name": "query_knowledge",
             "description": "Query AMReX knowledge base for simulation guidance. "
@@ -1193,6 +1195,7 @@ async def list_tools():
             }
         }
     ]
+    return [Tool(**spec) for spec in tool_specs]
 
 
 @app.call_tool()
@@ -1253,24 +1256,25 @@ async def call_tool(name: str, arguments: dict) -> Any:
 
 async def main():
     """Start the MCP server."""
-    print("[MCP] Starting stdio server...")
+    print("[MCP] Starting stdio server...", file=sys.stderr)
 
     async with stdio_server() as (read_stream, write_stream):
-        await app.run(read_stream, write_stream)
+        init_options = app.create_initialization_options()
+        await app.run(read_stream, write_stream, init_options)
 
 
 if __name__ == "__main__":
-    print("[MCP] AMReXAgent MCP Server")
-    print(f"[MCP] Environment: {config.environment}")
-    print(f"[MCP] FAISS indices: {config.faiss_db_path}")
-    print("[MCP] Starting...")
+    print("[MCP] AMReXAgent MCP Server", file=sys.stderr)
+    print(f"[MCP] Environment: {config.environment}", file=sys.stderr)
+    print(f"[MCP] FAISS indices: {config.faiss_db_path}", file=sys.stderr)
+    print("[MCP] Starting...", file=sys.stderr)
 
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n[MCP] Server stopped by user")
+        print("\n[MCP] Server stopped by user", file=sys.stderr)
     except Exception as e:
-        print(f"[MCP] Server error: {e}")
+        print(f"[MCP] Server error: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         sys.exit(1)

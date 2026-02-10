@@ -14,3 +14,4 @@ mkdocs serve
 - `docs/workflows.md` holds design and workflow notes.
 - `README.md` covers quick start and usage examples.
 - `demo/README.md` contains example scenarios and configs.
+- `docs/mcp.md` describes the MCP server and testing guidance.

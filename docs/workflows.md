@@ -65,3 +65,23 @@ Tokens expire; use the ALCF helper script to refresh:
 python inference_auth_token.py authenticate
 python inference_auth_token.py get_access_token
 ```
+
+## LiteLLM Proxy (OpenAI-compatible)
+
+LiteLLM works via the OpenAI-compatible proxy API. Set env vars:
+
+```bash
+export LITELLM_BASE_URL=http://localhost:4000/v1
+export LITELLM_API_KEY=your_key_here  # optional, proxy-specific
+export LITELLM_MODEL=gpt-4o-mini
+```
+
+Enable the provider in your config (example):
+
+```yaml
+llm_provider: litellm
+llm_model: gpt-4o-mini
+```
+
+Structured outputs via `instructor` should work if the proxy returns
+OpenAI-compatible response shapes.
