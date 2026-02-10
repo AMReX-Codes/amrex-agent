@@ -91,10 +91,10 @@ def test_demo_prompt_file_pelelmex_hierarchical(tmp_path: Path) -> None:
     repo_path = _resolve_pelelmex_repo()
     if not repo_path:
         pytest.skip("PeleLMeX repo not available")
-    baseline_dir = repo_path / "Exec" / "RegTests" / "JetInCrossFlow"
+    baseline_dir = repo_path / "Exec" / "Production" / "JetInCrossflow"
     if not baseline_dir.exists():
-        pytest.skip("PeleLMeX JetInCrossFlow baseline not available")
-    baseline_override = "PeleLMeX/Exec/RegTests/JetInCrossFlow"
+        pytest.skip("PeleLMeX JetInCrossflow baseline not available")
+    baseline_override = "PeleLMeX/Exec/Production/JetInCrossflow"
 
     output_dir = tmp_path / "runs"
     cmd = [

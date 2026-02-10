@@ -480,7 +480,7 @@ class AMReXAgentConfig(BaseModel):
         default=None,
         description="Force specific baseline case (overrides automatic selection). "
                     "Format: 'Code/Exec/Path/Case' or 'Exec/Path/Case'. "
-                    "Example: 'PeleLMeX/Exec/RegTests/JetInCrossFlow' or 'Exec/Production/JetFlame'. "
+                    "Example: 'PeleLMeX/Exec/Production/JetInCrossflow' or 'Exec/Production/JetFlame'. "
                     "When set, skips L2 baseline selection and uses this case directly."
     )
 

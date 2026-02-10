@@ -335,7 +335,7 @@ class EmbeddingService:
                     break
                 except Exception as e:
                     status_code = self._get_http_status(e)
-                    retryable = status_code in {429, 500}
+                    retryable = status_code in {429, 500, 502, 503}
                     if not retryable or attempt >= max_attempts:
                         raise
                     base_delay = 1.0
