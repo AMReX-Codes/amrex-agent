@@ -327,11 +327,17 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     preconfirm_selection = None
     gate_entry = None
     if getattr(config, "preconfirm_gate", False) is True:
+        auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
+        confidence = plan_result.baseline_confidence
         options = _build_baseline_options(plan_result)
         summary_lines = [
+            f"Iteration: {new_iteration} (retry {new_retry_count})",
             f"Solver: {plan_result.selected_solver}",
             f"Selected case: {plan_result.selected_case}",
+            f"Baseline confidence: {confidence if confidence is not None else 'n/a'}",
             f"Planned modifications: {len(plan_result.modifications)}",
+            f"Indexing strategy: {plan_result.indexing_strategy}",
+            f"Candidate baselines: {len(plan_result.case_candidates or [])}",
             "Note: Selecting an alternative keeps the current modification plan.",
         ]
         gate_result = run_preconfirm_gate(
@@ -340,6 +346,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             options=options,
             enabled=getattr(config, "preconfirm_gate", False) is True,
             allow_cancel=True,
+            auto_approve=auto_approve,
         )
         preconfirm_action = gate_result["action"]
         preconfirm_selection = gate_result.get("selection")
