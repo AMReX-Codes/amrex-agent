@@ -12,5 +12,6 @@ mkdocs serve
 ## Documentation layout
 
 - `docs/workflows.md` holds design and workflow notes.
+- `docs/api_keys.md` documents API key setup and OpenAI usage.
 - `README.md` covers quick start and usage examples.
 - `demo/README.md` contains example scenarios and configs.
