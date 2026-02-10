@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MCP prompt to slicefile contract",
+  "type": "object",
+  "properties": {
+    "input": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string"
+        },
+        "visualization_config": {
+          "type": "object",
+          "properties": {
+            "plots": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "slice"
+                    ]
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "axis": {
+                    "type": "string"
+                  },
+                  "colormap": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "field",
+                  "axis",
+                  "colormap"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": [
+            "plots"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "prompt",
+        "visualization_config"
+      ],
+      "additionalProperties": false
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "create_simulation_plan": {
+          "type": "object",
+          "properties": {
+            "selected_case": {
+              "type": "string"
+            },
+            "inputs_file_path": {
+              "type": "string"
+            },
+            "run_directory": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "selected_case",
+            "inputs_file_path",
+            "run_directory"
+          ],
+          "additionalProperties": false
+        },
+        "run_simulation": {
+          "type": "object",
+          "properties": {
+            "job_status": {
+              "type": "string"
+            },
+            "run_directory": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "job_status",
+            "run_directory",
+            "method"
+          ],
+          "additionalProperties": false
+        },
+        "generate_visualizations": {
+          "type": "object",
+          "properties": {
+            "visualization_status": {
+              "type": "string"
+            },
+            "visualization_images": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "visualization_metadata": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "visualization_status",
+            "visualization_images",
+            "visualization_metadata"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "create_simulation_plan",
+        "run_simulation",
+        "generate_visualizations"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "input",
+    "outputs"
+  ],
+  "additionalProperties": false
+}

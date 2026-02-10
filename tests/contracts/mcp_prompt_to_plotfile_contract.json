@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "contract_name": "mcp_prompt_to_plotfile",
+  "description": "MCP tool flow from user prompt to generated plotfile visualizations",
+  "transport": "stdio JSON-RPC (tools/list, tools/call)",
+  "schema_path": "mcp_prompt_to_plotfile_schema.json",
+  "example_path": "mcp_prompt_to_plotfile_example.json",
+
+  "tool_sequence": [
+    "create_simulation_plan",
+    "run_simulation",
+    "analyze_results",
+    "generate_visualizations"
+  ],
+
+  "required_inputs": {
+    "prompt": "str (natural language simulation request)",
+    "output_dir": "str (optional; where inputs/run directories are created)",
+    "submit": "dict (optional; must include dry_run=true for safe tests)"
+  },
+
+  "expected_outputs": {
+    "create_simulation_plan": {
+      "selected_case": "str",
+      "inputs_file_path": "str",
+      "run_directory": "str"
+    },
+    "run_simulation": {
+      "job_status": "str",
+      "run_directory": "str",
+      "method": "str"
+    },
+    "analyze_results": {
+      "job_status": "str",
+      "analysis_report": "dict"
+    },
+    "generate_visualizations": {
+      "visualization_status": "str",
+      "visualization_images": "List[str]",
+      "visualization_metadata": "dict"
+    }
+  },
+
+  "plotfile_expectations": {
+    "source": "run_directory",
+    "pattern": "plt* directories",
+    "note": "Visualization backends discover plotfiles from run_directory"
+  },
+
+  "failure_modes": [
+    "Missing inputs_file_path or case_dir for run_simulation",
+    "No plotfiles found (visualization_status=skipped)",
+    "Visualization backend unavailable"
+  ]
+}

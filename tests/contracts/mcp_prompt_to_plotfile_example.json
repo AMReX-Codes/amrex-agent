@@ -1,0 +1,34 @@
+{
+  "input": {
+    "prompt": "Run a 2D Kelvin-Helmholtz test and summarize instability growth.",
+    "output_dir": "output/mcp/kh",
+    "submit": {
+      "dry_run": true
+    }
+  },
+  "outputs": {
+    "create_simulation_plan": {
+      "selected_case": "kh_2d",
+      "inputs_file_path": "cases/kh/inputs_2d",
+      "run_directory": "output/mcp/kh/run_001"
+    },
+    "run_simulation": {
+      "job_status": "dry_run",
+      "run_directory": "output/mcp/kh/run_001",
+      "method": "local"
+    },
+    "analyze_results": {
+      "job_status": "dry_run",
+      "analysis_report": {
+        "summary": "Dry run - no analysis executed."
+      }
+    },
+    "generate_visualizations": {
+      "visualization_status": "skipped",
+      "visualization_images": [],
+      "visualization_metadata": {
+        "reason": "Dry run - no plotfiles available."
+      }
+    }
+  }
+}

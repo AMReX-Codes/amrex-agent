@@ -1,0 +1,34 @@
+{
+  "input": {
+    "prompt": "Generate a density slice along z for the Sedov blast.",
+    "visualization_config": {
+      "plots": [
+        {
+          "type": "slice",
+          "field": "density",
+          "axis": "z",
+          "colormap": "viridis"
+        }
+      ]
+    }
+  },
+  "outputs": {
+    "create_simulation_plan": {
+      "selected_case": "sedov",
+      "inputs_file_path": "cases/sedov/inputs_3d",
+      "run_directory": "output/mcp/sedov/run_001"
+    },
+    "run_simulation": {
+      "job_status": "dry_run",
+      "run_directory": "output/mcp/sedov/run_001",
+      "method": "local"
+    },
+    "generate_visualizations": {
+      "visualization_status": "skipped",
+      "visualization_images": [],
+      "visualization_metadata": {
+        "reason": "Dry run - no plotfiles available."
+      }
+    }
+  }
+}
