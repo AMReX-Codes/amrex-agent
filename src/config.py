@@ -916,6 +916,8 @@ def _wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
     max_attempts = getattr(config, "llm_retry_max_attempts", 1) or 1
     if max_attempts <= 1:
         return client
+    if isinstance(client, _LLMRetryClient):
+        return client
     return _LLMRetryClient(client, max_attempts)
 
 
@@ -932,6 +934,8 @@ def wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
 def unwrap_llm_client(client):
     """Return the underlying client if wrapped by the LLM gate."""
     if isinstance(client, _LLMGateClient):
+        return client._client
+    if isinstance(client, _LLMRetryClient):
         return client._client
     return client
 
