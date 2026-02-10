@@ -8,6 +8,7 @@ nav:
   - Workflows: workflows.md
   - Integration: integration.md
   - API Keys: api_keys.md
+  - Superfacility API: sfapi.md
   - Demos: demos.md
 
 theme:
