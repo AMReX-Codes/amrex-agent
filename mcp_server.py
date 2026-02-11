@@ -1521,11 +1521,14 @@ async def call_tool(name: str, arguments: dict) -> Any:
     try:
         session_id = None
         context = dict(arguments)
+        provided_steps = "steps" in context
         if "session_id" in context:
             session_id = str(context.get("session_id") or uuid.uuid4())
             context.pop("session_id", None)
             session_context = _get_session_context(session_id)
             session_context.update(context)
+            if not provided_steps:
+                session_context.pop("steps", None)
             context = session_context
 
         # Dispatch to adapter functions
