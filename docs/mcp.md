@@ -22,6 +22,7 @@ The MCP server exposes these tools:
 - `query_knowledge`
 - `execute_workflow`
 - `create_simulation_plan`
+- `apply_plan`
 - `create_proposed_modifications_with_plan`
 - `select_baseline_case`
 - `search_cases` (alias for `select_baseline_case`)
@@ -34,6 +35,36 @@ The MCP server exposes these tools:
 - `generate_visualizations`
 
 Use `tools/list` to discover schemas and required parameters.
+
+## Example: apply_plan
+
+Apply a previously generated plan to write inputs:
+
+```json
+{
+  "selected_case": "PeleLMeX/Exec/RegTests/FlameSheet",
+  "modifications": [["amr.max_level", "2"], ["geometry.prob_hi", "0.02 0.08"]],
+  "baseline": {"code_name": "PeleLMeX"},
+  "reasoning": "Increase AMR for sharper flame structure.",
+  "output_dir": "output/mcp/pelelmex"
+}
+```
+
+Example response:
+
+```json
+{
+  "run_directory": "output/mcp/pelelmex/run_001",
+  "inputs_file_path": "output/mcp/pelelmex/run_001/inputs",
+  "modifications_applied": 2,
+  "status": "ok",
+  "requires_parameter_resolution": false,
+  "unresolved_parameters": [],
+  "available_schema_params": [],
+  "suggested_params": {},
+  "resolution_guidance": ""
+}
+```
 
 ## Demo: execute_workflow (in-process)
 
