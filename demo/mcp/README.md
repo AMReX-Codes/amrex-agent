@@ -48,7 +48,8 @@ python -u mcp_server.py
 ### ALCF (Crux)
 
 ```bash
-./demo/mcp/run_mcp_stdio.sh
+cd /lus/eagle/projects/COMB-FLOW-UNI/mcp/amrex-agent
+python -u mcp_server.py
 ```
 
 ## Run anyio client (spawns server)
