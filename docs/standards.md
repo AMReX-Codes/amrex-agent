@@ -24,6 +24,10 @@ Evidence (paths):
 - `docs/BUILD_FAISS_INDICES.md`
 - `docs/integration.md`
 
+The tables below map each standard to concrete evidence and tests, and then
+summarize project-specific coverage alongside the external Agents4Science
+capability ladder.
+
 ## Standards checklist and evidence mapping
 
 | Standard | Evidence | Tests | Notes |
@@ -88,9 +92,7 @@ at runtime based on context, instead of following a fixed node sequence.
 
 ## Gaps and risk notes
 
-- Capability mapping needs periodic review when new nodes or external tools are added.
-- Collaboration is external to this repo; document orchestration changes if added.
-- Agents4Science stages 2-6 are not implemented; track if integration is planned.
+Use the gap log below to track items that are not yet implemented or need follow-up.
 
 ## Structured gap log
 
@@ -101,6 +103,10 @@ at runtime based on context, instead of following a fixed node sequence.
 | Dynamic DAG construction | Workflow is mostly fixed per run | Open | Add prompt-conditional routing and optional nodes | `docs/standards.md` | - |
 
 ## Evidence and checklists
+
+This section explains how to read the tables above and where the evidence
+lives. Each row in the standards and gap tables should point to at least one
+doc or test path that demonstrates the claim.
 
 Checklist:
 - [ ] API provider support matrix is up to date.
