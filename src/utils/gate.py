@@ -43,7 +43,7 @@ class GateManager:
         if self.strategy == "llm":
             return True
         if self.strategy == "terminal":
-            return True
+            return gate_point in self.gate_points if self.gate_points else True
         if self.strategy == "selective":
             return gate_point in self.gate_points
         return False

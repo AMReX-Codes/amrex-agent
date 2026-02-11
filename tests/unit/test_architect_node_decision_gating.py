@@ -50,12 +50,17 @@ def test_architect_node_solver_gate_invoked(monkeypatch):
     state = {"config": config, "prompt": "test prompt", "workflow_history": []}
 
     with monkeypatch.context() as mp:
-        mp.setattr("src.nodes.architect_node.ArchitectService", Mock(return_value=_mock_service_instance()))
+        mp.setattr(architect_node_module, "ArchitectService", Mock(return_value=_mock_service_instance()))
         mp.setattr("src.services.embedding_service_factory.get_embedding_service", Mock(return_value=Mock()))
-        architect_node_module.architect_node(state)
+        updates = architect_node_module.architect_node(state)
 
     gate_manager.present_gate.assert_called()
     assert gate_manager.present_gate.call_args.kwargs["gate_point"] == "solver"
+    history = updates.get("workflow_history", [])
+    assert any(
+        entry.get("node") == "preconfirm_gate" and entry.get("details", {}).get("gate_node") == "solver"
+        for entry in history
+    )
 
 
 def test_architect_node_baseline_gate_invoked(monkeypatch):
@@ -79,12 +84,17 @@ def test_architect_node_baseline_gate_invoked(monkeypatch):
     state = {"config": config, "prompt": "test prompt", "workflow_history": []}
 
     with monkeypatch.context() as mp:
-        mp.setattr("src.nodes.architect_node.ArchitectService", Mock(return_value=_mock_service_instance()))
+        mp.setattr(architect_node_module, "ArchitectService", Mock(return_value=_mock_service_instance()))
         mp.setattr("src.services.embedding_service_factory.get_embedding_service", Mock(return_value=Mock()))
-        architect_node_module.architect_node(state)
+        updates = architect_node_module.architect_node(state)
 
     gate_manager.present_gate.assert_called()
     assert gate_manager.present_gate.call_args.kwargs["gate_point"] == "baseline"
+    history = updates.get("workflow_history", [])
+    assert any(
+        entry.get("node") == "preconfirm_gate" and entry.get("details", {}).get("gate_node") == "baseline"
+        for entry in history
+    )
 
 
 def test_architect_node_auto_strategy_skips_gates(monkeypatch):
@@ -103,7 +113,7 @@ def test_architect_node_auto_strategy_skips_gates(monkeypatch):
     state = {"config": config, "prompt": "test prompt", "workflow_history": []}
 
     with monkeypatch.context() as mp:
-        mp.setattr("src.nodes.architect_node.ArchitectService", Mock(return_value=_mock_service_instance()))
+        mp.setattr(architect_node_module, "ArchitectService", Mock(return_value=_mock_service_instance()))
         mp.setattr("src.services.embedding_service_factory.get_embedding_service", Mock(return_value=Mock()))
         architect_node_module.architect_node(state)
 
@@ -131,9 +141,43 @@ def test_architect_node_modifications_gate_invoked(monkeypatch):
     state = {"config": config, "prompt": "test prompt", "workflow_history": []}
 
     with monkeypatch.context() as mp:
-        mp.setattr("src.nodes.architect_node.ArchitectService", Mock(return_value=_mock_service_instance()))
+        mp.setattr(architect_node_module, "ArchitectService", Mock(return_value=_mock_service_instance()))
         mp.setattr("src.services.embedding_service_factory.get_embedding_service", Mock(return_value=Mock()))
-        architect_node_module.architect_node(state)
+        updates = architect_node_module.architect_node(state)
 
     gate_manager.present_gate.assert_called()
     assert gate_manager.present_gate.call_args.kwargs["gate_point"] == "modifications"
+    history = updates.get("workflow_history", [])
+    assert any(
+        entry.get("node") == "preconfirm_gate" and entry.get("details", {}).get("gate_node") == "modifications"
+        for entry in history
+    )
+
+
+def test_solver_override_triggers_retry(monkeypatch):
+    GateManager = _require_gate_manager()
+    gate_manager = Mock()
+    gate_manager.should_gate.side_effect = lambda point: point == "solver"
+    gate_manager.present_gate.return_value = Mock(
+        user_action="modified",
+        selected_option="ERF",
+        user_modification={"manual_selection": "ERF"},
+    )
+    monkeypatch.setattr(architect_node_module, "GateManager", Mock(return_value=gate_manager))
+
+    config = Mock(
+        repositories={"AMReX": "/tmp/amrex"},
+        preconfirm_gate=False,
+        preconfirm_gate_auto_approve=False,
+        gate_strategy="terminal",
+        gate_points=["solver"],
+    )
+    state = {"config": config, "prompt": "test prompt", "workflow_history": []}
+
+    with monkeypatch.context() as mp:
+        mp.setattr(architect_node_module, "ArchitectService", Mock(return_value=_mock_service_instance()))
+        mp.setattr("src.services.embedding_service_factory.get_embedding_service", Mock(return_value=Mock()))
+        updates = architect_node_module.architect_node(state)
+
+    assert updates["mode"] == "retry"
+    assert updates["selected_solver"] == "ERF"
