@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "contract_name": "mcp_prompt_to_slicefile",
+  "description": "MCP tool flow from user prompt to generated slice images (slicefile-like outputs)",
+  "transport": "stdio JSON-RPC (tools/list, tools/call)",
+  "schema_path": "mcp_prompt_to_slicefile_schema.json",
+  "example_path": "mcp_prompt_to_slicefile_example.json",
+
+  "tool_sequence": [
+    "create_simulation_plan",
+    "run_simulation",
+    "generate_visualizations"
+  ],
+
+  "required_inputs": {
+    "prompt": "str (natural language simulation request)",
+    "visualization_config": {
+      "plots": "List[Dict] (slice plot definitions: type=slice, field, axis, colormap)"
+    }
+  },
+
+  "expected_outputs": {
+    "create_simulation_plan": {
+      "selected_case": "str",
+      "inputs_file_path": "str",
+      "run_directory": "str"
+    },
+    "run_simulation": {
+      "job_status": "str",
+      "run_directory": "str",
+      "method": "str"
+    },
+    "generate_visualizations": {
+      "visualization_status": "str",
+      "visualization_images": "List[str]",
+      "visualization_metadata": "dict"
+    }
+  },
+
+  "slice_expectations": {
+    "plot_types": ["slice"],
+    "output_dir": "run_directory/visualization by default",
+    "note": "Slice images are produced by the visualization backend"
+  },
+
+  "failure_modes": [
+    "Missing plot configuration for slice outputs",
+    "No plotfiles found (visualization_status=skipped)",
+    "Visualization backend unavailable"
+  ]
+}

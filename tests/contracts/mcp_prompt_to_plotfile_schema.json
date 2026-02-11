@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MCP prompt to plotfile contract",
+  "type": "object",
+  "properties": {
+    "input": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string"
+        },
+        "output_dir": {
+          "type": "string"
+        },
+        "submit": {
+          "type": "object",
+          "properties": {
+            "dry_run": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "dry_run"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "create_simulation_plan": {
+          "type": "object",
+          "properties": {
+            "selected_case": {
+              "type": "string"
+            },
+            "inputs_file_path": {
+              "type": "string"
+            },
+            "run_directory": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "selected_case",
+            "inputs_file_path",
+            "run_directory"
+          ],
+          "additionalProperties": false
+        },
+        "run_simulation": {
+          "type": "object",
+          "properties": {
+            "job_status": {
+              "type": "string"
+            },
+            "run_directory": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "job_status",
+            "run_directory",
+            "method"
+          ],
+          "additionalProperties": false
+        },
+        "analyze_results": {
+          "type": "object",
+          "properties": {
+            "job_status": {
+              "type": "string"
+            },
+            "analysis_report": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "job_status",
+            "analysis_report"
+          ],
+          "additionalProperties": false
+        },
+        "generate_visualizations": {
+          "type": "object",
+          "properties": {
+            "visualization_status": {
+              "type": "string"
+            },
+            "visualization_images": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "visualization_metadata": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "visualization_status",
+            "visualization_images",
+            "visualization_metadata"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "create_simulation_plan",
+        "run_simulation",
+        "analyze_results",
+        "generate_visualizations"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "input",
+    "outputs"
+  ],
+  "additionalProperties": false
+}

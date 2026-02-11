@@ -1,58 +1,13 @@
 import importlib
 import sys
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
+from types import SimpleNamespace
 
 import pytest
 
 
-def _install_dummy_mcp() -> None:
-    mcp_module = ModuleType("mcp")
-    server_module = ModuleType("mcp.server")
-    stdio_module = ModuleType("mcp.server.stdio")
-
-    class DummyServer:
-        def __init__(self, name: str):
-            self.name = name
-
-        def list_tools(self):
-            def decorator(func):
-                return func
-
-            return decorator
-
-        def call_tool(self):
-            def decorator(func):
-                return func
-
-            return decorator
-
-        async def run(self, *args, **kwargs):
-            return None
-
-    class DummyAsyncContext:
-        async def __aenter__(self):
-            return (None, None)
-
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
-
-    def stdio_server():
-        return DummyAsyncContext()
-
-    server_module.Server = DummyServer
-    stdio_module.stdio_server = stdio_server
-
-    mcp_module.server = server_module
-
-    sys.modules["mcp"] = mcp_module
-    sys.modules["mcp.server"] = server_module
-    sys.modules["mcp.server.stdio"] = stdio_module
-
-
 @pytest.fixture
 def mcp_server_module(monkeypatch):
-    _install_dummy_mcp()
     if "mcp_server" in sys.modules:
         del sys.modules["mcp_server"]
     return importlib.import_module("mcp_server")
@@ -196,6 +151,24 @@ def test_mcp_select_baseline_case_maps_fields(mcp_server_module, monkeypatch, tm
 def test_mcp_validate_inputs_requires_path(mcp_server_module):
     with pytest.raises(ValueError):
         mcp_server_module.mcp_validate_inputs({})
+
+
+@pytest.mark.asyncio
+async def test_mcp_list_tools_inprocess(mcp_server_module):
+    tools = await mcp_server_module.list_tools()
+    tool_names = {tool.name for tool in tools}
+    expected_tools = {
+        "query_knowledge",
+        "create_simulation_plan",
+        "create_proposed_modifications_with_plan",
+        "select_baseline_case",
+        "validate_inputs",
+        "setup_job",
+        "run_simulation",
+        "analyze_results",
+        "generate_visualizations",
+    }
+    assert expected_tools.issubset(tool_names)
 
 
 def test_mcp_validate_inputs_returns_validation(mcp_server_module, monkeypatch, tmp_path):

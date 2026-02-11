@@ -161,7 +161,7 @@ class AMReXAgentConfig(BaseModel):
     """
     
     # === LLM Configuration ===
-    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl"] = Field(
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm"] = Field(
         default="cborg",
         description="LLM provider to use"
     )
@@ -222,6 +222,16 @@ class AMReXAgentConfig(BaseModel):
     anthropic_api_key: Optional[str] = Field(
         default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"),
         description="Anthropic API key"
+    )
+
+    # === LiteLLM Proxy (OpenAI-compatible) ===
+    litellm_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("LITELLM_API_KEY"),
+        description="LiteLLM API key (optional; depends on proxy configuration)"
+    )
+    litellm_base_url: Optional[str] = Field(
+        default_factory=lambda: os.getenv("LITELLM_BASE_URL"),
+        description="LiteLLM proxy base URL (OpenAI-compatible)"
     )
     
     # === PNNL AI API ===
@@ -895,10 +905,28 @@ def get_llm_client(config: AMReXAgentConfig):
             config.llm_model = config.pnnl_default_model
             logger.info(f" Using PNNL default model: {config.llm_model}")
         
-        return OpenAI(
+        client = OpenAI(
             api_key=config.pnnl_api_key,
             base_url=config.pnnl_base_url
         )
+        return _wrap_llm_client_if_needed(client, config)
+
+    elif config.llm_provider == "litellm":
+        base_url = config.litellm_base_url
+        if not base_url:
+            raise ValueError("LITELLM_BASE_URL not set")
+        if not config.llm_model:
+            env_model = os.getenv("LITELLM_MODEL")
+            if env_model:
+                config.llm_model = env_model
+        if not config.llm_model:
+            raise ValueError("llm_model not set for LiteLLM provider")
+        api_key = config.litellm_api_key or "litellm"
+        client = OpenAI(
+            api_key=api_key,
+            base_url=base_url
+        )
+        return _wrap_llm_client_if_needed(client, config)
     
     else:
         raise ValueError(f"Unknown LLM provider: {config.llm_provider}")

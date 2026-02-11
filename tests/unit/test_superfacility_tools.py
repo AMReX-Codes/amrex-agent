@@ -61,6 +61,14 @@ def test_submit_via_sfapi_success(tmp_path, monkeypatch):
 
 def test_submit_job_falls_back_to_sbatch(monkeypatch):
     monkeypatch.setattr(
+        "src.services.run_superfacility_tools._load_sfapi_key_file",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools.submit_via_sfapi_client",
+        lambda *args, **kwargs: {"error": "skipped"},
+    )
+    monkeypatch.setattr(
         "src.services.run_superfacility_tools.find_nersc_clients",
         lambda: {},
     )
