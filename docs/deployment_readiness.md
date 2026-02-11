@@ -68,6 +68,9 @@ Verification steps:
 Current state:
 - Multi-user deployment is supported but not standardized.
 - Environment and credential setup varies by site or HPC center.
+- MCP server/client is the reference implementation for multi-user access.
+- SQLite session tracking is in development.
+- SFAPI demo materials exist for HPC workflows.
 
 Goal:
 - Provide a standard deployment checklist and validation script.
