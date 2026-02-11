@@ -20,6 +20,7 @@ The server writes logs to stderr to keep stdout clean for JSON-RPC.
 The MCP server exposes these tools:
 
 - `query_knowledge`
+- `execute_workflow`
 - `create_simulation_plan`
 - `create_proposed_modifications_with_plan`
 - `select_baseline_case`
@@ -30,6 +31,62 @@ The MCP server exposes these tools:
 - `generate_visualizations`
 
 Use `tools/list` to discover schemas and required parameters.
+
+## Demo: execute_workflow (in-process)
+
+This mirrors the unit test wiring and runs `execute_workflow` without stdio:
+
+```python
+import anyio
+from mcp.client.session import ClientSession
+import mcp_server
+
+
+async def main() -> None:
+    client_to_server_send, client_to_server_recv = anyio.create_memory_object_stream(0)
+    server_to_client_send, server_to_client_recv = anyio.create_memory_object_stream(0)
+
+    init_options = mcp_server.app.create_initialization_options()
+
+    async with anyio.create_task_group() as tg:
+        tg.start_soon(
+            mcp_server.app.run,
+            client_to_server_recv,
+            server_to_client_send,
+            init_options,
+        )
+
+        async with ClientSession(server_to_client_recv, client_to_server_send) as session:
+            await session.initialize()
+
+            remora = await session.call_tool(
+                "execute_workflow",
+                {
+                    "prompt": "Run the REMORA Upwelling case to demonstrate wind-driven upwelling over a periodic channel.",
+                    "baseline_override": "REMORA/Exec/Upwelling",
+                    "strategy": "override_static",
+                    "steps": ["create_simulation_plan", "run_simulation"],
+                    "submit": {"dry_run": True},
+                },
+            )
+
+            pelelmex = await session.call_tool(
+                "execute_workflow",
+                {
+                    "prompt": "2D hydrogen premixed flame with 32x128 grid cells, 2 AMR levels, 200 timesteps",
+                    "baseline_override": "PeleLMeX/Exec/RegTests/FlameSheet",
+                    "strategy": "simple",
+                    "steps": ["create_simulation_plan", "run_simulation"],
+                    "submit": {"dry_run": True},
+                },
+            )
+
+            print(remora)
+            print(pelelmex)
+
+
+anyio.run(main)
+```
 
 ## Smoke test (initialize response)
 
