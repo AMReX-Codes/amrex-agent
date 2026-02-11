@@ -10,7 +10,13 @@
           "colormap": "viridis"
         }
       ]
-    }
+    },
+    "steps": [
+      "create_simulation_plan",
+      "run_simulation",
+      "analyze_results",
+      "generate_visualizations"
+    ]
   },
   "outputs": {
     "create_simulation_plan": {

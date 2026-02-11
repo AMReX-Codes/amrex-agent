@@ -109,6 +109,96 @@ def test_mcp_create_simulation_plan_requires_prompt(mcp_server_module):
         mcp_server_module.mcp_create_simulation_plan({})
 
 
+def test_mcp_execute_workflow_defaults_steps(mcp_server_module, monkeypatch):
+    calls = []
+
+    def _stub(step_name, payload):
+        calls.append(step_name)
+        return {f"{step_name}_result": True}
+
+    monkeypatch.setattr(
+        mcp_server_module,
+        "mcp_create_simulation_plan",
+        lambda payload: _stub("create_simulation_plan", payload),
+    )
+    monkeypatch.setattr(
+        mcp_server_module,
+        "mcp_run_simulation",
+        lambda payload: _stub("run_simulation", payload),
+    )
+    monkeypatch.setattr(
+        mcp_server_module,
+        "mcp_analyze_results",
+        lambda payload: _stub("analyze_results", payload),
+    )
+    monkeypatch.setattr(
+        mcp_server_module,
+        "mcp_generate_visualizations",
+        lambda payload: _stub("generate_visualizations", payload),
+    )
+    result = mcp_server_module.mcp_execute_workflow({"prompt": "run something"})
+
+    assert calls == [
+        "create_simulation_plan",
+        "run_simulation",
+        "analyze_results",
+        "generate_visualizations",
+    ]
+    assert result["final"]["generate_visualizations_result"] is True
+
+
+def test_mcp_execute_workflow_runs_steps_in_order(mcp_server_module, monkeypatch):
+    calls = []
+
+    def _stub(step_name, payload):
+        calls.append((step_name, dict(payload)))
+        return {f"{step_name}_result": True, "step": step_name}
+
+    monkeypatch.setattr(
+        mcp_server_module,
+        "mcp_create_simulation_plan",
+        lambda payload: _stub("create_simulation_plan", payload),
+    )
+    monkeypatch.setattr(
+        mcp_server_module,
+        "mcp_run_simulation",
+        lambda payload: _stub("run_simulation", payload),
+    )
+    monkeypatch.setattr(
+        mcp_server_module,
+        "mcp_analyze_results",
+        lambda payload: _stub("analyze_results", payload),
+    )
+
+    payload = {
+        "prompt": "run something",
+        "steps": ["create_simulation_plan", "run_simulation", "analyze_results"],
+        "submit": {"dry_run": True},
+    }
+
+    result = mcp_server_module.mcp_execute_workflow(payload)
+
+    assert [call[0] for call in calls] == [
+        "create_simulation_plan",
+        "run_simulation",
+        "analyze_results",
+    ]
+    assert "create_simulation_plan" in result["steps"]
+    assert "run_simulation" in result["steps"]
+    assert "analyze_results" in result["steps"]
+    assert result["steps"]["run_simulation"]["run_simulation_result"] is True
+    assert result["final"]["analyze_results_result"] is True
+
+
+@pytest.mark.asyncio
+async def test_mcp_list_tools_includes_execute_workflow(mcp_server_module):
+    tools = await mcp_server_module.list_tools()
+    execute_tool = next(tool for tool in tools if tool.name == "execute_workflow")
+
+    assert "steps" in execute_tool.inputSchema.get("properties", {})
+    assert "steps" not in execute_tool.inputSchema.get("required", [])
+
+
 def test_mcp_select_baseline_case_handles_missing_baseline(mcp_server_module, monkeypatch):
     monkeypatch.setattr(
         mcp_server_module.ArchitectService, "_select_baseline", lambda *args, **kwargs: None
@@ -159,6 +249,7 @@ async def test_mcp_list_tools_inprocess(mcp_server_module):
     tool_names = {tool.name for tool in tools}
     expected_tools = {
         "query_knowledge",
+        "execute_workflow",
         "create_simulation_plan",
         "create_proposed_modifications_with_plan",
         "select_baseline_case",

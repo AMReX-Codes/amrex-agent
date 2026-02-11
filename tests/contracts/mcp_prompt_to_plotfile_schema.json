@@ -23,6 +23,12 @@
             "dry_run"
           ],
           "additionalProperties": true
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -72,54 +78,11 @@
             "method"
           ],
           "additionalProperties": false
-        },
-        "analyze_results": {
-          "type": "object",
-          "properties": {
-            "job_status": {
-              "type": "string"
-            },
-            "analysis_report": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "required": [
-            "job_status",
-            "analysis_report"
-          ],
-          "additionalProperties": false
-        },
-        "generate_visualizations": {
-          "type": "object",
-          "properties": {
-            "visualization_status": {
-              "type": "string"
-            },
-            "visualization_images": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "visualization_metadata": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "required": [
-            "visualization_status",
-            "visualization_images",
-            "visualization_metadata"
-          ],
-          "additionalProperties": false
         }
       },
       "required": [
         "create_simulation_plan",
-        "run_simulation",
-        "analyze_results",
-        "generate_visualizations"
+        "run_simulation"
       ],
       "additionalProperties": false
     }

@@ -253,6 +253,60 @@ def mcp_create_proposed_modifications_with_plan(payload: dict) -> dict:
     return response
 
 
+def mcp_execute_workflow(payload: dict) -> dict:
+    """
+    Execute a multi-step workflow using MCP tool functions.
+
+    Parameters
+    ----------
+    payload : Dict
+        Payload containing ``steps`` and optional tool parameters.
+
+    Returns
+    -------
+    Dict
+        Per-step results plus a merged final context.
+    """
+    steps = payload.get("steps")
+    if steps is None or steps == []:
+        steps = [
+            "create_simulation_plan",
+            "run_simulation",
+            "analyze_results",
+            "generate_visualizations",
+        ]
+    if not isinstance(steps, list):
+        raise ValueError("steps must be a list")
+
+    step_map = {
+        "query_knowledge": mcp_query_knowledge,
+        "create_simulation_plan": mcp_create_simulation_plan,
+        "create_proposed_modifications_with_plan": mcp_create_proposed_modifications_with_plan,
+        "select_baseline_case": mcp_select_baseline_case,
+        "validate_inputs": mcp_validate_inputs,
+        "setup_job": mcp_setup_job,
+        "run_simulation": mcp_run_simulation,
+        "analyze_results": mcp_analyze_results,
+        "generate_visualizations": mcp_generate_visualizations,
+    }
+
+    invalid_steps = [step for step in steps if step not in step_map]
+    if invalid_steps:
+        raise ValueError(f"Unsupported workflow steps: {', '.join(invalid_steps)}")
+
+    context = dict(payload)
+    context.pop("steps", None)
+    results: dict[str, Any] = {}
+
+    for step in steps:
+        result = step_map[step](context)
+        results[step] = result
+        if isinstance(result, dict):
+            context.update(result)
+
+    return {"steps": results, "final": context}
+
+
 def mcp_select_baseline_case(payload: dict) -> dict:
     """Select baseline case using 5-bucket scoring.
 
@@ -664,6 +718,79 @@ async def list_tools():
                     }
                 },
                 "required": ["question"]
+            }
+        },
+        {
+            "name": "execute_workflow",
+            "description": "Execute a multi-step workflow using the existing MCP tools.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "query_knowledge",
+                                "create_simulation_plan",
+                                "create_proposed_modifications_with_plan",
+                                "select_baseline_case",
+                                "validate_inputs",
+                                "setup_job",
+                                "run_simulation",
+                                "analyze_results",
+                                "generate_visualizations"
+                            ]
+                        },
+                        "description": "Ordered list of workflow steps to execute. Defaults to plan→run→analyze→visualize."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "Prompt for planning workflows."
+                    },
+                    "output_dir": {
+                        "type": "string",
+                        "description": "Output directory override."
+                    },
+                    "submit": {
+                        "type": "object",
+                        "description": "Submission settings (e.g., dry_run)."
+                    },
+                    "config_overrides": {
+                        "type": "object",
+                        "description": "Config overrides applied per step."
+                    },
+                    "visualization_config": {
+                        "type": "object",
+                        "description": "Visualization configuration for plots/slices."
+                    },
+                    "inputs_file_path": {
+                        "type": "string",
+                        "description": "Inputs file path for validation or execution."
+                    },
+                    "case_dir": {
+                        "type": "string",
+                        "description": "Case directory for execution setup."
+                    },
+                    "run_directory": {
+                        "type": "string",
+                        "description": "Run directory for analysis/visualization."
+                    }
+                },
+                "required": []
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "steps": {
+                        "type": "object",
+                        "description": "Per-step outputs keyed by step name."
+                    },
+                    "final": {
+                        "type": "object",
+                        "description": "Merged context after all steps."
+                    }
+                }
             }
         },
         {
@@ -1216,6 +1343,9 @@ async def call_tool(name: str, arguments: dict) -> Any:
         # Dispatch to adapter functions
         if name == "query_knowledge":
             return mcp_query_knowledge(arguments)
+
+        elif name == "execute_workflow":
+            return mcp_execute_workflow(arguments)
 
         elif name == "create_simulation_plan":
             return mcp_create_simulation_plan(arguments)
