@@ -3,11 +3,12 @@ from pathlib import Path
 import tempfile
 
 from mcp.client.session import ClientSession
-from mcp.client.stdio import stdio_client
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 
 async def main() -> None:
-    async with stdio_client(["python", "-u", "mcp_server.py"]) as (read, write):
+    server = StdioServerParameters(command="python", args=["-u", "mcp_server.py"])
+    async with stdio_client(server) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
             tools = await session.list_tools()
