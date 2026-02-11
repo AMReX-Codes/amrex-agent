@@ -210,7 +210,6 @@ context in a SQLite store (WAL) and reuses it on subsequent calls with the same
 Note: `execute_workflow` does not reuse prior `steps` unless `steps` is
 explicitly provided in the current request. Longer term, the session context
 may be namespaced per tool to avoid cross-tool bleed.
-
 - In-process integration: uses memory streams with the MCP client session.
 - Stdio integration: spawns `mcp_server.py` and sends JSON-RPC over stdio.
 
