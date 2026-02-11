@@ -181,3 +181,31 @@ def test_solver_override_triggers_retry(monkeypatch):
 
     assert updates["mode"] == "retry"
     assert updates["selected_solver"] == "ERF"
+
+
+def test_solver_override_same_selection_no_retry(monkeypatch):
+    GateManager = _require_gate_manager()
+    gate_manager = Mock()
+    gate_manager.should_gate.side_effect = lambda point: point == "solver"
+    gate_manager.present_gate.return_value = Mock(
+        user_action="modified",
+        selected_option="AMReX",
+        user_modification={"manual_selection": "AMReX"},
+    )
+    monkeypatch.setattr(architect_node_module, "GateManager", Mock(return_value=gate_manager))
+
+    config = Mock(
+        repositories={"AMReX": "/tmp/amrex"},
+        preconfirm_gate=False,
+        preconfirm_gate_auto_approve=False,
+        gate_strategy="terminal",
+        gate_points=["solver"],
+    )
+    state = {"config": config, "prompt": "test prompt", "workflow_history": []}
+
+    with monkeypatch.context() as mp:
+        mp.setattr(architect_node_module, "ArchitectService", Mock(return_value=_mock_service_instance()))
+        mp.setattr("src.services.embedding_service_factory.get_embedding_service", Mock(return_value=Mock()))
+        updates = architect_node_module.architect_node(state)
+
+    assert updates["mode"] == "proceed"

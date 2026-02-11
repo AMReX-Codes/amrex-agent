@@ -344,7 +344,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         )
         if decision.user_action == "modified":
             manual_selection = (decision.user_modification or {}).get("manual_selection")
-            if manual_selection:
+            if manual_selection and manual_selection != plan_result.selected_solver:
                 gate_history_entry = {
                     "node": "preconfirm_gate",
                     "timestamp": datetime.utcnow().isoformat() + "Z",
