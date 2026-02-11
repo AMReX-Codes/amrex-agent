@@ -99,7 +99,6 @@ async def main() -> None:
                     "prompt": "Run the REMORA Upwelling case to demonstrate wind-driven upwelling over a periodic channel.",
                     "baseline_override": "REMORA/Exec/Upwelling",
                     "strategy": "override_static",
-                    "steps": ["create_simulation_plan", "run_simulation"],
                     "submit": {"dry_run": True},
                 },
             )
