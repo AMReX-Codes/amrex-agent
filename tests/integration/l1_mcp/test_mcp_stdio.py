@@ -39,7 +39,11 @@ def _start_server(repo_root: Path):
                 if stream is proc.stderr:
                     stderr_lines.append(line)
                     continue
-                message = json.loads(line)
+                try:
+                    message = json.loads(line)
+                except json.JSONDecodeError:
+                    stderr_lines.append(line)
+                    continue
                 if message.get("id") == expected_id:
                     return message
         stderr_dump = "\n".join(stderr_lines[-20:])
