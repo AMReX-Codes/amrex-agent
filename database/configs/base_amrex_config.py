@@ -76,6 +76,10 @@ class BaseAMReXConfig:
         "Utils",
     ]
 
+    # Optional manual schema additions for parameters missing from source scans.
+    # Keys are parameter names, values define schema fields.
+    manual_schema_params: ClassVar[dict[str, dict[str, Any]]] = {}
+
     # === Amendment D.2: Parameter Priority Tiers ===
     tier1_params: ClassVar[set[str]] = {
         "amr.n_cell",

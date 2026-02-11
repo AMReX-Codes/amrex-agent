@@ -729,6 +729,29 @@ class SchemaBuilder:
         else:
             print("  ⚠️  No solver_config or build_requirements")
 
+        if solver_config and hasattr(solver_config, 'manual_schema_params'):
+            manual_params = solver_config.manual_schema_params or {}
+            print(f"Applying {len(manual_params)} manual schema params...")
+            added = 0
+            for param_name, param_info in manual_params.items():
+                if param_name in self.schema:
+                    continue
+                self.schema[param_name] = {
+                    'type': param_info.get('type', 'string'),
+                    'required': param_info.get('required', False),
+                    'is_array': param_info.get('is_array', False),
+                    'build_flags': param_info.get('build_flags', []),
+                    'default': param_info.get('default', None),
+                    'source_file': param_info.get('source_file', 'manual_config'),
+                    'source_type': 'manual',
+                    'priority': self._get_param_priority(param_name),
+                    'description': param_info.get('description'),
+                }
+                added += 1
+            print(f"  → Added {added} manual schema params")
+        else:
+            print("  ⚠️  No solver_config or manual_schema_params")
+
         return self.schema
 
     def _is_valid_param_name(self, name: str) -> bool:
@@ -953,6 +976,41 @@ class SchemaBuilder:
                 'is_array': is_array,
                 'build_flags': build_flags,
                 'default': default_value,
+                'source_file': str(file_path.relative_to(self.root)),
+                'source_type': source_type,
+                'priority': self._get_param_priority(full_name),
+                'description': description,
+            }
+
+        # Handle parseUserKey helpers (used for boundary conditions, etc.)
+        # Pattern: parseUserKey(pp, "param", table, var, idx);
+        parse_userkey_pattern = r'parseUserKey\(\s*(\w+)\s*,\s*"([^"]+)"\s*,\s*\w+\s*,\s*(\w+)'
+        for match in re.finditer(parse_userkey_pattern, content):
+            pp_var = match.group(1)
+            param_name = match.group(2)
+            var_name = match.group(3)
+
+            namespace = namespace_map.get(pp_var, current_namespace)
+            full_name = param_name if not namespace else f"{namespace}.{param_name}"
+
+            if not self._is_valid_param_name(full_name):
+                continue
+
+            if full_name in self.schema:
+                continue
+
+            line_num = content[:match.start()].count('\n')
+            build_flags = ifdef_blocks.get(line_num, [])
+            source_type = self._classify_source_file(file_path)
+            description = self._extract_param_description(content.splitlines(), line_num)
+
+            # parseUserKey consumes string values from inputs (e.g., boundary flags).
+            self.schema[full_name] = {
+                'type': 'string',
+                'required': False,
+                'is_array': True,
+                'build_flags': build_flags,
+                'default': None,
                 'source_file': str(file_path.relative_to(self.root)),
                 'source_type': source_type,
                 'priority': self._get_param_priority(full_name),
