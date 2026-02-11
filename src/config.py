@@ -913,7 +913,11 @@ def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
 
 
 def _wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
-    max_attempts = getattr(config, "llm_retry_max_attempts", 1) or 1
+    raw_attempts = getattr(config, "llm_retry_max_attempts", 1)
+    try:
+        max_attempts = int(raw_attempts)
+    except (TypeError, ValueError):
+        max_attempts = 1
     if max_attempts <= 1:
         return client
     if isinstance(client, _LLMRetryClient):
