@@ -49,8 +49,8 @@ class GraphState(TypedDict, total=False):
     # ========================================
     prompt: str                     # User's natural language request
     config: AMReXAgentConfig         # Runtime configuration (paths, API keys)
-    output_dir: Optional[str]        # Optional base output directory override
-    submit: Optional[Dict[str, Any]] # Optional submit config (MCP payload)
+    output_dir: Optional[str]        # Optional output directory override
+    submit: Optional[Dict[str, Any]] # Submission settings (e.g., dry_run)
 
     # ========================================
     # PLANNING PHASE (Architect outputs)
