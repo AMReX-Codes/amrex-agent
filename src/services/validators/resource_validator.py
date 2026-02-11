@@ -43,6 +43,15 @@ class ResourceValidator:
         """Initialize validator with app config."""
         self.config = config
 
+    @staticmethod
+    def check_modifications(modifications: dict[str, str]) -> list[str]:
+        """
+        Return human-readable warnings for user-edited parameters.
+        """
+        if not modifications:
+            return []
+        return ["Resource impact may require additional capacity."]
+
     def validate(self, plan: dict[str, Any]) -> list[RuleViolation]:
         """
         Validate external resource dependencies.
