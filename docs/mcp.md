@@ -169,6 +169,13 @@ The same applies to LLM providers: CBORG, ALCF, OpenAI, etc. use the server
 process credentials. Running the MCP server under your account means LLM calls
 consume your quota and SFAPI submissions use your key.
 
+## Session persistence (SQLite)
+
+If a tool call includes `session_id`, the MCP server persists the merged
+context in a SQLite store (WAL) and reuses it on subsequent calls with the same
+`session_id`. The store path is configured by `workflow_store_path` in
+`AMReXAgentConfig` (default `~/.amrex_agent/workflow_store.db`).
+
 - In-process integration: uses memory streams with the MCP client session.
 - Stdio integration: spawns `mcp_server.py` and sends JSON-RPC over stdio.
 

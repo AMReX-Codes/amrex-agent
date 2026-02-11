@@ -27,6 +27,7 @@ Usage:
 
 import asyncio
 import sys
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,7 @@ try:
     from src.services.run_superfacility import SuperfacilityRunner
     from src.services.validation import ValidationService
     from src.services.visualization import VisualizationService
+    from src.services.workflow_store import WorkflowStore
 except ModuleNotFoundError:
     PELE_AGENT_ROOT = Path(__file__).parent
     sys.path.insert(0, str(PELE_AGENT_ROOT))
@@ -64,6 +66,7 @@ except ModuleNotFoundError:
     from src.services.run_superfacility import SuperfacilityRunner
     from src.services.validation import ValidationService
     from src.services.visualization import VisualizationService
+    from src.services.workflow_store import WorkflowStore
 
 # ============================================================================
 # MCP Adapter Functions (foam-agent pattern)
@@ -72,6 +75,7 @@ except ModuleNotFoundError:
 
 # Global config (loaded once at startup)
 config = AMReXAgentConfig()
+workflow_store = WorkflowStore(Path(config.workflow_store_path))
 
 print("[MCP] AMReXAgent starting...", file=sys.stderr)
 print(f"[MCP] Environment: {config.environment}", file=sys.stderr)
@@ -112,6 +116,15 @@ def _apply_config_overrides(
         updates["amrex_tools_path"] = Path(updates["amrex_tools_path"])
 
     return base_config.model_copy(update=updates)
+
+
+def _get_session_context(session_id: str) -> dict[str, Any]:
+    session = workflow_store.get_session(session_id)
+    return dict(session.state) if session else {}
+
+
+def _persist_session_context(session_id: str, context: dict[str, Any]) -> None:
+    workflow_store.upsert_session(session_id, context)
 
 
 def _select_runner(active_config: AMReXAgentConfig):
@@ -1506,50 +1519,66 @@ async def call_tool(name: str, arguments: dict) -> Any:
         Tool execution result
     """
     try:
+        session_id = None
+        context = dict(arguments)
+        if "session_id" in context:
+            session_id = str(context.get("session_id") or uuid.uuid4())
+            context.pop("session_id", None)
+            session_context = _get_session_context(session_id)
+            session_context.update(context)
+            context = session_context
+
         # Dispatch to adapter functions
         if name == "query_knowledge":
-            return mcp_query_knowledge(arguments)
+            result = mcp_query_knowledge(context)
 
         elif name == "execute_workflow":
-            return mcp_execute_workflow(arguments)
+            result = mcp_execute_workflow(context)
 
         elif name == "create_simulation_plan":
-            return mcp_create_simulation_plan(arguments)
+            result = mcp_create_simulation_plan(context)
 
         elif name == "create_proposed_modifications_with_plan":
-            return mcp_create_proposed_modifications_with_plan(arguments)
+            result = mcp_create_proposed_modifications_with_plan(context)
 
         elif name == "select_baseline_case":
-            return mcp_select_baseline_case(arguments)
+            result = mcp_select_baseline_case(context)
 
         elif name == "search_cases":
-            return mcp_select_baseline_case(arguments)
+            result = mcp_select_baseline_case(context)
 
         elif name == "validate_inputs":
-            return mcp_validate_inputs(arguments)
+            result = mcp_validate_inputs(context)
 
         elif name == "validate_config":
-            return mcp_validate_config(arguments)
+            result = mcp_validate_config(context)
 
         elif name == "setup_job":
-            return mcp_setup_job(arguments)
+            result = mcp_setup_job(context)
 
         elif name == "run_simulation":
-            return mcp_run_simulation(arguments)
+            result = mcp_run_simulation(context)
 
         elif name == "analyze_results":
-            return mcp_analyze_results(arguments)
+            result = mcp_analyze_results(context)
 
         elif name == "get_workflow_status":
-            return mcp_analyze_results(arguments)
+            result = mcp_analyze_results(context)
 
         elif name == "generate_visualizations":
-            return mcp_generate_visualizations(arguments)
+            result = mcp_generate_visualizations(context)
 
         else:
-            return {
-                "error": f"Unknown tool: {name}"
-            }
+            result = {"error": f"Unknown tool: {name}"}
+
+        if session_id:
+            merged_context = dict(context)
+            if isinstance(result, dict):
+                merged_context.update(result)
+            _persist_session_context(session_id, merged_context)
+            if isinstance(result, dict):
+                result.setdefault("session_id", session_id)
+        return result
 
     except Exception as e:
         import traceback

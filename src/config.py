@@ -618,6 +618,11 @@ class AMReXAgentConfig(BaseModel):
         default=True,
         description="Stage back output logs and plotfiles after remote completion."
     )
+
+    workflow_store_path: Path = Field(
+        default_factory=lambda: Path.home() / ".amrex_agent" / "workflow_store.db",
+        description="SQLite path for MCP workflow session persistence."
+    )
     
     # === Workflow Settings ===
     max_iterations: int = Field(
