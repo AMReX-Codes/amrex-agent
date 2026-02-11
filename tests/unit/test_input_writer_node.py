@@ -1,5 +1,6 @@
 from datetime import datetime as real_datetime
 import importlib
+from unittest.mock import Mock
 
 import pytest
 
@@ -84,6 +85,54 @@ def test_success_path_maps_outputs(tmp_path, monkeypatch):
     assert updates["inputs_file_path"] == result["inputs_path"]
     assert updates["workflow_history"][-1]["action"] == "inputs_generated"
     assert "run_20250101_120000" in call_state["kwargs"]["output_dir"]
+
+
+def test_input_writer_decision_gate_invoked(tmp_path, monkeypatch):
+    gate_manager = Mock()
+    gate_manager.should_gate.return_value = True
+    gate_manager.present_gate.return_value = Mock(
+        user_action="approved",
+        selected_option="inputs",
+        user_modification=None,
+    )
+    monkeypatch.setattr(input_writer_node_module, "GateManager", Mock(return_value=gate_manager))
+    monkeypatch.setattr(input_writer_node_module, "datetime", FixedDateTime)
+
+    result = {
+        "run_dir": f"{tmp_path}/run_20250101_120000",
+        "inputs_path": f"{tmp_path}/run_20250101_120000/inputs",
+        "status": "success",
+    }
+
+    class DummyCasesService:
+        def __init__(self, _config):
+            pass
+
+    class FakeService:
+        def __init__(self, _config):
+            self.cases_svc = None
+
+        def apply_plan(self, **_kwargs):
+            return result
+
+    monkeypatch.setattr(cases_module, "AMReXCasesService", DummyCasesService)
+    monkeypatch.setattr(input_writer_node_module, "InputWriterService", FakeService)
+
+    state = _base_state(tmp_path)
+    state["config"].gate_strategy = "terminal"
+    state["config"].gate_points = ["input_writer"]
+    state["config"].preconfirm_gate = False
+    state["config"].preconfirm_gate_auto_approve = False
+
+    updates = input_writer_node_module.input_writer_node(state)
+
+    gate_manager.present_gate.assert_called()
+    assert gate_manager.present_gate.call_args.kwargs["gate_point"] == "input_writer"
+    history = updates.get("workflow_history", [])
+    assert any(
+        entry.get("node") == "preconfirm_gate" and entry.get("details", {}).get("gate_node") == "input_writer"
+        for entry in history
+    )
 
 
 def test_parameter_resolution_routes_to_review(tmp_path, monkeypatch):

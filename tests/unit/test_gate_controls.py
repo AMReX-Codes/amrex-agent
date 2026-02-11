@@ -228,6 +228,24 @@ def test_gate_manager_edit_mode_validates_resources(monkeypatch):
         )
 
 
+def test_gate_manager_edit_records_original_values(monkeypatch):
+    GateManager = _require_gate_manager()
+    _input_sequence(monkeypatch, ["e", "amr.n_cell", "256 512 32", "done", "y"])
+
+    manager = GateManager(strategy="terminal", gate_points=["modifications"])
+    decision = manager.present_gate(
+        gate_point="modifications",
+        selected="baseline",
+        confidence=0.73,
+        reasoning="Reasoning details",
+        evidence={"source": "plan"},
+        alternatives=[],
+        current_parameters={"amr.n_cell": "128 256 16"},
+    )
+
+    assert decision.user_modification["original"]["amr.n_cell"] == "128 256 16"
+
+
 def test_gate_history_records_original_parameters(tmp_path, monkeypatch):
     GateManager = _require_gate_manager()
     _input_sequence(monkeypatch, ["e", "amr.n_cell", "256 512 32", "done", "y"])

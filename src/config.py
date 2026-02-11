@@ -528,6 +528,14 @@ class AMReXAgentConfig(BaseModel):
         default_factory=list,
         description="Decision points to gate (e.g., solver, baseline, modifications, execution)."
     )
+    router_gate_strategy: Literal["off", "terminal", "selective"] = Field(
+        default="off",
+        description="Router-level gating strategy for interactivity gates."
+    )
+    router_gate_points: List[str] = Field(
+        default_factory=list,
+        description="Router steps to gate (e.g., architect, reviewer, input_writer, runner, analysis)."
+    )
 
     run_mode: Literal["dry", "stage", "submit", "full"] = Field(
         default="full",

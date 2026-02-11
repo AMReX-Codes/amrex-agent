@@ -154,6 +154,42 @@ def test_architect_node_modifications_gate_invoked(monkeypatch):
     )
 
 
+def test_architect_node_records_user_modification(monkeypatch):
+    GateManager = _require_gate_manager()
+    gate_manager = Mock()
+    gate_manager.should_gate.return_value = True
+    gate_manager.present_gate.return_value = Mock(
+        user_action="modified",
+        selected_option="AMReX",
+        user_modification={
+            "parameters": {"amr.n_cell": "128 256 16"},
+            "original": {"amr.n_cell": "64 64 64"},
+        },
+    )
+    monkeypatch.setattr(architect_node_module, "GateManager", Mock(return_value=gate_manager))
+
+    config = Mock(
+        repositories={"AMReX": "/tmp/amrex"},
+        preconfirm_gate=False,
+        preconfirm_gate_auto_approve=False,
+        gate_strategy="terminal",
+        gate_points=["modifications"],
+    )
+    state = {"config": config, "prompt": "test prompt", "workflow_history": []}
+
+    with monkeypatch.context() as mp:
+        mp.setattr(architect_node_module, "ArchitectService", Mock(return_value=_mock_service_instance()))
+        mp.setattr("src.services.embedding_service_factory.get_embedding_service", Mock(return_value=Mock()))
+        updates = architect_node_module.architect_node(state)
+
+    history = updates.get("workflow_history", [])
+    gate_entry = next(
+        entry for entry in history
+        if entry.get("node") == "preconfirm_gate" and entry.get("details", {}).get("gate_node") == "modifications"
+    )
+    assert gate_entry["details"]["user_modification"]["original"]["amr.n_cell"] == "64 64 64"
+
+
 def test_solver_override_triggers_retry(monkeypatch):
     GateManager = _require_gate_manager()
     gate_manager = Mock()

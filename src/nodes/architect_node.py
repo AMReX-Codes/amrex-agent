@@ -379,6 +379,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 },
             }
         )
+        if decision.user_modification:
+            decision_gate_entries[-1]["details"]["user_modification"] = decision.user_modification
 
     if (not allowed_gate_points or "baseline" in allowed_gate_points) and gate_manager.should_gate("baseline"):
         decision = gate_manager.present_gate(
@@ -406,6 +408,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 },
             }
         )
+        if decision.user_modification:
+            decision_gate_entries[-1]["details"]["user_modification"] = decision.user_modification
 
     if (not allowed_gate_points or "modifications" in allowed_gate_points) and gate_manager.should_gate("modifications"):
         decision = gate_manager.present_gate(
@@ -415,6 +419,11 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             reasoning=plan_result.reasoning,
             evidence={"modifications": plan_result.modifications},
             alternatives=[],
+            current_parameters=dict(plan_result.modifications),
+            resource_context={
+                "config": config,
+                "solver_name": plan_result.selected_solver,
+            },
         )
         if decision.user_action == "modified":
             modifications = (decision.user_modification or {}).get("parameters")
@@ -435,6 +444,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 },
             }
         )
+        if decision.user_modification:
+            decision_gate_entries[-1]["details"]["user_modification"] = decision.user_modification
 
     if getattr(config, "preconfirm_gate", False) is True:
         auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True

@@ -11,7 +11,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.input_writer import InputWriterService
-from src.utils.gate import run_preconfirm_gate
+from src.utils.gate import GateManager, run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,38 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     baseline = plan_details.get("baseline", {}) or {}
     baseline_path = baseline.get("local_path", "unknown")
 
+    gate_manager = GateManager(
+        strategy=getattr(config, "gate_strategy", "auto") or "auto",
+        gate_points=getattr(config, "gate_points", []) or [],
+    )
+    allowed_gate_points = set(getattr(config, "gate_points", []) or [])
+    if (not allowed_gate_points or "input_writer" in allowed_gate_points) and gate_manager.should_gate("input_writer"):
+        decision = gate_manager.present_gate(
+            gate_point="input_writer",
+            selected=selected_case,
+            confidence=1.0,
+            reasoning="Prepare inputs for the selected case.",
+            evidence={
+                "baseline_path": baseline_path,
+                "modifications": modifications,
+            },
+            alternatives=[],
+        )
+        decision_entry = {
+            "node": "preconfirm_gate",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "action": decision.user_action,
+            "iteration": state.get("iteration", 0),
+            "details": {
+                "gate_node": "input_writer",
+                "selection": {"value": decision.selected_option},
+                "reason": "decision_gate",
+            },
+        }
+        if decision.user_modification:
+            decision_entry["details"]["user_modification"] = decision.user_modification
+        workflow_history = workflow_history + [decision_entry]
+
     auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
     gate_result = run_preconfirm_gate(
         node_name="input_writer",
@@ -83,7 +115,6 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     # === CRITICAL: Read plan from workflow_history, NOT top-level state ===
     # Per contract line 12-18: Extract plan by searching workflow_history
     # for architect entry, then read from details (canonical location)
-    workflow_history = state.get("workflow_history", [])
     if gate_entry:
         workflow_history = workflow_history + [gate_entry]
 

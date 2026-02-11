@@ -140,6 +140,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                     "reason": "decision_gate",
                 },
             }
+            if decision.user_modification:
+                execution_gate_entry["details"]["user_modification"] = decision.user_modification
         run_mode = getattr(config, "run_mode", None)
         if run_mode is None or run_mode == "full":
             if getattr(config, "dry_run", False):

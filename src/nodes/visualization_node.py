@@ -21,7 +21,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.visualization import VisualizationService
-from src.utils.gate import run_preconfirm_gate
+from src.utils.gate import GateManager, run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +90,35 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
     analysis_status = analysis_report.get("status", "unknown") if isinstance(analysis_report, dict) else "unknown"
     plan = state.get("plan", {}) or {}
     selected_case = plan.get("selected_case", "unknown")
+
+    gate_manager = GateManager(
+        strategy=getattr(config, "gate_strategy", "auto") or "auto",
+        gate_points=getattr(config, "gate_points", []) or [],
+    )
+    allowed_gate_points = set(getattr(config, "gate_points", []) or [])
+    if (not allowed_gate_points or "visualization" in allowed_gate_points) and gate_manager.should_gate("visualization"):
+        decision = gate_manager.present_gate(
+            gate_point="visualization",
+            selected=run_dir or "visualization",
+            confidence=1.0,
+            reasoning="Generate visualization artifacts from plotfiles.",
+            evidence={"analysis_status": analysis_status},
+            alternatives=[],
+        )
+        decision_entry = {
+            "node": "preconfirm_gate",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "action": decision.user_action,
+            "iteration": iteration,
+            "details": {
+                "gate_node": "visualization",
+                "selection": {"value": decision.selected_option},
+                "reason": "decision_gate",
+            },
+        }
+        if decision.user_modification:
+            decision_entry["details"]["user_modification"] = decision.user_modification
+        workflow_history = workflow_history + [decision_entry]
 
     auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
     gate_result = run_preconfirm_gate(

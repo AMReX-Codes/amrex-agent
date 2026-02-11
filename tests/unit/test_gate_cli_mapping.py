@@ -55,3 +55,53 @@ def test_gate_strategy_and_preconfirm_are_independent():
     assert config.preconfirm_gate is True
     assert config.gate_strategy == "terminal"
     assert config.gate_points == []
+
+
+def test_router_gate_points_defaults_to_selective():
+    apply_gate_cli_settings = _require_apply_gate_cli_settings()
+    config = AMReXAgentConfig()
+    args = SimpleNamespace(
+        preconfirm=False,
+        gate_strategy=None,
+        gate_points=None,
+        router_gate_strategy=None,
+        router_gate_points="reviewer,analysis",
+    )
+
+    apply_gate_cli_settings(config, args)
+
+    assert config.router_gate_strategy == "selective"
+    assert config.router_gate_points == ["reviewer", "analysis"]
+
+
+def test_router_gate_strategy_overrides_default():
+    apply_gate_cli_settings = _require_apply_gate_cli_settings()
+    config = AMReXAgentConfig()
+    args = SimpleNamespace(
+        preconfirm=False,
+        gate_strategy=None,
+        gate_points=None,
+        router_gate_strategy="terminal",
+        router_gate_points=None,
+    )
+
+    apply_gate_cli_settings(config, args)
+
+    assert config.router_gate_strategy == "terminal"
+    assert config.router_gate_points == []
+
+
+def test_preconfirm_logs_deprecation_warning(caplog):
+    apply_gate_cli_settings = _require_apply_gate_cli_settings()
+    config = AMReXAgentConfig()
+    args = SimpleNamespace(
+        preconfirm=True,
+        gate_strategy=None,
+        gate_points=None,
+        router_gate_strategy=None,
+        router_gate_points=None,
+    )
+
+    apply_gate_cli_settings(config, args)
+
+    assert any("preconfirm" in record.message.lower() for record in caplog.records)

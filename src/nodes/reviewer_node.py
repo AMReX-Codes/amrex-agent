@@ -95,6 +95,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     )
     allowed_gate_points = set(getattr(config, "gate_points", []) or [])
     if (not allowed_gate_points or "modifications" in allowed_gate_points) and gate_manager.should_gate("modifications"):
+        current_parameters = dict(modifications) if isinstance(modifications, list) else dict(modifications or {})
         decision = gate_manager.present_gate(
             gate_point="modifications",
             selected=selected_case,
@@ -102,6 +103,11 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             reasoning=plan_details.get("reasoning", ""),
             evidence={"modifications": modifications},
             alternatives=[],
+            current_parameters=current_parameters,
+            resource_context={
+                "config": config,
+                "solver_name": plan_details.get("selected_solver"),
+            },
         )
         gate_entry = {
             "node": "preconfirm_gate",
@@ -114,6 +120,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 "reason": "decision_gate",
             },
         }
+        if decision.user_modification:
+            gate_entry["details"]["user_modification"] = decision.user_modification
         workflow_history = workflow_history + [gate_entry]
 
     auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True

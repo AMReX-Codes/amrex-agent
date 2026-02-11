@@ -56,6 +56,8 @@ class GateManager:
         reasoning: str,
         evidence: Dict[str, Any],
         alternatives: List[Dict[str, str]],
+        current_parameters: Optional[Dict[str, Any]] = None,
+        resource_context: Optional[Dict[str, Any]] = None,
     ) -> GateDecision:
         print(f"\n[GATE: {gate_point}]")
         print(f"Selected: {selected}")
@@ -143,7 +145,10 @@ class GateManager:
                 break
 
             if choice == "e" and gate_point in {"baseline", "modifications"}:
-                modifications = self._edit_parameters()
+                modifications = self._edit_parameters(
+                    current_parameters=current_parameters,
+                    resource_context=resource_context,
+                )
                 decision = GateDecision(
                     gate_point=gate_point,
                     selected_option=selected,
@@ -186,24 +191,47 @@ class GateManager:
                 return alternatives[idx].get("name", "")
             print(f"Invalid choice. Enter 1-{len(alternatives)}")
 
-    def _edit_parameters(self) -> Dict[str, Dict[str, str]]:
+    def _edit_parameters(
+        self,
+        current_parameters: Optional[Dict[str, Any]] = None,
+        resource_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Dict[str, Any]]:
         print("\n[EDIT MODE]")
         modifications: Dict[str, str] = {}
+        originals: Dict[str, Any] = {}
         while True:
             param_input = input("Parameter (or 'done'): ").strip()
             if param_input.lower() == "done":
                 break
             value_input = input(f"New value for {param_input}: ").strip()
             modifications[param_input] = value_input
+            if current_parameters and param_input in current_parameters:
+                originals[param_input] = current_parameters[param_input]
             print(f"Set {param_input} = {value_input}")
         if modifications:
-            self._validate_modifications(modifications)
-        return {"parameters": modifications}
+            self._validate_modifications(modifications, resource_context=resource_context)
+        payload: Dict[str, Dict[str, Any]] = {"parameters": modifications}
+        if originals:
+            payload["original"] = originals
+        return payload
 
-    def _validate_modifications(self, modifications: Dict[str, str]) -> None:
+    def _validate_modifications(
+        self,
+        modifications: Dict[str, str],
+        resource_context: Optional[Dict[str, Any]] = None,
+    ) -> None:
         from src.services.validators.resource_validator import ResourceValidator
 
-        warnings = ResourceValidator.check_modifications(modifications)
+        config = None
+        solver_name = None
+        if resource_context:
+            config = resource_context.get("config")
+            solver_name = resource_context.get("solver_name")
+        warnings = ResourceValidator.check_modifications(
+            modifications,
+            config=config,
+            solver_name=solver_name,
+        )
         if warnings:
             print("\n[RESOURCE WARNINGS]")
             for warning in warnings:
