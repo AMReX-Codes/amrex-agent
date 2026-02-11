@@ -31,6 +31,7 @@ Evidence (paths):
 | Reproducibility | `docs/BUILD_FAISS_INDICES.md` | `tests/unit/test_faiss_artifacts.py` | Deterministic index builds and pinned embedding flows |
 | Traceability | `docs/coverage_map.md` | `tests/unit/test_architect_node_history.py` | Maps tests, contracts, and graph state fields |
 | Safety and control | `docs/mcp.md` | `tests/unit/test_architect_node_safety.py` | Tool schemas + explicit interfaces for external calls |
+| External orchestration surface | `docs/mcp.md` | `tests/unit/test_mcp_tools.py`, `tests/integration/l1_mcp/test_mcp_stdio.py` | MCP tool surface for external orchestration |
 | Verification | `tests/quality/test_contract_schema_alignment.py` | `tests/quality/test_contract_schema_alignment.py` | Schema alignment and contract checks |
 | Transparency | `docs/workflow_visualization.md` | `tests/integration/l3_postprocessing/test_analysis_parsing.py` | Documented outputs and traceable artifacts |
 | Interoperability | `docs/mcp.md` | `tests/unit/test_mcp_tools.py`, `tests/integration/l1_mcp/test_mcp_stdio.py` | MCP tool surface for external orchestration |
@@ -61,6 +62,7 @@ Evidence (paths):
 ## Agents4Science capability stages (reference)
 
 Source: https://agents4science.github.io/Capabilities/
+GitHub reference: https://github.com/agents4science/agents4science.github.io/tree/main/Capabilities#readme
 
 | Stage | Capability | Status | Notes |
 | --- | --- | --- | --- |
@@ -77,16 +79,12 @@ at runtime based on context, instead of following a fixed node sequence.
 
 ## Collaboration expectations (Agents4Science)
 
-Agents4Science collaboration emphasizes:
-- Shared state, policy, and budget controls for multi-agent coordination.
-- Federated identity and cross-institution agent collaboration.
-- Capability discovery across agents or institutions.
-- Audit logging for cross-institution operations.
-
-Current alignment:
-- MCP provides a tool surface and schema definitions for external orchestration.
-- No built-in federated identity, shared policy/budget ledger, or cross-agent
-  coordination hub in this repo.
+| Expectation | Status | Notes |
+| --- | --- | --- |
+| Shared state, policy, and budget controls for multi-agent coordination | Not implemented | No shared governance layer in repo; see https://github.com/agents4science/agents4science.github.io/tree/main/Capabilities/multi-agent-coordination#readme |
+| Federated identity and cross-institution agent collaboration | Not implemented | No federated identity layer integrated; see https://github.com/agents4science/agents4science.github.io/tree/main/Capabilities/local-agents/AgentsFederated#readme |
+| Capability discovery across agents or institutions | Not implemented | No capability discovery service; see https://github.com/agents4science/agents4science.github.io/tree/main/Capabilities/local-agents/AgentsFederated#readme |
+| Audit logging for cross-institution operations | Not implemented | No cross-institution audit log; see https://github.com/agents4science/agents4science.github.io/tree/main/Capabilities/local-agents/AgentsFederated#readme |
 
 ## Gaps and risk notes
 
