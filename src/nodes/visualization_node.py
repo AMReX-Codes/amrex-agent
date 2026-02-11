@@ -86,14 +86,24 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
     workflow_history = state.get("workflow_history", [])
     error_logs = state.get("error_logs", [])
 
+    run_dir, analysis_report = get_run_directory_and_analysis(state)
+    analysis_status = analysis_report.get("status", "unknown") if isinstance(analysis_report, dict) else "unknown"
+    plan = state.get("plan", {}) or {}
+    selected_case = plan.get("selected_case", "unknown")
+
+    auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
     gate_result = run_preconfirm_gate(
         node_name="visualization",
         summary_lines=[
             "This step generates plots or images from simulation output.",
+            f"Selected case: {selected_case}",
+            f"Run directory: {run_dir or 'unknown'}",
+            f"Analysis status: {analysis_status}",
         ],
         options=[{"label": "Proceed with visualization", "value": "proceed"}],
         enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
+        auto_approve=auto_approve,
     )
     gate_entry = gate_result.get("history_entry")
     if gate_entry:

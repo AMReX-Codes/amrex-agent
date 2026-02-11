@@ -126,14 +126,20 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
         }
 
     gate_entry = None
+    run_dir = get_run_directory(state)
+    auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
     gate_result = run_preconfirm_gate(
         node_name="analysis",
         summary_lines=[
             "This step analyzes simulation output for errors and metrics.",
+            f"Run directory: {run_dir or 'unknown'}",
+            f"Job status: {state.get('job_status', 'unknown')}",
+            f"Run mode: {run_mode}",
         ],
         options=[{"label": "Proceed with analysis", "value": "proceed"}],
         enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
+        auto_approve=auto_approve,
     )
     gate_entry = gate_result.get("history_entry")
     if gate_entry:

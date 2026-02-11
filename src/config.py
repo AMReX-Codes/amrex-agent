@@ -464,6 +464,10 @@ class AMReXAgentConfig(BaseModel):
         default="off",
         description="LLM prompt gate strategy: off, default, feedback, gate-major, gate-all."
     )
+    llm_gate_auto_approve: bool = Field(
+        default=False,
+        description="Auto-approve LLM prompt gates without prompting."
+    )
 
     disable_embeddings: bool = Field(
         default=False,
@@ -492,6 +496,10 @@ class AMReXAgentConfig(BaseModel):
     preconfirm_gate: bool = Field(
         default=False,
         description="If True, pause in terminal for a pre-confirmation gate before validation."
+    )
+    preconfirm_gate_auto_approve: bool = Field(
+        default=False,
+        description="Auto-approve pre-confirmation gates without prompting."
     )
 
     run_mode: Literal["dry", "stage", "submit", "full"] = Field(
@@ -900,7 +908,8 @@ def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
     strategy = getattr(config, "llm_gate_strategy", "off") or "off"
     if strategy == "off":
         return client
-    return _LLMGateClient(client, strategy)
+    auto_approve = getattr(config, "llm_gate_auto_approve", False) is True
+    return _LLMGateClient(client, strategy, auto_approve)
 
 
 def wrap_llm_client(client, config: AMReXAgentConfig):
@@ -916,29 +925,36 @@ def unwrap_llm_client(client):
 
 
 class _LLMGateClient:
-    def __init__(self, client, strategy: str):
+    def __init__(self, client, strategy: str, auto_approve: bool):
         self._client = client
         self._strategy = strategy
-        self.chat = _LLMGateChat(client.chat, strategy)
+        self._auto_approve = auto_approve
+        self.chat = _LLMGateChat(client.chat, strategy, auto_approve)
 
     def __getattr__(self, name: str):
         return getattr(self._client, name)
 
 
 class _LLMGateChat:
-    def __init__(self, chat_resource, strategy: str):
+    def __init__(self, chat_resource, strategy: str, auto_approve: bool):
         self._chat = chat_resource
         self._strategy = strategy
-        self.completions = _LLMGateCompletions(chat_resource.completions, strategy)
+        self._auto_approve = auto_approve
+        self.completions = _LLMGateCompletions(
+            chat_resource.completions,
+            strategy,
+            auto_approve,
+        )
 
     def __getattr__(self, name: str):
         return getattr(self._chat, name)
 
 
 class _LLMGateCompletions:
-    def __init__(self, completions_resource, strategy: str) -> None:
+    def __init__(self, completions_resource, strategy: str, auto_approve: bool) -> None:
         self._completions = completions_resource
         self._strategy = strategy
+        self._auto_approve = auto_approve
 
     def create(self, *args: Any, **kwargs: Any) -> Any:
         from src.utils.gate import run_llm_post_gate, run_llm_pre_gate
@@ -949,14 +965,14 @@ class _LLMGateCompletions:
         else:
             strategy = self._strategy
 
-        if prompt_text and not run_llm_pre_gate(prompt_text, strategy):
+        if prompt_text and not run_llm_pre_gate(prompt_text, strategy, auto_approve=self._auto_approve):
             raise RuntimeError("LLM call canceled by user at prompt gate.")
 
         response = self._completions.create(*args, **kwargs)
 
         output_text = _extract_response_text(response)
         if output_text:
-            run_llm_post_gate(output_text, strategy)
+            run_llm_post_gate(output_text, strategy, auto_approve=self._auto_approve)
 
         return response
 

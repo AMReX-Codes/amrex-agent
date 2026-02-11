@@ -120,10 +120,13 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 run_mode = "dry"
             else:
                 run_mode = run_mode or "full"
+        auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
         compile_gate = run_preconfirm_gate(
             node_name="runner_compile",
             summary_lines=[
                 "This step compiles/links the executable and prepares the run directory.",
+                f"Environment: {config.environment}",
+                f"Run mode: {run_mode}",
                 f"Run directory: {run_directory}",
                 f"Inputs file: {inputs_file_path}",
             ],
@@ -133,6 +136,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             ],
             enabled=getattr(config, "preconfirm_gate", False) is True,
             allow_cancel=True,
+            auto_approve=auto_approve,
         )
         compile_gate_entry = compile_gate.get("history_entry")
         if compile_gate_entry:
@@ -213,10 +217,13 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             summary_lines=[
                 "This step submits the job to run.",
                 f"Run directory: {actual_run_dir}",
+                f"Environment: {config.environment}",
+                f"Run mode: {run_mode}",
             ],
             options=[{"label": "Submit run", "value": "run_now"}],
             enabled=getattr(config, "preconfirm_gate", False) is True,
             allow_cancel=True,
+            auto_approve=auto_approve,
         )
         run_gate_entry = run_gate.get("history_entry")
         if run_gate_entry:

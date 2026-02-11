@@ -80,14 +80,27 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     config = state["config"]
     iteration = state.get("iteration", 0)
 
+    workflow_history = state.get("workflow_history", [])
+    architect_entry = next(
+        (entry for entry in reversed(workflow_history) if entry.get("node") == "architect"),
+        None,
+    )
+    plan_details = architect_entry.get("details", {}) if architect_entry else {}
+    selected_case = plan_details.get("selected_case", "unknown")
+    modifications = plan_details.get("modifications", []) or []
+
+    auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
     gate_result = run_preconfirm_gate(
         node_name="reviewer",
         summary_lines=[
             "This step validates the plan before writing inputs.",
+            f"Selected case: {selected_case}",
+            f"Planned modifications: {len(modifications)}",
         ],
         options=[{"label": "Proceed with validation", "value": "proceed"}],
         enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
+        auto_approve=auto_approve,
     )
     gate_entry = gate_result.get("history_entry")
     if gate_entry:

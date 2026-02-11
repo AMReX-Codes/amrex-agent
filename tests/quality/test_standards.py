@@ -22,6 +22,9 @@ from typing import List, Tuple, Set
 # Configuration
 SRC_DIRS = [Path("src"), Path("database")]
 TEST_DIRS = [Path("tests")]
+PRINT_ALLOWLIST = {
+    Path("src/utils/gate.py"),
+}
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -134,6 +137,8 @@ def test_no_print_in_production():
             continue
 
         for py_file in source_dir.rglob("*.py"):
+            if py_file in PRINT_ALLOWLIST:
+                continue
             try:
                 tree = ast.parse(py_file.read_text())
                 visitor = PrintVisitor()

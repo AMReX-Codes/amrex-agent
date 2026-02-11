@@ -45,14 +45,30 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
         logger.error("Missing required 'config' in state")
         raise ValueError("Input Writer Node requires 'config' in state")
 
+    workflow_history = state.get("workflow_history", [])
+    architect_entry = next(
+        (entry for entry in reversed(workflow_history) if entry.get("node") == "architect"),
+        None,
+    )
+    plan_details = architect_entry.get("details", {}) if architect_entry else {}
+    selected_case = plan_details.get("selected_case", "unknown")
+    modifications = plan_details.get("modifications", []) or []
+    baseline = plan_details.get("baseline", {}) or {}
+    baseline_path = baseline.get("local_path", "unknown")
+
+    auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
     gate_result = run_preconfirm_gate(
         node_name="input_writer",
         summary_lines=[
             "This step writes inputs and prepares the run directory.",
+            f"Selected case: {selected_case}",
+            f"Baseline path: {baseline_path}",
+            f"Planned modifications: {len(modifications)}",
         ],
         options=[{"label": "Proceed with input writing", "value": "proceed"}],
         enabled=getattr(config, "preconfirm_gate", False) is True,
         allow_cancel=True,
+        auto_approve=auto_approve,
     )
     gate_entry = gate_result.get("history_entry")
     if gate_entry:
