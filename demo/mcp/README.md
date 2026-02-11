@@ -1,9 +1,25 @@
-# MCP Demo (Crux stdio)
+# MCP Demo (ALCF + NERSC stdio)
 
 This folder contains a minimal stdio-based MCP server/client demo intended for
-Crux (ALCF) with a shared conda base + venv.
+ALCF (Crux) or NERSC Perlmutter login nodes.
 
 ## Setup
+
+### NERSC (Perlmutter login)
+
+```bash
+cd /global/cfs/cdirs/amsc014/mcp/amrex-agent
+conda activate amrex-agent-dev
+```
+
+If you need a fresh env on Perlmutter:
+
+```bash
+conda env create -f environment.yaml
+conda activate amrex-agent-dev
+```
+
+### ALCF (Crux)
 
 ```bash
 module use /soft/modulefiles
@@ -21,8 +37,19 @@ python -m pip install -e .
 
 ## Run server (stdio)
 
+### NERSC (Perlmutter login)
+
 ```bash
-./demo/mcp/run_mcp_stdio.sh
+cd /global/cfs/cdirs/amsc014/mcp/amrex-agent
+conda activate amrex-agent-dev
+python -u mcp_server.py
+```
+
+### ALCF (Crux)
+
+```bash
+cd /lus/eagle/projects/COMB-FLOW-UNI/mcp/amrex-agent
+python -u mcp_server.py
 ```
 
 ## Run anyio client (spawns server)
@@ -33,3 +60,6 @@ python demo/mcp/mcp_anyio_client.py
 
 The anyio client starts a stdio MCP server subprocess, lists tools, and calls
 `validate_inputs` against a temporary inputs file to verify wiring.
+
+Note: The anyio client uses `StdioServerParameters`, required by recent MCP
+client versions.
