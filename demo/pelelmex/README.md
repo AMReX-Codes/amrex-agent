@@ -62,7 +62,7 @@ python amrex_agent.py \
 
 ## Testing Jet In Cross Flow (DNS example)
 
-Use the DNS prompt file and the JetInCrossFlow case from the JICF-ModCon branch.
+Use the DNS prompt file and the JetInCrossflow case from the JICF-ModCon branch.
 See the JICF-ModCon branch on Bruce Perry's fork (baperry2/PeleLMeX).
 
 To add the fork as a remote and check out the branch in an existing repo:
@@ -77,11 +77,15 @@ git checkout -b JICF-ModCon baperry/JICF-ModCon
 ```bash
 python amrex_agent.py \
   --prompt-path demo/pelelmex/user_requirements_test_DNS.txt \
-  --baseline-override PeleLMeX/Exec/RegTests/JetInCrossFlow \
+  --baseline-override PeleLMeX/Exec/Production/JetInCrossflow \
   --indexing-strategy simple \
   --save-workflow \
   --save-transcript \
   --save-log \
   --color-logs always \
   --verbose
+
+Note: this flow expects network access for the LLM provider (default: CBORG).
+Expected outputs (dry run): `output/run_<timestamp>/inputs`, `run_local.sh`,
+`workflow_history.json`, and `agent_transcript.txt` (no plotfiles generated).
 ```

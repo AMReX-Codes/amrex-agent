@@ -131,7 +131,7 @@ All demo commands live under `demo/`. Highlights:
 - AMReX simple indexing dry-run: `demo/README.md`
 - PeleC simple demo: `demo/pelec/README.md`
 - PeleLMeX FlameSheet override (best-known example): `demo/pelelmex/README.md`
-- PeleLMeX JetInCrossFlow DNS prompt example: `demo/pelelmex/README.md`
+- PeleLMeX JetInCrossflow DNS prompt example: `demo/pelelmex/README.md`
 - PeleLMeX retry/failure-path example: `demo/example_retry_setups.md`
 - ALCF inference endpoint demo (in development): `demo/alcf/README.md`
 - Superfacility (SFAPI) Perlmutter demo notes (in development): `demo/superfacility/README.md`

@@ -10,7 +10,7 @@ import logging
 import os
 from pathlib import Path
 
-from src.config import AMReXAgentConfig, resolve_alcf_base_url
+from src.config import AMReXAgentConfig, resolve_alcf_base_url, wrap_llm_client_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +157,7 @@ class ConfigService:
                     api_key=config.alcf_api_key,
                     base_url=base_url
                 )
+            client = wrap_llm_client_with_retry(client, config)
             logger.debug(" Discovering available models...")
             models = client.models.list()
             available_models = [model.id for model in models]

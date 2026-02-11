@@ -16,7 +16,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import warnings
 
-from src.config import AMReXAgentConfig, get_llm_client
+from src.config import AMReXAgentConfig, get_llm_client, unwrap_llm_client
 
 
 # =============================================================================
@@ -186,7 +186,7 @@ class TestGetLlmClient:
             api_key="test-cborg-key",
             base_url="https://api.cborg.lbl.gov/v1"
         )
-        assert result == mock_client
+        assert unwrap_llm_client(result) == mock_client
     
     @patch('openai.OpenAI')
     def test_cborg_auto_detects_model_when_not_set(self, mock_openai_class):
@@ -335,7 +335,7 @@ class TestGetLlmClient:
         mock_openai_class.assert_called_once_with(
             api_key="sk-test-openai-key"
         )
-        assert result == mock_client
+        assert unwrap_llm_client(result) == mock_client
 
     @patch('openai.OpenAI')
     def test_returns_alcf_client(self, mock_openai_class):
@@ -362,7 +362,7 @@ class TestGetLlmClient:
             api_key="test-alcf-key",
             base_url="https://inference-api.alcf.anl.gov/resource_server/sophia/vllm/v1"
         )
-        assert result == mock_client
+        assert unwrap_llm_client(result) == mock_client
 
     @patch('openai.OpenAI')
     def test_returns_litellm_client(self, mock_openai_class):
@@ -548,7 +548,7 @@ class TestConfigIntegration:
         assert mock_load_keys.called
         assert mock_detect_model.called
         assert mock_test_conn.called
-        assert client == mock_client
+        assert unwrap_llm_client(client) == mock_client
         
         # Verify client created with correct config
         mock_openai_class.assert_called_with(

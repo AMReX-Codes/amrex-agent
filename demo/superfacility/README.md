@@ -86,7 +86,7 @@ python amrex_agent.py \
   --environment perlmutter
 ```
 
-## PeleLMeX DNS example (JetInCrossFlow)
+## PeleLMeX DNS example (JetInCrossflow)
 
 ```bash
 # export SBATCH_ACCOUNT=m4106

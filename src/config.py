@@ -1,6 +1,8 @@
 """Configuration for AMReXAgent."""
 
 import os
+import random
+import time
 from pathlib import Path
 from typing import Optional, Dict, Literal, List, Any
 from pydantic import BaseModel, Field, ConfigDict
@@ -410,6 +412,12 @@ class AMReXAgentConfig(BaseModel):
         description="Max retry attempts for embedding batches (1 disables retries)."
     )
 
+    llm_retry_max_attempts: int = Field(
+        default=3,
+        ge=1,
+        description="Max retry attempts for LLM chat completions (1 disables retries)."
+    )
+
     faiss_semantic_weight: float = Field(
         default=0.5,
         ge=0.0,
@@ -494,7 +502,7 @@ class AMReXAgentConfig(BaseModel):
         default=None,
         description="Force specific baseline case (overrides automatic selection). "
                     "Format: 'Code/Exec/Path/Case' or 'Exec/Path/Case'. "
-                    "Example: 'PeleLMeX/Exec/RegTests/JetInCrossFlow' or 'Exec/Production/JetFlame'. "
+                    "Example: 'PeleLMeX/Exec/Production/JetInCrossflow' or 'Exec/Production/JetFlame'. "
                     "When set, skips L2 baseline selection and uses this case directly."
     )
 
@@ -933,6 +941,7 @@ def get_llm_client(config: AMReXAgentConfig):
 
 
 def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
+    client = _wrap_llm_client_with_retry(client, config)
     strategy = getattr(config, "llm_gate_strategy", "off") or "off"
     if strategy == "off":
         return client
@@ -940,16 +949,102 @@ def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
     return _LLMGateClient(client, strategy, auto_approve)
 
 
+def _wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
+    raw_attempts = getattr(config, "llm_retry_max_attempts", 1)
+    try:
+        max_attempts = int(raw_attempts)
+    except (TypeError, ValueError):
+        max_attempts = 1
+    if max_attempts <= 1:
+        return client
+    if isinstance(client, _LLMRetryClient):
+        return client
+    return _LLMRetryClient(client, max_attempts)
+
+
 def wrap_llm_client(client, config: AMReXAgentConfig):
     """Public helper to apply LLM gating to an existing client instance."""
     return _wrap_llm_client_if_needed(client, config)
+
+
+def wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
+    """Public helper to apply retry behavior without LLM gating."""
+    return _wrap_llm_client_with_retry(client, config)
 
 
 def unwrap_llm_client(client):
     """Return the underlying client if wrapped by the LLM gate."""
     if isinstance(client, _LLMGateClient):
         return client._client
+    if isinstance(client, _LLMRetryClient):
+        return client._client
     return client
+
+
+class _LLMRetryClient:
+    def __init__(self, client, max_attempts: int) -> None:
+        self._client = client
+        self._max_attempts = max_attempts
+        self.chat = _LLMRetryChat(client.chat, max_attempts)
+
+    def __getattr__(self, name: str):
+        return getattr(self._client, name)
+
+
+class _LLMRetryChat:
+    def __init__(self, chat_resource, max_attempts: int) -> None:
+        self._chat = chat_resource
+        self._max_attempts = max_attempts
+        self.completions = _LLMRetryCompletions(chat_resource.completions, max_attempts)
+
+    def __getattr__(self, name: str):
+        return getattr(self._chat, name)
+
+
+class _LLMRetryCompletions:
+    def __init__(self, completions_resource, max_attempts: int) -> None:
+        self._completions = completions_resource
+        self._max_attempts = max_attempts
+        self._retryable_statuses = {429, 500, 502, 503}
+
+    def create(self, *args: Any, **kwargs: Any) -> Any:
+        attempt = 0
+        while True:
+            attempt += 1
+            try:
+                return self._completions.create(*args, **kwargs)
+            except Exception as exc:
+                status_code = _get_http_status(exc)
+                retryable = status_code in self._retryable_statuses
+                if not retryable or attempt >= self._max_attempts:
+                    raise
+                base_delay = 1.0
+                max_delay = 20.0
+                backoff = 2.0
+                delay = min(max_delay, base_delay * (backoff ** (attempt - 1)))
+                delay += random.uniform(0.0, delay * 0.1)
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                logger.warning(
+                    "[%s] LLM request failed (attempt %s/%s, status %s): %s",
+                    timestamp,
+                    attempt,
+                    self._max_attempts,
+                    status_code,
+                    exc,
+                )
+                time.sleep(delay)
+
+
+def _get_http_status(error: Exception) -> int | None:
+    for attr in ("status_code", "http_status"):
+        value = getattr(error, attr, None)
+        if isinstance(value, int):
+            return value
+    response = getattr(error, "response", None)
+    status = getattr(response, "status_code", None)
+    if isinstance(status, int):
+        return status
+    return None
 
 
 class _LLMGateClient:

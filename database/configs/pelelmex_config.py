@@ -141,7 +141,7 @@ class PeleLMeXConfig(BaseAMReXConfig):
         "Exec/RegTests/FlameSheet",
         "Exec/RegTests/TaylorGreen",
         "Exec/Production/CounterFlow",
-        "Exec/Production/JetInCrossFlow",
+        "Exec/Production/JetInCrossflow",
     ]
 
     # Override with combustion-specific keywords (Indexing Engine: Physics-Agnostic Keywords & Scoring)
