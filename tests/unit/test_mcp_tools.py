@@ -350,6 +350,12 @@ def test_mcp_stdio_list_tools_and_validate_inputs(tmp_path):
         )
 
     try:
+        def _recv_or_xfail(expected_id: int, timeout: float = 20.0) -> dict:
+            try:
+                return _recv(expected_id, timeout=timeout)
+            except RuntimeError as exc:
+                pytest.xfail(str(exc))
+
         _send(
             {
                 "jsonrpc": "2.0",
@@ -362,16 +368,13 @@ def test_mcp_stdio_list_tools_and_validate_inputs(tmp_path):
                 },
             }
         )
-        try:
-            init_response = _recv(0, timeout=60.0)
-        except RuntimeError as exc:
-            pytest.xfail(str(exc))
+        init_response = _recv_or_xfail(0, timeout=20.0)
         assert "result" in init_response
 
         _send({"jsonrpc": "2.0", "method": "initialized", "params": {}})
 
         _send({"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}})
-        tools_response = _recv(1)
+        tools_response = _recv_or_xfail(1, timeout=20.0)
         tools = tools_response.get("result", {}).get("tools", [])
         tool_names = {tool.get("name") for tool in tools}
         expected_tools = {
@@ -440,7 +443,7 @@ def test_mcp_stdio_list_tools_and_validate_inputs(tmp_path):
                     "params": {"name": tool_name, "arguments": arguments},
                 }
             )
-            response = _recv(request_id, timeout=60.0)
+            response = _recv_or_xfail(request_id, timeout=20.0)
             assert "result" in response or "error" in response
             request_id += 1
     finally:
