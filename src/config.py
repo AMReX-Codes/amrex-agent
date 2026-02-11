@@ -520,6 +520,15 @@ class AMReXAgentConfig(BaseModel):
         description="Auto-approve pre-confirmation gates without prompting."
     )
 
+    gate_strategy: Literal["auto", "terminal", "selective"] = Field(
+        default="auto",
+        description="Decision-level gating strategy for GateManager."
+    )
+    gate_points: List[str] = Field(
+        default_factory=list,
+        description="Decision points to gate (e.g., solver, baseline, modifications, execution)."
+    )
+
     run_mode: Literal["dry", "stage", "submit", "full"] = Field(
         default="full",
         description="Run execution strategy: dry (scripts only), stage (stage inputs only), "

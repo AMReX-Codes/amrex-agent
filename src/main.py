@@ -438,6 +438,17 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
         help='Pause for a pre-confirmation gate before validation'
     )
     parser.add_argument(
+        '--gate-strategy',
+        choices=['auto', 'terminal', 'selective'],
+        dest='gate_strategy',
+        help='Decision gate strategy: auto, terminal, selective'
+    )
+    parser.add_argument(
+        '--gate-points',
+        dest='gate_points',
+        help='Comma-separated decision points to gate (solver,baseline,modifications,execution)'
+    )
+    parser.add_argument(
         '--llm-gate-strategy',
         choices=[
             'off',
@@ -559,6 +570,26 @@ def load_prompt_content(args: argparse.Namespace) -> str:
     return path.read_text().strip()
 
 
+def apply_gate_cli_settings(config, parsed_args) -> None:
+    if getattr(parsed_args, "preconfirm", False):
+        config.preconfirm_gate = True
+
+    gate_strategy = getattr(parsed_args, "gate_strategy", None)
+    gate_points_raw = getattr(parsed_args, "gate_points", None)
+    gate_points = []
+    if gate_points_raw:
+        gate_points = [p.strip() for p in gate_points_raw.split(",") if p.strip()]
+
+    if gate_strategy:
+        config.gate_strategy = gate_strategy
+    elif gate_points:
+        config.gate_strategy = "selective"
+    else:
+        config.gate_strategy = getattr(config, "gate_strategy", "auto") or "auto"
+
+    config.gate_points = gate_points
+
+
 def _warn_if_schema_missing(config: AMReXAgentConfig, baseline_override: str | None) -> None:
     """Warn if schema is missing for the baseline override solver."""
     if not baseline_override:
@@ -647,8 +678,7 @@ def main(args: list[str] | None = None) -> None:
         if parsed_args.environment:
             config.environment = parsed_args.environment
 
-        if parsed_args.preconfirm:
-            config.preconfirm_gate = True
+        apply_gate_cli_settings(config, parsed_args)
 
         if parsed_args.llm_gate_strategy:
             config.llm_gate_strategy = parsed_args.llm_gate_strategy
@@ -694,14 +724,23 @@ def main(args: list[str] | None = None) -> None:
                 if 'run_directory' in result:
                     run_dir = Path(result['run_directory'])
                     workflow_path = run_dir / "workflow_history.json"
+                    gate_history_path = run_dir / "gate_history.json"
                 else:
                     base_dir = Path(parsed_args.output_dir) if parsed_args.output_dir else Path("output")
                     base_dir.mkdir(parents=True, exist_ok=True)
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     workflow_path = base_dir / f"workflow_history_{timestamp}.json"
+                    gate_history_path = base_dir / f"gate_history_{timestamp}.json"
                 with open(workflow_path, 'w') as f:
                     json.dump(result.get('workflow_history', []), f, indent=2, default=str)
                 logger.info(f"Workflow history saved to {workflow_path}")
+                from src.utils.gate import build_gate_history_from_workflow_history
+                gate_history = build_gate_history_from_workflow_history(
+                    result.get('workflow_history', [])
+                )
+                with open(gate_history_path, 'w') as f:
+                    json.dump({"gates": gate_history}, f, indent=2, default=str)
+                logger.info(f"Gate history saved to {gate_history_path}")
             except Exception as e:
                 logger.warning(f"Failed to save workflow history: {e}")
 

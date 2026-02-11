@@ -558,3 +558,54 @@ def _build_options_metadata(options: list[dict[str, Any]]) -> list[dict[str, Any
             }
         )
     return metadata
+
+
+def build_gate_history_from_workflow_history(
+    workflow_history: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """
+    Build PRD gate_history.json payload from workflow_history gate entries.
+    """
+    gate_entries: list[dict[str, Any]] = []
+    for entry in workflow_history or []:
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("node") != "preconfirm_gate":
+            continue
+        details = entry.get("details", {}) if isinstance(entry.get("details", {}), dict) else {}
+        selection = details.get("selection")
+        selected_value = None
+        if isinstance(selection, dict):
+            selected_value = (
+                selection.get("value")
+                or selection.get("label")
+                or selection.get("case")
+            )
+        elif selection is not None:
+            selected_value = str(selection)
+        action = entry.get("action")
+        if action == "proceed":
+            user_action = "approved"
+        elif action == "cancel":
+            user_action = "cancel"
+        elif action == "skipped":
+            user_action = "skipped"
+        elif action in {"reject", "rejected"}:
+            user_action = "rejected"
+        else:
+            user_action = action or "unknown"
+        gate_record = {
+            "gate_point": details.get("gate_node"),
+            "selected": selected_value,
+            "user_action": user_action,
+            "timestamp": entry.get("timestamp"),
+        }
+        user_modification = (
+            details.get("user_modification")
+            or details.get("modification")
+            or details.get("parameters")
+        )
+        if user_modification:
+            gate_record["user_modification"] = user_modification
+        gate_entries.append(gate_record)
+    return gate_entries
