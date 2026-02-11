@@ -26,14 +26,25 @@ Evidence (paths):
 
 ## Standards checklist and evidence mapping
 
-| Standard | Evidence | Notes |
-| --- | --- | --- |
-| Reproducibility | `docs/BUILD_FAISS_INDICES.md` | Deterministic index builds and pinned embedding flows |
-| Traceability | `docs/coverage_map.md` | Maps tests, contracts, and graph state fields |
-| Safety and control | `docs/mcp.md` | Tool schemas + explicit interfaces for external calls |
-| Verification | `tests/quality/test_contract_schema_alignment.py` | Schema alignment and contract checks |
-| Transparency | `docs/workflow_visualization.md` | Documented outputs and traceable artifacts |
-| Interoperability | `docs/mcp.md` | MCP tool surface for external orchestration |
+| Standard | Evidence | Tests | Notes |
+| --- | --- | --- | --- |
+| Reproducibility | `docs/BUILD_FAISS_INDICES.md` | `tests/unit/test_faiss_artifacts.py` | Deterministic index builds and pinned embedding flows |
+| Traceability | `docs/coverage_map.md` | `tests/unit/test_architect_node_history.py` | Maps tests, contracts, and graph state fields |
+| Safety and control | `docs/mcp.md` | `tests/unit/test_architect_node_safety.py` | Tool schemas + explicit interfaces for external calls |
+| Verification | `tests/quality/test_contract_schema_alignment.py` | `tests/quality/test_contract_schema_alignment.py` | Schema alignment and contract checks |
+| Transparency | `docs/workflow_visualization.md` | `tests/integration/l3_postprocessing/test_analysis_parsing.py` | Documented outputs and traceable artifacts |
+| Interoperability | `docs/mcp.md` | `tests/unit/test_mcp_tools.py`, `tests/integration/l1_mcp/test_mcp_stdio.py` | MCP tool surface for external orchestration |
+
+## Standards to feature/test mapping
+
+| Gap | Impact | Status | Next step | Evidence | Tests |
+| --- | --- | --- | --- | --- | --- |
+| Reproducibility coverage | Deterministic runs for indices and embeddings | Documented | Tie to benchmark and validation tests | `docs/BUILD_FAISS_INDICES.md` | `tests/unit/test_faiss_artifacts.py` |
+| Traceability coverage | Decision trail for outputs | Documented | Map to workflow history fields | `docs/coverage_map.md` | `tests/unit/test_architect_node_history.py` |
+| Safety and control coverage | Guardrails for costly actions | Documented | Tie to gating tests and policies | `docs/mcp.md` | `tests/unit/test_architect_node_safety.py` |
+| Verification coverage | Schema and contract alignment | Documented | Map to quality tests | `tests/quality/test_contract_schema_alignment.py` | `tests/quality/test_contract_schema_alignment.py` |
+| Transparency coverage | Evidence links for outputs | Documented | Map to analysis/report artifacts | `docs/workflow_visualization.md` | `tests/integration/l3_postprocessing/test_analysis_parsing.py` |
+| Interoperability coverage | External tool schemas and hooks | Documented | Map to MCP tool inventory tests | `docs/mcp.md` | `tests/unit/test_mcp_tools.py`, `tests/integration/l1_mcp/test_mcp_stdio.py` |
 
 ## Capability coverage (Agents4Science-aligned)
 
@@ -82,6 +93,14 @@ Current alignment:
 - Capability mapping needs periodic review when new nodes or external tools are added.
 - Collaboration is external to this repo; document orchestration changes if added.
 - Agents4Science stages 2-6 are not implemented; track if integration is planned.
+
+## Structured gap log
+
+| Gap | Impact | Status | Next step | Evidence | Tests |
+| --- | --- | --- | --- | --- | --- |
+| Federated identity for collaboration | Limits cross-institution workflows | Open | Evaluate Academy/Globus integration | `docs/mcp.md` | - |
+| Shared policy/budget ledger for coordinated agents | No multi-agent governance | Open | Define governance layer requirements | `docs/standards.md` | - |
+| Dynamic DAG construction | Workflow is mostly fixed per run | Open | Add prompt-conditional routing and optional nodes | `docs/standards.md` | - |
 
 ## Evidence and checklists
 
