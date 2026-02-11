@@ -283,10 +283,13 @@ def mcp_execute_workflow(payload: dict) -> dict:
         "create_simulation_plan": mcp_create_simulation_plan,
         "create_proposed_modifications_with_plan": mcp_create_proposed_modifications_with_plan,
         "select_baseline_case": mcp_select_baseline_case,
+        "search_cases": mcp_select_baseline_case,
         "validate_inputs": mcp_validate_inputs,
+        "validate_config": mcp_validate_config,
         "setup_job": mcp_setup_job,
         "run_simulation": mcp_run_simulation,
         "analyze_results": mcp_analyze_results,
+        "get_workflow_status": mcp_analyze_results,
         "generate_visualizations": mcp_generate_visualizations,
     }
 
@@ -322,8 +325,10 @@ def mcp_select_baseline_case(payload: dict) -> dict:
     """
     architect = ArchitectService(config)
 
-    prompt = payload["prompt"]
-    code = payload.get("code")  # Optional - will use default from config if not specified
+    prompt = payload.get("prompt") or payload.get("query")
+    if not prompt:
+        raise ValueError("Missing prompt")
+    code = payload.get("code") or payload.get("solver")
     if not code:
         code = config.default_solver
     if not code:
@@ -388,6 +393,40 @@ def mcp_validate_inputs(payload: dict) -> dict:
 
     # Validate
     result = validator.validate_config(inputs_dict)
+
+    return {
+        "valid": result.get("valid", False),
+        "errors": result.get("errors", []),
+        "warnings": result.get("warnings", [])
+    }
+
+
+def mcp_validate_config(payload: dict) -> dict:
+    """Validate AMReX configuration payloads.
+
+    Parameters
+    ----------
+    payload : Dict
+        Payload with ``config`` and optional ``solver`` or ``inputs_file_path``.
+
+    Returns
+    -------
+    Dict
+        Validation results with errors and warnings.
+    """
+    from amrex_tools import parse_pele_inputs
+
+    validator = ValidationService(config)
+    config_dict = payload.get("config")
+    selected_solver = payload.get("solver")
+
+    if config_dict is None:
+        inputs_path = payload.get("inputs_file_path") or payload.get("inputs_path")
+        if not inputs_path:
+            raise ValueError("Missing config")
+        config_dict = parse_pele_inputs(inputs_path)
+
+    result = validator.validate_config(config_dict, selected_solver=selected_solver)
 
     return {
         "valid": result.get("valid", False),
@@ -735,10 +774,13 @@ async def list_tools():
                                 "create_simulation_plan",
                                 "create_proposed_modifications_with_plan",
                                 "select_baseline_case",
+                                "search_cases",
                                 "validate_inputs",
+                                "validate_config",
                                 "setup_job",
                                 "run_simulation",
                                 "analyze_results",
+                                "get_workflow_status",
                                 "generate_visualizations"
                             ]
                         },
@@ -982,6 +1024,63 @@ async def list_tools():
             }
         },
         {
+            "name": "search_cases",
+            "description": "Alias for select_baseline_case. Search and score baseline cases.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Simulation description for baseline selection"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "Alias for query"
+                    },
+                    "solver": {
+                        "type": "string",
+                        "enum": available_solvers,
+                        "description": "Target AMReX code (optional, defaults to config default solver)"
+                    },
+                    "code": {
+                        "type": "string",
+                        "enum": available_solvers,
+                        "description": "Alias for solver"
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of top cases to return (default: 5)",
+                        "default": 5
+                    }
+                },
+                "anyOf": [
+                    {"required": ["query"]},
+                    {"required": ["prompt"]}
+                ]
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "selected_case": {
+                        "type": "string",
+                        "description": "Selected baseline case path"
+                    },
+                    "baseline": {
+                        "type": "object",
+                        "description": "Baseline metadata (code_name, repo_path, case_path, local_path)"
+                    },
+                    "baseline_confidence": {
+                        "type": "number",
+                        "description": "Baseline selection confidence score"
+                    },
+                    "reasoning": {
+                        "type": "string",
+                        "description": "Selection rationale"
+                    }
+                }
+            }
+        },
+        {
             "name": "validate_inputs",
             "description": "Validate an AMReX inputs file for common errors and issues.",
             "inputSchema": {
@@ -993,6 +1092,32 @@ async def list_tools():
                     }
                 },
                 "required": ["inputs_file_path"]
+            }
+        },
+        {
+            "name": "validate_config",
+            "description": "Alias for validate_inputs. Validate a configuration dictionary or inputs file.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "config": {
+                        "type": "object",
+                        "description": "Parsed inputs configuration"
+                    },
+                    "solver": {
+                        "type": "string",
+                        "enum": available_solvers,
+                        "description": "Target AMReX code (optional)"
+                    },
+                    "inputs_file_path": {
+                        "type": "string",
+                        "description": "Inputs file path (alias if config is not provided)"
+                    }
+                },
+                "anyOf": [
+                    {"required": ["config"]},
+                    {"required": ["inputs_file_path"]}
+                ]
             }
         },
         {
@@ -1217,6 +1342,47 @@ async def list_tools():
             }
         },
         {
+            "name": "get_workflow_status",
+            "description": "Alias for analyze_results. Return workflow status from a run directory.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "run_directory": {
+                        "type": "string",
+                        "description": "Run directory containing log files"
+                    },
+                    "include_visual": {
+                        "type": "boolean",
+                        "description": "Include visual diagnostics (default: false)"
+                    },
+                    "config_overrides": {
+                        "type": "object",
+                        "properties": {
+                            "analysis_always_enabled": {
+                                "type": "boolean",
+                                "description": "Override analysis toggle (default: true)"
+                            }
+                        },
+                        "additionalProperties": False
+                    }
+                },
+                "required": ["run_directory"]
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "job_status": {
+                        "type": "string",
+                        "description": "Canonical status: completed, failed, unstable"
+                    },
+                    "analysis_report": {
+                        "type": "object",
+                        "description": "Full analysis report payload"
+                    }
+                }
+            }
+        },
+        {
             "name": "generate_visualizations",
             "description": "Generate visualization images from AMReX plotfiles in a run directory "
                           "using the configured visualization backend.",
@@ -1356,8 +1522,14 @@ async def call_tool(name: str, arguments: dict) -> Any:
         elif name == "select_baseline_case":
             return mcp_select_baseline_case(arguments)
 
+        elif name == "search_cases":
+            return mcp_select_baseline_case(arguments)
+
         elif name == "validate_inputs":
             return mcp_validate_inputs(arguments)
+
+        elif name == "validate_config":
+            return mcp_validate_config(arguments)
 
         elif name == "setup_job":
             return mcp_setup_job(arguments)
@@ -1366,6 +1538,9 @@ async def call_tool(name: str, arguments: dict) -> Any:
             return mcp_run_simulation(arguments)
 
         elif name == "analyze_results":
+            return mcp_analyze_results(arguments)
+
+        elif name == "get_workflow_status":
             return mcp_analyze_results(arguments)
 
         elif name == "generate_visualizations":

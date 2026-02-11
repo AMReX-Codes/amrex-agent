@@ -128,10 +128,13 @@ def test_mcp_stdio_list_tools_and_validate_inputs(tmp_path):
             "create_simulation_plan",
             "create_proposed_modifications_with_plan",
             "select_baseline_case",
+            "search_cases",
             "validate_inputs",
+            "validate_config",
             "setup_job",
             "run_simulation",
             "analyze_results",
+            "get_workflow_status",
             "generate_visualizations",
         }
         assert expected_tools.issubset(tool_names)

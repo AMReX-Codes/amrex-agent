@@ -24,10 +24,13 @@ The MCP server exposes these tools:
 - `create_simulation_plan`
 - `create_proposed_modifications_with_plan`
 - `select_baseline_case`
+- `search_cases` (alias for `select_baseline_case`)
 - `validate_inputs`
+- `validate_config` (alias for `validate_inputs`)
 - `setup_job`
 - `run_simulation`
 - `analyze_results`
+- `get_workflow_status` (alias for `analyze_results`)
 - `generate_visualizations`
 
 Use `tools/list` to discover schemas and required parameters.
@@ -118,6 +121,53 @@ mirroring the test logic in `tests/unit/test_mcp_tools.py`.
 ## Testing
 
 MCP tests live in `tests/unit/test_mcp_tools.py`:
+
+## Crux stdio runbook (ALCF)
+
+This is the recommended stdio-only setup for Crux using the shared conda base +
+venv approach. It is intended for local runs only (no Perlmutter dispatch yet).
+
+```bash
+module use /soft/modulefiles
+module load conda
+conda activate base
+
+cd /lus/eagle/projects/COMB-FLOW-UNI/mcp/amrex-agent
+CONDA_NAME=$(echo ${CONDA_PREFIX} | tr '\/' '\t' | sed -E 's/mconda3|\/base//g' | awk '{print $NF}')
+VENV_DIR="$(pwd)/venvs/${CONDA_NAME}"
+python -m venv "${VENV_DIR}" --system-site-packages
+source "${VENV_DIR}/bin/activate"
+python -m pip install -U pip
+python -m pip install -e .
+
+python -u mcp_server.py
+```
+
+For an anyio subprocess client, see `demo/mcp/mcp_anyio_client.py`.
+
+## SFAPI credential discovery (for later Perlmutter dispatch)
+
+The superfacility runner checks these environment variables and files:
+
+- `SBATCH_ACCOUNT` (default account if unset)
+- `SUPERFACILITY_CLIENT_ID`, `SUPERFACILITY_SECRET`
+- `NERSC_API_TOKEN` or `SFAPI_TOKEN`
+- `SFAPI_KEY_PATH`, `SUPERFACILITY_KEY_PATH`, `NERSC_SFAPI_KEY_PATH`
+- `~/.superfacility/` containing:
+  - `clientid.txt` + `priv_key.jwk` (flat)
+  - or `<color>_client/` with the same pair
+  - `*.pem`, `key.pem`, or `priv_key.pem` (first line client ID, rest PEM key)
+
+The PEM format expects the client ID on the first line; a standard
+`-----BEGIN` header on the first line is ignored.
+
+Note: MCP server submissions use the credentials available to the server
+process (env vars and `~/.superfacility`). There is no per-request credential
+switching, so start the server under the account you want to bill.
+
+The same applies to LLM providers: CBORG, ALCF, OpenAI, etc. use the server
+process credentials. Running the MCP server under your account means LLM calls
+consume your quota and SFAPI submissions use your key.
 
 - In-process integration: uses memory streams with the MCP client session.
 - Stdio integration: spawns `mcp_server.py` and sends JSON-RPC over stdio.

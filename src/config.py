@@ -26,7 +26,7 @@ def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
 def _default_superfacility_account() -> str:
     return (
         os.getenv("SBATCH_ACCOUNT")
-        or "mp111_g"
+        or "m5299"
     )
 
 def detect_environment(env: dict = None) -> str:

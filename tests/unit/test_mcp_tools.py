@@ -243,6 +243,11 @@ def test_mcp_validate_inputs_requires_path(mcp_server_module):
         mcp_server_module.mcp_validate_inputs({})
 
 
+def test_mcp_validate_config_requires_config(mcp_server_module):
+    with pytest.raises(ValueError):
+        mcp_server_module.mcp_validate_config({})
+
+
 @pytest.mark.asyncio
 async def test_mcp_list_tools_inprocess(mcp_server_module):
     tools = await mcp_server_module.list_tools()
@@ -253,10 +258,13 @@ async def test_mcp_list_tools_inprocess(mcp_server_module):
         "create_simulation_plan",
         "create_proposed_modifications_with_plan",
         "select_baseline_case",
+        "search_cases",
         "validate_inputs",
+        "validate_config",
         "setup_job",
         "run_simulation",
         "analyze_results",
+        "get_workflow_status",
         "generate_visualizations",
     }
     assert expected_tools.issubset(tool_names)
@@ -278,6 +286,22 @@ def test_mcp_validate_inputs_returns_validation(mcp_server_module, monkeypatch, 
 
     assert result["valid"] is False
     assert result["errors"] == ["bad"]
+
+
+def test_mcp_validate_config_returns_validation(mcp_server_module, monkeypatch):
+    def fake_validate(self, config_dict, selected_solver=None):
+        return {"valid": True, "errors": [], "warnings": ["warn"]}
+
+    monkeypatch.setattr(
+        mcp_server_module.ValidationService, "validate_config", fake_validate
+    )
+
+    result = mcp_server_module.mcp_validate_config(
+        {"config": {"amr.max_level": 1}, "solver": "PeleC"}
+    )
+
+    assert result["valid"] is True
+    assert result["warnings"] == ["warn"]
     assert result["warnings"] == ["warn"]
 
 
