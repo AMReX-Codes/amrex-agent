@@ -39,7 +39,11 @@ def _start_server(repo_root: Path):
                 if stream is proc.stderr:
                     stderr_lines.append(line)
                     continue
-                message = json.loads(line)
+                try:
+                    message = json.loads(line)
+                except json.JSONDecodeError:
+                    stderr_lines.append(line)
+                    continue
                 if message.get("id") == expected_id:
                     return message
         stderr_dump = "\n".join(stderr_lines[-20:])
@@ -128,10 +132,13 @@ def test_mcp_stdio_list_tools_and_validate_inputs(tmp_path):
             "create_simulation_plan",
             "create_proposed_modifications_with_plan",
             "select_baseline_case",
+            "search_cases",
             "validate_inputs",
+            "validate_config",
             "setup_job",
             "run_simulation",
             "analyze_results",
+            "get_workflow_status",
             "generate_visualizations",
         }
         assert expected_tools.issubset(tool_names)

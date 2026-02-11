@@ -4,7 +4,11 @@
     "output_dir": "output/mcp/kh",
     "submit": {
       "dry_run": true
-    }
+    },
+    "steps": [
+      "create_simulation_plan",
+      "run_simulation"
+    ]
   },
   "outputs": {
     "create_simulation_plan": {
@@ -16,19 +20,6 @@
       "job_status": "dry_run",
       "run_directory": "output/mcp/kh/run_001",
       "method": "local"
-    },
-    "analyze_results": {
-      "job_status": "dry_run",
-      "analysis_report": {
-        "summary": "Dry run - no analysis executed."
-      }
-    },
-    "generate_visualizations": {
-      "visualization_status": "skipped",
-      "visualization_images": [],
-      "visualization_metadata": {
-        "reason": "Dry run - no plotfiles available."
-      }
     }
   }
 }

@@ -26,7 +26,7 @@ def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
 def _default_superfacility_account() -> str:
     return (
         os.getenv("SBATCH_ACCOUNT")
-        or "mp111_g"
+        or "m5299"
     )
 
 def detect_environment(env: dict = None) -> str:
@@ -617,6 +617,11 @@ class AMReXAgentConfig(BaseModel):
     stage_out_outputs: bool = Field(
         default=True,
         description="Stage back output logs and plotfiles after remote completion."
+    )
+
+    workflow_store_path: Path = Field(
+        default_factory=lambda: Path.home() / ".amrex_agent" / "workflow_store.db",
+        description="SQLite path for MCP workflow session persistence."
     )
     
     # === Workflow Settings ===

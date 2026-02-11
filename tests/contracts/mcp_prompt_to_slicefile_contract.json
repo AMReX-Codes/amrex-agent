@@ -5,10 +5,17 @@
   "transport": "stdio JSON-RPC (tools/list, tools/call)",
   "schema_path": "mcp_prompt_to_slicefile_schema.json",
   "example_path": "mcp_prompt_to_slicefile_example.json",
+  "entrypoint_tool": "execute_workflow",
 
   "tool_sequence": [
     "create_simulation_plan",
     "run_simulation",
+    "generate_visualizations"
+  ],
+  "entrypoint_default_steps": [
+    "create_simulation_plan",
+    "run_simulation",
+    "analyze_results",
     "generate_visualizations"
   ],
 

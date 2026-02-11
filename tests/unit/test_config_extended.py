@@ -390,7 +390,7 @@ class TestGetLlmClient:
             api_key="test-litellm-key",
             base_url="http://localhost:4000/v1"
         )
-        assert result == mock_client
+        assert unwrap_llm_client(result) == mock_client
 
     def test_alcf_raises_error_when_no_api_key(self, monkeypatch):
         """

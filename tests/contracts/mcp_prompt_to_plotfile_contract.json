@@ -5,8 +5,13 @@
   "transport": "stdio JSON-RPC (tools/list, tools/call)",
   "schema_path": "mcp_prompt_to_plotfile_schema.json",
   "example_path": "mcp_prompt_to_plotfile_example.json",
+  "entrypoint_tool": "execute_workflow",
 
   "tool_sequence": [
+    "create_simulation_plan",
+    "run_simulation"
+  ],
+  "entrypoint_default_steps": [
     "create_simulation_plan",
     "run_simulation",
     "analyze_results",
@@ -29,15 +34,6 @@
       "job_status": "str",
       "run_directory": "str",
       "method": "str"
-    },
-    "analyze_results": {
-      "job_status": "str",
-      "analysis_report": "dict"
-    },
-    "generate_visualizations": {
-      "visualization_status": "str",
-      "visualization_images": "List[str]",
-      "visualization_metadata": "dict"
     }
   },
 
@@ -49,7 +45,6 @@
 
   "failure_modes": [
     "Missing inputs_file_path or case_dir for run_simulation",
-    "No plotfiles found (visualization_status=skipped)",
-    "Visualization backend unavailable"
+    "Simulation did not produce plotfiles"
   ]
 }
