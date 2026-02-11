@@ -736,6 +736,49 @@ class ArchitectService:
             'local_path': local_path
         }
 
+    def _ensure_baseline_inputs_content(
+        self,
+        baseline_result: dict,
+        solver_config,
+        default_local_path: Path | None = None,
+        default_repo_path: Path | None = None,
+    ) -> None:
+        """Ensure baseline inputs_content is populated for modification planning."""
+        if not baseline_result or not solver_config:
+            return
+
+        selected_case = baseline_result.get("selected_case", {})
+        metadata = selected_case.setdefault("metadata", {})
+        if metadata.get("inputs_content"):
+            return
+
+        local_path = metadata.get("local_path") or selected_case.get("local_path")
+        repo_path = metadata.get("repo_path") or selected_case.get("repo_path")
+        if not local_path and default_local_path:
+            local_path = str(default_local_path)
+        if not repo_path and default_repo_path:
+            repo_path = str(default_repo_path)
+
+        if not local_path:
+            return
+
+        local_path_obj = Path(local_path)
+        if not local_path_obj.exists():
+            return
+
+        try:
+            metadata_from_inputs = solver_config.extract_metadata(
+                local_path_obj,
+                repo_root=Path(repo_path) if repo_path else None,
+            )
+        except Exception as exc:
+            logger.debug(f"[Baseline] extract_metadata failed: {exc}")
+            return
+
+        inputs_content = metadata_from_inputs.get("inputs_content", {})
+        if inputs_content:
+            metadata["inputs_content"] = inputs_content
+
 
     def _override_hierarchical(
         self,
@@ -760,6 +803,11 @@ class ArchitectService:
 
         solver_config = self.code_configs[code_name]
         parameter_resolution_feedback = kwargs.get('parameter_resolution_feedback')
+
+        self._ensure_baseline_inputs_content(
+            baseline_result=baseline_result,
+            solver_config=solver_config,
+        )
 
         # Optional: Validate with L0 (log warning if mismatch)
         if self.level0_searcher:
@@ -913,15 +961,12 @@ class ArchitectService:
 
         solver_config = self.code_configs[code_name]
 
-        # Load metadata from inputs/aux files
-        try:
-            metadata = solver_config.extract_metadata(local_path, repo_root=repo_path)
-        except Exception as exc:
-            logger.debug(f"[Override] extract_metadata failed: {exc}")
-            metadata = {}
-
-        inputs_content = metadata.get("inputs_content", {})
-        baseline_result["selected_case"]["metadata"]["inputs_content"] = inputs_content
+        self._ensure_baseline_inputs_content(
+            baseline_result=baseline_result,
+            solver_config=solver_config,
+            default_local_path=local_path,
+            default_repo_path=repo_path,
+        )
 
         # Collect static docs from documentation_map (no embeddings)
         docs = self._collect_static_docs(solver_config, repo_path=repo_path)
@@ -930,7 +975,7 @@ class ArchitectService:
         # Extract modifications from user prompt against baseline
         cbr_plan = self.extract_physics_modifications(
             user_prompt,
-            inputs_content,
+            baseline_result["selected_case"]["metadata"].get("inputs_content", {}),
             parameter_resolution_feedback=parameter_resolution_feedback,
             solver_config=solver_config,
         )
@@ -992,8 +1037,15 @@ class ArchitectService:
             'override': True
         }
 
+        self._ensure_baseline_inputs_content(
+            baseline_result=baseline_result,
+            solver_config=solver_config,
+            default_local_path=local_path,
+            default_repo_path=repo_path,
+        )
+
         # Extract modifications from user prompt against baseline
-        inputs_content = baseline_result.get('metadata', {}).get('inputs_content', {})
+        inputs_content = baseline_result.get('selected_case', {}).get('metadata', {}).get('inputs_content', {})
         llm_result = self.extract_physics_modifications(
             user_prompt,
             inputs_content,
@@ -1443,6 +1495,11 @@ class ArchitectService:
 
         baseline_case = baseline_result['selected_case']
         baseline_conf = baseline_result['confidence']
+
+        self._ensure_baseline_inputs_content(
+            baseline_result=baseline_result,
+            solver_config=solver_config,
+        )
 
         # 4. Plan Modifications (Architect Service: Modification Planning)
         cbr_plan = self.plan_modifications(

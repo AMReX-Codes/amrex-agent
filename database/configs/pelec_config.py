@@ -199,6 +199,45 @@ class PeleCConfig(BaseAMReXConfig):
         "ode",
         "other",
     ]
+    prompt_templates: ClassVar[dict[str, Any]] = {
+        "architect": {
+            "modification_extraction": """Extract parameter modifications needed for this simulation case.
+
+Case Description:
+{case_description}
+
+Baseline Input File:
+```
+{inputs_content}
+```
+
+{param_guidance}
+
+TASK - reference-case adaptation:
+1. Identify the physical configuration in a few words.
+2. Identify key physical differences vs the baseline (flow regime, fuel/oxidizer, confinement).
+3. Modify boundary conditions first to match the new flow regime/configuration.
+4. Update chemistry/transport only if the fuel or oxidizer changes.
+5. Assess grid/AMR only if the physics scale or resolution requirements change.
+6. Apply remaining numeric value updates.
+7. Only include parameters that DIFFER from baseline or must be ADDED.
+
+CRITICAL RULES:
+- Use parameter names EXACTLY as shown in the valid parameters list (including prefix like "prob.")
+- If you cannot find an exact match, SKIP that modification
+- Never invent, modify, or abbreviate parameter names
+- For grid resolution requests ("grid cells", "grid size", "resolution"), prefer amr.n_cell (domain cell counts).
+- amr.max_grid_size is for domain decomposition / refinement control; use it only when explicitly requested.
+
+Return JSON with your working and results:
+{{
+  "working": "Step-by-step analysis: 1) Identified configuration ... 2) Found pressure=1atm -> prob.P_mean ...",
+  "modifications": [
+    {{"parameter": "prob.P_mean", "value": "101325"}}
+  ]
+}}""",
+        }
+    }
 
     @classmethod
     def analysis_error_patterns(cls) -> list[dict[str, str]]:

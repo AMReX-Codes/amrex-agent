@@ -669,6 +669,11 @@ TASK - work through step-by-step:
    c. Determine if value differs from baseline
 3. Only include parameters that DIFFER from baseline or must be ADDED
 
+4. PHYSICS CONSISTENCY CHECK (brief):
+   - Identify the physical configuration in a few words (e.g., channel, jet, cavity).
+   - Verify BCs/geometry/periodicity align with that type.
+   - If mismatched, adjust parameters only when a clear input mapping exists.
+
 CRITICAL RULES:
 - Use parameter names EXACTLY as shown in the valid parameters list (including prefix like "prob.")
 - If you cannot find an exact match, SKIP that modification
