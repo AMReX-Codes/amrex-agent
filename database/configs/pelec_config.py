@@ -236,77 +236,7 @@ Return JSON with your working and results:
     {{"parameter": "prob.P_mean", "value": "101325"}}
   ]
 }}""",
-        }
-    }
-
-    @classmethod
-    def analysis_error_patterns(cls) -> list[dict[str, str]]:
-        """
-        Extend stderr error patterns with PeleC-specific cases.
-
-        Call context: Used by stderr analysis to diagnose solver failures.
-
-        Parameters
-        ----------
-        cls : type
-            Config class.
-
-        Returns
-        -------
-        list[dict[str, str]]
-            Pattern entries with ``pattern`` and ``message`` keys.
-        """
-        patterns = super().analysis_error_patterns()
-        patterns.append({
-            "pattern": r"PMF file must have NUM_SPECIES\+4 variables",
-            "message": "PMF file mismatch: PMF must have NUM_SPECIES+4 variables (check mechanism/PMF pairing)",
-        })
-        return patterns
-
-
-    faiss_indices = [
-        'pelec_case_structure',
-        'pelec_case_details',
-        'pelec_case_names',
-        'pelec_input_templates',
-        'pelec_chemistry',
-    ]
-
-    # Priority cases for PeleC (from existing cases.py)
-    priority_cases = [
-        "Exec/RegTests/PMF",
-        "Exec/RegTests/Sedov",
-        "Exec/RegTests/TG",
-        "Exec/Production/JetFlame",
-    ]
-
-    example_catalog: ClassVar[dict[str, str]] = {
-        'sedov-1': 'Exec/RegTests/Sedov/sedov-1.inp',
-        'sedov-example': 'Exec/RegTests/Sedov/example.inp',
-        'tg-1': 'Exec/RegTests/TG/tg-1.inp',
-        'tg-2': 'Exec/RegTests/TG/tg-2.inp',
-        'tgreact': 'Exec/RegTests/TGReact/tgreact.inp',
-        'pmf-lidryer': 'Exec/RegTests/PMF/pmf-lidryer-rk64.inp',
-        'pmf-dodecane': 'Exec/RegTests/PMF/pmf-dodecane.inp',
-    }
-
-    # Override with PeleC-specific documentation
-    documentation_map = {
-        'solver_readme': ['README.rst'],
-        'problem_catalogs': ['database/reports/report2.txt', 'database/reports/report4.txt'],
-        'parameter_guides': ['database/reports/report5.txt'],
-        'build_instructions': ['Docs/sphinx/BuildingSource.rst'],
-    }
-
-    # Override inputs patterns - PeleC uses legacy .inp and input* patterns
-    inputs_file_patterns: ClassVar[list[str]] = [
-        'inputs',      # Standard
-        'inputs*',     # inputs.2d, inputs.3d
-        'input*',      # input.2d, input.3d (legacy)
-        '*.inp',       # Legacy .inp extension
-    ]
-
-    prompt_templates: ClassVar[dict[str, Any]] = {
+        },
         "misc": {
             "schema_scan": """Identify requested concepts from the case description that do not map to known baseline or schema parameters.
 
@@ -402,6 +332,73 @@ Return JSON:
             ),
         },
     }
+
+    @classmethod
+    def analysis_error_patterns(cls) -> list[dict[str, str]]:
+        """
+        Extend stderr error patterns with PeleC-specific cases.
+
+        Call context: Used by stderr analysis to diagnose solver failures.
+
+        Parameters
+        ----------
+        cls : type
+            Config class.
+
+        Returns
+        -------
+        list[dict[str, str]]
+            Pattern entries with ``pattern`` and ``message`` keys.
+        """
+        patterns = super().analysis_error_patterns()
+        patterns.append({
+            "pattern": r"PMF file must have NUM_SPECIES\+4 variables",
+            "message": "PMF file mismatch: PMF must have NUM_SPECIES+4 variables (check mechanism/PMF pairing)",
+        })
+        return patterns
+
+
+    faiss_indices = [
+        'pelec_case_structure',
+        'pelec_case_details',
+        'pelec_case_names',
+        'pelec_input_templates',
+        'pelec_chemistry',
+    ]
+
+    # Priority cases for PeleC (from existing cases.py)
+    priority_cases = [
+        "Exec/RegTests/PMF",
+        "Exec/RegTests/Sedov",
+        "Exec/RegTests/TG",
+        "Exec/Production/JetFlame",
+    ]
+
+    example_catalog: ClassVar[dict[str, str]] = {
+        'sedov-1': 'Exec/RegTests/Sedov/sedov-1.inp',
+        'sedov-example': 'Exec/RegTests/Sedov/example.inp',
+        'tg-1': 'Exec/RegTests/TG/tg-1.inp',
+        'tg-2': 'Exec/RegTests/TG/tg-2.inp',
+        'tgreact': 'Exec/RegTests/TGReact/tgreact.inp',
+        'pmf-lidryer': 'Exec/RegTests/PMF/pmf-lidryer-rk64.inp',
+        'pmf-dodecane': 'Exec/RegTests/PMF/pmf-dodecane.inp',
+    }
+
+    # Override with PeleC-specific documentation
+    documentation_map = {
+        'solver_readme': ['README.rst'],
+        'problem_catalogs': ['database/reports/report2.txt', 'database/reports/report4.txt'],
+        'parameter_guides': ['database/reports/report5.txt'],
+        'build_instructions': ['Docs/sphinx/BuildingSource.rst'],
+    }
+
+    # Override inputs patterns - PeleC uses legacy .inp and input* patterns
+    inputs_file_patterns: ClassVar[list[str]] = [
+        'inputs',      # Standard
+        'inputs*',     # inputs.2d, inputs.3d
+        'input*',      # input.2d, input.3d (legacy)
+        '*.inp',       # Legacy .inp extension
+    ]
 
     @classmethod
     def get_knowledge_tools(cls) -> dict[str, Any] | None:
