@@ -225,3 +225,7 @@ pytest tests/unit/test_mcp_tools.py
 MCP provides the transport and tool definitions. Tool-calling from an LLM
 still requires an orchestrator to map model tool calls into MCP tool calls.
 AMReXAgent currently exposes the tools; orchestration happens outside.
+
+## Standards alignment note
+
+For standards alignment and capability mapping, see `docs/standards.md`.
