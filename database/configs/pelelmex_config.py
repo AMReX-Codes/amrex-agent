@@ -106,6 +106,50 @@ class PeleLMeXConfig(BaseAMReXConfig):
     }
 
     prompt_templates: ClassVar[dict[str, Any]] = {
+        "misc": {
+            "schema_scan": """Identify requested concepts from the case description that do not map to known baseline or schema parameters.
+
+Case Description:
+{case_description}
+
+Baseline Parameters (from inputs file):
+{baseline_params}
+
+Available Schema Parameters (truncated, {schema_param_count} total):
+{schema_params}
+
+TASK - work through step-by-step:
+1. Extract all physics/simulation concepts from the case description.
+2. For EACH concept, check if it has parameter coverage in baseline or schema.
+3. Flag as "unresolved" ONLY if:
+   - It is explicitly requested, and
+   - No matching parameter exists in baseline OR schema, and
+   - It is a configuration requirement (not just context).
+4. Do NOT flag:
+   - General context items (e.g., "DNS") or derived quantities.
+   - Concepts already captured by existing parameters.
+5. Use short, specific noun phrases for unresolved concepts.
+
+EXAMPLES (PeleLMeX):
+Should be flagged:
+- "turbulent fluctuations 5%" - if no parameter like turbinflow.* or turbforce.* exists
+- "specific turbulence model" - if no turbulence model parameter exists
+- "radiation heat transfer" - if no radiation toggle/model parameter exists
+
+Should NOT be flagged:
+- "channel flow" - covered by geometry + BCs
+- "atmospheric pressure" - covered by prob.P_mean
+- "jet diameter 3mm" - covered by prob.jet_rad
+- "mixture composition 70% H2" - covered by prob.* composition parameters
+
+Return JSON:
+{{
+  "unresolved_concepts": [
+    "turbulent inflow fluctuations 5%"
+  ],
+  "notes": "Brief explanation"
+}}"""
+        },
         "architect": {
             "modification_extraction": """Extract parameter modifications needed for this simulation case.
 
@@ -211,6 +255,50 @@ Return JSON with your working and results:
     }
 
     prompt_templates: ClassVar[dict[str, Any]] = {
+        "misc": {
+            "schema_scan": """Identify requested concepts from the case description that do not map to known baseline or schema parameters.
+
+Case Description:
+{case_description}
+
+Baseline Parameters (from inputs file):
+{baseline_params}
+
+Available Schema Parameters (truncated, {schema_param_count} total):
+{schema_params}
+
+TASK - work through step-by-step:
+1. Extract all physics/simulation concepts from the case description.
+2. For EACH concept, check if it has parameter coverage in baseline or schema.
+3. Flag as "unresolved" ONLY if:
+   - It is explicitly requested, and
+   - No matching parameter exists in baseline OR schema, and
+   - It is a configuration requirement (not just context).
+4. Do NOT flag:
+   - General context items (e.g., "DNS") or derived quantities.
+   - Concepts already captured by existing parameters.
+5. Use short, specific noun phrases for unresolved concepts.
+
+EXAMPLES (PeleLMeX):
+Should be flagged:
+- "turbulent fluctuations 5%" - if no parameter like turbinflow.* or turbforce.* exists
+- "specific turbulence model" - if no turbulence model parameter exists
+- "radiation heat transfer" - if no radiation toggle/model parameter exists
+
+Should NOT be flagged:
+- "channel flow" - covered by geometry + BCs
+- "atmospheric pressure" - covered by prob.P_mean
+- "jet diameter 3mm" - covered by prob.jet_rad
+- "mixture composition 70% H2" - covered by prob.* composition parameters
+
+Return JSON:
+{{
+  "unresolved_concepts": [
+    "turbulent inflow fluctuations 5%"
+  ],
+  "notes": "Brief explanation"
+}}"""
+        },
         "knowledge": {
             "question_generator": (
                 "You are a PeleLMeX simulation expert. Given this simulation request:\n\n"

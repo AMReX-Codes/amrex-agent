@@ -1756,6 +1756,26 @@ class ArchitectService:
                     "used_llm": False
                 }
 
+        schema_scan_notes = ""
+        if not parameter_resolution_feedback and solver_config:
+            available_params = self._load_schema_params(solver_config)
+            baseline_params = self._collect_baseline_params(inputs_content)
+            scan_result = self._call_llm_for_schema_scan(
+                case_description=case_description,
+                baseline_params=baseline_params,
+                available_params=available_params,
+                solver_config=solver_config,
+                client=client,
+            )
+            unresolved_concepts = scan_result.get("unresolved_concepts", [])
+            if unresolved_concepts:
+                schema_scan_notes = (
+                    "\nSCHEMA SCAN NOTES:\n"
+                    "The following concepts did NOT map to baseline or schema parameters:\n"
+                    + "\n".join(f"- {concept}" for concept in unresolved_concepts)
+                    + "\nIf any have an exact parameter mapping, include it; otherwise skip."
+                )
+
         # Build parameter guidance chunks with tiered fallback for context limits
         param_chunks = []
         fallback_level = 0  # 0=category chunks, 1=suggested only, 2=fixed-size chunks
@@ -1790,6 +1810,8 @@ PARAMETER RESOLUTION FEEDBACK:
 The following parameters were NOT recognized in a previous attempt:
 {chr(10).join(failed_lines)}
 """
+            if schema_scan_notes:
+                failed_section = f"{schema_scan_notes}\n{failed_section}"
             # Collect all suggested params for fallback
             all_suggested = set()
             for suggestions in suggested.values():
@@ -1804,7 +1826,7 @@ The following parameters were NOT recognized in a previous attempt:
             )
         else:
             # No feedback - use empty guidance (LLM will rely on baseline file only)
-            param_chunks = [""]
+            param_chunks = [schema_scan_notes]
 
         # Try with progressively different chunking strategies on failure
         max_fallback = 3 if parameter_resolution_feedback else 1
@@ -2174,6 +2196,57 @@ CRITICAL: Use exact names only."""
         except Exception as e:
             return {"success": False, "error": e}
 
+    def _call_llm_for_schema_scan(
+            self,
+            case_description: str,
+            baseline_params: list[str],
+            available_params: list[str],
+            solver_config=None,
+            client=None
+    ) -> dict:
+        """Call LLM to surface concepts without schema/baseline matches."""
+        prompt_template = self._resolve_llm_prompt_template(
+            solver_config,
+            "schema_scan",
+        )
+        max_params = 200
+        truncated = available_params[:max_params]
+        prompt = prompt_template.format(
+            case_description=case_description,
+            baseline_params="\n".join(baseline_params[:max_params]),
+            schema_param_count=len(available_params),
+            schema_params="\n".join(truncated),
+        )
+
+        try:
+            import instructor
+            from src.config import get_llm_client, unwrap_llm_client, wrap_llm_client
+            from pydantic import BaseModel, Field
+
+            class SchemaScanResult(BaseModel):
+                unresolved_concepts: list[str] = Field(default_factory=list)
+                notes: str = ""
+
+            if client is None:
+                base_client = unwrap_llm_client(get_llm_client(self.config))
+                client = instructor.from_openai(base_client)
+                client = wrap_llm_client(client, self.config)
+            result = client.chat.completions.create(
+                model=self.config.llm_model,
+                response_model=SchemaScanResult,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1
+            )
+
+            return {
+                "unresolved_concepts": result.unresolved_concepts,
+                "notes": result.notes,
+            }
+
+        except Exception as e:
+            logger.debug(f"[LLM] Schema scan failed: {e}")
+            return {"unresolved_concepts": [], "notes": ""}
+
     def _group_parameters_by_category(
         self,
         params: list[str],
@@ -2221,6 +2294,47 @@ CRITICAL: Use exact names only."""
                 result[cat] = sorted(grouped[cat])
 
         return result
+
+    def _load_schema_params(self, solver_config) -> list[str]:
+        try:
+            from pathlib import Path
+            from src.services.config_model_factory import ConfigModelFactory
+            code_name = getattr(solver_config, "code_name", "")
+            repo_root = ""
+            if hasattr(self.config, "repositories"):
+                repo_root = self.config.repositories.get(code_name, "")
+            schema_dir = self.config.amrex_agent_root / "database/schemas"
+            schema_path = ConfigModelFactory.resolve_schema_path(
+                solver_config,
+                schema_dir,
+                Path(repo_root or "."),
+            )
+            schema = ConfigModelFactory.load_schema(schema_path)
+            if isinstance(schema, dict) and "parameters" in schema:
+                schema = schema["parameters"]
+            if isinstance(schema, dict):
+                return sorted(schema.keys())
+        except Exception as exc:
+            logger.debug(f"[LLM] Failed to load schema params: {exc}")
+        return []
+
+    def _collect_baseline_params(self, inputs_content: str | dict) -> list[str]:
+        if isinstance(inputs_content, str):
+            params = []
+            for line in inputs_content.splitlines():
+                if "=" in line and not line.strip().startswith("#"):
+                    params.append(line.split("=", 1)[0].strip())
+            return sorted(set(params))
+        if isinstance(inputs_content, dict):
+            params = set()
+            for key, value in inputs_content.items():
+                if isinstance(value, dict):
+                    for subkey in value.keys():
+                        params.add(f"{key}.{subkey}")
+                else:
+                    params.add(key)
+            return sorted(params)
+        return []
 
     def _extract_requirements(self, prompt: str) -> dict[str, Any]:
         """Extract simulation requirements from natural language prompt.

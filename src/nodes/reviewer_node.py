@@ -290,6 +290,15 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     schema_errors = [v for v in validation_result.violations if v.rule_name == "SchemaExistence"]
     if schema_errors:
         baseline = plan.get("baseline", {})
+        baseline_inputs = baseline.get("metadata", {}).get("inputs_content") or baseline.get("inputs_content") or {}
+        baseline_params = set()
+        if isinstance(baseline_inputs, dict):
+            for key, value in baseline_inputs.items():
+                if isinstance(value, dict):
+                    for subkey in value.keys():
+                        baseline_params.add(f"{key}.{subkey}")
+                else:
+                    baseline_params.add(key)
         solver_name = baseline.get("code_name") or baseline.get("code")
         mod_list = plan.get("modifications", [])
         mod_map = dict(mod_list) if isinstance(mod_list, list) else dict(mod_list.items())
@@ -297,6 +306,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         for v in schema_errors:
             param = v.parameter or ""
             if not param:
+                continue
+            if param in baseline_params:
                 continue
             unresolved.append((param, mod_map.get(param)))
 
