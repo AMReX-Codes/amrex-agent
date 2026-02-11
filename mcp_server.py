@@ -1663,6 +1663,9 @@ async def call_tool(name: str, arguments: dict) -> Any:
         elif name == "execute_workflow":
             result = mcp_execute_workflow(context)
 
+        elif name == "execute_workflow":
+            return mcp_execute_workflow(arguments)
+
         elif name == "create_simulation_plan":
             result = mcp_create_simulation_plan(context)
 
