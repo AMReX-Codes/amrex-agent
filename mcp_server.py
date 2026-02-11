@@ -1663,9 +1663,6 @@ async def call_tool(name: str, arguments: dict) -> Any:
         elif name == "execute_workflow":
             result = mcp_execute_workflow(context)
 
-        elif name == "execute_workflow":
-            return mcp_execute_workflow(arguments)
-
         elif name == "create_simulation_plan":
             result = mcp_create_simulation_plan(context)
 
@@ -1681,17 +1678,11 @@ async def call_tool(name: str, arguments: dict) -> Any:
         elif name == "search_cases":
             result = mcp_select_baseline_case(context)
 
-        elif name == "search_cases":
-            return mcp_select_baseline_case(arguments)
-
         elif name == "validate_inputs":
             result = mcp_validate_inputs(context)
 
         elif name == "validate_config":
             result = mcp_validate_config(context)
-
-        elif name == "validate_config":
-            return mcp_validate_config(arguments)
 
         elif name == "setup_job":
             result = mcp_setup_job(context)
@@ -1704,9 +1695,6 @@ async def call_tool(name: str, arguments: dict) -> Any:
 
         elif name == "get_workflow_status":
             result = mcp_analyze_results(context)
-
-        elif name == "get_workflow_status":
-            return mcp_analyze_results(arguments)
 
         elif name == "generate_visualizations":
             result = mcp_generate_visualizations(context)
