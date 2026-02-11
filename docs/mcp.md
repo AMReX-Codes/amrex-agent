@@ -65,7 +65,6 @@ async def main() -> None:
                     "prompt": "Run the REMORA Upwelling case to demonstrate wind-driven upwelling over a periodic channel.",
                     "baseline_override": "REMORA/Exec/Upwelling",
                     "strategy": "override_static",
-                    "steps": ["create_simulation_plan", "run_simulation"],
                     "submit": {"dry_run": True},
                 },
             )
@@ -81,8 +80,24 @@ async def main() -> None:
                 },
             )
 
+            staged = await session.call_tool(
+                "execute_workflow",
+                {
+                    "prompt": "Run the JetInCrossflow DNS prompt from demo/pelelmex/user_requirements_test_DNS.txt",
+                    "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow",
+                    "strategy": "simple",
+                    "steps": ["create_simulation_plan", "run_simulation"],
+                    "submit": {"dry_run": True},
+                    "config_overrides": {
+                        "environment": "perlmutter",
+                        "run_mode": "stage"
+                    }
+                },
+            )
+
             print(remora)
             print(pelelmex)
+            print(staged)
 
 
 anyio.run(main)
