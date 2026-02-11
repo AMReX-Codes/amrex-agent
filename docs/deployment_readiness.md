@@ -63,49 +63,50 @@ Verification steps:
 - `python amrex_agent.py --help` succeeds.
 - `python amrex_agent.py --prompt "..." --run-mode dry` generates scripts.
 
-### Facility (NERSC/Perlmutter via MCP)
+### Multi-user deployment (evolving goal)
 
-Prereqs:
-- `mcp_server.py` deployed via systemd or similar supervisor.
-- Shared indices + database path configured.
-- SFAPI credentials available for staging/submission when needed.
+Current state:
+- Multi-user deployment is supported but not standardized.
+- Environment and credential setup varies by site or HPC center.
 
-Verification steps:
-- MCP server launches without import errors.
-- MCP tool invocation returns expected JSON.
-- SFAPI auth test passes (token or client key).
+Goal:
+- Provide a standard deployment checklist and validation script.
 
-### Benchmark (paper-grade evaluation)
+Verification steps (target):
+- Server launches without import errors.
+- Tool invocation returns expected JSON.
 
-Prereqs:
-- Frozen indices and fixed seeds recorded.
-- Deterministic model configs.
-- Benchmark scripts and output directories created.
+### Benchmarking (evolving goal)
 
-Verification steps:
+Current state:
+- Benchmark scripts exist but are not consistently run.
+- Outputs and manifests are not standardized.
+
+Goal:
+- Provide a reproducible benchmark harness and output schema.
+
+Verification steps (target):
 - Benchmark run produces `summary.csv`, `by_model.csv`, `by_solver.csv`,
   `by_strategy.csv`, and `raw_metrics.jsonl`.
-- Runs are reproducible from a stored manifest.
 
-## Success Criteria and Evidence
+## Success Criteria and Evidence (evolving goals)
 
 Success criteria should be mapped to measurable artifacts.
 
 | Criterion | Evidence/Artifact | Location |
 | --- | --- | --- |
-| 20-25 case benchmark runs across target models | Benchmark outputs + manifest | `scripts/` outputs |
-| Camera-ready tables reproducible | Aggregated CSV + table scripts | `scripts/generate_paper_tables.py` |
-| Demo bundles ready (ERF, REMORA, PeleLMeX) | Demo run dirs + outputs | `demo/` and `output/` |
+| Benchmark runs across target models | Benchmark outputs + manifest | `scripts/` outputs |
+| Summary tables reproducible | Aggregated CSV + table scripts | `scripts/generate_paper_tables.py` |
 | Validation catches >=90% injected physics errors | Validator tests + metrics | `tests/` + metrics outputs |
 
-## Release Gates
+## Release Gates (proposed)
 
 1) Unit + integration tests pass on every commit.
 2) E2E smoke tests pass for solver-facing changes.
 3) Deployment verification steps are documented and executed.
 4) Success criteria artifacts exist and are linked in release notes.
 
-## Open Questions / To-Do
+## Open Questions / To-Do (evolving goals)
 
 - Where to store acceptance checklists and mapping tables.
 - Which CI workflow runs e2e tests and on what cadence.
