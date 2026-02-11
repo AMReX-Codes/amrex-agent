@@ -4,6 +4,8 @@
 - What other functionality overlaps this change, and can it be reused to avoid duplication?
 - If adding a non-optional variable or function argument (esp. node updates), how does that align with `src/models/graph_state_canonical.py` and the written node contracts in `tests/contracts`?
 - Does this decrease pytest coverage or add tests in `tests/unit` or `tests/integration`?
+- [ ] This embeds a significant architectural decision that needs an ADR.
+  - If checked, add an ADR under `docs/adr/` (one short file describing context, decision, consequences).
 
 ## Impact checklist
 - [ ] fixes a bug or incorrect behavior

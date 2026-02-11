@@ -12,6 +12,7 @@ mkdocs serve
 ## Documentation layout
 
 - `docs/workflows.md` holds design and workflow notes.
+- `docs/standards.md` tracks C6 standards mapping and evidence.
 - `docs/api_keys.md` documents API key setup and OpenAI usage.
 - `docs/sfapi.md` documents Superfacility API (SFAPI) usage.
 - `README.md` covers quick start and usage examples.
