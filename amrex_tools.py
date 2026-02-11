@@ -449,11 +449,18 @@ def copy_to_rundir(
 ## Files
 - `inputs` - AMReX configuration
 - `{exe_name}` - Compiled executable
-- `submit.sh` - SLURM batch script
-- `run.out` - Simulation output (after run)
+- `run_local.sh` - Local run script (generated for local runs)
+- `submit.sh` - SLURM batch script (generated for cluster runs)
+- `run.out` - Simulation output (batch runs only)
 - `plt*` - AMReX plotfiles (after run)
 
-## Submit Job
+## Run Locally (if `run_local.sh` exists)
+```bash
+cd {run_dir.name}
+./run_local.sh
+```
+
+## Submit Job (if `submit.sh` exists)
 ```bash
 cd {run_dir.name}
 sbatch submit.sh
@@ -461,8 +468,8 @@ sbatch submit.sh
 
 ## Monitor
 ```bash
-tail -f run.out
-squeue -u $USER
+squeue -u $USER  # batch only
+tail -f run.out  # batch only
 ```
 """
     readme.write_text(readme_content)

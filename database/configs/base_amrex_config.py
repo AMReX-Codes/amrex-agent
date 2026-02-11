@@ -76,6 +76,10 @@ class BaseAMReXConfig:
         "Utils",
     ]
 
+    # Optional manual schema additions for parameters missing from source scans.
+    # Keys are parameter names, values define schema fields.
+    manual_schema_params: ClassVar[dict[str, dict[str, Any]]] = {}
+
     # === Amendment D.2: Parameter Priority Tiers ===
     tier1_params: ClassVar[set[str]] = {
         "amr.n_cell",
@@ -644,6 +648,78 @@ If no match exists, set "to": null."""
     """
 
     llm_prompt_templates: ClassVar[dict[str, str]] = {
+        "schema_scan": """Identify requested concepts from the case description that do not map to known baseline or schema parameters.
+
+Case Description:
+{case_description}
+
+Baseline Parameters (from inputs file):
+{baseline_params}
+
+Available Schema Parameters (truncated, {schema_param_count} total):
+{schema_params}
+
+TASK:
+1. Extract all physics/simulation concepts from the case description:
+   - Physical phenomena: turbulent, reacting, multiphase, compressible, radiative, etc.
+   - Geometry features: channel, pipe, cavity, jet, inlet geometry, specific shapes
+   - Boundary conditions: wall types, inlet/outlet characteristics, thermal conditions
+   - Flow characteristics: velocity profiles (uniform, parabolic, turbulent), temperature distributions
+   - Material properties: composition details, species, equation of state
+   - Initial conditions: initialization methods, perturbations, fluctuations
+   - Numerical methods: time integration, spatial schemes, turbulence models
+   - Special features: particles, lagrangian tracers, adaptive mesh refinement levels
+2. For EACH concept, check if it has parameter coverage:
+   a. Look for EXACT or CLOSE parameter matches in baseline parameters
+   b. Look for EXACT or CLOSE parameter matches in schema parameters
+   c. Consider common parameter naming patterns:
+      - Physics toggles: do_*, use_*, enable_*
+      - Models: *_model, *_type, *_scheme
+      - Properties: *_velocity, *_temp, *_composition, *_profile
+      - Numerics: *_integrator, *_solver, *_order
+3. Flag as "unresolved" ONLY if:
+   - The concept is EXPLICITLY stated in the case description (not just implied)
+   - It represents a specific value, model choice, or configuration requirement
+   - NO matching parameter exists in baseline OR schema parameters
+   - It is NOT a generic restatement of existing parameters
+4. DO NOT flag as unresolved if:
+   - The concept is already captured by existing baseline parameters
+   - It is a general physics description that maps to multiple existing parameters
+   - It is a derived quantity or output (not an input)
+   - It is describing the problem context rather than a configuration requirement
+5. Format unresolved concepts as short, specific noun phrases:
+   - Include key details: "turbulent fluctuations 5%", "parabolic velocity profile"
+   - Avoid vague terms: instead of "special inlet", use "inlet with 5% turbulence intensity"
+   - Reference specific values when stated: "turbulence intensity 5%", "parabolic profile"
+
+EXAMPLES:
+
+Should be flagged:
+- "turbulent fluctuations 5%" - if no parameter like inflow_turbulence_intensity exists
+- "specific turbulence model" - if no turbulence model parameter exists
+- "parabolic velocity profile" - if only uniform profiles are supported
+- "radiation heat transfer" - if no radiation toggle/model parameter exists
+
+Should NOT be flagged:
+- "channel flow" - this is geometry (covered by domain bounds + BCs)
+- "atmospheric pressure" - covered by existing pressure parameter
+- "jet diameter 3mm" - covered by existing geometry parameter
+- "inlet temperature 300 K" - covered by existing temperature parameter
+- "DNS simulation" - this describes the approach, not a specific parameter requirement
+
+CRITICAL RULES:
+- Be conservative: only flag truly missing capabilities
+- Prioritize actionable, specific concepts over general descriptions
+- If a concept might be achievable through parameter combinations, do not flag it
+- Focus on what is explicitly requested, not what might be implied
+
+Return JSON:
+{{
+  "unresolved_concepts": [
+    "turbulent fluctuations 5%"
+  ],
+  "notes": "Optional brief note"
+}}""",
         "modification_extraction": """Extract parameter modifications needed for this simulation case.
 
 Case Description:
@@ -668,6 +744,11 @@ TASK - work through step-by-step:
       - percentage -> fraction: divide by 100
    c. Determine if value differs from baseline
 3. Only include parameters that DIFFER from baseline or must be ADDED
+
+4. PHYSICS CONSISTENCY CHECK (brief):
+   - Identify the physical configuration in a few words (e.g., channel, jet, cavity).
+   - Verify BCs/geometry/periodicity align with that type.
+   - If mismatched, adjust parameters only when a clear input mapping exists.
 
 CRITICAL RULES:
 - Use parameter names EXACTLY as shown in the valid parameters list (including prefix like "prob.")

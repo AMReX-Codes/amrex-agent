@@ -57,6 +57,41 @@ def get_architect_plan(state: GraphState) -> dict[str, Any] | None:
     return None
 
 
+def _load_baseline_inputs_content(plan: dict[str, Any]) -> dict[str, Any]:
+    baseline = plan.get("baseline", {})
+    metadata = baseline.get("metadata", {})
+    inputs_content = (
+        metadata.get("inputs_content")
+        or baseline.get("inputs_content")
+        or {}
+    )
+    if inputs_content:
+        return inputs_content
+
+    solver_name = baseline.get("code_name") or baseline.get("code")
+    local_path = metadata.get("local_path") or baseline.get("local_path")
+    repo_path = metadata.get("repo_path") or baseline.get("repo_path")
+    if not solver_name or not local_path:
+        return {}
+
+    try:
+        from database.configs import discover_code_configs
+
+        code_registry = {c.code_name: c for c in discover_code_configs()}
+        solver_config = code_registry.get(solver_name)
+        if not solver_config:
+            return {}
+
+        metadata_from_inputs = solver_config.extract_metadata(
+            Path(local_path),
+            repo_root=Path(repo_path) if repo_path else None,
+        )
+        return metadata_from_inputs.get("inputs_content", {})
+    except Exception as exc:
+        logger.debug(f"[Reviewer] extract_metadata failed: {exc}")
+        return {}
+
+
 def reviewer_node(state: GraphState) -> dict[str, Any]:
     """
     Validate the architect plan before execution.
@@ -290,6 +325,29 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     schema_errors = [v for v in validation_result.violations if v.rule_name == "SchemaExistence"]
     if schema_errors:
         baseline = plan.get("baseline", {})
+        baseline_inputs = _load_baseline_inputs_content(plan)
+        baseline_params = set()
+        if isinstance(baseline_inputs, dict):
+            for key, value in baseline_inputs.items():
+                if isinstance(value, dict):
+                    for subkey in value.keys():
+                        dotted_key = f"{key}.{subkey}"
+                        baseline_params.add(dotted_key)
+                        baseline_params.add(dotted_key.replace(".", "_"))
+                else:
+                    baseline_params.add(key)
+                    baseline_params.add(key.replace(".", "_"))
+        baseline_schema_messages = []
+        filtered_schema_errors = []
+        for v in schema_errors:
+            param = v.parameter or ""
+            if param and (param in baseline_params or param.replace("_", ".") in baseline_params):
+                baseline_schema_messages.append(v.message)
+                continue
+            filtered_schema_errors.append(v)
+        if baseline_schema_messages:
+            errors_current = [e for e in errors_current if e not in baseline_schema_messages]
+        schema_errors = filtered_schema_errors
         solver_name = baseline.get("code_name") or baseline.get("code")
         mod_list = plan.get("modifications", [])
         mod_map = dict(mod_list) if isinstance(mod_list, list) else dict(mod_list.items())
@@ -297,6 +355,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         for v in schema_errors:
             param = v.parameter or ""
             if not param:
+                continue
+            if param in baseline_params:
                 continue
             unresolved.append((param, mod_map.get(param)))
 
@@ -326,8 +386,53 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 feedback = None
 
             if feedback:
-                remap_success_count = feedback.get("remap_success_count", 0)
+                available_schema_params = set(feedback.get("available_schema_params", []))
+                remap_mapping = feedback.get("remap_mapping", {})
+                valid_remap_count = sum(
+                    1 for target in remap_mapping.values()
+                    if target in available_schema_params
+                )
+                remap_success_count = valid_remap_count
                 next_retry = retry_count if remap_success_count else retry_count + 1
+                last_schema_retry = next(
+                    (
+                        entry for entry in reversed(workflow_history)
+                        if entry.get("node") == "reviewer"
+                        and entry.get("action") == "parameter_resolution_retry"
+                        and entry.get("details", {}).get("reason") == "schema_resolution"
+                    ),
+                    None
+                )
+                if last_schema_retry:
+                    last_unresolved = last_schema_retry.get("details", {}).get("unresolved_parameters", [])
+                    if last_unresolved == feedback["unresolved_parameters"]:
+                        history_entry = {
+                            "node": "reviewer",
+                            "timestamp": datetime.utcnow().isoformat() + "Z",
+                            "action": "parameter_resolution_stalled",
+                            "iteration": iteration,
+                            "details": {
+                                "status": "terminal",
+                                "reason": "schema_resolution_stalled",
+                                "unresolved_parameters": feedback["unresolved_parameters"],
+                                "resolution_guidance": feedback["resolution_guidance"],
+                                "available_schema_params_count": len(feedback["available_schema_params"]),
+                                "suggested_params": feedback["suggested_params"],
+                                "remap_mapping": remap_mapping,
+                                "remap_success_count": remap_success_count,
+                                "retry_count": retry_count
+                            }
+                        }
+
+                        return {
+                            "mode": "terminal",
+                            "error": (
+                                "Parameter resolution stalled with unchanged unresolved parameters: "
+                                f"{[p[0] for p in feedback['unresolved_parameters']]}"
+                            ),
+                            "errors_active": [f"Unresolved parameter: {p[0]}" for p in feedback["unresolved_parameters"]],
+                            "workflow_history": workflow_history + [history_entry]
+                        }
                 history_entry = {
                     "node": "reviewer",
                     "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -361,6 +466,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                     "errors_active": [f"Unresolved parameter: {p[0]}" for p in feedback["unresolved_parameters"]],
                     "workflow_history": workflow_history + [history_entry]
                 }
+
+    if not errors_current and not schema_missing and not solver_unknown:
+        approved = True
 
     # Phase 2: Track error progress
     newly_fixed: list[str] = []
