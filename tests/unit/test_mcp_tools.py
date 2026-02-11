@@ -7,7 +7,9 @@ import pytest
 
 
 @pytest.fixture
-def mcp_server_module(monkeypatch):
+def mcp_server_module(monkeypatch, tmp_path_factory):
+    home_dir = tmp_path_factory.mktemp("mcp_home")
+    monkeypatch.setenv("HOME", str(home_dir))
     if "mcp_server" in sys.modules:
         del sys.modules["mcp_server"]
     return importlib.import_module("mcp_server")

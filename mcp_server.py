@@ -188,7 +188,6 @@ def mcp_create_simulation_plan(payload: dict) -> dict:
         Plan details and input writer outputs.
     """
     architect = ArchitectService(config)
-    writer = InputWriterService(config)
 
     prompt = payload["prompt"]
     baseline_override = payload.get("baseline_override")
@@ -202,12 +201,14 @@ def mcp_create_simulation_plan(payload: dict) -> dict:
         strategy=strategy,
     )
 
-    result = writer.apply_plan(
-        selected_case=plan.selected_case,
-        modifications=plan.modifications,
-        baseline=plan.baseline or {},
-        reasoning=plan.reasoning,
-        output_dir=output_dir,
+    result = mcp_apply_plan(
+        {
+            "selected_case": plan.selected_case,
+            "modifications": plan.modifications,
+            "baseline": plan.baseline,
+            "reasoning": plan.reasoning,
+            "output_dir": output_dir,
+        }
     )
 
     return {
@@ -216,6 +217,53 @@ def mcp_create_simulation_plan(payload: dict) -> dict:
         "reasoning": plan.reasoning,
         "baseline": plan.baseline,
         "indexing_strategy": plan.indexing_strategy,
+        "run_directory": result.get("run_directory"),
+        "inputs_file_path": result.get("inputs_file_path"),
+        "modifications_applied": result.get("modifications_applied"),
+        "status": result.get("status"),
+        "requires_parameter_resolution": result.get("requires_parameter_resolution"),
+        "unresolved_parameters": result.get("unresolved_parameters"),
+        "available_schema_params": result.get("available_schema_params"),
+        "suggested_params": result.get("suggested_params"),
+        "resolution_guidance": result.get("resolution_guidance"),
+    }
+
+
+def mcp_apply_plan(payload: dict) -> dict:
+    """Apply a simulation plan and write inputs to disk.
+
+    Parameters
+    ----------
+    payload : Dict
+        Payload with ``selected_case``, ``modifications``, and optional ``baseline``,
+        ``reasoning``, and ``output_dir``.
+
+    Returns
+    -------
+    Dict
+        Input writer outputs including run directory and inputs path.
+    """
+    writer = InputWriterService(config)
+
+    selected_case = payload.get("selected_case")
+    if not selected_case:
+        raise ValueError("Missing selected_case")
+    modifications = payload.get("modifications")
+    if modifications is None:
+        raise ValueError("Missing modifications")
+    baseline = payload.get("baseline") or {}
+    reasoning = payload.get("reasoning", "")
+    output_dir = payload.get("output_dir") or config.output_dir
+
+    result = writer.apply_plan(
+        selected_case=selected_case,
+        modifications=modifications,
+        baseline=baseline,
+        reasoning=reasoning,
+        output_dir=output_dir,
+    )
+
+    return {
         "run_directory": result.get("run_dir") or result.get("output_dir"),
         "inputs_file_path": result.get("inputs_path"),
         "modifications_applied": result.get("modifications_applied"),
@@ -295,6 +343,7 @@ def mcp_execute_workflow(payload: dict) -> dict:
         "query_knowledge": mcp_query_knowledge,
         "create_simulation_plan": mcp_create_simulation_plan,
         "create_proposed_modifications_with_plan": mcp_create_proposed_modifications_with_plan,
+        "apply_plan": mcp_apply_plan,
         "select_baseline_case": mcp_select_baseline_case,
         "search_cases": mcp_select_baseline_case,
         "validate_inputs": mcp_validate_inputs,
@@ -786,6 +835,7 @@ async def list_tools():
                                 "query_knowledge",
                                 "create_simulation_plan",
                                 "create_proposed_modifications_with_plan",
+                                "apply_plan",
                                 "select_baseline_case",
                                 "search_cases",
                                 "validate_inputs",
@@ -902,6 +952,81 @@ async def list_tools():
                         "type": "string",
                         "description": "Strategy used for planning"
                     },
+                    "run_directory": {
+                        "type": "string",
+                        "description": "Run directory containing generated inputs"
+                    },
+                    "inputs_file_path": {
+                        "type": "string",
+                        "description": "Generated inputs file path"
+                    },
+                    "modifications_applied": {
+                        "type": "integer",
+                        "description": "Number of modifications applied"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Input writer status"
+                    },
+                    "requires_parameter_resolution": {
+                        "type": "boolean",
+                        "description": "Whether unresolved parameters remain"
+                    },
+                    "unresolved_parameters": {
+                        "type": "array",
+                        "description": "List of unresolved parameter entries"
+                    },
+                    "available_schema_params": {
+                        "type": "array",
+                        "description": "Available schema parameters for mapping"
+                    },
+                    "suggested_params": {
+                        "type": "object",
+                        "description": "Suggested parameter remappings"
+                    },
+                    "resolution_guidance": {
+                        "type": "string",
+                        "description": "Human-readable guidance for parameter resolution"
+                    }
+                }
+            }
+        },
+        {
+            "name": "apply_plan",
+            "description": "Apply a simulation plan by writing inputs to disk using InputWriter.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "selected_case": {
+                        "type": "string",
+                        "description": "Selected baseline case path"
+                    },
+                    "modifications": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        },
+                        "description": "Proposed parameter modifications"
+                    },
+                    "baseline": {
+                        "type": "object",
+                        "description": "Baseline metadata (code_name, repo_path, case_path, local_path)"
+                    },
+                    "reasoning": {
+                        "type": "string",
+                        "description": "Planning rationale"
+                    },
+                    "output_dir": {
+                        "type": "string",
+                        "description": "Output directory for inputs file (optional, defaults to config.output_dir)"
+                    }
+                },
+                "required": ["selected_case", "modifications"]
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
                     "run_directory": {
                         "type": "string",
                         "description": "Run directory containing generated inputs"
@@ -1543,6 +1668,9 @@ async def call_tool(name: str, arguments: dict) -> Any:
 
         elif name == "create_proposed_modifications_with_plan":
             result = mcp_create_proposed_modifications_with_plan(context)
+
+        elif name == "apply_plan":
+            result = mcp_apply_plan(context)
 
         elif name == "select_baseline_case":
             result = mcp_select_baseline_case(context)
