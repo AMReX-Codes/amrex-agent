@@ -326,8 +326,53 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 feedback = None
 
             if feedback:
-                remap_success_count = feedback.get("remap_success_count", 0)
+                available_schema_params = set(feedback.get("available_schema_params", []))
+                remap_mapping = feedback.get("remap_mapping", {})
+                valid_remap_count = sum(
+                    1 for target in remap_mapping.values()
+                    if target in available_schema_params
+                )
+                remap_success_count = valid_remap_count
                 next_retry = retry_count if remap_success_count else retry_count + 1
+                last_schema_retry = next(
+                    (
+                        entry for entry in reversed(workflow_history)
+                        if entry.get("node") == "reviewer"
+                        and entry.get("action") == "parameter_resolution_retry"
+                        and entry.get("details", {}).get("reason") == "schema_resolution"
+                    ),
+                    None
+                )
+                if last_schema_retry:
+                    last_unresolved = last_schema_retry.get("details", {}).get("unresolved_parameters", [])
+                    if last_unresolved == feedback["unresolved_parameters"]:
+                        history_entry = {
+                            "node": "reviewer",
+                            "timestamp": datetime.utcnow().isoformat() + "Z",
+                            "action": "parameter_resolution_stalled",
+                            "iteration": iteration,
+                            "details": {
+                                "status": "terminal",
+                                "reason": "schema_resolution_stalled",
+                                "unresolved_parameters": feedback["unresolved_parameters"],
+                                "resolution_guidance": feedback["resolution_guidance"],
+                                "available_schema_params_count": len(feedback["available_schema_params"]),
+                                "suggested_params": feedback["suggested_params"],
+                                "remap_mapping": remap_mapping,
+                                "remap_success_count": remap_success_count,
+                                "retry_count": retry_count
+                            }
+                        }
+
+                        return {
+                            "mode": "terminal",
+                            "error": (
+                                "Parameter resolution stalled with unchanged unresolved parameters: "
+                                f"{[p[0] for p in feedback['unresolved_parameters']]}"
+                            ),
+                            "errors_active": [f"Unresolved parameter: {p[0]}" for p in feedback["unresolved_parameters"]],
+                            "workflow_history": workflow_history + [history_entry]
+                        }
                 history_entry = {
                     "node": "reviewer",
                     "timestamp": datetime.utcnow().isoformat() + "Z",

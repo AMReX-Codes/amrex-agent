@@ -1308,6 +1308,7 @@ If no match exists, set "to": null."""
             Properly typed value for AMReX
         """
         from typing import get_args, get_origin
+        import types
 
         logger = logging.getLogger(__name__)
 
@@ -1325,7 +1326,7 @@ If no match exists, set "to": null."""
 
         # Handle Union types (unwrap Optional)
         origin = get_origin(expected_type)
-        if origin is Union:
+        if origin in (Union, types.UnionType):
             type_args = get_args(expected_type)
             concrete_types = [t for t in type_args if t is not type(None)]
 
@@ -1382,6 +1383,7 @@ If no match exists, set "to": null."""
         Also checks type annotations for List hints.
         """
         from typing import get_args, get_origin
+        import types
 
         # Strategy 1: Check description for explicit is_array metadata
         description = field_info.description or ''
@@ -1392,7 +1394,7 @@ If no match exists, set "to": null."""
 
         # Strategy 2: Check if type includes List
         origin = get_origin(expected_type)
-        if origin is Union:
+        if origin in (Union, types.UnionType):
             type_args = get_args(expected_type)
             for arg in type_args:
                 if get_origin(arg) is list:
