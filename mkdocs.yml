@@ -11,6 +11,7 @@ nav:
   - Integration: integration.md
   - API Keys: api_keys.md
   - Superfacility API: sfapi.md
+  - Deployment Readiness: deployment_readiness.md
   - Demos: demos.md
 
 theme:
