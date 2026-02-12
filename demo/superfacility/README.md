@@ -79,7 +79,7 @@ Synapse-style shared layout (SFAPI on NERSC systems, example):
 ## Example command
 
 ```bash
-# export SBATCH_ACCOUNT=m4106
+# export SBATCH_ACCOUNT=amsc014
 python amrex_agent.py \
   --prompt "Run AMReX Advection_AmrCore using the default inputs file without changes." \
   --config demo/superfacility/config_perlmutter_remote.yaml \
@@ -89,7 +89,7 @@ python amrex_agent.py \
 ## PeleLMeX DNS example (JetInCrossflow)
 
 ```bash
-# export SBATCH_ACCOUNT=m4106
+# export SBATCH_ACCOUNT=amsc014
 python amrex_agent.py \
   --prompt-path demo/pelelmex/user_requirements_test_DNS.txt \
   --baseline-override PeleLMeX/Exec/Production/JetInCrossflow \

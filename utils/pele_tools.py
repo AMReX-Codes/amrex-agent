@@ -3674,7 +3674,7 @@ if __name__ == "__main__":
     params = {
         'nodes': 2,
         'walltime': '00:10:00',
-        'account': 'mp111_g',
+        'account': 'amsc014',
         'qos': 'debug',
         'constraint': 'gpu&hbm40g',
         'executable': 'PeleC3d.gnu.MPI.CUDA.ex'

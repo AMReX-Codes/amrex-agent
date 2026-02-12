@@ -114,7 +114,7 @@ class TestResolveDatabasePath:
         result = resolve_database_path('reports')
         
         # Assert
-        expected = Path('/global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/amrex_agent/database/reports')
+        expected = Path('/global/cfs/cdirs/amsc014/mcp/amrex-agent/database/reports')
         assert result == expected
     
     def test_resolves_mcp_path(self, monkeypatch):

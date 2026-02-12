@@ -11,7 +11,8 @@ async def main() -> None:
     async with stdio_client(server) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            tools = await session.list_tools()
+            tools_response = await session.list_tools()
+            tools = _normalize_tools(tools_response)
             tool_names = [tool.name for tool in tools]
             print(f"tools: {tool_names}")
 
@@ -31,3 +32,11 @@ def _write_inputs_file():
 
 
 anyio.run(main)
+
+
+def _normalize_tools(tools_response):
+    if isinstance(tools_response, tuple):
+        tools_response = tools_response[0]
+    if isinstance(tools_response, dict):
+        return tools_response.get("tools", [])
+    return tools_response

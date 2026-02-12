@@ -26,7 +26,7 @@ def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
 def _default_superfacility_account() -> str:
     return (
         os.getenv("SBATCH_ACCOUNT")
-        or "m5299"
+        or "amsc014"
     )
 
 def detect_environment(env: dict = None) -> str:
@@ -112,7 +112,7 @@ def resolve_database_path(relative_path: str) -> Path:
 
     if env == 'perlmutter':
         # Perlmutter-specific path (CFS filesystem)
-        base = Path('/global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/amrex_agent/database')
+        base = Path('/global/cfs/cdirs/amsc014/mcp/amrex-agent/database')
         return base / relative_path
 
     elif env == 'mcp':
