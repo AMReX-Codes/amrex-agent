@@ -174,7 +174,7 @@ python -m pip install -e .
 python -u mcp_server.py
 ```
 
-For an anyio subprocess client, see `demo/mcp/mcp_anyio_client.py`.
+For an anyio subprocess client, see `demo/mcp/mcp_stdio_client_smoke.py`.
 
 ## SFAPI credential discovery (for later Perlmutter dispatch)
 
