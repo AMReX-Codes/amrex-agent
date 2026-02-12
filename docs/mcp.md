@@ -210,6 +210,18 @@ context in a SQLite store (WAL) and reuses it on subsequent calls with the same
 Note: `execute_workflow` does not reuse prior `steps` unless `steps` is
 explicitly provided in the current request. Longer term, the session context
 may be namespaced per tool to avoid cross-tool bleed.
+
+## Data placement (shared filesystem today)
+
+The MCP server currently assumes shared filesystem paths for indices, schemas,
+and the workflow store (e.g., a shared CFS directory). This keeps deployment
+simple for HPC environments where all users share a read-only data root.
+
+Longer term, these storage locations are intended to be abstracted so the
+indices/artifacts live in a remote object store and the session metadata lives
+in a dedicated DB. The current split between data paths and session storage is
+designed to make that migration straightforward when external infrastructure
+is available.
 - In-process integration: uses memory streams with the MCP client session.
 - Stdio integration: spawns `mcp_server.py` and sends JSON-RPC over stdio.
 
