@@ -8,7 +8,7 @@ ALCF (Crux) or NERSC Perlmutter login nodes.
 ### NERSC (Perlmutter login)
 
 ```bash
-cd /global/cfs/cdirs/amsc014/mcp/amrex-agent
+cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent
 conda activate amrex-agent-dev
 ```
 
@@ -40,7 +40,7 @@ python -m pip install -e .
 ### NERSC (Perlmutter login)
 
 ```bash
-cd /global/cfs/cdirs/amsc014/mcp/amrex-agent
+cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent
 conda activate amrex-agent-dev
 python -u mcp_server.py
 ```

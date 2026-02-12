@@ -112,7 +112,7 @@ def resolve_database_path(relative_path: str) -> Path:
 
     if env == 'perlmutter':
         # Perlmutter-specific path (CFS filesystem)
-        base = Path('/global/cfs/cdirs/amsc014/mcp/amrex-agent/database')
+        base = Path('/global/cfs/cdirs/amsc014/superfacility/amrex-agent/database')
         return base / relative_path
 
     elif env == 'mcp':

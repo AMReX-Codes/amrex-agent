@@ -15,7 +15,7 @@ Usage:
           "command": "python",
           "args": ["/path/to/amrex_agent/mcp_server.py"],
           "env": {
-            "AMREX_DATABASE_PATH": "/global/cfs/cdirs/amsc014/mcp/amrex-agent/database"
+            "AMREX_DATABASE_PATH": "/global/cfs/cdirs/amsc014/superfacility/amrex-agent/database"
           }
         }
       }
