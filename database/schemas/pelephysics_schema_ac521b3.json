@@ -1,2339 +1,2347 @@
 {
-  "spray.read_from_dpm_file": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.dpm_filename": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.m_override_inj_plane_dir": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.m_override_inj_plane_loc": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.is_dpm_periodic": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.trans_matrix": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.translation": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.start_time": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.end_time": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.initial_injection_dpm_time": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "m_endTime = verylargenum;"
-  },
-  "spray.initial_injection_flow_time": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.Y": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.dist_type": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.jet_cent": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.jet_norm": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.jet_dia": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.spread_angle": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.swirl_angle": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.T": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.inject_ppp": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.discharge_coeff": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": 0.0,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.roi_file": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.jet_vel": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.mass_flow_rate": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.hollow_spray": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "spray.hollow_spread": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SprayJet.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.v": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Control the verbosity of the Particle class"
-  },
-  "particles.mass_transfer": {
-    "type": "endif",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "new SprayData{}",
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.mom_transfer": {
-    "type": "endif",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "new SprayData{}",
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.fixed_parts": {
-    "type": "endif",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "new SprayData{}",
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.cfl": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.fuel_species": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.dep_fuel_species": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.use_splash_model": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "false",
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Set the number of particles per parcel"
-  },
-  "particles.use_breakup_model": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "\"None\"",
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.max_parcel_size": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.KHRT_B0": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.KHRT_B1": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.KHRT_C3": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.breakup_parcel_factor": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.wall_temp": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "TODO: Have this retrieved from proper boundary data"
-  },
-  "particles.contact_angle": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": -1.0,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.write_ascii_files": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Set if spray ascii files should be written"
-  },
-  "particles.plot_src": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Set if gas phase spray source term should be written"
-  },
-  "particles.init_file": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Used in initData() on startup to read in a file of particles."
-  },
-  "particles.min_eb_vfrac": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "USE_EB"
-    ],
-    "default": null,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "than this value"
-  },
-  "particles.derive_plot_vars": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": 1,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.derive_plot_species": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": 1,
-    "source_file": "Source/Spray/SpraySetup.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "diameter": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/Distribution/Distributions.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "mean_dia": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/Distribution/Distributions.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "std_dev": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/Distribution/Distributions.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "k": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Spray/Distribution/Distributions.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "d32": {
-    "type": "Real",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": 0.0,
-    "source_file": "Source/Spray/Distribution/Distributions.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "field_name": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "value_greater": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "value_less": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "value_inrange": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "nBins": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "normalized": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "volume_weighted": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "range": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "field_names": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "n_files": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "amrex::max<int>(\n    1, amrex::min<int>(amrex::ParallelDescriptor::NProcs(), 256))",
-    "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "normal": {
-    "type": "int",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Plane normal"
-  },
-  "center": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Plane center"
-  },
-  "dump_ghost_if_OOB": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "false",
-    "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "dump_flat_3D_plotfile": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "false",
-    "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "interpolation": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "\"Quadratic\"",
-    "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Interpolation"
-  },
-  "conditional_type": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagConditional.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "condition_field_name": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagConditional.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "int": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "IO"
-  },
-  "per": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "IO"
-  },
-  "file": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "a_diagName",
-    "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "filters": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "turbforce.v": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "parse in variables"
-  },
-  "turbforce.force_scale_fudge": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "fine scale tuning of the forcing"
-  },
-  "turbforce.urms": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "target velocity fluctuation"
-  },
-  "turbforce.time_offset": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "time offset (e.g. for starting from precursor turb sim)"
-  },
-  "turbforce.hack_lz": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "or as the factor itself"
-  },
-  "turbforce.ff_factor": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "fast force coarsening factor"
-  },
-  "turbforce.nmodes": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "largest mode to force"
-  },
-  "turbforce.forcing_epsilon": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "reduce amplitude of modes used for breaking symmetry"
-  },
-  "turbforce.spectrum_type": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "shape the spectrum of the forcing"
-  },
-  "turbforce.moderate_zero_modes": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "reduce the impact of any zero mode"
-  },
-  "turbforce.mode_start": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "reduce the impact of any zero mode"
-  },
-  "turbinflows": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "turb_file": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Query data"
-  },
-  "dir": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "side": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "time_offset": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "turb_scale_loc": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "turb_scale_vel": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "verbose": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "extrap_nonperiodic": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "tile_periodic": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "interp_type": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "turb_center": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Get the turbcenter on the injection face"
-  },
-  "turb_nplane": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "turb_conv_vel": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.verbose": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.rtol": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.atol": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.atomic_reductions": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.max_nls_iters": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.max_fp_accel": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.clean_init_massfrac": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.print_profiling": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "cvode.max_order": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Query CVODE options"
-  },
-  "cvode.max_substeps": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "cvode.solve_type": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "cvode.precond_type": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorCvode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_nonlinear_iters": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_nonlinear_tol": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_nsubsteps": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_gmres_restarts": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_gmres_kspiters": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_gmres_tol": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_gmres_precond": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.bdf_scheme": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorBDF.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.use_erkstep": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorArkode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.rk_method": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorArkode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.rk_controller": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorArkode.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.rk64_nsubsteps_guess": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorRK64.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.rk64_nsubsteps_min": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorRK64.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ode.rk64_nsubsteps_max": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Reactions/ReactorRK64.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "soot.incept_pah": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "soot.pah_name": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": "m_inceptPAH",
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Necessary if species names differ from A2, A3, or A4"
-  },
-  "soot.v": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Necessary if species names differ from A2, A3, or A4"
-  },
-  "soot.X_cutoff": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Set the maximum allowable change for variables during soot source terms"
-  },
-  "soot.temp_cutoff": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Set the maximum allowable change for variables during soot source terms"
-  },
-  "soot.max_subcycles": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "soot.num_subcycles": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": 5,
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "soot.conserve_mass": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Source/Soot/SootModel.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": "Determines if mass is conserved by adding lost mass to H2"
-  },
-  "particles.fuel_ref_temp": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!SPRAYPROPERTIESPELEMP_H"
-    ],
-    "default": null,
-    "source_file": "Source/Spray/SprayPropertiesPeleMP.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "particles.fuel_sigma": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!SPRAYPROPERTIESPELEMP_H"
-    ],
-    "default": null,
-    "source_file": "Source/Spray/SprayPropertiesPeleMP.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "v": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!NEURAL_NET_HR_H"
-    ],
-    "default": 2,
-    "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "filename": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!NEURAL_NET_HR_H"
-    ],
-    "default": null,
-    "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "info_filename": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!NEURAL_NET_HR_H"
-    ],
-    "default": null,
-    "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "cmlm_net": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!NEURAL_NET_HR_H"
-    ],
-    "default": "false",
-    "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "pmf.v": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!PMF_DATA_H"
-    ],
-    "default": null,
-    "source_file": "Source/Utility/PMF/PMFData.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "pmf.do_cellAverage": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!PMF_DATA_H"
-    ],
-    "default": 1,
-    "source_file": "Source/Utility/PMF/PMFData.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "pmf.datafile": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!PMF_DATA_H"
-    ],
-    "default": null,
-    "source_file": "Source/Utility/PMF/PMFData.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.gamma": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.metadata_filename": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.model": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.v": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.nominal_pressure_cgs": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.has_mani_src": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.compute_temperature": {
-    "type": null,
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "manifold.has_species_mw": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": "Molecular weights and indices of chemical species if requested"
-  },
-  "manifold.density_lookup_type": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!EOS_PARAMS_H",
-      "!USE_SYCL"
-    ],
-    "default": null,
-    "source_file": "Source/Eos/EosParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": "Setup density lookups"
-  },
-  "transport.const_viscosity": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.const_bulk_viscosity": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.const_conductivity": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.const_diffusivity": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.const_thermal_diffusion_ratio": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.units": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "\"CGS\"",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.Prandtl_number": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.viscosity_mu_ref": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.viscosity_T_ref": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.viscosity_S": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.use_eos_manifold": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": null,
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.model": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": null,
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "transport.use_soret": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!TRANSPORT_PARAMS_H"
-    ],
-    "default": "&(parm_in->m_h_parm)",
-    "source_file": "Source/Transport/TransportParams.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "max_level": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!AMR_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/AMRParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "ref_ratio": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!AMR_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/AMRParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "n_cell": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!AMR_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/AMRParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "max_grid_size": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!AMR_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/AMRParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "prob_type": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!AMR_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/AMRParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "plot_file_name": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!AMR_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/AMRParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "kppath": {
-    "type": "std::string",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "bottom_verbose": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "max_iter": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "max_fmg_iter": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "max_bottom_iter": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "reltol": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "abstol": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "bottom_reltol": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "bottom_abstol": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "linop_maxorder": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "max_coarsening_level": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "agg_grid_size": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "con_grid_size": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "agglomeration": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "consolidation": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "composite_solve": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "fine_level_solve_only": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "use_hypre": {
-    "type": "bool",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "lo_bc": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "hi_bc": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "ebbc_type": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [
-      "!MLMG_PARAM_H"
-    ],
-    "default": null,
-    "source_file": "Source/Radiation/MLMGParam.H",
-    "source_type": "header",
-    "priority": "tier3",
-    "description": null
-  },
-  "ifiles": {
-    "type": null,
-    "required": true,
-    "is_array": true,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/diag_frame_planes.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "level": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": 0,
-    "source_file": "Support/TurbInflowGenerator/diag_frame_planes.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "periodicity": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/diag_frame_planes.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ifile": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/periodic_plt.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "hit_file": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "input_ncell": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "input_binaryformat": {
-    "type": "int",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": 0,
-    "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "urms0": {
-    "type": null,
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "ofile": {
-    "type": "std::string",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/main.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "type": {
-    "type": "InputType",
-    "required": true,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Support/TurbInflowGenerator/main.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
+  "metadata": {
+    "solver": "pelephysics",
+    "schema_version": 1,
+    "repo_commit": "ac521b3",
+    "generated_at": "2026-02-12T13:01:56.760048+00:00"
+  },
+  "parameters": {
+    "spray.read_from_dpm_file": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.dpm_filename": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.m_override_inj_plane_dir": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.m_override_inj_plane_loc": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.is_dpm_periodic": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.trans_matrix": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.translation": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.start_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.end_time": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.initial_injection_dpm_time": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "m_endTime = verylargenum;"
+    },
+    "spray.initial_injection_flow_time": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.Y": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.dist_type": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.jet_cent": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.jet_norm": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.jet_dia": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.spread_angle": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.swirl_angle": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.T": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.inject_ppp": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.discharge_coeff": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0.0,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.roi_file": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.jet_vel": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.mass_flow_rate": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.hollow_spray": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "spray.hollow_spread": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SprayJet.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.v": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Control the verbosity of the Particle class"
+    },
+    "particles.mass_transfer": {
+      "type": "endif",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "new SprayData{}",
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.mom_transfer": {
+      "type": "endif",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "new SprayData{}",
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.fixed_parts": {
+      "type": "endif",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "new SprayData{}",
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.cfl": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.fuel_species": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.dep_fuel_species": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.use_splash_model": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Set the number of particles per parcel"
+    },
+    "particles.use_breakup_model": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "\"None\"",
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.max_parcel_size": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.KHRT_B0": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.KHRT_B1": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.KHRT_C3": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.breakup_parcel_factor": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.wall_temp": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "TODO: Have this retrieved from proper boundary data"
+    },
+    "particles.contact_angle": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": -1.0,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.write_ascii_files": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Set if spray ascii files should be written"
+    },
+    "particles.plot_src": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Set if gas phase spray source term should be written"
+    },
+    "particles.init_file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Used in initData() on startup to read in a file of particles."
+    },
+    "particles.min_eb_vfrac": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "USE_EB"
+      ],
+      "default": null,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "than this value"
+    },
+    "particles.derive_plot_vars": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 1,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.derive_plot_species": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 1,
+      "source_file": "Source/Spray/SpraySetup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "diameter": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/Distribution/Distributions.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "mean_dia": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/Distribution/Distributions.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "std_dev": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/Distribution/Distributions.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "k": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Spray/Distribution/Distributions.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "d32": {
+      "type": "Real",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0.0,
+      "source_file": "Source/Spray/Distribution/Distributions.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "field_name": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "value_greater": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "value_less": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "value_inrange": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagFilter.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "nBins": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "normalized": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "volume_weighted": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "range": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagPDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "field_names": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "n_files": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "amrex::max<int>(\n    1, amrex::min<int>(amrex::ParallelDescriptor::NProcs(), 256))",
+      "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "normal": {
+      "type": "int",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Plane normal"
+    },
+    "center": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Plane center"
+    },
+    "dump_ghost_if_OOB": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "dump_flat_3D_plotfile": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "false",
+      "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "interpolation": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "\"Quadratic\"",
+      "source_file": "Source/Utility/Diagnostics/DiagFramePlane.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Interpolation"
+    },
+    "conditional_type": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagConditional.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "condition_field_name": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagConditional.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "int": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "IO"
+    },
+    "per": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "IO"
+    },
+    "file": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "a_diagName",
+      "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "filters": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/Diagnostics/DiagBase.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "turbforce.v": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "parse in variables"
+    },
+    "turbforce.force_scale_fudge": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "fine scale tuning of the forcing"
+    },
+    "turbforce.urms": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "target velocity fluctuation"
+    },
+    "turbforce.time_offset": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "time offset (e.g. for starting from precursor turb sim)"
+    },
+    "turbforce.hack_lz": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "or as the factor itself"
+    },
+    "turbforce.ff_factor": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "fast force coarsening factor"
+    },
+    "turbforce.nmodes": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "largest mode to force"
+    },
+    "turbforce.forcing_epsilon": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "reduce amplitude of modes used for breaking symmetry"
+    },
+    "turbforce.spectrum_type": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "shape the spectrum of the forcing"
+    },
+    "turbforce.moderate_zero_modes": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "reduce the impact of any zero mode"
+    },
+    "turbforce.mode_start": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbForcing/TurbForcing.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "reduce the impact of any zero mode"
+    },
+    "turbinflows": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "turb_file": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Query data"
+    },
+    "dir": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "side": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "time_offset": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "turb_scale_loc": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "turb_scale_vel": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "verbose": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "extrap_nonperiodic": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "tile_periodic": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "interp_type": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "turb_center": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Get the turbcenter on the injection face"
+    },
+    "turb_nplane": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "turb_conv_vel": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Utility/TurbInflow/turbinflow.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.verbose": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.rtol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.atol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.atomic_reductions": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.max_nls_iters": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.max_fp_accel": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.clean_init_massfrac": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.print_profiling": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "cvode.max_order": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Query CVODE options"
+    },
+    "cvode.max_substeps": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "cvode.solve_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "cvode.precond_type": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorCvode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_nonlinear_iters": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_nonlinear_tol": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_nsubsteps": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_gmres_restarts": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_gmres_kspiters": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_gmres_tol": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_gmres_precond": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.bdf_scheme": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorBDF.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.use_erkstep": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorArkode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.rk_method": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorArkode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.rk_controller": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorArkode.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.rk64_nsubsteps_guess": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorRK64.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.rk64_nsubsteps_min": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorRK64.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ode.rk64_nsubsteps_max": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Reactions/ReactorRK64.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "soot.incept_pah": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "soot.pah_name": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": "m_inceptPAH",
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Necessary if species names differ from A2, A3, or A4"
+    },
+    "soot.v": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Necessary if species names differ from A2, A3, or A4"
+    },
+    "soot.X_cutoff": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Set the maximum allowable change for variables during soot source terms"
+    },
+    "soot.temp_cutoff": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Set the maximum allowable change for variables during soot source terms"
+    },
+    "soot.max_subcycles": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "soot.num_subcycles": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 5,
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "soot.conserve_mass": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Source/Soot/SootModel.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": "Determines if mass is conserved by adding lost mass to H2"
+    },
+    "particles.fuel_ref_temp": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!SPRAYPROPERTIESPELEMP_H"
+      ],
+      "default": null,
+      "source_file": "Source/Spray/SprayPropertiesPeleMP.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "particles.fuel_sigma": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!SPRAYPROPERTIESPELEMP_H"
+      ],
+      "default": null,
+      "source_file": "Source/Spray/SprayPropertiesPeleMP.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "v": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!NEURAL_NET_HR_H"
+      ],
+      "default": 2,
+      "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "filename": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!NEURAL_NET_HR_H"
+      ],
+      "default": null,
+      "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "info_filename": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!NEURAL_NET_HR_H"
+      ],
+      "default": null,
+      "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "cmlm_net": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!NEURAL_NET_HR_H"
+      ],
+      "default": "false",
+      "source_file": "Source/Utility/BlackBoxFunction/NeuralNetHomerolled.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "pmf.v": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!PMF_DATA_H"
+      ],
+      "default": null,
+      "source_file": "Source/Utility/PMF/PMFData.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "pmf.do_cellAverage": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!PMF_DATA_H"
+      ],
+      "default": 1,
+      "source_file": "Source/Utility/PMF/PMFData.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "pmf.datafile": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!PMF_DATA_H"
+      ],
+      "default": null,
+      "source_file": "Source/Utility/PMF/PMFData.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.gamma": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.metadata_filename": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.model": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.v": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.nominal_pressure_cgs": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.has_mani_src": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.compute_temperature": {
+      "type": null,
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "manifold.has_species_mw": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Molecular weights and indices of chemical species if requested"
+    },
+    "manifold.density_lookup_type": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!EOS_PARAMS_H",
+        "!USE_SYCL"
+      ],
+      "default": null,
+      "source_file": "Source/Eos/EosParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": "Setup density lookups"
+    },
+    "transport.const_viscosity": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.const_bulk_viscosity": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.const_conductivity": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.const_diffusivity": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.const_thermal_diffusion_ratio": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.units": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "\"CGS\"",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.Prandtl_number": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.viscosity_mu_ref": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.viscosity_T_ref": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.viscosity_S": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.use_eos_manifold": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": null,
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.model": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": null,
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "transport.use_soret": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!TRANSPORT_PARAMS_H"
+      ],
+      "default": "&(parm_in->m_h_parm)",
+      "source_file": "Source/Transport/TransportParams.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "max_level": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!AMR_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/AMRParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "ref_ratio": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!AMR_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/AMRParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "n_cell": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!AMR_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/AMRParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "max_grid_size": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!AMR_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/AMRParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "prob_type": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!AMR_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/AMRParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "plot_file_name": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!AMR_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/AMRParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "kppath": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "bottom_verbose": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "max_iter": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "max_fmg_iter": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "max_bottom_iter": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "reltol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "abstol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "bottom_reltol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "bottom_abstol": {
+      "type": "Real",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "linop_maxorder": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "max_coarsening_level": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "agg_grid_size": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "con_grid_size": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "agglomeration": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "consolidation": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "composite_solve": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "fine_level_solve_only": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "use_hypre": {
+      "type": "bool",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "lo_bc": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "hi_bc": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "ebbc_type": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [
+        "!MLMG_PARAM_H"
+      ],
+      "default": null,
+      "source_file": "Source/Radiation/MLMGParam.H",
+      "source_type": "header",
+      "priority": "tier3",
+      "description": null
+    },
+    "ifiles": {
+      "type": null,
+      "required": true,
+      "is_array": true,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/diag_frame_planes.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "level": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Support/TurbInflowGenerator/diag_frame_planes.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "periodicity": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/diag_frame_planes.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ifile": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/periodic_plt.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "hit_file": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "input_ncell": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "input_binaryformat": {
+      "type": "int",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": 0,
+      "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "urms0": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/turb_box.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "ofile": {
+      "type": "std::string",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "type": {
+      "type": "InputType",
+      "required": true,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Support/TurbInflowGenerator/main.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    }
   }
 }
