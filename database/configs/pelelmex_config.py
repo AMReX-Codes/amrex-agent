@@ -64,6 +64,28 @@ class PeleLMeXConfig(BaseAMReXConfig):
     tier1_params: ClassVar[set[str]] = {
         "amr.n_cell",
         "pelelmex.do_react",  # Critical: reactions on/off
+        "peleLM.les_model",
+        "peleLM.do_turbulent_forcing",
+    }
+
+    tier2_params: ClassVar[set[str]] = {
+        "peleLM.chem_integrator",
+        "peleLM.use_typ_vals_chem",
+        "peleLM.plot_react",
+        "peleLM.chem_load_balancing_method",
+        "peleLM.chem_load_balancing_cost_estimate",
+        "peleLM.max_grid_size_chem",
+        "turbforce.urms",
+        "turbforce.nmodes",
+        "turbforce.spectrum_type",
+        "turb_file",
+        "turb_scale_vel",
+        "peleLM.les_cs_smag",
+        "peleLM.les_cm_wale",
+        "peleLM.les_cs_sigma",
+        "peleLM.les_c_chi",
+        "peleLM.plot_les",
+        "peleLM.les_v",
     }
 
     # Build flag requirements (Amendment D.3)
@@ -207,7 +229,7 @@ TASK - reference-case adaptation:
 2. Identify key physical differences vs the baseline (flow regime, fuel/oxidizer, confinement).
 3. Modify boundary conditions first to match the new flow regime/configuration.
 4. Check the baseline prob.* composition/mixture flags and keep the chemical specification consistent (e.g., prob.cf_composition/jet_composition vs prob.X_* or prob.Y_*).
-5. Update chemistry/transport only if the fuel or oxidizer changes.
+5. Update chemistry/transport if the user requests a reacting case; do this even if fuel/oxidizer species stay the same.
 6. Assess grid/AMR only if the physics scale or resolution requirements change.
 7. Apply remaining numeric value updates.
 8. Only include parameters that DIFFER from baseline or must be ADDED.
@@ -218,6 +240,7 @@ CRITICAL RULES:
 - Never invent, modify, or abbreviate parameter names
 - For grid resolution requests ("grid cells", "grid size", "resolution"), prefer amr.n_cell (domain cell counts).
 - amr.max_grid_size is for domain decomposition / refinement control; use it only when explicitly requested.
+- When the request implies a significant difference from baseline inputs or choosing a different physics scale, consider a group of parameter modifications in addition to setting the important flag.
 
 Return JSON with your working and results:
 {{
