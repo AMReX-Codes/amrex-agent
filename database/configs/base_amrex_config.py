@@ -437,6 +437,8 @@ CASE: <path>"""
 
     # Schema tag (used when schema_strategy="tag")
     schema_tag: str = ""
+    # Schema metadata version (used in composed schema naming/selection)
+    schema_version: int = 1
 
     # === Documentation Sources (Indexing Engine: Level 1 (Documentation): Level 1 Index) ===
     documentation_map: dict[str, list[str]] = {
