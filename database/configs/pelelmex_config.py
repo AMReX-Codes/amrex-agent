@@ -206,10 +206,11 @@ TASK - reference-case adaptation:
 1. Identify the physical configuration in a few words.
 2. Identify key physical differences vs the baseline (flow regime, fuel/oxidizer, confinement).
 3. Modify boundary conditions first to match the new flow regime/configuration.
-4. Update chemistry/transport only if the fuel or oxidizer changes.
-5. Assess grid/AMR only if the physics scale or resolution requirements change.
-6. Apply remaining numeric value updates.
-7. Only include parameters that DIFFER from baseline or must be ADDED.
+4. Check the baseline prob.* composition/mixture flags and keep the chemical specification consistent (e.g., prob.cf_composition/jet_composition vs prob.X_* or prob.Y_*).
+5. Update chemistry/transport only if the fuel or oxidizer changes.
+6. Assess grid/AMR only if the physics scale or resolution requirements change.
+7. Apply remaining numeric value updates.
+8. Only include parameters that DIFFER from baseline or must be ADDED.
 
 CRITICAL RULES:
 - Use parameter names EXACTLY as shown in the valid parameters list (including prefix like "prob.")
