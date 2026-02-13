@@ -1035,6 +1035,16 @@ def resolve_remote_output_dir(
         except Exception as exc:
             logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
             continue
+        if nersc_session is None:
+            rest_clients = find_nersc_clients()
+            if not rest_clients:
+                # REST write check needs a NERSC token/OAuth session; sfapi_client listing
+                # already proved the path is reachable, so accept for sfapi_client staging.
+                logger.info(
+                    "Using remote output dir without REST write check (sfapi_client-only auth): %s",
+                    candidate,
+                )
+                return candidate
         try:
             ensure_remote_directory_rest(
                 remote_run_dir=str(candidate),

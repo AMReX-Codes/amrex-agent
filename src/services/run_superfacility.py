@@ -541,7 +541,9 @@ class SuperfacilityRunner:
                 job_id: str,
                 method: str = 'sbatch',
                 poll_interval: int = 10,
-                max_polls: int = 30) -> str:
+                max_polls: int = 30,
+                walltime: str | None = None,
+                queue_buffer_seconds: int = 1200) -> str:
         """
         Monitor job until completion or timeout.
 
@@ -557,13 +559,30 @@ class SuperfacilityRunner:
             Seconds between checks.
         max_polls : int, optional
             Maximum number of checks.
+        walltime : str or None, optional
+            Walltime (HH:MM:SS) used to scale max_polls for long runs.
+        queue_buffer_seconds : int, optional
+            Extra seconds beyond walltime to allow for queue/pending time.
 
         Returns
         -------
         str
             Final job state.
         """
-        logger.debug(f"\n[INFO] Monitoring job {job_id} (method: {method})...")
+        if walltime and max_polls == 30:
+            walltime_seconds = _parse_walltime_seconds(walltime)
+            if walltime_seconds:
+                max_polls = max(
+                    max_polls,
+                    int((walltime_seconds + queue_buffer_seconds + poll_interval - 1) / poll_interval),
+                )
+        logger.debug(
+            "\n[INFO] Monitoring job %s (method: %s, polls: %s, interval: %ss)...",
+            job_id,
+            method,
+            max_polls,
+            poll_interval,
+        )
 
         state = monitor_job(
             job_id=job_id,
@@ -634,7 +653,8 @@ class SuperfacilityRunner:
         if monitor_job_flag:
             final_state = self.monitor(
                 job_id=job_result['job_id'],
-                method=job_result['method']
+                method=job_result['method'],
+                walltime=walltime,
             )
             job_result['final_state'] = final_state
 
@@ -666,3 +686,22 @@ if __name__ == "__main__":
 
     logger.debug("\n[OK] Runner service test complete")
     logger.debug("  (To submit: runner.submit(result['run_dir'], nodes=1, walltime='00:30:00'))")
+
+
+def _parse_walltime_seconds(walltime: str) -> int | None:
+    parts = str(walltime).split(":")
+    if not parts or any(not part.isdigit() for part in parts):
+        return None
+    values = [int(part) for part in parts]
+    if len(values) == 3:
+        hours, minutes, seconds = values
+    elif len(values) == 2:
+        hours = 0
+        minutes, seconds = values
+    elif len(values) == 1:
+        hours = 0
+        minutes = 0
+        seconds = values[0]
+    else:
+        return None
+    return hours * 3600 + minutes * 60 + seconds

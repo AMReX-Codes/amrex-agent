@@ -274,6 +274,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 final_state = runner.monitor(
                     job_id=submit_result["job_id"],
                     method=submit_result.get("method", "sbatch"),
+                    walltime=(submit_result.get("params") or {}).get("walltime"),
                 )
                 submit_result["job_status"] = final_state
                 submit_result["final_state"] = final_state
@@ -300,7 +301,11 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             job_status = submit_result.get("job_status")
             monitor_states = {None, "queued", "pending", "running", "submitted"}
             if job_id and hasattr(runner, "monitor") and job_status in monitor_states:
-                final_state = runner.monitor(job_id, method=method or "sbatch")
+                final_state = runner.monitor(
+                    job_id,
+                    method=method or "sbatch",
+                    walltime=(submit_result.get("params") or {}).get("walltime"),
+                )
 
         # ========================================
         # COMPONENT 11e: OUTPUT MAPPING (Complete)
