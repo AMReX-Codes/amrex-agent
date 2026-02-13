@@ -21,6 +21,9 @@ export SFAPI_KEY_PATH=/path/to/priv_key.pem
 # or SUPERFACILITY_KEY_PATH / NERSC_SFAPI_KEY_PATH
 ```
 
+The key file must be read/write only by you (`chmod 600`), or `sfapi_client`
+will refuse to authenticate.
+
 To obtain a client key, follow the NERSC SFAPI client instructions:
 ```
 https://docs.nersc.gov/services/sfapi/authentication/#client
