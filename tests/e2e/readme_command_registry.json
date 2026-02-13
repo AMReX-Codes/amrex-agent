@@ -36,8 +36,8 @@
     "start_line": 35
   },
   {
-    "first_line": "python amrex_agent.py --prompt \"Run AMReX Advection_AmrCore with a 64x64 grid and 2 AMR levels\"",
-    "hash": "sha256:36c7bdbbf7b8d90b4a9dbca773b91fbe5e68ede6593f1c7017e4ea036e689e71",
+    "first_line": "python amrex_agent.py \\",
+    "hash": "sha256:4e7d7d2c243598eb295d88a4a37e850a86e329d33f5f4e9bb389397f1a2194c9",
     "id": "README.md::bash_block::5",
     "index": 5,
     "kind": "bash_block",
@@ -51,7 +51,7 @@
     "index": 6,
     "kind": "bash_block",
     "path": "README.md",
-    "start_line": 55
+    "start_line": 58
   },
   {
     "first_line": "python amrex_agent.py --prompt \"Run AMReX Advection_AmrCore with a 64x64 grid\" --config demo/amrex/config.yaml",
@@ -60,7 +60,7 @@
     "index": 7,
     "kind": "bash_block",
     "path": "README.md",
-    "start_line": 70
+    "start_line": 73
   },
   {
     "first_line": "python amrex_agent.py \\",
@@ -69,7 +69,7 @@
     "index": 8,
     "kind": "bash_block",
     "path": "README.md",
-    "start_line": 93
+    "start_line": 104
   },
   {
     "first_line": "python amrex_agent.py \\",
@@ -78,7 +78,7 @@
     "index": 9,
     "kind": "bash_block",
     "path": "README.md",
-    "start_line": 104
+    "start_line": 115
   },
   {
     "first_line": "pytest tests/unit",
@@ -87,7 +87,7 @@
     "index": 10,
     "kind": "bash_block",
     "path": "README.md",
-    "start_line": 132
+    "start_line": 143
   },
   {
     "first_line": "# 1. Clone the target AMReX code (if not already done)",
@@ -360,15 +360,6 @@
     "start_line": 651
   },
   {
-    "first_line": "# Generate schema for PeleC",
-    "hash": "sha256:c76a68c7ba96f7f2f7eceaa5f770942d51d8822edccd26601478cfbd071ec40e",
-    "id": "database/schemas/README.md::bash_block::1",
-    "index": 1,
-    "kind": "bash_block",
-    "path": "database/schemas/README.md",
-    "start_line": 37
-  },
-  {
     "first_line": "# From project root",
     "hash": "sha256:526d080f54d47035e7b7f063dde70631a0520fe009713c50f68ee797246a1420",
     "id": "database/scripts/README.md::bash_block::1",
@@ -430,15 +421,6 @@
     "kind": "bash_block",
     "path": "database/scripts/README.md",
     "start_line": 199
-  },
-  {
-    "first_line": "**Note:** This script is under development. For reliable testing, use Option 1 with `amrex_agent.py` and basic user requirement files.",
-    "hash": "sha256:4f81e95b8e596bae8d6fa03c5839abb949b8b3af46c60e6651cf73044c8cf5f5",
-    "id": "demo/README.md::amrex_agent_inline::1",
-    "index": 1,
-    "kind": "amrex_agent_inline",
-    "path": "demo/README.md",
-    "start_line": 197
   },
   {
     "first_line": "cd /path/to/amrex-agent",
@@ -621,6 +603,15 @@
     "start_line": 231
   },
   {
+    "first_line": "**Note:** This script is under development. For reliable testing, use Option 1 with `amrex_agent.py` and basic user requirement files.",
+    "hash": "sha256:4f81e95b8e596bae8d6fa03c5839abb949b8b3af46c60e6651cf73044c8cf5f5",
+    "id": "demo/README.md::amrex_agent_inline::1",
+    "index": 1,
+    "kind": "amrex_agent_inline",
+    "path": "demo/README.md",
+    "start_line": 197
+  },
+  {
     "first_line": "export ALCF_API_KEY=your_access_token",
     "hash": "sha256:cc75cd9bfacd0bef4e24290cb91411a8a36fc56ffc53943bdf00f3440e0ed98d",
     "id": "demo/alcf/README.md::bash_block::1",
@@ -774,6 +765,96 @@
     "start_line": 34
   },
   {
+    "first_line": "cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent",
+    "hash": "sha256:1d59725073fa20f2106ed37942d5953c33ba4b9496e16e5c6e4988947e43fcfb",
+    "id": "demo/mcp/README.md::bash_block::1",
+    "index": 1,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 10
+  },
+  {
+    "first_line": "conda env create -f environment.yaml",
+    "hash": "sha256:f81bd5f2144ae1b693dfb4442dda601d3a7d8207d67b64cec8594b4bfd220ce7",
+    "id": "demo/mcp/README.md::bash_block::2",
+    "index": 2,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 17
+  },
+  {
+    "first_line": "module use /soft/modulefiles",
+    "hash": "sha256:346c06319cb04c2ac5d538d724f28dd972ed3fd648b69c008d85525cc5e4211b",
+    "id": "demo/mcp/README.md::bash_block::3",
+    "index": 3,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 24
+  },
+  {
+    "first_line": "cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent",
+    "hash": "sha256:ca8203801498ee34f5332c59704b81cf4866f32be2bf30caac8a21a44eed05f8",
+    "id": "demo/mcp/README.md::bash_block::4",
+    "index": 4,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 42
+  },
+  {
+    "first_line": "cd /lus/eagle/projects/COMB-FLOW-UNI/mcp/amrex-agent",
+    "hash": "sha256:86321cc89cddab6084a631582d8d1a362f3204c515c419e8bb627247911543cf",
+    "id": "demo/mcp/README.md::bash_block::5",
+    "index": 5,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 50
+  },
+  {
+    "first_line": "python demo/mcp/mcp_stdio_client_smoke.py",
+    "hash": "sha256:b8d309c23897620c9842486dc7968711feb70b19d08b4370a05342f30eea16a3",
+    "id": "demo/mcp/README.md::bash_block::6",
+    "index": 6,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 57
+  },
+  {
+    "first_line": "python demo/mcp/mcp_execute_workflow_examples.py",
+    "hash": "sha256:11a728be0dac834506b22d669e2914105ee7c284e430a4eb445b77e0df3edda5",
+    "id": "demo/mcp/README.md::bash_block::7",
+    "index": 7,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 100
+  },
+  {
+    "first_line": "python demo/mcp/mcp_inprocess_examples.py",
+    "hash": "sha256:624872aa809c6348936d478ca8d33097aa067c6f0ca3066de418d3851a4ada0a",
+    "id": "demo/mcp/README.md::bash_block::8",
+    "index": 8,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 108
+  },
+  {
+    "first_line": "./demo/mcp/run_dns_cli_examples.sh",
+    "hash": "sha256:5d298aa7e620abb1c8432da7b173407e92933816e1b9aacd5508ed186c94291d",
+    "id": "demo/mcp/README.md::bash_block::9",
+    "index": 9,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 114
+  },
+  {
+    "first_line": "./demo/mcp/run_dns_cli_examples_dry_verbose.sh",
+    "hash": "sha256:fc29455ac36ccafda8e0188a7186c27b78b1e1e603bb3a41db1aec0b5664b583",
+    "id": "demo/mcp/README.md::bash_block::10",
+    "index": 10,
+    "kind": "bash_block",
+    "path": "demo/mcp/README.md",
+    "start_line": 120
+  },
+  {
     "first_line": "bash demo/setup_demo_database.sh --code pelec",
     "hash": "sha256:4973f05325f853e874e58e3830b91f38544eba7caada0695645a8b4e5c95a334",
     "id": "demo/pelec/README.md::bash_block::1",
@@ -874,12 +955,21 @@
   },
   {
     "first_line": "python amrex_agent.py \\",
-    "hash": "sha256:2573fa46bbc8e087921e56c320bbd4379b697086dc7a8d59a453bb172d234b39",
+    "hash": "sha256:edfef53a53e263a9e0914642d29f9a87791377a55a63a77187e872ea9d78e590",
     "id": "demo/pelelmex/README.md::bash_block::8",
     "index": 8,
     "kind": "bash_block",
     "path": "demo/pelelmex/README.md",
     "start_line": 77
+  },
+  {
+    "first_line": "python amrex_agent.py \\",
+    "hash": "sha256:e3be2cd0df49f39c1c8f370a1d752b4a995b5bb5813b1b0f885d3d5b1570e05d",
+    "id": "demo/remora/README.md::bash_block::1",
+    "index": 1,
+    "kind": "bash_block",
+    "path": "demo/remora/README.md",
+    "start_line": 7
   },
   {
     "first_line": "export SFAPI_KEY_PATH=/path/to/priv_key.pem",
@@ -888,7 +978,7 @@
     "index": 1,
     "kind": "bash_block",
     "path": "demo/superfacility/README.md",
-    "start_line": 18
+    "start_line": 19
   },
   {
     "first_line": "cp ~/.superfacility/priv_key.pem ~/.superfacility/priv_key.pem.no_client_id",
@@ -897,7 +987,7 @@
     "index": 2,
     "kind": "bash_block",
     "path": "demo/superfacility/README.md",
-    "start_line": 51
+    "start_line": 52
   },
   {
     "first_line": "export NERSC_API_TOKEN=your_token",
@@ -906,34 +996,25 @@
     "index": 3,
     "kind": "bash_block",
     "path": "demo/superfacility/README.md",
-    "start_line": 63
+    "start_line": 64
   },
   {
     "first_line": "# export SBATCH_ACCOUNT=amsc014",
-    "hash": "sha256:2af258b85fb1a349bfd4708659189f009890744c503bb613b2f77f6e73a7798c",
+    "hash": "sha256:2551fb16b78ce6d8e946eec0311bd79c6aaf0b6968bd81a4df2b484d58b74f36",
     "id": "demo/superfacility/README.md::bash_block::4",
     "index": 4,
     "kind": "bash_block",
     "path": "demo/superfacility/README.md",
-    "start_line": 80
+    "start_line": 87
   },
   {
     "first_line": "# export SBATCH_ACCOUNT=amsc014",
-    "hash": "sha256:98afdccff070e7c83638ecff4e27b50bc17a3462c0053374e6121b42f4a9523f",
+    "hash": "sha256:f3d445a657b47410e0205e8915ac35eae2910f558aefb1c4277a4df37b8342c8",
     "id": "demo/superfacility/README.md::bash_block::5",
     "index": 5,
     "kind": "bash_block",
     "path": "demo/superfacility/README.md",
-    "start_line": 90
-  },
-  {
-    "first_line": "Now run any demo or `amrex_agent.py` as usual. Retrieval will use the hosted",
-    "hash": "sha256:01ddafaface9f6a9bcb96fc7c2d0d876efa95f5ed12445585758227f154a0ffc",
-    "id": "demo/vector_store/README.md::amrex_agent_inline::1",
-    "index": 1,
-    "kind": "amrex_agent_inline",
-    "path": "demo/vector_store/README.md",
-    "start_line": 50
+    "start_line": 98
   },
   {
     "first_line": "export OPENAI_API_KEY=your_key_here",
@@ -990,6 +1071,51 @@
     "start_line": 38
   },
   {
+    "first_line": "Now run any demo or `amrex_agent.py` as usual. Retrieval will use the hosted",
+    "hash": "sha256:01ddafaface9f6a9bcb96fc7c2d0d876efa95f5ed12445585758227f154a0ffc",
+    "id": "demo/vector_store/README.md::amrex_agent_inline::1",
+    "index": 1,
+    "kind": "amrex_agent_inline",
+    "path": "demo/vector_store/README.md",
+    "start_line": 50
+  },
+  {
+    "first_line": "cd run_20260202_091048",
+    "hash": "sha256:b43482a22e6a170aa27a95abd3254b5830b2bfd2f2801b15abb902633439b4d6",
+    "id": "output/run_20260202_091048/README.md::bash_block::1",
+    "index": 1,
+    "kind": "bash_block",
+    "path": "output/run_20260202_091048/README.md",
+    "start_line": 18
+  },
+  {
+    "first_line": "tail -f run.out",
+    "hash": "sha256:62052093f40b6d7db0c8b99e86d8bf2e26ed5fdd15760285c8f6e9f37031dfe5",
+    "id": "output/run_20260202_091048/README.md::bash_block::2",
+    "index": 2,
+    "kind": "bash_block",
+    "path": "output/run_20260202_091048/README.md",
+    "start_line": 24
+  },
+  {
+    "first_line": "cd run_20260202_091204",
+    "hash": "sha256:cc5a923e195382c15e269b3e0aa11d9ed2aeb1f8132eba9d92505938075bc1d7",
+    "id": "output/run_20260202_091204/README.md::bash_block::1",
+    "index": 1,
+    "kind": "bash_block",
+    "path": "output/run_20260202_091204/README.md",
+    "start_line": 18
+  },
+  {
+    "first_line": "tail -f run.out",
+    "hash": "sha256:62052093f40b6d7db0c8b99e86d8bf2e26ed5fdd15760285c8f6e9f37031dfe5",
+    "id": "output/run_20260202_091204/README.md::bash_block::2",
+    "index": 2,
+    "kind": "bash_block",
+    "path": "output/run_20260202_091204/README.md",
+    "start_line": 24
+  },
+  {
     "first_line": "pytest --unit",
     "hash": "sha256:add09341b6512043e4c1c9a669bf63bce56b49fd471e3b20ec544ae0069caaa1",
     "id": "tests/README.md::bash_block::1",
@@ -1008,13 +1134,49 @@
     "start_line": 39
   },
   {
-    "first_line": "pytest --unit --cov --cov-report=term-missing",
-    "hash": "sha256:8f8c3aabf88eeb9a64d11e7c20d28ee9b84915a32f20179bd9bb22e925bc24d5",
+    "first_line": "python -m tests.e2e.readme_command_runner --dry-run",
+    "hash": "sha256:427a274eaf1c02c394dc063e0a70b4a9710d079917ffa3b98b73cc89e2823d0a",
     "id": "tests/README.md::bash_block::3",
     "index": 3,
     "kind": "bash_block",
     "path": "tests/README.md",
-    "start_line": 49
+    "start_line": 54
+  },
+  {
+    "first_line": "pytest --unit --cov --cov-report=term-missing",
+    "hash": "sha256:8f8c3aabf88eeb9a64d11e7c20d28ee9b84915a32f20179bd9bb22e925bc24d5",
+    "id": "tests/README.md::bash_block::4",
+    "index": 4,
+    "kind": "bash_block",
+    "path": "tests/README.md",
+    "start_line": 77
+  },
+  {
+    "first_line": "We track README bash blocks and `amrex_agent.py` calls in",
+    "hash": "sha256:d2ae73f87341e4ccd8c587b34d54f04d028ab7e3dcb3cef12c5712ecc0f7ab97",
+    "id": "tests/README.md::amrex_agent_inline::1",
+    "index": 1,
+    "kind": "amrex_agent_inline",
+    "path": "tests/README.md",
+    "start_line": 48
+  },
+  {
+    "first_line": "Execution is limited to commands that include `amrex_agent.py`, with a 30s",
+    "hash": "sha256:8424e96a60c6926b49b995ac35128eb5eb0c0073e9990872558e08f8f2d5bc5a",
+    "id": "tests/README.md::amrex_agent_inline::2",
+    "index": 2,
+    "kind": "amrex_agent_inline",
+    "path": "tests/README.md",
+    "start_line": 66
+  },
+  {
+    "first_line": "uses all `amrex_agent.py` commands in those files. It also skips if no LLM API",
+    "hash": "sha256:7663dac4223621dd624da8374d287b57eb0a94e0af5cce08a6b647e98401b62e",
+    "id": "tests/README.md::amrex_agent_inline::3",
+    "index": 3,
+    "kind": "amrex_agent_inline",
+    "path": "tests/README.md",
+    "start_line": 68
   },
   {
     "first_line": "# Run only demo e2e smoke tests",
