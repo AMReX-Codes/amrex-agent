@@ -14,10 +14,13 @@ from amrex_tools import copy_to_rundir, setup_run_directory
 
 from src.services.build_tools import compile_amrex
 from src.services.run_superfacility_tools import (
+    ensure_remote_directory_rest,
     generate_slurm_script,
     _load_sfapi_key_file,
     find_remote_executable,
+    list_remote_entries,
     monitor_job,
+    resolve_remote_output_dir,
     stage_out_outputs,
     stage_run_directory,
     submit_job,
@@ -179,6 +182,19 @@ class SuperfacilityRunner:
             if rendered_path.suffix == ".ex":
                 return rendered_path
             if getattr(self.config, "remote_executable_find", False):
+                try:
+                    list_remote_entries(str(rendered_path), system=system)
+                except Exception as exc:
+                    hint = ""
+                    if "No NERSC session" in str(exc):
+                        hint = (
+                            " (SFAPI auth missing; set SFAPI_KEY_PATH or NERSC_API_TOKEN "
+                            "to enable remote directory listing)"
+                        )
+                    raise RuntimeError(
+                        "Remote case directory not available for executable search: "
+                        f"{rendered_path}{hint}"
+                    ) from exc
                 found = find_remote_executable(
                     remote_case_dir=str(rendered_path),
                     system=system,
@@ -195,6 +211,19 @@ class SuperfacilityRunner:
             return None
 
         remote_case_dir = Path("/global/cfs/cdirs") / account / user / repo_name / relative_case_dir
+        try:
+            list_remote_entries(str(remote_case_dir), system=system)
+        except Exception as exc:
+            hint = ""
+            if "No NERSC session" in str(exc):
+                hint = (
+                    " (SFAPI auth missing; set SFAPI_KEY_PATH or NERSC_API_TOKEN "
+                    "to enable remote directory listing)"
+                )
+            raise RuntimeError(
+                "Remote case directory not available for executable search: "
+                f"{remote_case_dir}{hint}"
+            ) from exc
         found = find_remote_executable(
             remote_case_dir=str(remote_case_dir),
             system=system,
@@ -242,9 +271,12 @@ class SuperfacilityRunner:
 
         logger.debug("\n=== Setting Up Job ===\n")
 
-        # Use config output_dir if not specified
+        # Use config output_dir if not specified (prefer remote_output_dir on Perlmutter)
         if output_dir is None:
-            output_dir = self.config.output_dir
+            if getattr(self.config, "environment", None) == "perlmutter":
+                output_dir = getattr(self.config, "remote_output_dir", None) or self.config.output_dir
+            else:
+                output_dir = self.config.output_dir
 
         output_dir_path = Path(output_dir) if output_dir else None
         if output_dir_path and output_dir_path.exists() and (output_dir_path / "inputs").exists():
@@ -410,17 +442,26 @@ class SuperfacilityRunner:
         remote_run_dir = None
         exclude_names = None
         if remote_staging:
-            remote_output_dir = getattr(self.config, "remote_output_dir", None)
-            if remote_output_dir is None:
-                remote_output_dir = self.config.output_dir
+            preferred_output_dir = getattr(self.config, "remote_output_dir", None)
+            if preferred_output_dir is None:
+                preferred_output_dir = self.config.output_dir
                 logger.warning(
                     "[Config] remote_output_dir not set; defaulting staging target to %s",
-                    remote_output_dir,
+                    preferred_output_dir,
                 )
-            remote_output_dir = Path(os.path.expandvars(str(remote_output_dir)))
+            remote_output_dir = resolve_remote_output_dir(
+                preferred_output_dir=preferred_output_dir,
+                account=account,
+                user=os.getenv("USER"),
+                system=system,
+            )
             fixed_remote_run_dir = getattr(self.config, "remote_run_dir", None)
             if fixed_remote_run_dir:
                 remote_run_dir = Path(os.path.expandvars(str(fixed_remote_run_dir)))
+                ensure_remote_directory_rest(
+                    remote_run_dir=str(remote_run_dir),
+                    upload_host=system,
+                )
             else:
                 remote_run_dir = Path(remote_output_dir) / run_dir.name
             if remote_executable_path and executable:

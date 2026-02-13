@@ -164,8 +164,8 @@ def _parse_sfapi_pem(key_str: str) -> tuple[str, str] | None:
     return first_line, secret
 
 
-def _load_sfapi_key_file() -> tuple[str, str] | None:
-    """Load Superfacility API client ID + key from a PEM file, if present."""
+def _resolve_sfapi_key_path() -> Path | None:
+    """Return the first available SFAPI PEM key path, if any."""
     env_paths = [
         os.getenv("SFAPI_KEY_PATH"),
         os.getenv("SUPERFACILITY_KEY_PATH"),
@@ -175,23 +175,36 @@ def _load_sfapi_key_file() -> tuple[str, str] | None:
 
     superfacility_dir = Path.home() / ".superfacility"
     if superfacility_dir.exists():
-        search_paths.extend(sorted(superfacility_dir.glob("*.pem")))
         search_paths.append(superfacility_dir / "key.pem")
         search_paths.append(superfacility_dir / "priv_key.pem")
+        search_paths.extend(sorted(superfacility_dir.glob("*.pem")))
 
     search_paths.extend([
         Path.cwd() / "priv_key.pem",
         Path.home() / "sfapi" / "priv_key.pem",
     ])
 
+    seen = set()
     for path in search_paths:
+        if path in seen:
+            continue
+        seen.add(path)
         if path.exists():
-            try:
-                parsed = _parse_sfapi_pem(path.read_text())
-                if parsed:
-                    return parsed
-            except Exception:
-                continue
+            return path
+    return None
+
+
+def _load_sfapi_key_file() -> tuple[str, str] | None:
+    """Load Superfacility API client ID + key from a PEM file, if present."""
+    key_path = _resolve_sfapi_key_path()
+    if not key_path:
+        return None
+    try:
+        parsed = _parse_sfapi_pem(key_path.read_text())
+        if parsed:
+            return parsed
+    except Exception:
+        return None
     return None
 
 
@@ -259,6 +272,7 @@ def submit_via_sfapi_client(
     system: str = "perlmutter",
     client_id: str | None = None,
     secret: str | None = None,
+    key_path: str | Path | None = None,
     is_path: bool = False,
     config: dict | None = None,
 ) -> dict[str, Any]:
@@ -275,6 +289,8 @@ def submit_via_sfapi_client(
         SFAPI OAuth client ID.
     secret : str or None, optional
         SFAPI private key (PEM).
+    key_path : str or Path or None, optional
+        SFAPI key file path (first line client_id, remainder PEM).
     config : dict or None, optional
         Optional configuration overrides.
 
@@ -291,7 +307,7 @@ def submit_via_sfapi_client(
     except Exception:
         return {"error": "sfapi_client not available"}
 
-    if not client_id or not secret:
+    if not key_path and (not client_id or not secret):
         return {"error": "Missing SFAPI client credentials"}
 
     machine = Machine.perlmutter
@@ -300,7 +316,11 @@ def submit_via_sfapi_client(
 
     try:
         logger = logging.getLogger(__name__)
-        with Client(client_id=client_id, secret=secret) as client:
+        if key_path:
+            client = Client(key=Path(key_path))
+        else:
+            client = Client(client_id=client_id, secret=secret)
+        with client:
             perlmutter = client.compute(machine)
             if is_path:
                 job = perlmutter.submit_job(script_path)
@@ -475,19 +495,22 @@ def submit_job(
     logger = logging.getLogger(__name__)
     client_id = None
     secret = None
+    key_path = None
     if config is not None:
         client_id = config.get("superfacility_client_id")
         secret = config.get("superfacility_secret")
+    key_path = _resolve_sfapi_key_path()
     if not client_id or not secret:
         parsed = _load_sfapi_key_file()
         if parsed:
             client_id, secret = parsed
-    if client_id and secret:
+    if key_path or (client_id and secret):
         result = submit_via_sfapi_client(
             script_path=script_path,
             system=system,
             client_id=client_id,
             secret=secret,
+            key_path=key_path,
             is_path=is_path,
             config=config,
         )
@@ -524,6 +547,7 @@ def stage_run_directory_sfapi_client(
     remote_run_dir: str,
     client_id: str | None = None,
     secret: str | None = None,
+    key_path: str | Path | None = None,
     exclude_names: list[str] | None = None,
 ) -> None:
     """
@@ -546,7 +570,7 @@ def stage_run_directory_sfapi_client(
     except Exception as exc:
         raise RuntimeError("sfapi_client not available for staging") from exc
 
-    if not client_id or not secret:
+    if not key_path and (not client_id or not secret):
         raise RuntimeError("Missing SFAPI client credentials for staging")
 
     local_run_dir = Path(local_run_dir)
@@ -554,7 +578,11 @@ def stage_run_directory_sfapi_client(
     if not local_run_dir.exists():
         raise FileNotFoundError(f"Local run directory not found: {local_run_dir}")
 
-    with Client(client_id=client_id, secret=secret) as client:
+    if key_path:
+        client = Client(key=Path(key_path))
+    else:
+        client = Client(client_id=client_id, secret=secret)
+    with client:
         perlmutter = client.compute(Machine.perlmutter)
 
         target_dir = None
@@ -690,6 +718,7 @@ def stage_run_directory(
     remote_run_dir: str,
     client_id: str | None = None,
     secret: str | None = None,
+    key_path: str | Path | None = None,
     method: str = "auto",
     nersc_session: dict | None = None,
     exclude_names: list[str] | None = None,
@@ -702,12 +731,16 @@ def stage_run_directory(
       - sfapi_client: require sfapi_client credentials
       - rest_upload: use REST upload endpoint (token/OAuth)
     """
+    if key_path is None:
+        key_path = _resolve_sfapi_key_path()
+
     if method == "sfapi_client":
         stage_run_directory_sfapi_client(
             local_run_dir=local_run_dir,
             remote_run_dir=remote_run_dir,
             client_id=client_id,
             secret=secret,
+            key_path=key_path,
             exclude_names=exclude_names,
         )
         return
@@ -736,6 +769,7 @@ def stage_run_directory(
                 remote_run_dir=remote_run_dir,
                 client_id=client_id,
                 secret=secret,
+                key_path=key_path,
                 exclude_names=exclude_names,
             )
             return
@@ -764,8 +798,9 @@ def list_remote_files(
     import requests
 
     logger = logging.getLogger(__name__)
+    key_path = _resolve_sfapi_key_path()
     client_id, secret = _resolve_sfapi_credentials()
-    if client_id and secret:
+    if key_path or (client_id and secret):
         try:
             from sfapi_client import Client
             from sfapi_client.compute import Machine
@@ -775,9 +810,13 @@ def list_remote_files(
         else:
             if system == "perlmutter":
                 try:
-                    with Client(client_id=client_id, secret=secret) as client:
+                    if key_path:
+                        client = Client(key=Path(key_path))
+                    else:
+                        client = Client(client_id=client_id, secret=secret)
+                    with client:
                         perlmutter = client.compute(Machine.perlmutter)
-                        entries = perlmutter.ls(remote_dir, directory=True)
+                        entries = perlmutter.ls(remote_dir, directory=False)
                         names: list[str] = []
                         for entry in entries:
                             name = getattr(entry, "name", None) or getattr(entry, "path", None)
@@ -849,6 +888,33 @@ def list_remote_entries(
     """
     import requests
 
+    key_path = _resolve_sfapi_key_path()
+    client_id, secret = _resolve_sfapi_credentials()
+    if key_path or (client_id and secret):
+        try:
+            from sfapi_client import Client
+            from sfapi_client.compute import Machine
+        except Exception:
+            client_id = None
+            secret = None
+        else:
+            if system == "perlmutter":
+                try:
+                    if key_path:
+                        client = Client(key=Path(key_path))
+                    else:
+                        client = Client(client_id=client_id, secret=secret)
+                    with client:
+                        perlmutter = client.compute(Machine.perlmutter)
+                        entries = perlmutter.ls(remote_dir, directory=True)
+                        return [
+                            {"name": getattr(entry, "name", None) or getattr(entry, "path", "")}
+                            for entry in entries
+                            if entry
+                        ]
+                except Exception:
+                    pass
+
     if nersc_session is None:
         clients = find_nersc_clients()
         if clients:
@@ -915,6 +981,76 @@ def _resolve_sfapi_credentials() -> tuple[str | None, str | None]:
     if parsed:
         return parsed
     return None, None
+
+
+def _superfacility_suffix(local_path: Path) -> str | None:
+    parts = local_path.parts
+    for idx, part in enumerate(parts):
+        if part == "superfacility":
+            suffix_parts = parts[idx + 1 :]
+            return str(Path(*suffix_parts)) if suffix_parts else ""
+    return None
+
+
+def resolve_remote_output_dir(
+    preferred_output_dir: str | None,
+    account: str,
+    user: str | None = None,
+    system: str = "perlmutter",
+    nersc_session: dict | None = None,
+) -> Path:
+    """
+    Resolve a writable remote output directory with shared->user fallback.
+    """
+    import logging
+    import os
+
+    logger = logging.getLogger(__name__)
+    candidates: list[Path] = []
+    suffix: str | None = None
+    if preferred_output_dir:
+        preferred_path = Path(os.path.expandvars(str(preferred_output_dir)))
+        if not str(preferred_path).startswith("/global/cfs/cdirs/"):
+            logger.info("Using local output dir for staging: %s", preferred_path)
+            return preferred_path
+        candidates.append(preferred_path)
+        suffix = _superfacility_suffix(preferred_path)
+
+    shared_root = Path(f"/global/cfs/cdirs/{account}/superfacility")
+    user_root = (
+        Path(f"/global/cfs/cdirs/{account}/{user}/superfacility") if user else None
+    )
+    for root in [shared_root, user_root]:
+        if not root:
+            continue
+        candidate = root
+        if suffix is not None:
+            candidate = root / suffix if suffix else root
+        if candidate not in candidates:
+            candidates.append(candidate)
+
+    for candidate in candidates:
+        try:
+            list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
+        except Exception as exc:
+            logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
+            continue
+        try:
+            ensure_remote_directory_rest(
+                remote_run_dir=str(candidate),
+                nersc_session=nersc_session,
+                upload_host=system,
+            )
+        except Exception as exc:
+            logger.debug("Remote output dir not writable for %s: %s", candidate, exc)
+            continue
+        logger.info("Using remote output dir: %s", candidate)
+        return candidate
+
+    raise RuntimeError(
+        "No writable remote output dir found. Checked: "
+        + ", ".join(str(candidate) for candidate in candidates)
+    )
 
 
 def _download_remote_file_sfapi(

@@ -1,0 +1,76 @@
+# Best-effort pip translation of environment.yaml for a clean Python env.
+# Some compiled/conda-centric deps (e.g., numpy/scipy/faiss/yt) may be fragile on HPC.
+
+# === Core ===
+# (python=3.11 is handled by the interpreter, not listed here)
+# pip  # from conda: pip
+
+# === Scientific Computing ===
+numpy>=1.26  # from conda: numpy>=1.26
+pandas>=2.3  # from conda: pandas>=2.3
+matplotlib>=3.10  # from conda: matplotlib-base>=3.10
+scipy  # from conda: scipy
+yt  # from conda: yt
+
+# === Data & Parsing ===
+pyyaml>=6.0  # from conda: pyyaml>=6.0
+requests>=2.32  # from conda: requests>=2.32
+beautifulsoup4>=4.14  # from conda: beautifulsoup4>=4.14
+
+# === AI/ML Infrastructure ===
+faiss-cpu>=1.9.0  # from conda: faiss>=1.9.0
+langgraph  # from conda: langgraph
+langchain>=0.3.27  # from conda: langchain>=0.3.27
+langchain-community>=0.3.31  # from conda: langchain-community>=0.3.31
+langchain-text-splitters>=0.3.11  # from conda: langchain-text-splitters>=0.3.11
+
+# === LLM Providers ===
+anthropic>=0.74  # from conda: anthropic>=0.74
+openai>=1.0  # from conda: openai (pip below)
+
+# === Jupyter & Interactive ===
+jupyter-ai>=2.31  # from conda: jupyter-ai>=2.31
+ipykernel>=7.1  # from conda: ipykernel>=7.1
+ipython>=9.7  # from conda: ipython>=9.7
+jupytext>=1.18  # from conda: jupytext>=1.18
+ipywidgets>=8.1  # from conda: ipywidgets>=8.1
+
+# === Documentation ===
+mkdocs>=1.5  # from conda: mkdocs>=1.5
+mkdocstrings>=0.24  # from conda: mkdocstrings>=0.24
+mkdocstrings-python>=1.0  # from conda: mkdocstrings-python>=1.0
+mkdocs-include-markdown-plugin>=6.2  # from conda: mkdocs-include-markdown-plugin>=6.2
+
+# === Testing & Quality (Gate 0) ===
+pytest>=7.4.0  # from conda: pytest>=7.4.0
+pytest-cov>=4.1.0  # from conda: pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0  # from conda: pytest-asyncio>=0.21.0
+pytest-mock>=3.11.0  # from conda: pytest-mock>=3.11.0
+jsonschema>=4.18  # from conda: jsonschema>=4.18
+
+# === Code Quality (Gate 0-1) ===
+mypy>=1.5.0  # from conda: mypy>=1.5.0
+black>=23.7.0  # from conda: black>=23.7.0
+ruff>=0.0.287  # from conda: ruff>=0.0.287
+
+# === Type Stubs ===
+types-requests  # from conda: types-requests
+types-pyyaml  # from conda: types-pyyaml
+
+# === Utilities ===
+tqdm>=4.67  # from conda: tqdm>=4.67
+python-dotenv>=1.2  # from conda: python-dotenv>=1.2
+PyGithub  # from conda: PyGithub
+globus-sdk  # from conda: globus-sdk
+
+# === Pip-only packages ===
+langchain-anthropic>=0.3.22  # from pip: langchain-anthropic>=0.3.22
+langchain-openai>=0.3.35  # from pip: langchain-openai>=0.3.35
+langsmith>=0.4.46  # from pip: langsmith>=0.4.46
+mcp  # from pip: mcp
+instructor  # from pip: instructor
+arxiv>=2.3.1  # from pip: arxiv>=2.3.1
+pymupdf  # from pip: pymupdf
+chromadb  # from pip: chromadb
+python-json-logger>=4.0  # from pip: python-json-logger>=4.0
+sfapi-client  # from pip: sfapi-client
