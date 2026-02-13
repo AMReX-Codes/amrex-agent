@@ -185,8 +185,15 @@ class SuperfacilityRunner:
                 try:
                     list_remote_entries(str(rendered_path), system=system)
                 except Exception as exc:
+                    hint = ""
+                    if "No NERSC session" in str(exc):
+                        hint = (
+                            " (SFAPI auth missing; set SFAPI_KEY_PATH or NERSC_API_TOKEN "
+                            "to enable remote directory listing)"
+                        )
                     raise RuntimeError(
-                        f"Remote case directory not found for executable search: {rendered_path}"
+                        "Remote case directory not available for executable search: "
+                        f"{rendered_path}{hint}"
                     ) from exc
                 found = find_remote_executable(
                     remote_case_dir=str(rendered_path),
@@ -207,8 +214,15 @@ class SuperfacilityRunner:
         try:
             list_remote_entries(str(remote_case_dir), system=system)
         except Exception as exc:
+            hint = ""
+            if "No NERSC session" in str(exc):
+                hint = (
+                    " (SFAPI auth missing; set SFAPI_KEY_PATH or NERSC_API_TOKEN "
+                    "to enable remote directory listing)"
+                )
             raise RuntimeError(
-                f"Remote case directory not found for executable search: {remote_case_dir}"
+                "Remote case directory not available for executable search: "
+                f"{remote_case_dir}{hint}"
             ) from exc
         found = find_remote_executable(
             remote_case_dir=str(remote_case_dir),
