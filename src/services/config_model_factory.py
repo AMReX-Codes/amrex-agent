@@ -1833,14 +1833,22 @@ If no match exists, set "to": null."""
 
         # STRATEGY: EXACT (Digital Twin - match git hash)
         if strategy == 'exact':
-            pattern = solver_config.schema_pattern
+            pattern = getattr(solver_config, "schema_pattern", None)
+            if not isinstance(pattern, str) or not pattern:
+                pattern = f"{solver_name}_schema_*.json"
             matches = list(schema_dir.glob(pattern))
             if not matches:
-                raise FileNotFoundError(
-                    f"No schema found for solver '{solver_name_orig}' "
-                    f"in {schema_dir}. Expected pattern: {pattern}. "
-                    f"Run 'python database/scripts/build_schema.py' first."
-                )
+                matches = []
+
+            expected_hash = cls._get_git_hash(repo_path)
+            if expected_hash:
+                for candidate in matches:
+                    if expected_hash in candidate.name:
+                        logger.debug(
+                            "Found exact schema match via filename hash: %s",
+                            candidate.name
+                        )
+                        return candidate
 
             expected_commits = _get_dependency_commits()
             expected_version = getattr(solver_config, "schema_version", None)
@@ -1862,10 +1870,24 @@ If no match exists, set "to": null."""
                     logger.debug("Found exact schema match via metadata: %s", candidate.name)
                     return candidate
 
-            logger.warning("No exact schema metadata match found; falling back to newest schema.")
-            latest = max(matches, key=lambda p: p.stat().st_mtime)
-            logger.debug("Using newest schema: %s", latest.name)
-            return latest
+            logger.warning("No exact schema metadata match found; rebuilding schema.")
+            from database.scripts.build_schema import SchemaBuilder
+            from database.configs.base_amrex_config import BaseAMReXConfig
+
+            source_dirs = getattr(
+                solver_config,
+                "schema_source_patterns",
+                BaseAMReXConfig.schema_source_patterns
+            )
+            if not isinstance(source_dirs, (list, tuple)):
+                source_dirs = BaseAMReXConfig.schema_source_patterns
+            builder = SchemaBuilder(repo_path)
+            build_requirements = getattr(solver_config, "build_requirements", None)
+            scan_config = solver_config if isinstance(build_requirements, (list, tuple, dict)) else None
+            builder.scan_source_code(source_dirs, solver_config=scan_config)
+            new_schema_path = builder.save(schema_dir, solver_name=solver_name)
+            logger.debug("Built schema: %s", new_schema_path.name)
+            return new_schema_path
 
         # STRATEGY: TAG (Reproducibility - specific version)
         elif strategy == 'tag':
@@ -1883,7 +1905,9 @@ If no match exists, set "to": null."""
 
         # STRATEGY: NEWEST (Default - most recent)
         else:  # strategy == 'newest' or fallback
-            pattern = solver_config.schema_pattern
+            pattern = getattr(solver_config, "schema_pattern", None)
+            if not isinstance(pattern, str) or not pattern:
+                pattern = f"{solver_name}_schema_*.json"
             matches = list(schema_dir.glob(pattern))
 
             if not matches:
