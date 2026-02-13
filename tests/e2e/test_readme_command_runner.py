@@ -61,6 +61,47 @@ def test_readme_command_runner_execute_amrex_agent_only() -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.use_real_services
+@pytest.mark.requires_repos
+@pytest.mark.requires_schema
+def test_readme_command_runner_execute_superfacility_sfapi() -> None:
+    if not _assets_available():
+        pytest.skip("Required repos/schemas/indices not available for README execution.")
+    if not _llm_available():
+        pytest.skip("LLM API key not available for README execution.")
+    if not _sfapi_available():
+        pytest.skip("SFAPI credentials not available for README execution.")
+
+    repo_root = __import__("pathlib").Path(__file__).resolve().parents[2]
+    file_filter = ["demo/superfacility/README.md"]
+    results = run_commands_by_file(
+        repo_root,
+        file_filter=file_filter,
+        dry_run=False,
+        timeout_seconds=120,
+        stop_on_failure=True,
+        entry_filter=_is_executable_readme_command,
+        command_transform=_force_stage_run,
+    )
+
+    failures = [
+        (path, entry)
+        for path, entries in results.items()
+        for entry in entries
+        if entry["status"] in {"failed", "timeout"}
+    ]
+    if failures:
+        lines = ["Superfacility README command execution failures:"]
+        for path, entry in failures[:20]:
+            lines.append(
+                f"  - {path} :: {entry['id']} ({entry['status']}, rc={entry.get('returncode')})"
+            )
+        if len(failures) > 20:
+            lines.append(f"  - ... and {len(failures) - 20} more")
+        pytest.fail("\n".join(lines))
+
+
+@pytest.mark.e2e
 @pytest.mark.skip(reason="Manual-only: run full README commands when needed.")
 def test_readme_command_runner_execute_full_file_manual() -> None:
     repo_root = __import__("pathlib").Path(__file__).resolve().parents[2]
@@ -126,6 +167,25 @@ def _force_dry_run(command: str) -> str:
     return f"{command} --run-mode dry"
 
 
+def _force_stage_run(command: str) -> str:
+    if "amrex_agent.py" not in command:
+        return command
+    if "--run-mode" in command or "--dry-run" in command:
+        return command
+    return f"{command} --run-mode stage"
+
+
 def _is_executable_readme_command(entry: dict) -> bool:
     text = entry["text"]
     return "amrex_agent.py" in text
+
+
+def _sfapi_available() -> bool:
+    from src.services.run_superfacility_tools import _resolve_sfapi_credentials
+
+    client_id, secret = _resolve_sfapi_credentials()
+    if client_id and secret:
+        return True
+    if os.getenv("NERSC_API_TOKEN") or os.getenv("SFAPI_TOKEN"):
+        return True
+    return False

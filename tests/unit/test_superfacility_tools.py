@@ -6,6 +6,7 @@ from src.services.run_superfacility_tools import (
     create_nersc_session,
     generate_slurm_script,
     monitor_job,
+    resolve_remote_output_dir,
     submit_job,
     submit_via_sfapi,
 )
@@ -97,3 +98,56 @@ def test_monitor_job_sbatch_completes(monkeypatch):
     state = monitor_job(job_id="123", method="sbatch", poll_interval=0, max_polls=2)
 
     assert state == "COMPLETED"
+
+
+def test_resolve_remote_output_dir_prefers_shared_then_fallback(monkeypatch):
+    checks = []
+
+    def fake_list_remote_entries(remote_dir, **_kwargs):
+        checks.append(remote_dir)
+        if remote_dir.endswith("/acct/superfacility/output"):
+            raise RuntimeError("shared missing")
+        return [{"name": "ok"}]
+
+    def fake_ensure_remote_directory_rest(remote_run_dir, **_kwargs):
+        checks.append(f"ensure:{remote_run_dir}")
+
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools.list_remote_entries",
+        fake_list_remote_entries,
+    )
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools.ensure_remote_directory_rest",
+        fake_ensure_remote_directory_rest,
+    )
+
+    result = resolve_remote_output_dir(
+        preferred_output_dir="/global/cfs/cdirs/acct/superfacility/output",
+        account="acct",
+        user="jdoe",
+    )
+
+    assert result == Path("/global/cfs/cdirs/acct/jdoe/superfacility/output")
+    assert f"ensure:{result}" in checks
+
+
+def test_resolve_remote_output_dir_returns_local_path(monkeypatch):
+    def fail_call(*_args, **_kwargs):
+        raise AssertionError("unexpected remote check")
+
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools.list_remote_entries",
+        fail_call,
+    )
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools.ensure_remote_directory_rest",
+        fail_call,
+    )
+
+    result = resolve_remote_output_dir(
+        preferred_output_dir="/tmp/amrex_agent_runs",
+        account="acct",
+        user="jdoe",
+    )
+
+    assert result == Path("/tmp/amrex_agent_runs")
