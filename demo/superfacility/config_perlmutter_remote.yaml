@@ -4,7 +4,7 @@
 environment: perlmutter
 
 # Local output directory (this host)
-output_dir: /tmp/amrex_agent_runs
+# output_dir: /tmp/amrex_agent_runs
 
 # Demo overrides (baseline + inputs)
 inputs_file_override: inputs
