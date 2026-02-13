@@ -271,9 +271,12 @@ class SuperfacilityRunner:
 
         logger.debug("\n=== Setting Up Job ===\n")
 
-        # Use config output_dir if not specified
+        # Use config output_dir if not specified (prefer remote_output_dir on Perlmutter)
         if output_dir is None:
-            output_dir = self.config.output_dir
+            if getattr(self.config, "environment", None) == "perlmutter":
+                output_dir = getattr(self.config, "remote_output_dir", None) or self.config.output_dir
+            else:
+                output_dir = self.config.output_dir
 
         output_dir_path = Path(output_dir) if output_dir else None
         if output_dir_path and output_dir_path.exists() and (output_dir_path / "inputs").exists():
