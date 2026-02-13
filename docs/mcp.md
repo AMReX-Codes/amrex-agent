@@ -156,7 +156,7 @@ MCP tests live in `tests/unit/test_mcp_tools.py`:
 ## Crux stdio runbook (ALCF)
 
 This is the recommended stdio-only setup for Crux using the shared conda base +
-venv approach. It is intended for local runs only (no Perlmutter dispatch yet).
+venv overlay. It is intended for local runs only (no Perlmutter dispatch yet).
 
 ```bash
 module use /soft/modulefiles
@@ -173,6 +173,14 @@ python -m pip install -e .
 
 python -u mcp_server.py
 ```
+
+We do not recommend running without a venv because the shared base env is not
+writable and `pip install` into it is blocked, making dependency changes
+brittle.
+
+Note: A best-effort `requirements.txt` is under test for ALCF. The conda
+environment path on ALCF is non-recommended, so prefer the base+venv flow unless
+you need the full `environment.yaml` stack.
 
 For an anyio subprocess client, see `demo/mcp/mcp_stdio_client_smoke.py`.
 

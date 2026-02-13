@@ -35,6 +35,14 @@ python -m pip install -U pip
 python -m pip install -e .
 ```
 
+This follows ALCF guidance (base conda + venv overlay). We do not recommend
+running without a venv because the shared base env is not writable and `pip
+install` into it is blocked, making dependency changes brittle.
+
+Note: A best-effort `requirements.txt` is under test for ALCF. The conda
+environment path on ALCF is non-recommended, so prefer the base+venv flow unless
+you need the full `environment.yaml` stack.
+
 ## Run server (stdio)
 
 ### NERSC (Perlmutter login)
