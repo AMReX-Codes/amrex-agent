@@ -909,7 +909,7 @@
     "start_line": 63
   },
   {
-    "first_line": "# export SBATCH_ACCOUNT=m4106",
+    "first_line": "# export SBATCH_ACCOUNT=amsc014",
     "hash": "sha256:2af258b85fb1a349bfd4708659189f009890744c503bb613b2f77f6e73a7798c",
     "id": "demo/superfacility/README.md::bash_block::4",
     "index": 4,
@@ -918,7 +918,7 @@
     "start_line": 80
   },
   {
-    "first_line": "# export SBATCH_ACCOUNT=m4106",
+    "first_line": "# export SBATCH_ACCOUNT=amsc014",
     "hash": "sha256:98afdccff070e7c83638ecff4e27b50bc17a3462c0053374e6121b42f4a9523f",
     "id": "demo/superfacility/README.md::bash_block::5",
     "index": 5,

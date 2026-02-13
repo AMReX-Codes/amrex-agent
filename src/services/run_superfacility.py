@@ -359,7 +359,7 @@ class SuperfacilityRunner:
 
         # Use config account if not provided
         if account is None:
-            account = self.config.superfacility_account or "mp111_g"
+            account = self.config.superfacility_account or "amsc014"
         account = os.path.expandvars(str(account))
 
         # Find executable in run directory

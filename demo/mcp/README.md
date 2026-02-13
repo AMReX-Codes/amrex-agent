@@ -8,7 +8,7 @@ ALCF (Crux) or NERSC Perlmutter login nodes.
 ### NERSC (Perlmutter login)
 
 ```bash
-cd /global/cfs/cdirs/amsc014/mcp/amrex-agent
+cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent
 conda activate amrex-agent-dev
 ```
 
@@ -40,7 +40,7 @@ python -m pip install -e .
 ### NERSC (Perlmutter login)
 
 ```bash
-cd /global/cfs/cdirs/amsc014/mcp/amrex-agent
+cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent
 conda activate amrex-agent-dev
 python -u mcp_server.py
 ```
@@ -52,14 +52,71 @@ cd /lus/eagle/projects/COMB-FLOW-UNI/mcp/amrex-agent
 python -u mcp_server.py
 ```
 
-## Run anyio client (spawns server)
+## Run anyio client (stdio subprocess)
 
 ```bash
-python demo/mcp/mcp_anyio_client.py
+python demo/mcp/mcp_stdio_client_smoke.py
 ```
 
 The anyio client starts a stdio MCP server subprocess, lists tools, and calls
 `validate_inputs` against a temporary inputs file to verify wiring.
 
+Expected output (abridged):
+
+```
+tools: ['query_knowledge', 'execute_workflow', ...]
+structuredContent={'valid': False, 'errors': [...], 'warnings': [...]}
+```
+
 Note: The anyio client uses `StdioServerParameters`, required by recent MCP
 client versions.
+
+## Example execute_workflow calls (stdio subprocess)
+
+DNS isothermal (PeleLMeX):
+
+```json
+{
+  "prompt": "<contents of demo/pelelmex/user_requirements_DNS_isothermal.txt>",
+  "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "submit": {"dry_run": true}
+}
+```
+
+DNS test case:
+
+```json
+{
+  "prompt": "<contents of demo/pelelmex/user_requirements_test_DNS.txt>",
+  "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "submit": {"dry_run": true}
+}
+```
+
+Run them via the helper:
+
+```bash
+python demo/mcp/mcp_execute_workflow_examples.py
+```
+
+## In-process (memory stream) demo
+
+This runs the MCP server in-process using memory streams (no subprocess, no stdio).
+
+```bash
+python demo/mcp/mcp_inprocess_examples.py
+```
+
+CLI equivalents (no dry-run/verbose, includes save flags):
+
+```bash
+./demo/mcp/run_dns_cli_examples.sh
+```
+
+CLI equivalents (dry-run + verbose):
+
+```bash
+./demo/mcp/run_dns_cli_examples_dry_verbose.sh
+```

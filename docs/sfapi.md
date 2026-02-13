@@ -58,7 +58,7 @@ and `~/.superfacility/token`.
 These live in `src/config.py` and can be set in a YAML config override.
 
 - `environment`: set to `perlmutter` to enable SFAPI logic.
-- `superfacility_account`: defaults to `SBATCH_ACCOUNT` or `mp111_g`.
+- `superfacility_account`: defaults to `SBATCH_ACCOUNT` or `amsc014`.
 - `remote_output_dir`: CFS destination for staged runs (defaults to `output_dir`).
 - `remote_run_dir`: fixed remote run directory (overrides `remote_output_dir/run_name`).
 - `remote_executable_path`: absolute path to prebuilt executable on Perlmutter.
@@ -119,7 +119,7 @@ Job allocation details (nodes/time) are encoded in the generated SLURM script:
 - `qos`: defaults to `regular`.
 - `constraint`: defaults to `gpu&hbm40g`.
 - `account`: uses `config.superfacility_account`, which defaults to
-  `SBATCH_ACCOUNT` (or `mp111_g` if unset).
+  `SBATCH_ACCOUNT` (or `amsc014` if unset).
 
 To override these values today, call `SuperfacilityRunner.submit(...)` with
 explicit `nodes`, `walltime`, `qos`, or `constraint`, or adjust `mpi_ranks` and

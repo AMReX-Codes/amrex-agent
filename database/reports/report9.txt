@@ -2,9 +2,9 @@
 
 === Complete PeleC Example Case Documentation ===
 
-Repository: /global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/PeleC
+Repository: /global/cfs/cdirs/amsc014/superfacility/PeleC
 
-Scanned: /global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/PeleC/Exec
+Scanned: /global/cfs/cdirs/amsc014/superfacility/PeleC/Exec
 
 Total test cases found: 47
 

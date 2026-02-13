@@ -12,8 +12,8 @@ from langchain.tools import tool
 # CONFIGURATION
 # ============================================================================
 
-REPORTS_DIR = os.getenv("PELE_REPORTS_DIR", "/global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/reports")
-PELEC_ROOT = os.getenv("PELEC_ROOT", "/global/cfs/cdirs/mp111/jmsexton/test_pelec_sf/PeleC")
+REPORTS_DIR = os.getenv("PELE_REPORTS_DIR", "/global/cfs/cdirs/amsc014/superfacility/amrex-agent/database/reports")
+PELEC_ROOT = os.getenv("PELEC_ROOT", "/global/cfs/cdirs/amsc014/superfacility/PeleC")
 
 # ============================================================================
 # PHASE 1: KNOWLEDGE BASE (as tools from start)

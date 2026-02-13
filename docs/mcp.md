@@ -174,7 +174,7 @@ python -m pip install -e .
 python -u mcp_server.py
 ```
 
-For an anyio subprocess client, see `demo/mcp/mcp_anyio_client.py`.
+For an anyio subprocess client, see `demo/mcp/mcp_stdio_client_smoke.py`.
 
 ## SFAPI credential discovery (for later Perlmutter dispatch)
 
@@ -199,6 +199,18 @@ switching, so start the server under the account you want to bill.
 The same applies to LLM providers: CBORG, ALCF, OpenAI, etc. use the server
 process credentials. Running the MCP server under your account means LLM calls
 consume your quota and SFAPI submissions use your key.
+
+## Data placement (shared filesystem today)
+
+The MCP server currently assumes shared filesystem paths for indices, schemas,
+and the workflow store (e.g., a shared CFS directory). This keeps deployment
+simple for HPC environments where all users share a read-only data root.
+
+Longer term, these storage locations are intended to be abstracted so the
+indices/artifacts live in a remote object store and the session metadata lives
+in a dedicated DB. The current split between data paths and session storage is
+designed to make that migration straightforward when external infrastructure
+is available.
 
 ## Session persistence (SQLite)
 
