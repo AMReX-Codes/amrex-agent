@@ -7,6 +7,7 @@ environment: perlmutter
 output_dir: /tmp/amrex_agent_runs
 
 # Demo overrides (baseline + inputs)
+baseline_override: PeleLMeX/Exec/Production/JetInCrossflow
 inputs_file_override: inputs
 
 # Remote destination for staged runs
@@ -15,9 +16,10 @@ remote_staging: true
 remote_staging_method: sfapi_client
 remote_run_dir: /global/cfs/cdirs/amsc014/superfacility/output/run_test_1
 superfacility_account: amsc014
-# Remote executable discovery (finds *.ex, prefers CUDA)
-remote_executable_template: /global/cfs/cdirs/amsc014/superfacility/{repo_name}/{case_dir}
-remote_executable_find: true
+
+# Remote executable (exact path)
+remote_executable_path: /global/cfs/cdirs/amsc014/superfacility/PeleLMeX/Exec/Production/JetInCrossflow/PeleLMeX3d.gnu.MPI.CUDA.ex
+remote_executable_find: false
 
 # Repo path (optional; follows normal priority if unset)
 # amrex_repo_path: /path/to/amrex

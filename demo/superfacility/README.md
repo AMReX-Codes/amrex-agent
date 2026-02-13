@@ -74,7 +74,13 @@ Start with one of the configs in this folder and update the paths:
 - `config_perlmutter_remote.yaml`: stage from another host to Perlmutter via SFAPI
 
 Synapse-style shared layout (SFAPI on NERSC systems, example):
+`/global/cfs/cdirs/$SBATCH_ACCOUNT/superfacility`
+
+Fallback if the shared layout is unavailable:
 `/global/cfs/cdirs/$SBATCH_ACCOUNT/$USER/superfacility`
+
+The runner now attempts the shared layout first and falls back to the
+user-specific path when it cannot verify or write to the shared location.
 
 ## Example command
 
@@ -82,6 +88,7 @@ Synapse-style shared layout (SFAPI on NERSC systems, example):
 # export SBATCH_ACCOUNT=amsc014
 python amrex_agent.py \
   --prompt "Run AMReX Advection_AmrCore using the default inputs file without changes." \
+  --baseline-override AMReX/Tests/Amr/Advection_AmrCore/Exec \
   --config demo/superfacility/config_perlmutter_remote.yaml \
   --environment perlmutter
 ```

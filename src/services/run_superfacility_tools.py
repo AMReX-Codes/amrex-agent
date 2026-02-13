@@ -917,6 +917,76 @@ def _resolve_sfapi_credentials() -> tuple[str | None, str | None]:
     return None, None
 
 
+def _superfacility_suffix(local_path: Path) -> str | None:
+    parts = local_path.parts
+    for idx, part in enumerate(parts):
+        if part == "superfacility":
+            suffix_parts = parts[idx + 1 :]
+            return str(Path(*suffix_parts)) if suffix_parts else ""
+    return None
+
+
+def resolve_remote_output_dir(
+    preferred_output_dir: str | None,
+    account: str,
+    user: str | None = None,
+    system: str = "perlmutter",
+    nersc_session: dict | None = None,
+) -> Path:
+    """
+    Resolve a writable remote output directory with shared->user fallback.
+    """
+    import logging
+    import os
+
+    logger = logging.getLogger(__name__)
+    candidates: list[Path] = []
+    suffix: str | None = None
+    if preferred_output_dir:
+        preferred_path = Path(os.path.expandvars(str(preferred_output_dir)))
+        if not str(preferred_path).startswith("/global/cfs/cdirs/"):
+            logger.info("Using local output dir for staging: %s", preferred_path)
+            return preferred_path
+        candidates.append(preferred_path)
+        suffix = _superfacility_suffix(preferred_path)
+
+    shared_root = Path(f"/global/cfs/cdirs/{account}/superfacility")
+    user_root = (
+        Path(f"/global/cfs/cdirs/{account}/{user}/superfacility") if user else None
+    )
+    for root in [shared_root, user_root]:
+        if not root:
+            continue
+        candidate = root
+        if suffix is not None:
+            candidate = root / suffix if suffix else root
+        if candidate not in candidates:
+            candidates.append(candidate)
+
+    for candidate in candidates:
+        try:
+            list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
+        except Exception as exc:
+            logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
+            continue
+        try:
+            ensure_remote_directory_rest(
+                remote_run_dir=str(candidate),
+                nersc_session=nersc_session,
+                upload_host=system,
+            )
+        except Exception as exc:
+            logger.debug("Remote output dir not writable for %s: %s", candidate, exc)
+            continue
+        logger.info("Using remote output dir: %s", candidate)
+        return candidate
+
+    raise RuntimeError(
+        "No writable remote output dir found. Checked: "
+        + ", ".join(str(candidate) for candidate in candidates)
+    )
+
+
 def _download_remote_file_sfapi(
     remote_path: str,
     local_path: str | Path,
