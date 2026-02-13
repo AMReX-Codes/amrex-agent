@@ -1,12 +1,18 @@
 {
   "metadata": {
     "solver": "ERF",
+    "schema_version": 1,
     "composed_from": [
       "amrex",
       "ERF"
     ],
     "composition_method": "auto-compose (gitmodules)",
-    "total_parameters": 767
+    "total_parameters": 767,
+    "repo_commits": {
+      "amrex": "bac24575699ecaa6ce153cf088077b1282dfbe87",
+      "erf": "eb2717130c9f68cd5175388be721a30373343103"
+    },
+    "generated_at": "2026-02-12T13:02:18.152476+00:00"
   },
   "parameters": {
     "amr.regrid_on_restart": {

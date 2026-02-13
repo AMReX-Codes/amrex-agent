@@ -299,7 +299,10 @@ docs/handoff_wt_*.md
 # Project: Scripts and Tools
 # ============================================================================
 # Local utility scripts (not part of core codebase)
-scripts/
+scripts/local/
+scripts/tmp/
+scripts/*.local.*
+scripts/*.tmp
 run_*.sh
 extract_*.sh
 generate_*.sh

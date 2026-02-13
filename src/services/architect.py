@@ -1756,6 +1756,7 @@ class ArchitectService:
                     "used_llm": False
                 }
 
+        available_params = []
         schema_scan_notes = ""
         if not parameter_resolution_feedback and solver_config:
             available_params = self._load_schema_params(solver_config)
@@ -1776,10 +1777,36 @@ class ArchitectService:
                     + "\nIf any have an exact parameter mapping, include it; otherwise skip."
                 )
 
+        def _resolve_tier_params(params: set[str], available: list[str]) -> list[str]:
+            if not params or not available:
+                return []
+            available_set = set(available)
+            resolved = set()
+            for name in params:
+                if name in available_set:
+                    resolved.add(name)
+            return sorted(resolved)
+
+        def _build_tier_guidance(tier_name: str, params: list[str], notes: str) -> str:
+            if not params:
+                return notes
+            param_list = ", ".join(params)
+            notes_section = f"{notes}\n" if notes else ""
+            return (
+                f"{notes_section}VALID PRIORITY PARAMETERS ({tier_name}):\n"
+                f"  {param_list}\n\n"
+                "MATCHING INSTRUCTIONS:\n"
+                "1. Use exact parameter names from this list if they apply.\n"
+                "2. If no exact match exists, SKIP that modification.\n"
+                "CRITICAL: Parameter names are case-sensitive and must include the full prefix."
+            )
+
         # Build parameter guidance chunks with tiered fallback for context limits
         param_chunks = []
         fallback_level = 0  # 0=category chunks, 1=suggested only, 2=fixed-size chunks
         failed_section = ""
+        tier1_params = []
+        tier2_params = []
 
         if parameter_resolution_feedback:
             unresolved = parameter_resolution_feedback.get('unresolved_parameters', [])
@@ -1825,8 +1852,17 @@ The following parameters were NOT recognized in a previous attempt:
                 solver_config=solver_config,
             )
         else:
-            # No feedback - use empty guidance (LLM will rely on baseline file only)
-            param_chunks = [schema_scan_notes]
+            # No feedback - inject tier1 guidance if available, otherwise rely on baseline file only.
+            tier1_params = _resolve_tier_params(
+                getattr(solver_config, "tier1_params", set()),
+                available_params,
+            ) if solver_config else []
+            tier2_params = _resolve_tier_params(
+                getattr(solver_config, "tier2_params", set()),
+                available_params,
+            ) if solver_config else []
+            tier1_guidance = _build_tier_guidance("Tier 1", tier1_params, schema_scan_notes)
+            param_chunks = [tier1_guidance]
 
         # Try with progressively different chunking strategies on failure
         max_fallback = 3 if parameter_resolution_feedback else 1
@@ -1894,6 +1930,24 @@ The following parameters were NOT recognized in a previous attempt:
                 # Lower confidence further if we had to fall back
                 if fallback_level > 0:
                     confidence *= 0.9
+
+                # If a tier1 parameter was modified, request a tier2 pass for related params.
+                if not parameter_resolution_feedback and tier1_params and tier2_params:
+                    modified_params = {param for param, _ in modifications}
+                    if modified_params.intersection(tier1_params):
+                        tier2_guidance = _build_tier_guidance("Tier 2", tier2_params, "")
+                        tier2_result = self._call_llm_for_modifications(
+                            case_description=case_description,
+                            inputs_content=inputs_content,
+                            param_guidance=tier2_guidance,
+                            solver_config=solver_config,
+                            client=client
+                        )
+                        if tier2_result.get('success') and tier2_result.get('modifications'):
+                            modifications, merge_warnings = self._merge_modifications(
+                                [modifications, tier2_result['modifications']],
+                                case_description
+                            )
 
                 return {
                     "modifications": modifications,

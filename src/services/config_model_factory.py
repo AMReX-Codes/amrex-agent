@@ -1791,24 +1791,103 @@ If no match exists, set "to": null."""
         solver_name = solver_name_orig.lower()  # Normalize for file matching
         strategy = getattr(solver_config, 'schema_strategy', 'newest')
 
+        def _load_schema_metadata(schema_path: Path) -> dict[str, Any]:
+            try:
+                with open(schema_path) as f:
+                    data = json.load(f)
+                if isinstance(data, dict):
+                    return data.get("metadata", {})
+            except Exception as exc:
+                logger.debug("Failed to read schema metadata from %s: %s", schema_path, exc)
+            return {}
+
+        def _commit_matches(expected: str, actual: str) -> bool:
+            if not expected or not actual:
+                return False
+            return expected.startswith(actual) or actual.startswith(expected)
+
+        def _get_dependency_commits() -> dict[str, str]:
+            from database.scripts.dependency_discovery import DependencyDiscovery
+            import subprocess
+
+            commits: dict[str, str] = {}
+            deps = DependencyDiscovery.discover(repo_path)
+            for dep in deps:
+                if dep.commit:
+                    commits[dep.name.lower()] = dep.commit
+
+            try:
+                result = subprocess.run(
+                    ['git', 'rev-parse', 'HEAD'],
+                    cwd=repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=5
+                )
+                commits[repo_path.name.lower()] = result.stdout.strip()
+            except Exception:
+                commits[repo_path.name.lower()] = "unknown"
+
+            return commits
+
         # STRATEGY: EXACT (Digital Twin - match git hash)
         if strategy == 'exact':
-            current_hash = cls._get_git_hash(repo_path)
-            expected_filename = f"{solver_name}_schema_{current_hash}.json"
-            expected_path = schema_dir / expected_filename
+            pattern = getattr(solver_config, "schema_pattern", None)
+            if not isinstance(pattern, str) or not pattern:
+                pattern = f"{solver_name}_schema_*.json"
+            matches = list(schema_dir.glob(pattern))
+            if not matches:
+                matches = []
 
-            if expected_path.exists():
-                logger.debug(f"Found exact schema match: {expected_filename}")
-                return expected_path
+            expected_hash = cls._get_git_hash(repo_path)
+            if expected_hash:
+                for candidate in matches:
+                    if expected_hash in candidate.name:
+                        logger.debug(
+                            "Found exact schema match via filename hash: %s",
+                            candidate.name
+                        )
+                        return candidate
 
-            # Rebuild if missing
-            logger.warning(f"Schema mismatch for hash {current_hash}. Rebuilding...")
+            expected_commits = _get_dependency_commits()
+            expected_version = getattr(solver_config, "schema_version", None)
+            for candidate in matches:
+                metadata = _load_schema_metadata(candidate)
+                repo_commits = metadata.get("repo_commits", {})
+                schema_version = metadata.get("schema_version")
+                if expected_version is not None and schema_version != expected_version:
+                    continue
+                if not repo_commits:
+                    continue
+
+                all_match = True
+                for name, commit in expected_commits.items():
+                    if name not in repo_commits or not _commit_matches(commit, repo_commits.get(name, "")):
+                        all_match = False
+                        break
+                if all_match:
+                    logger.debug("Found exact schema match via metadata: %s", candidate.name)
+                    return candidate
+
+            logger.warning("No exact schema metadata match found; rebuilding schema.")
             from database.scripts.build_schema import SchemaBuilder
+            from database.configs.base_amrex_config import BaseAMReXConfig
 
-            builder = SchemaBuilder(repo_root=repo_path)
-            builder.scan_source_code(['Source', 'Src', 'Source/Src_nd'])
-            builder.load_build_config()
-            return builder.save(output_path=schema_dir, solver_name=solver_name)
+            source_dirs = getattr(
+                solver_config,
+                "schema_source_patterns",
+                BaseAMReXConfig.schema_source_patterns
+            )
+            if not isinstance(source_dirs, (list, tuple)):
+                source_dirs = BaseAMReXConfig.schema_source_patterns
+            builder = SchemaBuilder(repo_path)
+            build_requirements = getattr(solver_config, "build_requirements", None)
+            scan_config = solver_config if isinstance(build_requirements, (list, tuple, dict)) else None
+            builder.scan_source_code(source_dirs, solver_config=scan_config)
+            new_schema_path = builder.save(schema_dir, solver_name=solver_name)
+            logger.debug("Built schema: %s", new_schema_path.name)
+            return new_schema_path
 
         # STRATEGY: TAG (Reproducibility - specific version)
         elif strategy == 'tag':
@@ -1826,7 +1905,9 @@ If no match exists, set "to": null."""
 
         # STRATEGY: NEWEST (Default - most recent)
         else:  # strategy == 'newest' or fallback
-            pattern = solver_config.schema_pattern
+            pattern = getattr(solver_config, "schema_pattern", None)
+            if not isinstance(pattern, str) or not pattern:
+                pattern = f"{solver_name}_schema_*.json"
             matches = list(schema_dir.glob(pattern))
 
             if not matches:

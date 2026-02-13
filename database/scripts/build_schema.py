@@ -1272,7 +1272,12 @@ class SchemaBuilder:
             logger.warning(f"Could not parse build config: {e}")
             return {}
 
-    def save(self, output_path: Path, solver_name: str = "amrex") -> Path:
+    def save(
+        self,
+        output_path: Path,
+        solver_name: str = "amrex",
+        schema_version: int = 1
+    ) -> Path:
         """
         Save schema to JSON file with version suffix.
 
@@ -1298,9 +1303,20 @@ class SchemaBuilder:
         filename = f"{solver_name}_schema_{commit_hash}.json"
         output_path = output_path / filename
 
+        from datetime import datetime, timezone
+        output_data = {
+            "metadata": {
+                "solver": solver_name,
+                "schema_version": schema_version,
+                "repo_commit": commit_hash,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            },
+            "parameters": self.schema
+        }
+
         # Save
         with open(output_path, 'w') as f:
-            json.dump(self.schema, f, indent=2)
+            json.dump(output_data, f, indent=2)
 
         logger.info(f"Saved schema to {output_path}")
         return output_path
@@ -1949,7 +1965,11 @@ def build_with_auto_compose(repo_path: Path, schema_dir: Path) -> Path:
             builder.scan_source_code(dep_config.schema_source_patterns, dep_config)
 
             if builder.schema:
-                schema_path = builder.save(schema_dir, solver_name=dep.name)
+                schema_path = builder.save(
+                    schema_dir,
+                    solver_name=dep.name,
+                    schema_version=dep_config.schema_version
+                )
                 built_schemas.append((dep.name, schema_path))
                 print(f"  ✅ Saved: {schema_path.name} ({len(builder.schema)} params)")
             else:
@@ -1965,7 +1985,11 @@ def build_with_auto_compose(repo_path: Path, schema_dir: Path) -> Path:
     builder.scan_source_code(solver_config.schema_source_patterns, solver_config)
 
     if builder.schema:
-        schema_path = builder.save(schema_dir, solver_name=repo_path.name)
+        schema_path = builder.save(
+            schema_dir,
+            solver_name=repo_path.name,
+            schema_version=solver_config.schema_version
+        )
         built_schemas.append((repo_path.name, schema_path))
         print(f"  ✅ Saved: {schema_path.name} ({len(builder.schema)} params)")
 
@@ -2001,19 +2025,46 @@ def build_with_auto_compose(repo_path: Path, schema_dir: Path) -> Path:
         composed = composer.compose(schemas_to_compose, solver_name=repo_path.name)
 
         # Save composed schema
-        import hashlib
-        hash_str = hashlib.sha256(
-            json.dumps(composed, sort_keys=True).encode()
-        ).hexdigest()[:7]
+        from datetime import datetime, timezone
 
-        output_path = schema_dir / f"{repo_path.name.lower()}_complete_{hash_str}.json"
+        def _get_full_commit(path: Path) -> str:
+            try:
+                result = subprocess.run(
+                    ['git', 'rev-parse', 'HEAD'],
+                    cwd=path,
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                return result.stdout.strip()
+            except Exception:
+                return "unknown"
+
+        repo_commits = {}
+        for dep in deps:
+            if dep.commit:
+                repo_commits[dep.name.lower()] = dep.commit
+        repo_commits[repo_path.name.lower()] = _get_full_commit(repo_path)
+
+        schema_version = solver_config.schema_version
+        ordered_names = [name.lower() for name in dep_names]
+        name_parts = []
+        for name in ordered_names:
+            commit = repo_commits.get(name, "unknown")
+            name_parts.append(f"{name}{commit[:7]}")
+
+        name_suffix = "_".join(name_parts)
+        output_path = schema_dir / f"{repo_path.name.lower()}_complete_v{schema_version}_{name_suffix}.json"
 
         output_data = {
             "metadata": {
                 "solver": repo_path.name,
+                "schema_version": schema_version,
                 "composed_from": dep_names,
                 "composition_method": "auto-compose (gitmodules)",
-                "total_parameters": len(composed)
+                "total_parameters": len(composed),
+                "repo_commits": repo_commits,
+                "generated_at": datetime.now(timezone.utc).isoformat()
             },
             "parameters": composed
         }
