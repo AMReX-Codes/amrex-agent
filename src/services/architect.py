@@ -1785,11 +1785,6 @@ class ArchitectService:
             for name in params:
                 if name in available_set:
                     resolved.add(name)
-                    continue
-                if name.startswith("pelelmex."):
-                    alt = "peleLM." + name.split(".", 1)[1]
-                    if alt in available_set:
-                        resolved.add(alt)
             return sorted(resolved)
 
         def _build_tier_guidance(tier_name: str, params: list[str], notes: str) -> str:

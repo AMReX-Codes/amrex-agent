@@ -63,7 +63,7 @@ class PeleLMeXConfig(BaseAMReXConfig):
     # === Amendment D.2: PeleC Critical Parameters ===
     tier1_params: ClassVar[set[str]] = {
         "amr.n_cell",
-        "pelelmex.do_react",  # Critical: reactions on/off
+        "peleLM.do_react",  # Critical: reactions on/off
         "peleLM.les_model",
         "peleLM.do_turbulent_forcing",
     }
