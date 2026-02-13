@@ -20,12 +20,17 @@ async def main() -> None:
             init_options,
         )
 
-        async with ClientSession(server_to_client_recv, client_to_server_send) as session:
-            await session.initialize()
-            tools_response = await session.list_tools()
-            tools = _normalize_tools(tools_response)
-            tool_names = [getattr(tool, "name", str(tool)) for tool in tools]
-            print(f"tools: {tool_names}")
+        try:
+            async with ClientSession(server_to_client_recv, client_to_server_send) as session:
+                await session.initialize()
+                tools_response = await session.list_tools()
+                tools = _normalize_tools(tools_response)
+                tool_names = [getattr(tool, "name", str(tool)) for tool in tools]
+                print(f"tools: {tool_names}")
+        finally:
+            await client_to_server_send.aclose()
+            await server_to_client_send.aclose()
+            tg.cancel_scope.cancel()
 
 
 def _normalize_tools(tools_response):
