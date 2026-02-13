@@ -816,7 +816,7 @@ def list_remote_files(
                         client = Client(client_id=client_id, secret=secret)
                     with client:
                         perlmutter = client.compute(Machine.perlmutter)
-                        entries = perlmutter.ls(remote_dir, directory=True)
+                        entries = perlmutter.ls(remote_dir, directory=False)
                         names: list[str] = []
                         for entry in entries:
                             name = getattr(entry, "name", None) or getattr(entry, "path", None)
