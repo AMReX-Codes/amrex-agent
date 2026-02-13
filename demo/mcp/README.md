@@ -43,6 +43,24 @@ Note: A best-effort `requirements.txt` is under test for ALCF. The conda
 environment path on ALCF is non-recommended, so prefer the base+venv flow unless
 you need the full `environment.yaml` stack.
 
+If you do use `requirements.txt`, run it inside the venv:
+
+```bash
+source "${VENV_DIR}/bin/activate"
+python -m pip install -r requirements.txt
+```
+
+
+If you must match the NERSC-style conda flow, here is the non-recommended
+alternative for ALCF:
+
+```bash
+conda env create -f environment.yaml -n amrex-agent-dev
+conda activate amrex-agent-dev
+python -m pip install -U pip
+python -m pip install -e .
+```
+
 ## Run server (stdio)
 
 ### NERSC (Perlmutter login)
