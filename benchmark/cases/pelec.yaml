@@ -10,6 +10,11 @@ cases:
     description: "Premixed methane flame; baseline reacting flow scaling case."
     dimension: 3
     physics: [premixed, combustion, compressible]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
     scaling:
       type: "weak"
       sizes:
@@ -33,6 +38,11 @@ cases:
     description: "Sedov blast wave for compressible hydro strong scaling."
     dimension: 3
     physics: [blast, hydro, compressible]
+    difficulty_tier: "easy"
+    prompt_length_band: "short"
+    concept_density: "low"
+    specialized_knowledge: false
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -53,9 +63,14 @@ cases:
     case_name: "TaylorGreen"
     case_dir: "Exec/RegTests/TG"
     inputs: "tg-1.inp"
-    description: "Taylor-Green vortex for turbulence scaling."
+    description: "Taylor-Green vortex (High-Order CFD workshop benchmark)."
     dimension: 3
     physics: [turbulence, vortex, compressible]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: false
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -76,9 +91,14 @@ cases:
     case_name: "TGReact"
     case_dir: "Exec/RegTests/TGReact"
     inputs: "tgreact.inp"
-    description: "Reacting Taylor-Green vortex for weak scaling."
+    description: "Reacting Taylor-Green vortex (combustion DNS workshop setup)."
     dimension: 3
     physics: [turbulence, combustion, compressible]
+    difficulty_tier: "hard"
+    prompt_length_band: "long"
+    concept_density: "high"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
     scaling:
       type: "weak"
       sizes:
@@ -102,6 +122,11 @@ cases:
     description: "Turbulent jet flame production case for weak scaling."
     dimension: 3
     physics: [jet, combustion, compressible]
+    difficulty_tier: "hard"
+    prompt_length_band: "long"
+    concept_density: "high"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
     scaling:
       type: "weak"
       sizes:

@@ -29,6 +29,11 @@ properties:
         - description
         - dimension
         - physics
+        - difficulty_tier
+        - prompt_length_band
+        - concept_density
+        - specialized_knowledge
+        - novelty_tier
         - scaling
         - tags
       properties:
@@ -58,6 +63,25 @@ properties:
           minItems: 1
           items:
             type: string
+        difficulty_tier:
+          type: string
+          enum: [easy, medium, hard]
+        prompt_length_band:
+          type: string
+          enum: [short, medium, long]
+        concept_density:
+          type: string
+          enum: [low, medium, high]
+        specialized_knowledge:
+          type: boolean
+        novelty_tier:
+          type: string
+          enum:
+            - parameter-only
+            - config-extension
+            - code-touch
+            - build-dependent
+            - additional-runs
         scaling:
           type: object
           additionalProperties: false

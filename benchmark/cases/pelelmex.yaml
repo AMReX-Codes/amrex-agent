@@ -7,9 +7,14 @@ cases:
     case_name: "FlameSheet"
     case_dir: "Exec/RegTests/FlameSheet"
     inputs: "inputs"
-    description: "Low-Mach diffusion flame sheet for strong scaling."
+    description: "Harmonically perturbed flame sheet with Cantera initial solution."
     dimension: 3
     physics: [diffusion_flame, combustion, low_mach]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -30,9 +35,14 @@ cases:
     case_name: "TaylorGreen"
     case_dir: "Exec/RegTests/TaylorGreen"
     inputs: "inputs"
-    description: "Low-Mach Taylor-Green vortex for turbulence scaling."
+    description: "Taylor-Green vortex pulled from PeleC High-Order CFD workshop case."
     dimension: 3
     physics: [turbulence, vortex, low_mach]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: false
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -53,9 +63,14 @@ cases:
     case_name: "CounterFlow"
     case_dir: "Exec/Production/CounterFlow"
     inputs: "inputs"
-    description: "Counterflow diffusion flame for weak scaling."
+    description: "Counterflow diffusion flame with coolflow pre-run and ignition restart."
     dimension: 3
     physics: [counterflow, combustion, low_mach]
+    difficulty_tier: "hard"
+    prompt_length_band: "long"
+    concept_density: "high"
+    specialized_knowledge: true
+    novelty_tier: "additional-runs"
     scaling:
       type: "weak"
       sizes:
@@ -79,6 +94,11 @@ cases:
     description: "Jet in crossflow combustion for weak scaling."
     dimension: 3
     physics: [jet, combustion, low_mach]
+    difficulty_tier: "hard"
+    prompt_length_band: "long"
+    concept_density: "high"
+    specialized_knowledge: true
+    novelty_tier: "additional-runs"
     scaling:
       type: "weak"
       sizes:
@@ -96,12 +116,17 @@ cases:
 
   - id: "pelelmex_eb_c7_strong"
     solver: "PeleLMeX"
-    case_name: "EB-C7"
-    case_dir: "Exec/RegTests/EB-C7"
-    inputs: "inputs"
-    description: "Embedded boundary low-Mach case for geometry-aware scaling."
+    case_name: "EB_BackwardStepFlame"
+    case_dir: "Exec/RegTests/EB_BackwardStepFlame"
+    inputs: "eb_bfs.inp"
+    description: "Laminar flame stabilized behind a backward-facing step (EB reactive flow)."
     dimension: 3
     physics: [embedded_boundary, combustion, low_mach]
+    difficulty_tier: "hard"
+    prompt_length_band: "medium"
+    concept_density: "high"
+    specialized_knowledge: true
+    novelty_tier: "build-dependent"
     scaling:
       type: "strong"
       sizes:
