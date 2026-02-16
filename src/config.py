@@ -983,6 +983,10 @@ def _wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
 def _wrap_llm_client_with_metrics(client, config: AMReXAgentConfig):
     if getattr(config, "metrics_enabled", True) is False:
         return client
+    if not getattr(client, "chat", None):
+        return client
+    if not getattr(getattr(client, "chat", None), "completions", None):
+        return client
     if isinstance(client, _LLMMetricsClient):
         return client
     return _LLMMetricsClient(client, config)
@@ -1000,11 +1004,11 @@ def wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
 
 def unwrap_llm_client(client):
     """Return the underlying client if wrapped by the LLM gate."""
-    if isinstance(client, _LLMGateClient):
-        return client._client
-    if isinstance(client, _LLMRetryClient):
-        return client._client
-    return client
+    wrapped_types = (_LLMGateClient, _LLMRetryClient, _LLMMetricsClient)
+    current = client
+    while isinstance(current, wrapped_types):
+        current = current._client
+    return current
 
 
 class _LLMRetryClient:
