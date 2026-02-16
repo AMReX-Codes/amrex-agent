@@ -690,7 +690,7 @@ def main(args: list[str] | None = None) -> None:
 
         # Save metrics JSONL (if enabled)
         try:
-            from src.utils.metrics import metrics_collector
+            from src.utils.metrics import metrics_collector, metrics_extra
 
             if getattr(config, "metrics_enabled", True) and metrics_collector.events():
                 summary = metrics_collector.build_workflow_summary()
@@ -699,13 +699,14 @@ def main(args: list[str] | None = None) -> None:
                     "iteration": result.get("iteration", 0),
                     "run_directory": result.get("run_directory"),
                 })
-                metrics_collector.record_event(
-                    "workflow_summary",
-                    summary,
-                    stage="workflow",
-                    node="main",
-                    iteration=result.get("iteration", 0),
-                )
+                with metrics_extra(result.get("metrics_context") or None):
+                    metrics_collector.record_event(
+                        "workflow_summary",
+                        summary,
+                        stage="workflow",
+                        node="main",
+                        iteration=result.get("iteration", 0),
+                    )
                 if 'run_directory' in result:
                     run_dir = Path(result['run_directory'])
                     metrics_path = run_dir / getattr(config, "metrics_filename", "metrics.jsonl")
@@ -877,6 +878,17 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
     if not prompt_content:
         raise ValueError("User requirement prompt cannot be empty")
 
+    metrics_context = {
+        "case_id": os.getenv("BENCHMARK_CASE_ID"),
+        "solver": os.getenv("BENCHMARK_SOLVER"),
+        "difficulty_tier": os.getenv("BENCHMARK_DIFFICULTY_TIER"),
+        "novelty_tier": os.getenv("BENCHMARK_NOVELTY_TIER"),
+        "prompt_id": os.getenv("BENCHMARK_PROMPT_ID"),
+        "model_id": os.getenv("BENCHMARK_MODEL_ID"),
+        "provider": os.getenv("BENCHMARK_PROVIDER"),
+    }
+    metrics_context = {k: v for k, v in metrics_context.items() if v}
+
     # 3. Initialize state with defaults
     return {
         # Inputs
@@ -897,6 +909,7 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
         "modifications": [],
         "workflow_history": [],
         "history": [],            # Legacy field required by visualization_node
+        "metrics_context": metrics_context,
     }
 
 
@@ -1037,7 +1050,10 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
     try:
         from langgraph.errors import GraphRecursionError
 
-        final_state = app.invoke(initial_state, run_config)
+        from src.utils.metrics import metrics_extra
+
+        with metrics_extra(initial_state.get("metrics_context") or None):
+            final_state = app.invoke(initial_state, run_config)
 
         status = final_state.get("job_status", "unknown")
         logger.info("-" * 80)

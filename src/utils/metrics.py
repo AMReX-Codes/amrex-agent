@@ -41,6 +41,19 @@ def metrics_context(
             token.var.reset(token)
 
 
+@contextmanager
+def metrics_extra(extra: dict[str, Any] | None):
+    """Set metrics context extra fields without changing stage."""
+    if extra is None:
+        yield
+        return
+    token = _extra_var.set(extra)
+    try:
+        yield
+    finally:
+        _extra_var.reset(token)
+
+
 class MetricsCollector:
     """Collects instrumentation events for aggregation and export."""
 

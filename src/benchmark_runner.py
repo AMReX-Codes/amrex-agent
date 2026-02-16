@@ -222,6 +222,10 @@ def _ensure_prompt_entry(entry: Any, index: int) -> dict[str, Any]:
             "id": prompt_id,
             "prompt": entry.get("prompt"),
             "prompt_path": entry.get("prompt_path"),
+            "case_id": entry.get("case_id"),
+            "solver": entry.get("solver"),
+            "difficulty_tier": entry.get("difficulty_tier"),
+            "novelty_tier": entry.get("novelty_tier"),
         }
     raise ValueError(f"Invalid prompt entry at index {index}: {entry!r}")
 
@@ -373,6 +377,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         model_slug = _slugify(model_id)
         model_env = dict(env_common)
         model_env.update(model.get("env") or {})
+        provider = (model.get("overrides") or {}).get("llm_provider")
 
         model_config_path = _build_config_for_model(model, run_dir)
         manifest["models"].append({
@@ -390,6 +395,16 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             prompt_dir.mkdir(parents=True, exist_ok=True)
             env = os.environ.copy()
             env.update({k: str(v) for k, v in model_env.items()})
+            benchmark_env = {
+                "BENCHMARK_PROMPT_ID": str(prompt_id),
+                "BENCHMARK_CASE_ID": prompt.get("case_id"),
+                "BENCHMARK_SOLVER": prompt.get("solver"),
+                "BENCHMARK_DIFFICULTY_TIER": prompt.get("difficulty_tier"),
+                "BENCHMARK_NOVELTY_TIER": prompt.get("novelty_tier"),
+                "BENCHMARK_MODEL_ID": model_id,
+                "BENCHMARK_PROVIDER": provider,
+            }
+            env.update({k: str(v) for k, v in benchmark_env.items() if v})
 
             cmd = _build_command(model_config_path, prompt, prompt_dir, run_args)
 
