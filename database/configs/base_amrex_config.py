@@ -972,7 +972,7 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
             '*.inp',
             '*.inputs',
         ]
-        has_inputs = any(directory.glob(pattern) for pattern in patterns)
+        has_inputs = any(any(directory.glob(pattern)) for pattern in patterns)
 
         return has_inputs
 
