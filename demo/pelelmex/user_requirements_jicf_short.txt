@@ -1,0 +1,3 @@
+Short JICF smoke test: nonreacting jet in crossflow in a ducted channel.
+Use the default JetInCrossflow baseline settings (geometry, inlet conditions,
+and chemistry) with no additional modifications; just generate the inputs.

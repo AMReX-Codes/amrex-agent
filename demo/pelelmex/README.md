@@ -60,9 +60,9 @@ python amrex_agent.py \
   --verbose
 ```
 
-## Testing Jet In Cross Flow (DNS example)
+## Testing Jet In Cross Flow (short CI example)
 
-Use the DNS prompt file and the JetInCrossflow case from the JICF-ModCon branch.
+Use the short JICF prompt file and the JetInCrossflow case from the JICF-ModCon branch.
 See the JICF-ModCon branch on Bruce Perry's fork (baperry2/PeleLMeX).
 
 To add the fork as a remote and check out the branch in an existing repo:
@@ -76,7 +76,7 @@ git checkout -b JICF-ModCon baperry/JICF-ModCon
 
 ```bash
 python amrex_agent.py \
-  --prompt-path demo/pelelmex/user_requirements_test_DNS.txt \
+  --prompt-path demo/pelelmex/user_requirements_jicf_short.txt \
   --baseline-override PeleLMeX/Exec/Production/JetInCrossflow \
   --indexing-strategy simple \
   --save-workflow \

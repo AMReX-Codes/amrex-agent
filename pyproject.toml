@@ -65,6 +65,7 @@ markers = [
     "requires_solver: Tests require a specific solver code name (args: AMReX, PeleC, WarpX, etc.)",
     "requires_indices: Tests require FAISS indices (args: faiss, level0, level1, level2, or index subdir)",
     "slow: Slower integration tests (may be skipped in CI)",
+    "ci_fast: Fast smoke tests intended for CI selection",
     "skip: Skipped tests (use sparingly)",
     "use_real_services: Run tests with real services (not mocked)",
     "use_mock_services: Run tests with mocked services (default, fast)",

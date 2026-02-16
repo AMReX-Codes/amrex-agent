@@ -11,6 +11,7 @@ Tests command-line interface:
 These tests validate the user-facing interface.
 """
 from io import StringIO
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -154,3 +155,27 @@ class TestCLIInterface:
             output = json.loads(captured.out)
             assert output["job_status"] == "completed"
             assert output["job_id"] == "test_123"
+
+    def test_main_uses_short_dns_prompt_file(self, tmp_path):
+        """
+        Test 9: main() passes prompt file content to run_agent.
+
+        Given: Short DNS-mod prompt file
+        When: main() executes with --prompt-path
+        Then: run_agent receives prompt text with step-count instruction
+        """
+        repo_root = Path(__file__).resolve().parents[3]
+        prompt_path = repo_root / "demo" / "pelelmex" / "user_requirements_test_DNS_mod_short.txt"
+        assert prompt_path.exists(), f"Prompt file missing: {prompt_path}"
+
+        with patch("src.main.run_agent") as mock_run:
+            mock_run.return_value = {
+                "job_status": "completed",
+                "mode": "proceed"
+            }
+
+            main(["--prompt-path", str(prompt_path), "--output-dir", str(tmp_path), "--dry-run"])
+
+            assert mock_run.call_count == 1
+            passed_prompt = mock_run.call_args[0][0]
+            assert "50 steps" in passed_prompt
