@@ -2184,9 +2184,10 @@ CRITICAL: Use exact names only."""
         )
 
         try:
-            import instructor
-            from src.config import get_llm_client, unwrap_llm_client, wrap_llm_client
+            import json
             from pydantic import BaseModel, Field
+            from src.config import get_llm_client
+            from src.utils.llm_calls import LLMCallSpec, call_llm
 
             class Modification(BaseModel):
                 parameter: str
@@ -2195,57 +2196,48 @@ CRITICAL: Use exact names only."""
             class ModificationExtraction(BaseModel):
                 working: str = Field(description="Step-by-step reasoning showing parameter mapping and unit conversions")
                 modifications: list[Modification]
+
             if client is None:
-                base_client = unwrap_llm_client(get_llm_client(self.config))
-                client = instructor.from_openai(base_client)
-                client = wrap_llm_client(client, self.config)
-            result = client.chat.completions.create(
+                client = get_llm_client(self.config)
+            spec = LLMCallSpec(
                 model=self.config.llm_model,
                 response_model=ModificationExtraction,
+                response_format={"type": "json_object"},
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1
+                temperature=0.1,
+                purpose="modification_extraction",
+                template_name="modification_extraction",
+                template_source="solver_config",
             )
+            result = call_llm(client, spec, config=self.config)
+            if hasattr(result, "modifications"):
+                modifications = [(m.parameter, _normalize_llm_value(m.value)) for m in result.modifications]
 
-            modifications = [(m.parameter, _normalize_llm_value(m.value)) for m in result.modifications]
-
-            # Log reasoning for debugging
-            logger.debug(f"[LLM] Working: {result.working}")
-            logger.debug(f"[LLM] Extracted {len(modifications)} modifications")
-            if not modifications:
-                redactor = _redactor()
-                raw = result.model_dump_json() if hasattr(result, "model_dump_json") else str(result)
-                logger.debug("[LLM] Empty modifications (raw response): %s", redactor(raw))
-
-            return {"success": True, "modifications": modifications}
-
-        except (ModuleNotFoundError, ImportError):
-            try:
-                import json
-                from src.config import get_llm_client
-                client = get_llm_client(self.config)
-                response = client.chat.completions.create(
-                    model=self.config.llm_model,
-                    messages=[{"role": "user", "content": prompt}],
-                    response_format={"type": "json_object"},
-                    temperature=0.1
-                )
-                raw_content = response.choices[0].message.content
-                result = json.loads(raw_content)
-                modifications = [
-                    (m['parameter'], _normalize_llm_value(m.get('value', '')))
-                    for m in result.get('modifications', [])
-                ]
-
-                # Log reasoning from fallback mode too
-                logger.debug(f"[LLM] Working: {result.get('working', 'N/A')}")
+                # Log reasoning for debugging
+                logger.debug(f"[LLM] Working: {result.working}")
                 logger.debug(f"[LLM] Extracted {len(modifications)} modifications")
                 if not modifications:
                     redactor = _redactor()
-                    logger.debug("[LLM] Empty modifications (raw response): %s", redactor(raw_content))
+                    raw = result.model_dump_json() if hasattr(result, "model_dump_json") else str(result)
+                    logger.debug("[LLM] Empty modifications (raw response): %s", redactor(raw))
 
                 return {"success": True, "modifications": modifications}
-            except Exception as e:
-                return {"success": False, "error": e}
+
+            raw_content = result.choices[0].message.content
+            parsed = json.loads(raw_content)
+            modifications = [
+                (m['parameter'], _normalize_llm_value(m.get('value', '')))
+                for m in parsed.get('modifications', [])
+            ]
+
+            # Log reasoning from fallback mode too
+            logger.debug(f"[LLM] Working: {parsed.get('working', 'N/A')}")
+            logger.debug(f"[LLM] Extracted {len(modifications)} modifications")
+            if not modifications:
+                redactor = _redactor()
+                logger.debug("[LLM] Empty modifications (raw response): %s", redactor(raw_content))
+
+            return {"success": True, "modifications": modifications}
 
         except Exception as e:
             return {"success": False, "error": e}
@@ -2273,29 +2265,31 @@ CRITICAL: Use exact names only."""
         )
 
         try:
-            import instructor
-            from src.config import get_llm_client, unwrap_llm_client, wrap_llm_client
             from pydantic import BaseModel, Field
+            from src.config import get_llm_client
+            from src.utils.llm_calls import LLMCallSpec, call_llm
 
             class SchemaScanResult(BaseModel):
                 unresolved_concepts: list[str] = Field(default_factory=list)
                 notes: str = ""
 
             if client is None:
-                base_client = unwrap_llm_client(get_llm_client(self.config))
-                client = instructor.from_openai(base_client)
-                client = wrap_llm_client(client, self.config)
-            result = client.chat.completions.create(
+                client = get_llm_client(self.config)
+            spec = LLMCallSpec(
                 model=self.config.llm_model,
                 response_model=SchemaScanResult,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1
+                temperature=0.1,
+                purpose="schema_scan",
+                template_name="schema_scan",
+                template_source="solver_config",
             )
-
-            return {
-                "unresolved_concepts": result.unresolved_concepts,
-                "notes": result.notes,
-            }
+            result = call_llm(client, spec, config=self.config)
+            if hasattr(result, "unresolved_concepts"):
+                return {
+                    "unresolved_concepts": result.unresolved_concepts,
+                    "notes": result.notes,
+                }
 
         except Exception as e:
             logger.debug(f"[LLM] Schema scan failed: {e}")
@@ -4018,15 +4012,8 @@ Solver: {code_name}"""
             Dict compatible with plan_modifications return format, or None if failed
         """
         try:
-            import instructor
-
             from src.services.plan import SimulationPlan
-            from src.config import unwrap_llm_client, wrap_llm_client
-
-            # Wrap LLM client with instructor
-            base_client = unwrap_llm_client(self.llm_client)
-            client = instructor.from_openai(base_client)
-            client = wrap_llm_client(client, self.config)
+            from src.utils.llm_calls import LLMCallSpec, call_llm
 
             # Extract solver from baseline metadata
             solver_name = baseline.get('metadata', {}).get('solver')
@@ -4051,13 +4038,20 @@ Solver: {code_name}"""
             logger.info("[LLM] Requesting complete SimulationPlan via structured output...")
 
             # Get structured SimulationPlan from LLM
-            plan = client.chat.completions.create(
+            spec = LLMCallSpec(
                 model=self.config.llm_model,
                 response_model=SimulationPlan,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.2,
-                max_retries=2
+                max_retries=2,
+                purpose="structured_fallback_planning",
+                template_name="structured_fallback_planning",
+                template_source="solver_config",
             )
+            plan = call_llm(self.llm_client, spec, config=self.config)
+            if not hasattr(plan, "modifications"):
+                logger.warning("[LLM] Structured output unavailable - falling back to JSON parsing")
+                return self._llm_fallback_json(query, baseline, baseline_case)
 
             # Override fields we already know (LLM might hallucinate these)
             plan.selected_solver = solver_name
@@ -4081,11 +4075,6 @@ Solver: {code_name}"""
                 "reasoning": plan.reasoning,
                 "_full_plan": plan  # Include full plan for debugging
             }
-
-        except ImportError:
-            logger.warning("[LLM] instructor not installed - falling back to JSON parsing")
-            logger.info("[LLM] Install with: pip install instructor")
-            return self._llm_fallback_json(query, baseline, baseline_case)
 
         except Exception as e:
             logger.error(f"[LLM] Structured fallback failed: {e}")

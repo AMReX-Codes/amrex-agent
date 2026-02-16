@@ -15,6 +15,7 @@ class LLMCallSpec:
     temperature: float | None = None
     max_tokens: int | None = None
     response_model: Any | None = None
+    response_format: dict[str, Any] | None = None
     max_retries: int | None = None
     purpose: str | None = None
     template_name: str | None = None
@@ -89,6 +90,7 @@ def call_llm(
             messages=spec.messages,
             temperature=spec.temperature,
             max_tokens=spec.max_tokens,
+            response_format=spec.response_format,
         )
         if fallback_parser:
             return fallback_parser(response)
