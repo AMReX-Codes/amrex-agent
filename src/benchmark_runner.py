@@ -264,6 +264,7 @@ def _build_command(
     prompt_entry: dict[str, Any],
     output_dir: Path,
     run_args: dict[str, Any],
+    benchmark_context: Path | None,
 ) -> list[str]:
     cmd = [os.environ.get("AMREX_AGENT_PYTHON", "python"), "amrex_agent.py", "--json"]
     if prompt_entry.get("prompt"):
@@ -276,6 +277,8 @@ def _build_command(
     if config_path:
         cmd.extend(["--config", str(config_path)])
     cmd.extend(["--output-dir", str(output_dir)])
+    if benchmark_context:
+        cmd.extend(["--benchmark-context", str(benchmark_context)])
 
     flag_map = {
         "run_mode": "--run-mode",
@@ -395,18 +398,19 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             prompt_dir.mkdir(parents=True, exist_ok=True)
             env = os.environ.copy()
             env.update({k: str(v) for k, v in model_env.items()})
-            benchmark_env = {
-                "BENCHMARK_PROMPT_ID": str(prompt_id),
-                "BENCHMARK_CASE_ID": prompt.get("case_id"),
-                "BENCHMARK_SOLVER": prompt.get("solver"),
-                "BENCHMARK_DIFFICULTY_TIER": prompt.get("difficulty_tier"),
-                "BENCHMARK_NOVELTY_TIER": prompt.get("novelty_tier"),
-                "BENCHMARK_MODEL_ID": model_id,
-                "BENCHMARK_PROVIDER": provider,
-            }
-            env.update({k: str(v) for k, v in benchmark_env.items() if v})
+            benchmark_context = prompt_dir / "benchmark_context.json"
+            benchmark_context.write_text(json.dumps({
+                "prompt_id": prompt_id,
+                "prompt_excerpt": prompt["prompt"][:160],
+                "case_id": prompt.get("case_id"),
+                "solver": prompt.get("solver"),
+                "difficulty_tier": prompt.get("difficulty_tier"),
+                "novelty_tier": prompt.get("novelty_tier"),
+                "model_id": model_id,
+                "provider": provider,
+            }, indent=2, default=str))
 
-            cmd = _build_command(model_config_path, prompt, prompt_dir, run_args)
+            cmd = _build_command(model_config_path, prompt, prompt_dir, run_args, benchmark_context)
 
             started_at = datetime.now().isoformat()
             start_time = time.time()

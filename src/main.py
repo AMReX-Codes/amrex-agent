@@ -526,6 +526,13 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
         dest='mpi_ranks',
         help='Local run tasks (mpirun -np)'
     )
+    parser.add_argument(
+        '--benchmark-context',
+        type=str,
+        default=None,
+        dest='benchmark_context',
+        help='Optional JSON/YAML file with benchmark metadata to attach to metrics'
+    )
 
     return parser.parse_args(args)
 
@@ -595,6 +602,23 @@ def _warn_if_schema_missing(config: AMReXAgentConfig, baseline_override: str | N
     repo_arg = repo_root or "<path-to-repo>"
     schema_cmd = f"python database/scripts/build_schema.py {repo_arg} --solver {solver_flag}"
     logging.getLogger(__name__).warning("Schema missing for %s. Run: %s", solver_name, schema_cmd)
+
+
+def _load_benchmark_context(path: str | None) -> dict[str, Any] | None:
+    if not path:
+        return None
+    context_path = Path(path)
+    if not context_path.exists():
+        raise FileNotFoundError(f"Benchmark context file not found: {context_path}")
+    suffix = context_path.suffix.lower()
+    if suffix in {".yaml", ".yml"}:
+        import yaml
+        data = yaml.safe_load(context_path.read_text(encoding="utf-8"))
+    else:
+        data = json.loads(context_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("Benchmark context file must contain a JSON/YAML object.")
+    return data
 
 
 def main(args: list[str] | None = None) -> None:
@@ -686,7 +710,11 @@ def main(args: list[str] | None = None) -> None:
 
         # Run Agent
         logger.debug("Starting AMReXAgent workflow...")
-        result = run_agent(user_requirement, config)
+        benchmark_context = _load_benchmark_context(parsed_args.benchmark_context)
+        from src.utils.metrics import metrics_extra
+
+        with metrics_extra(benchmark_context):
+            result = run_agent(user_requirement, config)
 
         # Save metrics JSONL (if enabled)
         try:
@@ -699,7 +727,7 @@ def main(args: list[str] | None = None) -> None:
                     "iteration": result.get("iteration", 0),
                     "run_directory": result.get("run_directory"),
                 })
-                with metrics_extra(result.get("metrics_context") or None):
+                with metrics_extra(benchmark_context):
                     metrics_collector.record_event(
                         "workflow_summary",
                         summary,
@@ -865,8 +893,6 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
     dict
         Initialized graph state for the workflow.
     """
-    import os
-
     # 1. Load prompt (file or string)
     if os.path.exists(user_requirement) and os.path.isfile(user_requirement):
         with open(user_requirement) as f:
@@ -877,17 +903,6 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
     # 2. Validate prompt
     if not prompt_content:
         raise ValueError("User requirement prompt cannot be empty")
-
-    metrics_context = {
-        "case_id": os.getenv("BENCHMARK_CASE_ID"),
-        "solver": os.getenv("BENCHMARK_SOLVER"),
-        "difficulty_tier": os.getenv("BENCHMARK_DIFFICULTY_TIER"),
-        "novelty_tier": os.getenv("BENCHMARK_NOVELTY_TIER"),
-        "prompt_id": os.getenv("BENCHMARK_PROMPT_ID"),
-        "model_id": os.getenv("BENCHMARK_MODEL_ID"),
-        "provider": os.getenv("BENCHMARK_PROVIDER"),
-    }
-    metrics_context = {k: v for k, v in metrics_context.items() if v}
 
     # 3. Initialize state with defaults
     return {
@@ -909,7 +924,6 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
         "modifications": [],
         "workflow_history": [],
         "history": [],            # Legacy field required by visualization_node
-        "metrics_context": metrics_context,
     }
 
 
