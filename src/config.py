@@ -648,9 +648,21 @@ class AMReXAgentConfig(BaseModel):
         default=Path("./output"),
         description="Base output directory for simulations"
     )
+    metrics_output_dir: Optional[Path] = Field(
+        default=None,
+        description="Directory for metrics.jsonl when run_directory is unavailable (defaults to output_dir)."
+    )
+    metrics_filename: str = Field(
+        default="metrics.jsonl",
+        description="Metrics JSONL filename for workflow summaries."
+    )
     save_intermediate: bool = Field(
         default=True,
         description="Save intermediate results (plans, configs, etc.)"
+    )
+    metrics_enabled: bool = Field(
+        default=True,
+        description="Enable metrics collection and JSONL output"
     )
 
     # === Validator Configuration ===
@@ -947,6 +959,7 @@ def get_llm_client(config: AMReXAgentConfig):
 
 def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
     client = _wrap_llm_client_with_retry(client, config)
+    client = _wrap_llm_client_with_metrics(client, config)
     strategy = getattr(config, "llm_gate_strategy", "off") or "off"
     if strategy == "off":
         return client
@@ -965,6 +978,14 @@ def _wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
     if isinstance(client, _LLMRetryClient):
         return client
     return _LLMRetryClient(client, max_attempts)
+
+
+def _wrap_llm_client_with_metrics(client, config: AMReXAgentConfig):
+    if getattr(config, "metrics_enabled", True) is False:
+        return client
+    if isinstance(client, _LLMMetricsClient):
+        return client
+    return _LLMMetricsClient(client, config)
 
 
 def wrap_llm_client(client, config: AMReXAgentConfig):
@@ -994,6 +1015,46 @@ class _LLMRetryClient:
 
     def __getattr__(self, name: str):
         return getattr(self._client, name)
+
+
+class _LLMMetricsClient:
+    def __init__(self, client, config: AMReXAgentConfig) -> None:
+        self._client = client
+        self._config = config
+        self.chat = _LLMMetricsChat(client.chat, config)
+
+    def __getattr__(self, name: str):
+        return getattr(self._client, name)
+
+
+class _LLMMetricsChat:
+    def __init__(self, chat_resource, config: AMReXAgentConfig) -> None:
+        self._chat = chat_resource
+        self._config = config
+        self.completions = _LLMMetricsCompletions(chat_resource.completions, config)
+
+    def __getattr__(self, name: str):
+        return getattr(self._chat, name)
+
+
+class _LLMMetricsCompletions:
+    def __init__(self, completions_resource, config: AMReXAgentConfig) -> None:
+        self._completions = completions_resource
+        self._config = config
+
+    def create(self, *args: Any, **kwargs: Any) -> Any:
+        response = self._completions.create(*args, **kwargs)
+        try:
+            from src.utils.metrics import metrics_collector
+
+            metrics_collector.record_llm_usage(
+                response,
+                model=kwargs.get("model"),
+                provider=getattr(self._config, "llm_provider", None),
+            )
+        except Exception:
+            pass
+        return response
 
 
 class _LLMRetryChat:

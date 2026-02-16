@@ -209,6 +209,7 @@ class GraphState(TypedDict, total=False):
     # ========================================
     # METADATA
     # ========================================
+    metrics: Optional[Dict[str, Any]]            # Aggregated metrics (tokens, retrieval, validation)
     phase: str                      # Current workflow phase
                                     # Values: "planning", "execution", "analysis", "complete"
 
