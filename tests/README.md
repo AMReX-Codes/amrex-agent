@@ -22,6 +22,7 @@ Resource markers:
 - `requires_indices("faiss" | "level0" | "level1" | "level2")` gate tests on index files.
 - `use_real_services` or `use_mock_services` describes service dependencies.
 `requires_solver(...)` bundles repo + schema + default index checks (hierarchical if `indexing_hierarchical`, otherwise `faiss`).
+- `indexing_override_static` selects the override_static indexing strategy (no embeddings, baseline override required).
 
 Additional markers exist for integration ladder levels and components; keep them
 consistent with `pyproject.toml`.

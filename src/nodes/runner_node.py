@@ -181,6 +181,11 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 setup_kwargs["inputs_path"] = str(inputs_path)
         except (TypeError, ValueError):
             pass
+        try:
+            if run_mode == "dry" and "executable_path" in inspect.signature(runner.setup_job).parameters:
+                setup_kwargs["executable_path"] = ""
+        except (TypeError, ValueError):
+            pass
 
         setup_result = runner.setup_job(**setup_kwargs)
 

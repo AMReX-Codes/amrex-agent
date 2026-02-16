@@ -88,7 +88,9 @@
     },
     "details_execution_metadata": {
       "indexing_strategy": "string ('simple', 'hierarchical', or 'override_static')",
-      "indexing_calls_count": "int (number of search operations performed, can be 0)",
+      "indexing_calls_count": "int (number of embedding invocations performed during planning, can be 0)",
+      "indexing_calls_total": "int (cumulative embedding invocations across workflow, can be 0)",
+      "indexing_calls_detail": "Dict[str,int] (per-call-type delta for this planning step)",
       "top_candidate_score": "float (confidence of selected case, 0-1)"
     },
     "example": {
@@ -117,6 +119,11 @@
         },
         "indexing_strategy": "simple",
         "indexing_calls_count": 1,
+        "indexing_calls_total": 4,
+        "indexing_calls_detail": {
+          "embed_documents": 0,
+          "embed_query": 1
+        },
         "top_candidate_score": 0.92
       }
     }
@@ -133,7 +140,7 @@
       ],
       "computation_output_location": "workflow_history[-1]['details']",
       "workflow_action": "plan_created",
-      "indexing_detail_calls": 1,
+      "indexing_detail_calls": ">=1 (actual embedding invocations)",
       "validation_rules": [
         "workflow_history[-1]['details']['baseline']['code_name'] must be non-empty",
         "workflow_history[-1]['details']['baseline']['repo_path'] must be absolute filesystem path",
@@ -158,7 +165,7 @@
         "baseline_confidence"
       ],
       "workflow_action": "plan_created",
-      "indexing_detail_calls": 3,
+      "indexing_detail_calls": ">=1 (actual embedding invocations)",
       "validation_rules": [
         "workflow_history[-1]['details']['baseline']['code_name'] must be non-empty",
         "workflow_history[-1]['details']['baseline']['repo_path'] must be absolute filesystem path",
@@ -299,8 +306,8 @@
     },
     {
       "field": "indexing metadata (in workflow_history.details)",
-      "requirement": "MUST include indexing_strategy and indexing_calls_count for comparative testing",
-      "canonical_format": "indexing_strategy: 'simple'|'hierarchical'|'override_static', indexing_calls_count: int >= 0",
+      "requirement": "MUST include indexing_strategy and indexing_calls_count for comparative testing; include indexing_calls_total when available",
+      "canonical_format": "indexing_strategy: 'simple'|'hierarchical'|'override_static', indexing_calls_count: int >= 0, indexing_calls_total: int >= 0",
       "violation_consequence": "Cannot compare strategies or debug indexing performance"
     }
   ]

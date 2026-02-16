@@ -140,12 +140,15 @@ class ArchitectService:
             self.llm_client = None
 
         # Initialize FAISS embedding service for semantic search (5th scoring bucket)
-        try:
-            from .embedding import EmbeddingService
-            self.embeddings = EmbeddingService(config)
-        except Exception as e:
-            logger.debug(f"Warning: Could not initialize FAISS embeddings: {e}")
-            self.embeddings = None
+        if embedding_service is not None:
+            self.embeddings = embedding_service
+        else:
+            try:
+                from .embedding import EmbeddingService
+                self.embeddings = EmbeddingService(config)
+            except Exception as e:
+                logger.debug(f"Warning: Could not initialize FAISS embeddings: {e}")
+                self.embeddings = None
 
     def _schema_has_param(self, solver_name: str | None, param_name: str) -> bool:
         if not solver_name:
@@ -677,7 +680,7 @@ class ArchitectService:
                 logger.debug("Hierarchical indexing succeeded")
                 return plan
             except Exception as e:
-                logger.warning(f"Hierarchical indexing failed: {e}")
+                logger.exception("Hierarchical indexing failed: %s", e)
                 if getattr(self.config, 'fallback_to_simple_on_error', True):
                     logger.debug("Falling back to simple indexing")
                     strategy = "simple"
@@ -1310,27 +1313,70 @@ class ArchitectService:
             {"role": "user", "content": prompt},
         ]
 
-        response = llm.chat(messages=messages, temperature=temperature)
-        content = getattr(response, "content", "")
-
-        # Strip markdown code fences if present.
-        cleaned = content.strip()
-        if "```" in cleaned:
-            fenced_match = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, re.DOTALL)
-            if fenced_match:
-                cleaned = fenced_match.group(1).strip()
-
+        content = ""
         try:
-            data = json.loads(cleaned)
-        except Exception as exc:
-            logger.error("Failed to parse LLM JSON response: %s", exc)
-            return LLMPlanResult(
-                modifications=[],
-                reasoning="Failed to parse LLM response",
-            )
+            import instructor
+            from pydantic import BaseModel, Field
+            from src.config import unwrap_llm_client, wrap_llm_client
 
-        raw_mods = data.get("modifications", [])
-        reasoning = data.get("reasoning", "")
+            class Modification(BaseModel):
+                parameter: str
+                value: str
+
+            class LLMPlanResponse(BaseModel):
+                modifications: list[Modification]
+                reasoning: str = Field(default="")
+
+            base_client = unwrap_llm_client(llm)
+            instr_client = instructor.from_openai(base_client)
+            instr_client = wrap_llm_client(instr_client, self.config)
+            result = instr_client.chat.completions.create(
+                model=getattr(self.config, "llm_model", None),
+                response_model=LLMPlanResponse,
+                messages=messages,
+                temperature=temperature,
+            )
+            raw_mods = [
+                {"parameter": mod.parameter, "value": mod.value}
+                for mod in result.modifications
+            ]
+            reasoning = result.reasoning or ""
+        except Exception:
+            from src.config import unwrap_llm_client, wrap_llm_client
+
+            base_client = unwrap_llm_client(llm)
+            client = wrap_llm_client(base_client, self.config)
+            response = client.chat.completions.create(
+                model=getattr(self.config, "llm_model", None),
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=temperature,
+            )
+            if hasattr(response, "choices") and response.choices:
+                message = getattr(response.choices[0], "message", None)
+                content = getattr(message, "content", "") if message else ""
+            raw_mods = []
+            reasoning = ""
+
+        if not raw_mods:
+            # Strip markdown code fences if present.
+            cleaned = content.strip()
+            if "```" in cleaned:
+                fenced_match = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, re.DOTALL)
+                if fenced_match:
+                    cleaned = fenced_match.group(1).strip()
+
+            try:
+                data = json.loads(cleaned)
+            except Exception as exc:
+                logger.error("Failed to parse LLM JSON response: %s", exc)
+                return LLMPlanResult(
+                    modifications=[],
+                    reasoning="Failed to parse LLM response",
+                )
+
+            raw_mods = data.get("modifications", [])
+            reasoning = data.get("reasoning", "")
 
         # Build allowed parameter set from baseline cases.
         allowed_params = set()
@@ -1343,8 +1389,18 @@ class ArchitectService:
 
         valid_mods = []
         for mod in raw_mods:
-            param = mod.get("parameter")
-            value = mod.get("value")
+            if isinstance(mod, dict):
+                param = mod.get("parameter")
+                value = mod.get("value")
+            elif isinstance(mod, str):
+                if "=" in mod:
+                    param, value = (part.strip() for part in mod.split("=", 1))
+                elif ":" in mod:
+                    param, value = (part.strip() for part in mod.split(":", 1))
+                else:
+                    continue
+            else:
+                continue
             if not isinstance(param, str) or not isinstance(value, str):
                 continue
             if "." not in param:

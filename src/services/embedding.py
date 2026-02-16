@@ -23,6 +23,24 @@ from .vector_store_backends import OpenAIVectorStoreBackend
 
 logger = logging.getLogger(__name__)
 
+
+class _CountingEmbeddings:
+    def __init__(self, embeddings, record_call) -> None:
+        self._embeddings = embeddings
+        self._record_call = record_call
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        self._record_call("embed_documents")
+        return self._embeddings.embed_documents(texts)
+
+    def embed_query(self, text: str) -> list[float]:
+        self._record_call("embed_query")
+        return self._embeddings.embed_query(text)
+
+    def __getattr__(self, name: str):
+        return getattr(self._embeddings, name)
+
+
 class EmbeddingService:
     """
     FAISS embedding service with CBORG and hybrid LLM fallback.
@@ -46,6 +64,11 @@ class EmbeddingService:
         self._use_faiss_local = self._vector_backend is None
         self._faiss_download_enabled = self._should_download_faiss()
         self._last_embed_request_ts: float | None = None
+        self._embedding_call_counts = {
+            "total": 0,
+            "embed_documents": 0,
+            "embed_query": 0,
+        }
 
         # Instance-based FAISS cache (replaces global)
         self._faiss_cache: dict[str, FAISS] = {}
@@ -139,15 +162,26 @@ class EmbeddingService:
         """
         from .embedding_factory import create_embeddings
 
-        self.embeddings = create_embeddings(
+        raw_embeddings = create_embeddings(
             provider=self.config.embedding_provider,
             config=self.config,
             enable_cache=True
         )
 
-        if self.embeddings is None:
+        if raw_embeddings is None:
             logger.debug(f"Warning: Failed to initialize {self.config.embedding_provider} embeddings")
             logger.debug("         FAISS retrieval will be unavailable")
+            return
+
+        self.embeddings = _CountingEmbeddings(raw_embeddings, self._record_embedding_call)
+
+    def _record_embedding_call(self, call_type: str) -> None:
+        if call_type in self._embedding_call_counts:
+            self._embedding_call_counts[call_type] += 1
+        self._embedding_call_counts["total"] += 1
+
+    def get_embedding_call_counts(self) -> dict[str, int]:
+        return dict(self._embedding_call_counts)
 
     def _load_indices(self):
         """

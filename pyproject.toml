@@ -73,6 +73,7 @@ markers = [
     "requires_schema: Tests require schema files to be available",
     "indexing_simple: Use simple indexing strategy (development approach, proven e2e)",
     "indexing_hierarchical: Use hierarchical indexing strategy (L0/L1/L2, experimental)",
+    "indexing_override_static: Use override_static indexing strategy (no embeddings, baseline override required)",
 ]
 asyncio_mode = "auto"
 
