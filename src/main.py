@@ -688,6 +688,42 @@ def main(args: list[str] | None = None) -> None:
         logger.debug("Starting AMReXAgent workflow...")
         result = run_agent(user_requirement, config)
 
+        # Save metrics JSONL (if enabled)
+        try:
+            from src.utils.metrics import metrics_collector
+
+            if getattr(config, "metrics_enabled", True) and metrics_collector.events():
+                summary = metrics_collector.build_workflow_summary()
+                summary.update({
+                    "job_status": result.get("job_status", "unknown"),
+                    "iteration": result.get("iteration", 0),
+                    "run_directory": result.get("run_directory"),
+                })
+                metrics_collector.record_event(
+                    "workflow_summary",
+                    summary,
+                    stage="workflow",
+                    node="main",
+                    iteration=result.get("iteration", 0),
+                )
+                if 'run_directory' in result:
+                    run_dir = Path(result['run_directory'])
+                    metrics_path = run_dir / getattr(config, "metrics_filename", "metrics.jsonl")
+                else:
+                    base_dir = (
+                        Path(parsed_args.output_dir)
+                        if parsed_args.output_dir
+                        else (config.metrics_output_dir or config.output_dir)
+                    )
+                    base_dir.mkdir(parents=True, exist_ok=True)
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"metrics_{timestamp}.jsonl"
+                    metrics_path = base_dir / filename
+                metrics_collector.write_jsonl(str(metrics_path))
+                logger.info(f"Metrics saved to {metrics_path}")
+        except Exception as e:
+            logger.warning(f"Failed to save metrics JSONL: {e}")
+
         # Save workflow_history if requested
         if parsed_args.save_workflow:
             try:
