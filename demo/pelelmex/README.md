@@ -89,3 +89,30 @@ Note: this flow expects network access for the LLM provider (default: CBORG).
 Expected outputs (dry run): `output/run_<timestamp>/inputs`, `run_local.sh`,
 `workflow_history.json`, and `agent_transcript.txt` (no plotfiles generated).
 ```
+
+## Pytest Matrix Coverage
+
+The PeleLMeX test matrix is exercised via pytest (real services only). These
+tests are opt-in and require a local PeleLMeX repo plus schemas/indices.
+
+Examples:
+
+```bash
+pytest tests/integration/test_pelelmex_test_matrix.py -m e2e
+```
+
+```bash
+pytest tests/integration/test_pelelmex_test_matrix.py -m e2e \
+  --llm-provider cborg --llm-model claude-sonnet-4-5
+```
+
+```bash
+LLM_PRESET=sonnet pytest tests/integration/test_pelelmex_test_matrix.py -m e2e
+```
+
+Enable remote targets (Perlmutter/ALCF) explicitly:
+
+```bash
+pytest tests/integration/test_pelelmex_test_matrix.py -m e2e --pelelmex-remote \
+  --llm-provider alcf --llm-model meta-llama/Meta-Llama-3.1-70B-Instruct
+```

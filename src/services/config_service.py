@@ -125,6 +125,35 @@ class ConfigService:
         if config.llm_provider == "alcf" and not config.alcf_api_key:
             return config
 
+        # If model already set, use it.
+        if config.llm_model:
+            logger.info("Using LLM model: %s/%s", config.llm_provider, config.llm_model)
+            return config
+
+        preset_value = os.getenv("LLM_PRESET")
+        if preset_value:
+            resolved = _resolve_llm_preset(config.llm_provider, preset_value)
+            if resolved:
+                logger.info("Using LLM model preset: %s -> %s", preset_value, resolved)
+                return config.model_copy(update={'llm_model': resolved})
+            available = _preset_options(config.llm_provider)
+            if preset_value.strip().lower() in _KNOWN_PRESETS:
+                logger.warning(
+                    "LLM_PRESET=%s is not available for provider %s. Available presets: %s. "
+                    "Use --llm-model or config llm_model explicitly.",
+                    preset_value,
+                    config.llm_provider,
+                    _format_preset_options(available),
+                )
+            else:
+                logger.warning(
+                    "Unknown LLM_PRESET=%s. Available presets: %s. "
+                    "Use --llm-model or config llm_model explicitly.",
+                    preset_value,
+                    _format_preset_options(available),
+                )
+            return config
+
         # Check if model already set in environment
         if config.llm_provider == "cborg":
             env_model = os.getenv("CBORG_MODEL")
@@ -138,11 +167,6 @@ class ConfigService:
                 logger.debug(f" Using ALCF_MODEL from environment: {env_model}")
                 logger.info("Using LLM model: %s/%s", config.llm_provider, env_model)
                 return config.model_copy(update={'llm_model': env_model})
-        # If model already set, use it
-        if config.llm_model:
-            logger.info("Using LLM model: %s/%s", config.llm_provider, config.llm_model)
-            return config
-
         # Discover and select best model
         try:
             from openai import OpenAI
@@ -275,6 +299,39 @@ class ConfigService:
         except Exception as e:
             logger.error(f"[ERROR] CBORG API connection failed: {e}")
             return False
+
+
+_KNOWN_PRESETS = {"sonnet", "llama8b", "llama17b", "llama70b", "gpt", "gpt120b"}
+
+
+def _preset_options(provider: str) -> dict[str, str]:
+    if provider == "cborg":
+        return {
+            "sonnet": "claude-sonnet-4-5",
+            "llama17b": "lbl/Llama-4-Scout-17B-16E-Instruct",
+            "gpt": "gpt-4o",
+            "gpt120b": "gpt-oss-120b",
+        }
+    if provider == "alcf":
+        return {
+            "llama8b": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+            "llama70b": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+            "gpt120b": "openai/gpt-oss-120b",
+        }
+    return {}
+
+
+def _format_preset_options(options: dict[str, str]) -> str:
+    if not options:
+        return "none"
+    return ", ".join(f"{key}={value}" for key, value in sorted(options.items()))
+
+
+def _resolve_llm_preset(provider: str, preset: str) -> str | None:
+    normalized = preset.strip().lower()
+    if normalized not in _KNOWN_PRESETS:
+        return None
+    return _preset_options(provider).get(normalized)
 
     def setup_environment_vars(self, config: AMReXAgentConfig) -> None:
         """
