@@ -2,37 +2,19 @@ schema_version: "1.0"
 suite_id: "erf_scaling_v1"
 solver: "ERF"
 cases:
-  - id: "erf_bubble_strong"
-    solver: "ERF"
-    case_name: "Bubble"
-    case_dir: "Exec/RegTests/Bubble"
-    inputs: "inputs"
-    description: "Thermal bubble rise for atmospheric dynamics scaling."
-    dimension: 3
-    physics: [buoyancy, stratification, atmosphere]
-    scaling:
-      type: "strong"
-      sizes:
-        - label: "S"
-          grid: "128x128x128"
-          amr_levels: 0
-        - label: "M"
-          grid: "256x256x256"
-          amr_levels: 0
-        - label: "L"
-          grid: "384x384x384"
-          amr_levels: 0
-    tags: [regtest, atmosphere]
-    status: "ready"
-
   - id: "erf_density_current_strong"
     solver: "ERF"
     case_name: "DensityCurrent"
-    case_dir: "Exec/RegTests/DensityCurrent"
-    inputs: "inputs"
-    description: "Density current propagation for shear-driven flow scaling."
+    case_dir: "Exec/DryRegTests/DensityCurrent"
+    inputs: "inputs_amr"
+    description: "Classic density (gravity) current benchmark (Straka 1993)."
     dimension: 3
     physics: [density_current, stratification, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: false
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -52,10 +34,15 @@ cases:
     solver: "ERF"
     case_name: "ABL-Neutral"
     case_dir: "Exec/ABL"
-    inputs: "inputs"
-    description: "Neutral atmospheric boundary layer for weak scaling."
+    inputs: "inputs_smagorinsky"
+    description: "Atmospheric boundary layer with turbulence scheme and MOST options."
     dimension: 3
     physics: [abl, turbulence, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
     scaling:
       type: "weak"
       sizes:
@@ -75,10 +62,15 @@ cases:
     solver: "ERF"
     case_name: "ABL-Stable"
     case_dir: "Exec/ABL"
-    inputs: "inputs_stable"
-    description: "Stable boundary layer for night-time stratification scaling."
+    inputs: "mrf_stable_gabls"
+    description: "Stable ABL configuration with hydrostatic sounding inputs."
     dimension: 3
     physics: [abl, stable, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
     scaling:
       type: "weak"
       sizes:
@@ -98,10 +90,15 @@ cases:
     solver: "ERF"
     case_name: "ABL-Convective"
     case_dir: "Exec/ABL"
-    inputs: "inputs_convective"
-    description: "Convective boundary layer with surface heating for weak scaling."
+    inputs: "mrf_unstable"
+    description: "Unstable/convective ABL configuration with perturbations."
     dimension: 3
     physics: [abl, convection, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
     scaling:
       type: "weak"
       sizes:
@@ -116,3 +113,31 @@ cases:
           amr_levels: 0
     tags: [abl, convection]
     status: "draft"
+
+  - id: "erf_taylor_green_strong"
+    solver: "ERF"
+    case_name: "TaylorGreenVortex"
+    case_dir: "Exec/DryRegTests/TaylorGreenVortex"
+    inputs: "inputs_advdiff"
+    description: "Taylor-Green vortex benchmark for advection/diffusion terms."
+    dimension: 3
+    physics: [turbulence, vortex, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: false
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "128x128x128"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x256"
+          amr_levels: 0
+        - label: "L"
+          grid: "384x384x384"
+          amr_levels: 0
+    tags: [regtest, turbulence]
+    status: "ready"

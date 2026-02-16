@@ -7,9 +7,14 @@ cases:
     case_name: "Seamount"
     case_dir: "Exec/Seamount"
     inputs: "inputs"
-    description: "Seamount circulation case for strong scaling."
+    description: "Stably stratified fluid at rest over a seamount (ROMS standard test)."
     dimension: 3
-    physics: [ocean, topography, circulation]
+    physics: [ocean, stratification, bathymetry]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -30,9 +35,14 @@ cases:
     case_name: "Upwelling"
     case_dir: "Exec/Upwelling"
     inputs: "inputs"
-    description: "Coastal upwelling case for strong scaling."
+    description: "Wind-driven upwelling over a periodic channel (ROMS upwelling case)."
     dimension: 3
-    physics: [ocean, upwelling, coastal]
+    physics: [ocean, upwelling, wind_forcing]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -53,9 +63,14 @@ cases:
     case_name: "DoubleGyre"
     case_dir: "Exec/DoubleGyre"
     inputs: "inputs"
-    description: "Wind-driven double gyre for weak scaling."
+    description: "Classic wind-driven double gyre test (ROMS double gyre case)."
     dimension: 3
     physics: [ocean, gyre, wind_forcing]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
     scaling:
       type: "weak"
       sizes:
@@ -76,9 +91,14 @@ cases:
     case_name: "Channel_Test"
     case_dir: "Exec/Channel_Test"
     inputs: "inputs"
-    description: "Idealized channel flow test for strong scaling."
+    description: "Reentrant channel test for turbulence and GLS mixing scheme."
     dimension: 3
-    physics: [ocean, channel, circulation]
+    physics: [ocean, channel, turbulence]
+    difficulty_tier: "hard"
+    prompt_length_band: "short"
+    concept_density: "high"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
     scaling:
       type: "strong"
       sizes:
@@ -99,9 +119,14 @@ cases:
     case_name: "DoublyPeriodic"
     case_dir: "Exec/DoublyPeriodic"
     inputs: "inputs"
-    description: "Doubly periodic ocean box for weak scaling."
+    description: "Doubly periodic domain with depth-dependent velocity/temperature profile."
     dimension: 3
-    physics: [ocean, periodic, idealized]
+    physics: [ocean, periodic, stratification]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
     scaling:
       type: "weak"
       sizes:
