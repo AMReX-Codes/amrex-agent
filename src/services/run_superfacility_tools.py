@@ -1008,6 +1008,9 @@ def resolve_remote_output_dir(
     logger = logging.getLogger(__name__)
     candidates: list[Path] = []
     suffix: str | None = None
+    key_path = _resolve_sfapi_key_path()
+    client_id, secret = _resolve_sfapi_credentials()
+    sfapi_available = bool(key_path or (client_id and secret))
     if preferred_output_dir:
         preferred_path = Path(os.path.expandvars(str(preferred_output_dir)))
         if not str(preferred_path).startswith("/global/cfs/cdirs/"):
@@ -1035,6 +1038,10 @@ def resolve_remote_output_dir(
         except Exception as exc:
             logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
             continue
+        if sfapi_available and not nersc_session:
+            logger.debug("Using SFAPI credentials for %s; skipping REST mkdir check", candidate)
+            logger.info("Using remote output dir: %s", candidate)
+            return candidate
         try:
             ensure_remote_directory_rest(
                 remote_run_dir=str(candidate),
