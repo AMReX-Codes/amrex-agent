@@ -299,39 +299,6 @@ class ConfigService:
             logger.error(f"[ERROR] CBORG API connection failed: {e}")
             return False
 
-
-_KNOWN_PRESETS = {"sonnet", "llama8b", "llama17b", "llama70b", "gpt", "gpt120b"}
-
-
-def _preset_options(provider: str) -> dict[str, str]:
-    if provider == "cborg":
-        return {
-            "sonnet": "claude-sonnet-4-5",
-            "llama17b": "lbl/Llama-4-Scout-17B-16E-Instruct",
-            "gpt": "gpt-4o",
-            "gpt120b": "gpt-oss-120b",
-        }
-    if provider == "alcf":
-        return {
-            "llama8b": "meta-llama/Meta-Llama-3.1-8B-Instruct",
-            "llama70b": "meta-llama/Meta-Llama-3.1-70B-Instruct",
-            "gpt120b": "openai/gpt-oss-120b",
-        }
-    return {}
-
-
-def _format_preset_options(options: dict[str, str]) -> str:
-    if not options:
-        return "none"
-    return ", ".join(f"{key}={value}" for key, value in sorted(options.items()))
-
-
-def _resolve_llm_preset(provider: str, preset: str) -> str | None:
-    normalized = preset.strip().lower()
-    if normalized not in _KNOWN_PRESETS:
-        return None
-    return _preset_options(provider).get(normalized)
-
     def setup_environment_vars(self, config: AMReXAgentConfig) -> None:
         """
         Set up environment variables for utils.pele_tools.
@@ -377,6 +344,7 @@ def _resolve_llm_preset(provider: str, preset: str) -> str | None:
         if config.llm_model and config.llm_provider == "alcf":
             os.environ['ALCF_MODEL'] = config.llm_model
             logger.debug(f" Set ALCF_MODEL={config.llm_model}")
+
     def _load_config_file(self, config_path: Path) -> dict:
         """Load config overrides from JSON or YAML file."""
         if not config_path.exists():
@@ -464,3 +432,36 @@ def _resolve_llm_preset(provider: str, preset: str) -> str | None:
         logger.debug("\n" + "="*60 + "\n")
 
         return config
+
+
+_KNOWN_PRESETS = {"sonnet", "llama8b", "llama17b", "llama70b", "gpt", "gpt120b"}
+
+
+def _preset_options(provider: str) -> dict[str, str]:
+    if provider == "cborg":
+        return {
+            "sonnet": "claude-sonnet-4-5",
+            "llama17b": "lbl/Llama-4-Scout-17B-16E-Instruct",
+            "gpt": "gpt-4o",
+            "gpt120b": "gpt-oss-120b",
+        }
+    if provider == "alcf":
+        return {
+            "llama8b": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+            "llama70b": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+            "gpt120b": "openai/gpt-oss-120b",
+        }
+    return {}
+
+
+def _format_preset_options(options: dict[str, str]) -> str:
+    if not options:
+        return "none"
+    return ", ".join(f"{key}={value}" for key, value in sorted(options.items()))
+
+
+def _resolve_llm_preset(provider: str, preset: str) -> str | None:
+    normalized = preset.strip().lower()
+    if normalized not in _KNOWN_PRESETS:
+        return None
+    return _preset_options(provider).get(normalized)
