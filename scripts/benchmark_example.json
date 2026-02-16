@@ -1,0 +1,33 @@
+{
+  "prompts": [
+    {
+      "id": "demo_advection",
+      "prompt": "Run AMReX Advection_AmrCore with a 128x128 grid and 3 AMR levels."
+    },
+    {
+      "id": "demo_premixed_flame",
+      "prompt": "2D hydrogen premixed flame with 32x128 grid cells, 2 AMR levels, 200 timesteps."
+    }
+  ],
+  "models": [
+    {
+      "id": "cborg_default",
+      "overrides": {
+        "llm_provider": "cborg",
+        "llm_model": "lbl/Llama-4-Scout-17B-16E-Instruct"
+      }
+    },
+    {
+      "id": "pnnl_claude",
+      "overrides": {
+        "llm_provider": "pnnl",
+        "llm_model": "claude-haiku-4-5-20251001-v1-birthright"
+      }
+    }
+  ],
+  "run_args": {
+    "run_mode": "dry",
+    "save_workflow": true,
+    "save_log": true
+  }
+}
