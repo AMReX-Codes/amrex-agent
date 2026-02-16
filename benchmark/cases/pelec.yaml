@@ -1,0 +1,118 @@
+schema_version: "1.0"
+suite_id: "pelec_scaling_v1"
+solver: "PeleC"
+cases:
+  - id: "pelec_pmf_weak"
+    solver: "PeleC"
+    case_name: "PMF"
+    case_dir: "Exec/RegTests/PMF"
+    inputs: "pmf-lidryer-rk64.inp"
+    description: "Premixed methane flame; baseline reacting flow scaling case."
+    dimension: 3
+    physics: [premixed, combustion, compressible]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x256"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x512"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x1024"
+          amr_levels: 0
+    tags: [regtest, combustion, baseline]
+    status: "ready"
+
+  - id: "pelec_sedov_strong"
+    solver: "PeleC"
+    case_name: "Sedov"
+    case_dir: "Exec/RegTests/Sedov"
+    inputs: "sedov-1.inp"
+    description: "Sedov blast wave for compressible hydro strong scaling."
+    dimension: 3
+    physics: [blast, hydro, compressible]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x256"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x384"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x512"
+          amr_levels: 0
+    tags: [regtest, hydro, shock]
+    status: "ready"
+
+  - id: "pelec_tg_strong"
+    solver: "PeleC"
+    case_name: "TaylorGreen"
+    case_dir: "Exec/RegTests/TG"
+    inputs: "tg-1.inp"
+    description: "Taylor-Green vortex for turbulence scaling."
+    dimension: 3
+    physics: [turbulence, vortex, compressible]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x256"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x384"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x512"
+          amr_levels: 0
+    tags: [regtest, turbulence]
+    status: "ready"
+
+  - id: "pelec_tgreact_weak"
+    solver: "PeleC"
+    case_name: "TGReact"
+    case_dir: "Exec/RegTests/TGReact"
+    inputs: "tgreact.inp"
+    description: "Reacting Taylor-Green vortex for weak scaling."
+    dimension: 3
+    physics: [turbulence, combustion, compressible]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x128"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x256"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x512"
+          amr_levels: 0
+    tags: [regtest, combustion, turbulence]
+    status: "ready"
+
+  - id: "pelec_jetflame_weak"
+    solver: "PeleC"
+    case_name: "JetFlame"
+    case_dir: "Exec/Production/JetFlame"
+    inputs: "inputs"
+    description: "Turbulent jet flame production case for weak scaling."
+    dimension: 3
+    physics: [jet, combustion, compressible]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x256"
+          amr_levels: 1
+        - label: "M"
+          grid: "256x256x512"
+          amr_levels: 1
+        - label: "L"
+          grid: "384x384x768"
+          amr_levels: 1
+    tags: [production, combustion, jet]
+    status: "ready"

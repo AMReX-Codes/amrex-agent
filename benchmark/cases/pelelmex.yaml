@@ -1,0 +1,118 @@
+schema_version: "1.0"
+suite_id: "pelelmex_scaling_v1"
+solver: "PeleLMeX"
+cases:
+  - id: "pelelmex_flamesheet_strong"
+    solver: "PeleLMeX"
+    case_name: "FlameSheet"
+    case_dir: "Exec/RegTests/FlameSheet"
+    inputs: "inputs"
+    description: "Low-Mach diffusion flame sheet for strong scaling."
+    dimension: 3
+    physics: [diffusion_flame, combustion, low_mach]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x128"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x192"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x256"
+          amr_levels: 0
+    tags: [regtest, combustion, low_mach]
+    status: "ready"
+
+  - id: "pelelmex_taylorgreen_strong"
+    solver: "PeleLMeX"
+    case_name: "TaylorGreen"
+    case_dir: "Exec/RegTests/TaylorGreen"
+    inputs: "inputs"
+    description: "Low-Mach Taylor-Green vortex for turbulence scaling."
+    dimension: 3
+    physics: [turbulence, vortex, low_mach]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x256"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x384"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x512"
+          amr_levels: 0
+    tags: [regtest, turbulence]
+    status: "ready"
+
+  - id: "pelelmex_counterflow_weak"
+    solver: "PeleLMeX"
+    case_name: "CounterFlow"
+    case_dir: "Exec/Production/CounterFlow"
+    inputs: "inputs"
+    description: "Counterflow diffusion flame for weak scaling."
+    dimension: 3
+    physics: [counterflow, combustion, low_mach]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x256"
+          amr_levels: 1
+        - label: "M"
+          grid: "256x256x512"
+          amr_levels: 1
+        - label: "L"
+          grid: "384x384x768"
+          amr_levels: 1
+    tags: [production, combustion]
+    status: "ready"
+
+  - id: "pelelmex_jet_in_crossflow_weak"
+    solver: "PeleLMeX"
+    case_name: "JetInCrossflow"
+    case_dir: "Exec/Production/JetInCrossflow"
+    inputs: "inputs"
+    description: "Jet in crossflow combustion for weak scaling."
+    dimension: 3
+    physics: [jet, combustion, low_mach]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x256x128"
+          amr_levels: 1
+        - label: "M"
+          grid: "256x384x256"
+          amr_levels: 1
+        - label: "L"
+          grid: "384x512x384"
+          amr_levels: 1
+    tags: [production, combustion, jet]
+    status: "ready"
+
+  - id: "pelelmex_eb_c7_strong"
+    solver: "PeleLMeX"
+    case_name: "EB-C7"
+    case_dir: "Exec/RegTests/EB-C7"
+    inputs: "inputs"
+    description: "Embedded boundary low-Mach case for geometry-aware scaling."
+    dimension: 3
+    physics: [embedded_boundary, combustion, low_mach]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "192x192x192"
+          amr_levels: 1
+        - label: "M"
+          grid: "256x256x256"
+          amr_levels: 1
+        - label: "L"
+          grid: "384x384x384"
+          amr_levels: 1
+    tags: [regtest, eb, geometry]
+    status: "draft"
