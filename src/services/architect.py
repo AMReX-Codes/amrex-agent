@@ -173,6 +173,8 @@ class ArchitectService:
                 self.config.amrex_agent_root,
             )
             schema = ConfigModelFactory.load_schema(schema_path)
+            if isinstance(schema, dict) and "parameters" in schema:
+                schema = schema.get("parameters", {})
             if isinstance(schema, dict):
                 return schema
         except Exception as exc:
