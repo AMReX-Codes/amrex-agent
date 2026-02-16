@@ -165,6 +165,103 @@ class ArchitectService:
             return False
         return param_name in schema
 
+    def _load_schema_details(self, solver_config) -> dict[str, Any]:
+        try:
+            schema_path = ConfigModelFactory.resolve_schema_path(
+                solver_config,
+                self.config.amrex_agent_root / "database/schemas",
+                self.config.amrex_agent_root,
+            )
+            schema = ConfigModelFactory.load_schema(schema_path)
+            if isinstance(schema, dict):
+                return schema
+        except Exception as exc:
+            logger.debug(f"Could not load schema details: {exc}")
+        return {}
+
+    @staticmethod
+    def _param_keywords(param_name: str, description: str | None) -> set[str]:
+        tokens = set(re.split(r'[^a-zA-Z0-9]+', param_name.lower()))
+        if description:
+            tokens.update(re.split(r'[^a-zA-Z0-9]+', description.lower()))
+        stop = {"", "amr", "max", "min", "plot", "check", "file", "files"}
+        keywords = {t for t in tokens if len(t) >= 3 and t not in stop and not t.isdigit()}
+        expanded = set()
+        for token in keywords:
+            expanded.add(token)
+            if token == "step":
+                expanded.update({"steps", "timestep", "timesteps"})
+            if token == "cell":
+                expanded.add("cells")
+        return expanded
+
+    def _get_tier_params(
+        self,
+        solver_config,
+        available_params: list[str] | None = None,
+    ) -> tuple[list[str], list[str]]:
+        from database.configs.base_amrex_config import BaseAMReXConfig
+
+        tier1 = set(BaseAMReXConfig.tier1_params)
+        tier2 = set(BaseAMReXConfig.tier2_params)
+        if solver_config:
+            tier1.update(getattr(solver_config, "tier1_params", set()) or set())
+            tier2.update(getattr(solver_config, "tier2_params", set()) or set())
+
+        if available_params:
+            available_set = set(available_params)
+            tier1 = {name for name in tier1 if name in available_set}
+            tier2 = {name for name in tier2 if name in available_set}
+
+        return sorted(tier1), sorted(tier2)
+
+    def _extract_tier1_overrides(
+        self,
+        prompt: str,
+        solver_name: str | None,
+        solver_config,
+    ) -> list[tuple[str, str]]:
+        if not solver_config:
+            return []
+
+        schema = self._load_schema_details(solver_config)
+        available_params = sorted(schema.keys())
+        tier1_params, _tier2_params = self._get_tier_params(
+            solver_config, available_params
+        )
+
+        prompt_lower = prompt.lower()
+        overrides: list[tuple[str, str]] = []
+
+        for param in tier1_params:
+            param_info = schema.get(param)
+            if not param_info:
+                continue
+
+            param_pattern = re.escape(param)
+            explicit = re.search(
+                rf"\b{param_pattern}\s*=\s*([0-9eE+\-.\s]+)",
+                prompt,
+            )
+            if explicit:
+                value = explicit.group(1).strip()
+                if value:
+                    overrides.append((param, value))
+                continue
+
+            description = param_info.get("description")
+            keywords = self._param_keywords(param, description)
+            if not keywords:
+                continue
+
+            for keyword in keywords:
+                match = re.search(rf"(\d+(?:\.\d+)?)\s*{re.escape(keyword)}\b", prompt_lower)
+                if match:
+                    overrides.append((param, match.group(1)))
+                    break
+
+        return overrides
+
     @staticmethod
     def _resolve_llm_prompt_template(solver_config, template_name: str) -> str:
         from database.configs.base_amrex_config import BaseAMReXConfig
@@ -1054,6 +1151,20 @@ class ArchitectService:
         )
         modifications = llm_result.get('modifications', [])
 
+        tier1_overrides = self._extract_tier1_overrides(
+            prompt=user_prompt,
+            solver_name=code_name,
+            solver_config=solver_config,
+        )
+        if tier1_overrides:
+            modifications.extend(tier1_overrides)
+
+        if modifications:
+            merged = {}
+            for param, value in modifications:
+                merged[param] = value
+            modifications = list(merged.items())
+
         logger.debug(f"[Override] Extracted {len(modifications)} modifications")
 
         # Plan visualization and analysis (still useful for override)
@@ -1777,16 +1888,6 @@ class ArchitectService:
                     + "\nIf any have an exact parameter mapping, include it; otherwise skip."
                 )
 
-        def _resolve_tier_params(params: set[str], available: list[str]) -> list[str]:
-            if not params or not available:
-                return []
-            available_set = set(available)
-            resolved = set()
-            for name in params:
-                if name in available_set:
-                    resolved.add(name)
-            return sorted(resolved)
-
         def _build_tier_guidance(tier_name: str, params: list[str], notes: str) -> str:
             if not params:
                 return notes
@@ -1853,14 +1954,9 @@ The following parameters were NOT recognized in a previous attempt:
             )
         else:
             # No feedback - inject tier1 guidance if available, otherwise rely on baseline file only.
-            tier1_params = _resolve_tier_params(
-                getattr(solver_config, "tier1_params", set()),
-                available_params,
-            ) if solver_config else []
-            tier2_params = _resolve_tier_params(
-                getattr(solver_config, "tier2_params", set()),
-                available_params,
-            ) if solver_config else []
+            tier1_params, tier2_params = self._get_tier_params(
+                solver_config, available_params
+            ) if solver_config else ([], [])
             tier1_guidance = _build_tier_guidance("Tier 1", tier1_params, schema_scan_notes)
             param_chunks = [tier1_guidance]
 
@@ -2463,6 +2559,7 @@ CRITICAL: Use exact names only."""
             grid_answer = self.knowledge.query(grid_question, context=requirements)
             requirements['grid_validation'] = grid_answer['answer'][:200]
 
+        requirements['user_prompt'] = prompt
         return requirements
 
     def _build_solver_selection_question(self, prompt: str) -> str:
@@ -3840,6 +3937,20 @@ Solver: {code_name}"""
                         'rationale': requirements.get('solver_rationale', 'Knowledge-based CFL')[:100]
                     })
         # #######################
+
+        tier1_overrides = self._extract_tier1_overrides(
+            prompt=requirements.get('user_prompt', ''),
+            solver_name=solver,
+            solver_config=self.code_configs.get(solver),
+        )
+        for param, value in tier1_overrides:
+            modifications.append({
+                'file': 'inputs',
+                'parameter': param,
+                'old_value': baseline.get(param),
+                'new_value': str(value),
+                'rationale': "Tier-1 parameter override from prompt"
+            })
 
         # Convert to tuple format per PRD AgentState schema
         return [(mod['parameter'], mod['new_value']) for mod in modifications]

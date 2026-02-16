@@ -84,6 +84,9 @@ class BaseAMReXConfig:
     tier1_params: ClassVar[set[str]] = {
         "amr.n_cell",
         "geometry.is_periodic",
+        "amr.max_step",
+        "max_step",
+        "stop_time",
     }
 
     tier2_params: ClassVar[set[str]] = {

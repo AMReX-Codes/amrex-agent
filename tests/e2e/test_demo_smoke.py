@@ -8,7 +8,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEMO_DIR = REPO_ROOT / "demo"
-PELELMEX_PROMPT_PATH = DEMO_DIR / "pelelmex" / "user_requirements_test_DNS.txt"
+PELELMEX_PROMPT_PATH = DEMO_DIR / "pelelmex" / "user_requirements_jicf_short.txt"
 ERF_PROMPT_PATH = DEMO_DIR / "erf" / "user_requirements_abl.txt"
 
 
@@ -80,12 +80,13 @@ def _find_run_directory(output_dir: Path, stdout: str, stderr: str) -> Path | No
 @pytest.mark.e2e
 @pytest.mark.demo
 @pytest.mark.use_real_services
-@pytest.mark.indexing_hierarchical
+@pytest.mark.indexing_simple
+@pytest.mark.ci_fast
 @pytest.mark.requires_solver("PeleLMeX")
 @pytest.mark.requires_repos("PeleLMeX")
 @pytest.mark.requires_schema("PeleLMeX")
-@pytest.mark.requires_indices("level0", "level1", "level2")
-def test_demo_prompt_file_pelelmex_hierarchical(tmp_path: Path) -> None:
+@pytest.mark.requires_indices("faiss")
+def test_demo_prompt_file_pelelmex_jicf_short(tmp_path: Path) -> None:
     if not PELELMEX_PROMPT_PATH.exists():
         pytest.skip("Demo prompt file missing")
     repo_path = _resolve_pelelmex_repo()
@@ -105,7 +106,7 @@ def test_demo_prompt_file_pelelmex_hierarchical(tmp_path: Path) -> None:
         "--output-dir",
         str(output_dir),
         "--indexing-strategy",
-        "hierarchical",
+        "simple",
         "--baseline-override",
         baseline_override,
         "--dry-run",
