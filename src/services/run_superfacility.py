@@ -271,7 +271,7 @@ class SuperfacilityRunner:
 
         logger.debug("\n=== Setting Up Job ===\n")
 
-        # Use local output_dir for run directory creation.
+        # Use config output_dir if not specified (always local for run directory creation)
         if output_dir is None:
             output_dir = self.config.output_dir
 

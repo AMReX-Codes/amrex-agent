@@ -152,7 +152,6 @@ class ConfigService:
                     preset_value,
                     _format_preset_options(available),
                 )
-            return config
 
         # Check if model already set in environment
         if config.llm_provider == "cborg":
