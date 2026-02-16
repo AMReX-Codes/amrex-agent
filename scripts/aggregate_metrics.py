@@ -32,17 +32,17 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
     providers = data.get("providers") or []
     model_id = context.get("model_id") or (models[0] if models else "unknown")
     provider = context.get("provider") or (providers[0] if providers else None)
-    strategy = _extract_strategy(data)
+    strategy = context.get("strategy") or data.get("strategy") or _extract_strategy(data)
 
     return {
         "model_id": model_id,
         "provider": provider,
         "prompt_id": context.get("prompt_id"),
         "prompt_excerpt": context.get("prompt_excerpt"),
-        "case_id": context.get("case_id"),
-        "solver": context.get("solver"),
-        "difficulty_tier": context.get("difficulty_tier"),
-        "novelty_tier": context.get("novelty_tier"),
+        "case_id": context.get("case_id") or data.get("case_id"),
+        "solver": context.get("solver") or data.get("solver"),
+        "difficulty_tier": context.get("difficulty_tier") or data.get("difficulty_tier"),
+        "novelty_tier": context.get("novelty_tier") or data.get("novelty_tier"),
         "retrieval_strategy": strategy,
         "job_status": data.get("job_status"),
         "iteration": data.get("iteration"),
