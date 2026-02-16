@@ -1,0 +1,118 @@
+schema_version: "1.0"
+suite_id: "remora_scaling_v1"
+solver: "REMORA"
+cases:
+  - id: "remora_seamount_strong"
+    solver: "REMORA"
+    case_name: "Seamount"
+    case_dir: "Exec/Seamount"
+    inputs: "inputs"
+    description: "Seamount circulation case for strong scaling."
+    dimension: 3
+    physics: [ocean, topography, circulation]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, topography]
+    status: "ready"
+
+  - id: "remora_upwelling_strong"
+    solver: "REMORA"
+    case_name: "Upwelling"
+    case_dir: "Exec/Upwelling"
+    inputs: "inputs"
+    description: "Coastal upwelling case for strong scaling."
+    dimension: 3
+    physics: [ocean, upwelling, coastal]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, coastal]
+    status: "ready"
+
+  - id: "remora_double_gyre_weak"
+    solver: "REMORA"
+    case_name: "DoubleGyre"
+    case_dir: "Exec/DoubleGyre"
+    inputs: "inputs"
+    description: "Wind-driven double gyre for weak scaling."
+    dimension: 3
+    physics: [ocean, gyre, wind_forcing]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, wind]
+    status: "ready"
+
+  - id: "remora_channel_test_strong"
+    solver: "REMORA"
+    case_name: "Channel_Test"
+    case_dir: "Exec/Channel_Test"
+    inputs: "inputs"
+    description: "Idealized channel flow test for strong scaling."
+    dimension: 3
+    physics: [ocean, channel, circulation]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x192x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x256x128"
+          amr_levels: 0
+    tags: [ocean, test]
+    status: "ready"
+
+  - id: "remora_doubly_periodic_weak"
+    solver: "REMORA"
+    case_name: "DoublyPeriodic"
+    case_dir: "Exec/DoublyPeriodic"
+    inputs: "inputs"
+    description: "Doubly periodic ocean box for weak scaling."
+    dimension: 3
+    physics: [ocean, periodic, idealized]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, idealized]
+    status: "ready"

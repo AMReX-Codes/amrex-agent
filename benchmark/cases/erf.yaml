@@ -1,0 +1,118 @@
+schema_version: "1.0"
+suite_id: "erf_scaling_v1"
+solver: "ERF"
+cases:
+  - id: "erf_bubble_strong"
+    solver: "ERF"
+    case_name: "Bubble"
+    case_dir: "Exec/RegTests/Bubble"
+    inputs: "inputs"
+    description: "Thermal bubble rise for atmospheric dynamics scaling."
+    dimension: 3
+    physics: [buoyancy, stratification, atmosphere]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "128x128x128"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x256"
+          amr_levels: 0
+        - label: "L"
+          grid: "384x384x384"
+          amr_levels: 0
+    tags: [regtest, atmosphere]
+    status: "ready"
+
+  - id: "erf_density_current_strong"
+    solver: "ERF"
+    case_name: "DensityCurrent"
+    case_dir: "Exec/RegTests/DensityCurrent"
+    inputs: "inputs"
+    description: "Density current propagation for shear-driven flow scaling."
+    dimension: 3
+    physics: [density_current, stratification, atmosphere]
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "128x256x128"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x384x256"
+          amr_levels: 0
+        - label: "L"
+          grid: "384x512x384"
+          amr_levels: 0
+    tags: [regtest, atmosphere]
+    status: "ready"
+
+  - id: "erf_abl_neutral_weak"
+    solver: "ERF"
+    case_name: "ABL-Neutral"
+    case_dir: "Exec/ABL"
+    inputs: "inputs"
+    description: "Neutral atmospheric boundary layer for weak scaling."
+    dimension: 3
+    physics: [abl, turbulence, atmosphere]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x128"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x256"
+          amr_levels: 0
+    tags: [abl, turbulence]
+    status: "ready"
+
+  - id: "erf_abl_stable_weak"
+    solver: "ERF"
+    case_name: "ABL-Stable"
+    case_dir: "Exec/ABL"
+    inputs: "inputs_stable"
+    description: "Stable boundary layer for night-time stratification scaling."
+    dimension: 3
+    physics: [abl, stable, atmosphere]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x128"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x256"
+          amr_levels: 0
+    tags: [abl, stable]
+    status: "draft"
+
+  - id: "erf_abl_convective_weak"
+    solver: "ERF"
+    case_name: "ABL-Convective"
+    case_dir: "Exec/ABL"
+    inputs: "inputs_convective"
+    description: "Convective boundary layer with surface heating for weak scaling."
+    dimension: 3
+    physics: [abl, convection, atmosphere]
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x128"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x256"
+          amr_levels: 0
+    tags: [abl, convection]
+    status: "draft"
