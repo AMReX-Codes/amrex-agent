@@ -1897,13 +1897,106 @@ class ArchitectService:
             param_list = ", ".join(params)
             notes_section = f"{notes}\n" if notes else ""
             return (
-                f"{notes_section}VALID PRIORITY PARAMETERS ({tier_name}):\n"
+                f"{notes_section}PRIORITY PARAMETERS ({tier_name}):\n"
                 f"  {param_list}\n\n"
                 "MATCHING INSTRUCTIONS:\n"
-                "1. Use exact parameter names from this list if they apply.\n"
-                "2. If no exact match exists, SKIP that modification.\n"
+                "1. Prefer exact parameter names from this list when they apply.\n"
+                "2. If the needed parameter is not in this list, use the exact name from the baseline input file.\n"
+                "3. If no exact match exists in either place, SKIP that modification.\n"
                 "CRITICAL: Parameter names are case-sensitive and must include the full prefix."
             )
+
+        def _merge_with_overrides(
+            base_mods: list[tuple[str, str]],
+            extra_mods: list[tuple[str, str]],
+            override_params: set[str],
+        ) -> list[tuple[str, str]]:
+            merged = {}
+            for param, value in base_mods:
+                if param not in merged:
+                    merged[param] = value
+            for param, value in extra_mods:
+                if param in merged and param not in override_params:
+                    continue
+                merged[param] = value
+            return list(merged.items())
+
+        def _run_guidance_pass(
+            pass_name: str,
+            chunks: list[str],
+        ) -> dict:
+            chunk_results: list[list[tuple[str, str]]] = []
+            chunk_errors: list[str] = []
+            for chunk_idx, param_guidance in enumerate(chunks):
+                logger.debug(f"[LLM] {pass_name} pass chunk {chunk_idx+1}/{len(chunks)}")
+                result = self._call_llm_for_modifications(
+                    case_description=case_description,
+                    inputs_content=inputs_content,
+                    param_guidance=param_guidance,
+                    solver_config=solver_config,
+                    client=client,
+                )
+                if result.get('success'):
+                    chunk_results.append(result['modifications'])
+                else:
+                    chunk_errors.append(result.get('error'))
+                    logger.warning(
+                        f"[LLM] {pass_name} chunk {chunk_idx+1} failed: {result.get('error')}"
+                    )
+
+            modifications: list[tuple[str, str]] = []
+            merge_warnings: list[str] = []
+            if chunk_results:
+                modifications, merge_warnings = self._merge_modifications(
+                    chunk_results,
+                    case_description,
+                )
+
+            return {
+                "pass_name": pass_name,
+                "modifications": modifications,
+                "merge_warnings": merge_warnings,
+                "errors": chunk_errors,
+                "chunks_total": len(chunks),
+                "chunks_processed": len(chunk_results),
+            }
+
+        def _merge_passes(
+            base_pass: dict,
+            extra_pass: dict,
+            override_params: set[str],
+        ) -> dict:
+            merged_mods = _merge_with_overrides(
+                base_pass.get("modifications", []),
+                extra_pass.get("modifications", []),
+                override_params,
+            )
+            merge_warnings = (base_pass.get("merge_warnings") or []) + (
+                extra_pass.get("merge_warnings") or []
+            )
+            errors = (base_pass.get("errors") or []) + (extra_pass.get("errors") or [])
+            return {
+                "modifications": merged_mods,
+                "merge_warnings": merge_warnings,
+                "errors": errors,
+            }
+
+        def _needs_schema_fallback(
+            merged_mods: list[tuple[str, str]],
+            prompt_text: str,
+            tier1_params: list[str],
+            tier2_params: list[str],
+        ) -> bool:
+            if not merged_mods:
+                return True
+            mods_set = {param for param, _ in merged_mods}
+            if tier1_params or tier2_params:
+                tier_params = set(tier1_params) | set(tier2_params)
+                if tier_params and not mods_set.intersection(tier_params):
+                    return True
+            if len(prompt_text.split()) > 50 and len(merged_mods) < 3:
+                return True
+            return False
 
         # Build parameter guidance chunks with tiered fallback for context limits
         param_chunks = []
@@ -1956,12 +2049,80 @@ The following parameters were NOT recognized in a previous attempt:
                 solver_config=solver_config,
             )
         else:
-            # No feedback - inject tier1 guidance if available, otherwise rely on baseline file only.
             tier1_params, tier2_params = self._get_tier_params(
                 solver_config, available_params
             ) if solver_config else ([], [])
-            tier1_guidance = _build_tier_guidance("Tier 1", tier1_params, schema_scan_notes)
-            param_chunks = [tier1_guidance]
+            # No feedback: multi-pass (baseline-only, then tier-priority, then schema fallback).
+            baseline_pass = _run_guidance_pass("baseline", [schema_scan_notes or ""])
+
+            tier_mods: list[tuple[str, str]] = []
+            tier_warnings: list[str] = []
+            if tier1_params:
+                tier1_guidance = _build_tier_guidance("Tier 1", tier1_params, "")
+                tier1_pass = _run_guidance_pass("tier1", [tier1_guidance])
+                tier_mods = tier1_pass.get("modifications", [])
+                tier_warnings = tier1_pass.get("merge_warnings", [])
+                if tier_mods and tier2_params:
+                    tier2_guidance = _build_tier_guidance("Tier 2", tier2_params, "")
+                    tier2_pass = _run_guidance_pass("tier2", [tier2_guidance])
+                    tier2_mods = tier2_pass.get("modifications", [])
+                    tier2_warnings = tier2_pass.get("merge_warnings", [])
+                    if tier2_mods:
+                        tier_mods, tier_warnings = self._merge_modifications(
+                            [tier_mods, tier2_mods],
+                            case_description,
+                        )
+                    else:
+                        tier_warnings = (tier_warnings or []) + (tier2_warnings or [])
+
+            merged_pass = _merge_passes(
+                baseline_pass,
+                {"modifications": tier_mods, "merge_warnings": tier_warnings},
+                override_params=set(tier1_params) | set(tier2_params),
+            )
+            merged_mods = merged_pass.get("modifications", [])
+
+            used_schema_fallback = False
+            if _needs_schema_fallback(
+                merged_mods,
+                case_description,
+                tier1_params,
+                tier2_params,
+            ) and available_params:
+                used_schema_fallback = True
+                param_chunks = self._build_param_guidance(
+                    failed_section=schema_scan_notes,
+                    available=available_params,
+                    all_suggested=[],
+                    fallback_level=0,
+                    solver_config=solver_config,
+                )
+                schema_pass = _run_guidance_pass("schema", param_chunks)
+                if schema_pass.get("modifications"):
+                    merged_pass = _merge_passes(
+                        {"modifications": merged_mods, "merge_warnings": tier_warnings},
+                        schema_pass,
+                        override_params=set(),
+                    )
+                    merged_mods = merged_pass.get("modifications", [])
+                    tier_warnings = merged_pass.get("merge_warnings", [])
+                else:
+                    tier_warnings.extend(schema_pass.get("merge_warnings") or [])
+
+            confidence = 0.75 if merged_mods else 0.3
+            if used_schema_fallback:
+                confidence *= 0.9
+
+            return {
+                "modifications": merged_mods,
+                "confidence": confidence,
+                "used_llm": True,
+                "parameter_resolution_applied": False,
+                "fallback_level": None,
+                "chunks_processed": None,
+                "chunks_total": None,
+                "merge_warnings": (baseline_pass.get("merge_warnings") or []) + (tier_warnings or []),
+            }
 
         # Try with progressively different chunking strategies on failure
         max_fallback = 3 if parameter_resolution_feedback else 1
