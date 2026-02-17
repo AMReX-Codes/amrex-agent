@@ -74,32 +74,6 @@ Config override example:
 python amrex_agent.py --prompt "Run AMReX Advection_AmrCore with a 64x64 grid" --config demo/amrex/config.yaml
 ```
 
-### Container runs (local/NERSC/ALCF)
-
-Container runs are enabled when `container_image` (or `container_runtime`) is set in config.
-Default image (when unset): `registry.nersc.gov/amsc014/superfacility/pele:latest`.
-ALCF defaults to `docker://registry.nersc.gov/amsc014/superfacility/pele:latest` for Apptainer.
-
-Minimal examples (YAML config override):
-
-```yaml
-environment: local
-container_image: registry.nersc.gov/amsc014/superfacility/pele:latest
-container_runtime: docker
-```
-
-```yaml
-environment: perlmutter
-container_image: registry.nersc.gov/amsc014/superfacility/pele:latest
-container_runtime: podman-hpc
-```
-
-```yaml
-environment: alcf
-container_image: docker://registry.nersc.gov/amsc014/superfacility/pele:latest
-container_runtime: apptainer
-```
-
 ## Configuration knobs (examples)
 
 - `--indexing-strategy`:
