@@ -296,7 +296,21 @@ class ConfigService:
             return True
 
         except Exception as e:
-            logger.error(f"[ERROR] CBORG API connection failed: {e}")
+            detail = str(e)
+            if config.llm_provider == "cborg":
+                hint = ""
+                if (
+                    "401" in detail
+                    or "Authentication" in detail
+                    or "token_not_found_in_db" in detail
+                ):
+                    hint = (
+                        " Check CBORG_API_KEY and CBORG_BASE_URL, and verify the token "
+                        "is registered with the proxy."
+                    )
+                logger.error(f"[ERROR] CBORG API connection failed: {detail}.{hint}")
+            else:
+                logger.error(f"[ERROR] ALCF API connection failed: {detail}")
             return False
 
     def setup_environment_vars(self, config: AMReXAgentConfig) -> None:

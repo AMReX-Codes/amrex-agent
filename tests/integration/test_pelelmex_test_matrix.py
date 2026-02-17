@@ -248,6 +248,9 @@ def test_pelelmex_test_matrix_case(
         "--run-mode",
         "dry",
         "--save-workflow",
+        "--save-transcript",
+        "--save-log",
+        "--verbose",
     ]
     if case.execution_target != "local":
         cmd.extend(["--environment", "perlmutter"])
