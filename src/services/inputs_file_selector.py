@@ -160,6 +160,8 @@ class InputsFileSelector:
             Selected inputs file path, or None if not found.
         """
         excluded_files = excluded_files or []
+        original_strategy = strategy
+        fallback_reason = None
 
         # Find candidate files (use provided or discover)
         if available_files:
@@ -185,16 +187,30 @@ class InputsFileSelector:
             selected = cls._select_override(case_dir, config)
             if selected:
                 logger.info(f"Selected inputs file: {selected.name} (strategy: override)")
+                _record_inputs_selection(
+                    strategy="override",
+                    original_strategy=original_strategy,
+                    selected=selected,
+                    candidates=candidates,
+                )
                 return selected
             # Fallback to smallest if override didn't resolve
+            fallback_reason = "override_unresolved"
             strategy = "smallest"
 
         if strategy == "llm_compare":
             selected = cls._select_with_llm(case_dir, candidates, config=config)
             if selected:
                 logger.info(f"Selected inputs file: {selected.name} (strategy: llm_compare)")
+                _record_inputs_selection(
+                    strategy="llm_compare",
+                    original_strategy=original_strategy,
+                    selected=selected,
+                    candidates=candidates,
+                )
                 return selected
             # LLM unavailable or failed → fallback to smallest
+            fallback_reason = "llm_unavailable"
             strategy = "smallest"
 
         # Score by strategy
@@ -209,6 +225,14 @@ class InputsFileSelector:
 
         selected = scored[0][1]
         logger.info(f"Selected inputs file: {selected.name} (strategy: {strategy}, score: {scored[0][0]:.2f})")
+        _record_inputs_selection(
+            strategy=strategy,
+            original_strategy=original_strategy,
+            selected=selected,
+            candidates=candidates,
+            fallback_reason=fallback_reason,
+            score=scored[0][0],
+        )
 
         return selected
 
@@ -313,3 +337,30 @@ class InputsFileSelector:
         if default_path.exists():
             return default_path
         return None
+
+
+def _record_inputs_selection(
+    *,
+    strategy: str,
+    original_strategy: str,
+    selected: Path,
+    candidates: list[Path],
+    fallback_reason: str | None = None,
+    score: float | None = None,
+) -> None:
+    try:
+        from src.utils.metrics import metrics_collector
+
+        metrics_collector.record_event(
+            "retrieval_strategy",
+            {
+                "strategy": strategy,
+                "original_strategy": original_strategy,
+                "fallback_reason": fallback_reason,
+                "selected": selected.name,
+                "candidate_count": len(candidates),
+                "score": score,
+            },
+        )
+    except Exception:
+        return
