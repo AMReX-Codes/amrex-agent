@@ -1098,12 +1098,26 @@ def resolve_remote_output_dir(
         if candidate not in candidates:
             candidates.append(candidate)
 
+    create_budget = 2
     for candidate in candidates:
         try:
             list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
         except Exception as exc:
-            logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
-            continue
+            if create_budget > 0:
+                try:
+                    ensure_remote_directory_rest(
+                        remote_run_dir=str(candidate),
+                        nersc_session=nersc_session,
+                        upload_host=system,
+                    )
+                    create_budget -= 1
+                    list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
+                except Exception as mkdir_exc:
+                    logger.debug("Remote output dir check failed for %s: %s", candidate, mkdir_exc)
+                    continue
+            else:
+                logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
+                continue
         if sfapi_available and not nersc_session:
             logger.debug("Using SFAPI credentials for %s; skipping REST mkdir check", candidate)
             logger.info("Using remote output dir: %s", candidate)
