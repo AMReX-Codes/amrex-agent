@@ -1164,7 +1164,8 @@ class ArchitectService:
         if modifications:
             merged = {}
             for param, value in modifications:
-                merged[param] = value
+                if param not in merged:
+                    merged[param] = value
             modifications = list(merged.items())
 
         logger.debug(f"[Override] Extracted {len(modifications)} modifications")
@@ -3945,7 +3946,10 @@ Solver: {code_name}"""
             solver_name=solver,
             solver_config=self.code_configs.get(solver),
         )
+        existing_params = {mod['parameter'] for mod in modifications}
         for param, value in tier1_overrides:
+            if param in existing_params:
+                continue
             modifications.append({
                 'file': 'inputs',
                 'parameter': param,
@@ -3953,6 +3957,7 @@ Solver: {code_name}"""
                 'new_value': str(value),
                 'rationale': "Tier-1 parameter override from prompt"
             })
+            existing_params.add(param)
 
         # Convert to tuple format per PRD AgentState schema
         return [(mod['parameter'], mod['new_value']) for mod in modifications]

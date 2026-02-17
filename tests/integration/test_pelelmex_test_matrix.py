@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from amrex_tools import parse_pele_inputs
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEMO_DIR = REPO_ROOT / "demo" / "pelelmex"
@@ -103,6 +104,60 @@ def _find_run_directory(output_dir: Path, stdout: str, stderr: str) -> Path | No
             if candidate.exists():
                 return candidate
     return None
+
+
+def _parse_composition(composition: str) -> dict[str, float]:
+    parsed: dict[str, float] = {}
+    for item in composition.split():
+        if ":" not in item:
+            continue
+        species, value = item.split(":", 1)
+        parsed[species.strip()] = float(value)
+    return parsed
+
+
+def _float_close(actual: str, expected: float, rel_tol: float = 1e-6) -> bool:
+    return abs(float(actual) - expected) <= rel_tol * max(abs(expected), 1.0)
+
+
+def _assert_common_prompt_values(config: dict) -> None:
+    prob = config.get("prob", {})
+    assert _float_close(prob.get("cf_velocity", "nan"), 19.1)
+    assert _float_close(prob.get("cf_temp", "nan"), 1236.0)
+    assert prob.get("cf_composition_type") == "mole"
+    assert _float_close(prob.get("jet_velocity", "nan"), 42.2)
+    assert _float_close(prob.get("jet_temp", "nan"), 300.0)
+    assert prob.get("jet_composition_type") == "mole"
+    assert _float_close(prob.get("jet_rad", "nan"), 0.0015875)
+
+    cf_comp = _parse_composition(prob.get("cf_composition", ""))
+    assert cf_comp == {
+        "O2": 0.1291,
+        "N2": 0.7611,
+        "CO2": 0.0366,
+        "H2O": 0.0732,
+        "OH": 1.9629e-5,
+    }
+
+    jet_comp = _parse_composition(prob.get("jet_composition", ""))
+    assert jet_comp == {
+        "H2": 0.7,
+        "N2": 0.18,
+        "HE": 0.12,
+    }
+
+
+def _assert_wall_thermal_condition(config: dict, expect_isothermal: bool) -> None:
+    pele = config.get("peleLM", {})
+    lo_bc = pele.get("lo_bc", "")
+    hi_bc = pele.get("hi_bc", "")
+    combined = f"{lo_bc} {hi_bc}"
+    if expect_isothermal:
+        assert "NoSlipWallIsotherm" in combined or "SlipWallIsotherm" in combined
+        assert "NoSlipWallAdiab" not in combined and "SlipWallAdiab" not in combined
+    else:
+        assert "NoSlipWallAdiab" in combined or "SlipWallAdiab" in combined
+        assert "Isotherm" not in combined
 
 
 def _remote_tests_enabled(request: pytest.FixtureRequest) -> bool:
@@ -218,3 +273,13 @@ def test_pelelmex_test_matrix_case(
     assert inputs_files, "No inputs file created"
     workflow_file = run_dir / "workflow_history.json"
     assert workflow_file.exists(), "workflow_history.json missing"
+
+    inputs_config = parse_pele_inputs(str(inputs_files[0]))
+    _assert_common_prompt_values(inputs_config)
+    _assert_wall_thermal_condition(
+        inputs_config,
+        "isothermal" in case.prompt_path.name,
+    )
+    if case.prompt_path.name == "user_requirements_test_DNS_mod.txt":
+        amr = inputs_config.get("amr", {})
+        assert _float_close(amr.get("max_step", "nan"), 200.0)
