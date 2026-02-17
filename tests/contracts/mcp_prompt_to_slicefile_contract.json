@@ -43,6 +43,7 @@
       "visualization_metadata": "dict"
     }
   },
+  "computation_output_location": "workflow_history[-1]['details']",
 
   "slice_expectations": {
     "plot_types": ["slice"],

@@ -235,8 +235,8 @@ TASK - reference-case adaptation:
 8. Only include parameters that DIFFER from baseline or must be ADDED.
 
 CRITICAL RULES:
-- Use parameter names EXACTLY as shown in the valid parameters list (including prefix like "prob.")
-- If you cannot find an exact match, SKIP that modification
+- Use parameter names EXACTLY as shown in the baseline input file or valid parameters list (including prefix like "prob."). The list is a priority aid, not exhaustive.
+- If you cannot find an exact match in either place, SKIP that modification
 - Never invent, modify, or abbreviate parameter names
 - For grid resolution requests ("grid cells", "grid size", "resolution"), prefer amr.n_cell (domain cell counts).
 - amr.max_grid_size is for domain decomposition / refinement control; use it only when explicitly requested.

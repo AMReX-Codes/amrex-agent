@@ -36,6 +36,7 @@
       "method": "str"
     }
   },
+  "computation_output_location": "workflow_history[-1]['details']",
 
   "plotfile_expectations": {
     "source": "run_directory",

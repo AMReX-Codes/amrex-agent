@@ -413,7 +413,7 @@ class AMReXAgentConfig(BaseModel):
     )
 
     llm_retry_max_attempts: int = Field(
-        default=3,
+        default=6,
         ge=1,
         description="Max retry attempts for LLM chat completions (1 disables retries)."
     )
@@ -1020,7 +1020,7 @@ class _LLMRetryCompletions:
                 return self._completions.create(*args, **kwargs)
             except Exception as exc:
                 status_code = _get_http_status(exc)
-                retryable = status_code in self._retryable_statuses
+                retryable = status_code in self._retryable_statuses or _is_retryable_exception(exc)
                 if not retryable or attempt >= self._max_attempts:
                     raise
                 base_delay = 1.0
@@ -1050,6 +1050,24 @@ def _get_http_status(error: Exception) -> int | None:
     if isinstance(status, int):
         return status
     return None
+
+
+def _is_retryable_exception(error: Exception) -> bool:
+    try:
+        import httpx
+    except Exception:
+        httpx = None
+    if httpx is not None and isinstance(
+        error,
+        (
+            httpx.ConnectError,
+            httpx.ConnectTimeout,
+            httpx.ReadTimeout,
+            httpx.WriteTimeout,
+        ),
+    ):
+        return True
+    return False
 
 
 class _LLMGateClient:

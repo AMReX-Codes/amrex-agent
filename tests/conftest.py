@@ -46,6 +46,35 @@ def pytest_addoption(parser) -> None:
         action="store_true",
         help="Run quality tests only (auto-marks tests/quality).",
     )
+    group.addoption(
+        "--llm-provider",
+        dest="llm_provider",
+        default=None,
+        help="LLM provider override for integration/E2E runs (cborg, alcf, openai, etc.)",
+    )
+    group.addoption(
+        "--llm-model",
+        dest="llm_model",
+        default=None,
+        help="LLM model override for integration/E2E runs",
+    )
+    group.addoption(
+        "--alcf-cluster",
+        dest="alcf_cluster",
+        default=None,
+        help="ALCF cluster selector (sophia or metis)",
+    )
+    group.addoption(
+        "--alcf-base-url",
+        dest="alcf_base_url",
+        default=None,
+        help="ALCF base URL override",
+    )
+    group.addoption(
+        "--pelelmex-remote",
+        action="store_true",
+        help="Enable PeleLMeX test-matrix remote targets",
+    )
 
 
 def pytest_configure(config) -> None:
@@ -101,8 +130,8 @@ def pytest_collection_modifyitems(config, items) -> None:
                 "use_real_services and use_mock_services are mutually exclusive."
             )
 
-        if item.get_closest_marker("use_real_services") and not _has_cborg_key():
-            item.add_marker(pytest.mark.skip(reason="CBORG API key not available"))
+        if item.get_closest_marker("use_real_services") and not _has_required_llm_key(config):
+            item.add_marker(pytest.mark.skip(reason="Required LLM API key not available"))
 
         solver_marker = item.get_closest_marker("requires_solver")
         if solver_marker:
@@ -143,6 +172,35 @@ def _explicit_e2e_selected(config) -> bool:
         if "tests" in parts and "e2e" in parts:
             return True
     return False
+
+
+def _selected_llm_provider(config) -> str | None:
+    return (config.getoption("llm_provider") or "").strip().lower() or None
+
+
+def _has_required_llm_key(config) -> bool:
+    provider = _selected_llm_provider(config)
+    provider_env = {
+        "alcf": "ALCF_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "pnnl": "LLM_API_KEY",
+        "litellm": "LLM_API_KEY",
+    }
+    if provider in {None, "cborg"}:
+        return _has_cborg_key()
+    env_var = provider_env.get(provider)
+    if env_var:
+        return bool(os.getenv(env_var))
+    if provider == "alcf":
+        return bool(os.getenv("ALCF_API_KEY"))
+    if provider == "openai":
+        return bool(os.getenv("OPENAI_API_KEY"))
+    if provider == "anthropic":
+        return bool(os.getenv("ANTHROPIC_API_KEY"))
+    if provider:
+        return bool(os.getenv("LLM_API_KEY"))
+    return _has_cborg_key()
 
 
 def _has_cborg_key() -> bool:
