@@ -37,6 +37,9 @@ class _CountingEmbeddings:
         self._record_call("embed_query")
         return self._embeddings.embed_query(text)
 
+    def __call__(self, text: str) -> list[float]:
+        return self.embed_query(text)
+
     def __getattr__(self, name: str):
         return getattr(self._embeddings, name)
 

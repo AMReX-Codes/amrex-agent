@@ -67,6 +67,8 @@ import socket
 import subprocess
 from datetime import datetime
 from pathlib import Path
+
+from src.config import resolve_database_path
 from typing import Any
 
 import numpy as np
@@ -251,7 +253,7 @@ def load_pele_knowledge() -> str:
     -------
         str: Combined text from all report files
     """
-    reports_dir = Path(os.getenv("PELE_REPORTS_DIR", "./reports"))
+    reports_dir = Path(os.getenv("PELE_REPORTS_DIR") or resolve_database_path("reports"))
 
     if not reports_dir.exists():
         return f"[ERROR] Reports directory not found: {reports_dir}"
@@ -445,8 +447,7 @@ def add_custom_knowledge(content: str, title: str = "Custom Notes") -> str:
         ...     "title": "Perlmutter GPU Notes"
         ... })
     """
-    reports_dir = Path(os.getenv('PELE_REPORTS_DIR',
-                                  str(Path.cwd().parent / "reports")))
+    reports_dir = Path(os.getenv("PELE_REPORTS_DIR") or resolve_database_path("reports"))
 
     if not reports_dir.exists():
         reports_dir.mkdir(parents=True)

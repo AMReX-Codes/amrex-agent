@@ -111,6 +111,7 @@ class ArchitectService:
     def __init__(self, config, embedding_service=None):
         self.config = config
         self.embedder = embedding_service
+        self._knowledge = None
 
         # Initialize Level 0 Searcher (Architect Service: Solver Selection)
         if embedding_service and hasattr(config, "faiss_db_path"):
@@ -128,7 +129,6 @@ class ArchitectService:
         # Initialize Config Registry (Cases Service: Config-Driven Discovery)
         from database.configs import discover_code_configs
         self.code_configs = {cfg.code_name: cfg for cfg in discover_code_configs()}
-        self.knowledge = PeleKnowledgeService(config)
         self.cases = AMReXCasesService(config)
 
         # Initialize LLM client for hierarchical planning
@@ -149,6 +149,12 @@ class ArchitectService:
             except Exception as e:
                 logger.debug(f"Warning: Could not initialize FAISS embeddings: {e}")
                 self.embeddings = None
+
+    @property
+    def knowledge(self) -> PeleKnowledgeService:
+        if self._knowledge is None:
+            self._knowledge = PeleKnowledgeService(self.config)
+        return self._knowledge
 
     def _schema_has_param(self, solver_name: str | None, param_name: str) -> bool:
         if not solver_name:
@@ -2578,6 +2584,8 @@ CRITICAL: Use exact names only."""
         if any(word in prompt_lower for word in ['flame', 'combustion', 'burn']):
             requirements['physics'] = 'combustion'
 
+        requirements['problem_type'] = self._infer_problem_type(prompt, requirements)
+
         # === NEW: KNOWLEDGE-ENHANCED VALIDATION ===
 
         # 1a. Try to parse solver explicitly from prompt FIRST
@@ -2600,22 +2608,33 @@ CRITICAL: Use exact names only."""
 
         # 1b. If still not found, infer from KB
         if 'solver' not in requirements:
-            solver_question = self._build_solver_selection_question(prompt)
-            solver_answer = self.knowledge.query(solver_question)
-            requirements['solver'] = self._parse_solver_from_answer(solver_answer['answer'])
-            requirements['solver_rationale'] = solver_answer['answer'][:200]
-            requirements['solver_source'] = 'knowledge_base'
+            if self.level0_searcher:
+                try:
+                    selection = self.select_solver(prompt)
+                    if selection and selection.code_name:
+                        requirements['solver'] = selection.code_name
+                        requirements['solver_source'] = 'level0_faiss'
+                        requirements['solver_confidence'] = selection.confidence
+                        logger.debug(f"      Detected solver from level0: {selection.code_name}")
+                except Exception as exc:
+                    logger.debug("      Level0 solver selection failed: %s", exc)
+            if 'solver' not in requirements:
+                solver_question = self._build_solver_selection_question(prompt)
+                solver_answer = self.knowledge.query(solver_question)
+                requirements['solver'] = self._parse_solver_from_answer(solver_answer['answer'])
+                requirements['solver_rationale'] = solver_answer['answer'][:200]
+                requirements['solver_source'] = 'knowledge_base'
 
         # 2. Get recommended CFL for the detected fuel/physics
         if requirements.get('fuel'):
             cfl_question = f"What CFL number is recommended for {requirements['fuel']} combustion simulations?"
-            cfl_answer = self.knowledge.query(cfl_question)
+            cfl_answer = self.knowledge.query(cfl_question, context=requirements)
             requirements['recommended_cfl'] = self._parse_cfl_from_answer(cfl_answer['answer'])
 
         # 3. Get chemistry mechanism recommendation
         if requirements.get('fuel'):
             chem_question = f"What chemistry mechanism should I use for {requirements['fuel']}?"
-            chem_answer = self.knowledge.query(chem_question)
+            chem_answer = self.knowledge.query(chem_question, context=requirements)
             requirements['chemistry_mechanism'] = chem_answer['answer'][:300]
 
         # 4. Validate grid resolution against Kolmogorov scale / flame thickness
@@ -2812,7 +2831,7 @@ Answer with the solver name and brief justification."""
         # Query knowledge base
         for question in questions:
             try:
-                result = self.knowledge.query(question)
+                result = self.knowledge.query(question, context=requirements)
                 knowledge[question] = result.get('answer', '')
             except Exception as e:
                 logger.warning(f"[WARN] Knowledge query failed: {e}")
@@ -2844,10 +2863,10 @@ Answer with the solver name and brief justification."""
             # Default weights for 5-bucket scoring system
             # FAISS semantic search added as 5th bucket for A/B comparison
             weights = {
-                'kb_relevance': 0.35,
-                'metrics': 0.35,
+                'kb_relevance': 0.40,
+                'metrics': 0.25,
                 'path_heuristics': 0.10,
-                'domain_specific': 0.20,
+                'domain_specific': 0.25,
                 'faiss_semantic': self.config.faiss_semantic_weight  # 5th bucket (default 0.20)
             }
 
@@ -3070,9 +3089,17 @@ Solver: {code_name}"""
                     'use_instruction': False  # Flag to skip instruction wrapper
                 }
             )
+            logger.debug(
+                "KB batch answer keys=%s method=%s confidence=%s",
+                list(answer.keys()),
+                answer.get("method"),
+                answer.get("confidence"),
+            )
+            if answer.get("answer"):
+                logger.debug("KB batch answer preview: %s", str(answer.get("answer"))[:200])
 
             # === FAISS PATH: Convert sources to scores ===
-            if 'sources' in answer and 'scores' not in answer:
+            if answer.get('method') == 'faiss' and answer.get('sources') and 'scores' not in answer:
                 logger.debug(" Using FAISS semantic scores")
                 scores = {}
                 case_path = None  # Initialize to prevent UnboundLocalError
@@ -3623,6 +3650,12 @@ Solver: {code_name}"""
                 details['physics_problem'] = problem
                 break
 
+        problem_type = requirements.get('problem_type', '')
+        if problem_type.startswith('jet') and 'jet' in case_lower:
+            score = max(score, 1.0)
+            details['problem_type_match'] = problem_type
+
+
         # === 4. MECHANISM-FUEL MATCHING (20% of domain score) ===
         # Extract mechanism from case directory
         mechanism = None
@@ -3707,8 +3740,8 @@ Solver: {code_name}"""
         # Level 1: Fast name/directory matching (NEW)
         try:
             names_results = self.embeddings.retrieve_faiss(
-                names_index,
                 search_query,
+                names_index,
                 topk=min(50, len(case_list) * 2)
             )
             logger.debug(f"[DEBUG] Names index: {names_index}")
@@ -3725,8 +3758,8 @@ Solver: {code_name}"""
         # Level 2: Broad case structure
         try:
             structure_results = self.embeddings.retrieve_faiss(
-                structure_index,
                 search_query,
+                structure_index,
                 topk=min(50, len(case_list) * 2)
             )
             logger.debug(f"[DEBUG] Structure index: {structure_index}")
@@ -3743,8 +3776,8 @@ Solver: {code_name}"""
         # Level 3: Detailed README content
         try:
             details_results = self.embeddings.retrieve_faiss(
-                details_index,
                 search_query,
+                details_index,
                 topk=min(50, len(case_list))
             )
         except Exception as e:

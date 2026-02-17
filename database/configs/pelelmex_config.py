@@ -292,6 +292,7 @@ Return JSON with your working and results:
 
 
     faiss_indices = [
+        'pelelmex_case_names',
         'pelelmex_case_structure',
         'pelelmex_case_details',
         'pelelmex_input_templates',
