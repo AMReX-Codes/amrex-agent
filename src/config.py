@@ -656,6 +656,22 @@ class AMReXAgentConfig(BaseModel):
         default="metrics.jsonl",
         description="Metrics JSONL filename for workflow summaries."
     )
+    write_policy_mode: str = Field(
+        default="warn",
+        description="Filesystem write policy mode: off, warn, or deny."
+    )
+    allow_write_paths: List[Path] = Field(
+        default=[],
+        description="Optional allowlist of writable path roots."
+    )
+    require_run_dir_prefix: bool = Field(
+        default=False,
+        description="Require run directories to start with run_dir_prefix."
+    )
+    run_dir_prefix: str = Field(
+        default="run_",
+        description="Prefix required for run directories when require_run_dir_prefix is true."
+    )
     save_intermediate: bool = Field(
         default=True,
         description="Save intermediate results (plans, configs, etc.)"
