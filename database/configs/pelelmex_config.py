@@ -26,6 +26,7 @@ from .pelec_config import (
 
 logger = logging.getLogger(__name__)
 
+
 class PeleLMeXConfig(BaseAMReXConfig):
     """
     PeleLMeX (low-Mach reacting flow) configuration.
@@ -291,6 +292,7 @@ Return JSON with your working and results:
 
 
     faiss_indices = [
+        'pelelmex_case_names',
         'pelelmex_case_structure',
         'pelelmex_case_details',
         'pelelmex_input_templates',
@@ -397,6 +399,7 @@ Return JSON with your working and results:
         'input*',      # input.2d, input.3d (legacy)
         '*.inp',       # Legacy .inp extension
     ]
+
 
     # Remap Hints
     parameter_format_hints: ClassVar[dict[str, str]] = {

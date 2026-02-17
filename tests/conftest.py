@@ -276,6 +276,8 @@ def _indices_available(index_names: tuple) -> bool:
 def _default_indices_for_item(item) -> tuple[str, ...]:
     if item.get_closest_marker("indexing_hierarchical"):
         return ("level0", "level1", "level2")
+    if item.get_closest_marker("indexing_override_static"):
+        return ()
     return ("faiss",)
 
 
@@ -494,6 +496,7 @@ def indexing_strategy(request) -> str:
     Allows tests to control which indexing approach is used:
     - "simple": development's proven single FAISS approach
     - "hierarchical": integration_ladder's L0/L1/L2 approach
+    - "override_static": no embeddings; requires baseline_override
 
     Returns:
         Indexing strategy name from config or marker
@@ -506,6 +509,8 @@ def indexing_strategy(request) -> str:
     """
     if request.node.get_closest_marker("indexing_hierarchical"):
         return "hierarchical"
+    elif request.node.get_closest_marker("indexing_override_static"):
+        return "override_static"
     elif request.node.get_closest_marker("indexing_simple"):
         return "simple"
     else:

@@ -59,6 +59,11 @@ class TestArchitectNodeServiceOrchestration:
             
             with patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
                 mock_embed.return_value = Mock()
+                mock_embed.return_value.get_embedding_call_counts.return_value = {
+                    "total": 0,
+                    "embed_documents": 0,
+                    "embed_query": 0,
+                }
                 architect_node_module.architect_node(mock_state)
             
             # Verify initialization
@@ -73,6 +78,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service_instance), \
              patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
             mock_embed.return_value = Mock()
+            mock_embed.return_value.get_embedding_call_counts.return_value = {
+                "total": 0,
+                "embed_documents": 0,
+                "embed_query": 0,
+            }
             architect_node_module.architect_node(mock_state)
             
             # Verify method call
@@ -91,6 +101,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service_instance), \
              patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
             mock_embed.return_value = Mock()
+            mock_embed.return_value.get_embedding_call_counts.return_value = {
+                "total": 0,
+                "embed_documents": 0,
+                "embed_query": 0,
+            }
             architect_node_module.architect_node(mock_state)
             
             call_kwargs = mock_service_instance.execute_planning.call_args.kwargs
@@ -111,6 +126,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service_instance):
             with patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
                 mock_embed.return_value = Mock()
+                mock_embed.return_value.get_embedding_call_counts.return_value = {
+                    "total": 0,
+                    "embed_documents": 0,
+                    "embed_query": 0,
+                }
                 architect_node_module.architect_node(state)
             
             call_kwargs = mock_service_instance.execute_planning.call_args.kwargs
@@ -129,6 +149,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service), \
              patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
             mock_embed.return_value = Mock()
+            mock_embed.return_value.get_embedding_call_counts.return_value = {
+                "total": 0,
+                "embed_documents": 0,
+                "embed_query": 0,
+            }
             result = architect_node_module.architect_node(mock_state)
             
             assert result["mode"] == "fail"
@@ -145,6 +170,11 @@ class TestArchitectNodeServiceOrchestration:
             
             with patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
                 mock_embed.return_value = Mock()
+                mock_embed.return_value.get_embedding_call_counts.return_value = {
+                    "total": 0,
+                    "embed_documents": 0,
+                    "embed_query": 0,
+                }
                 result = architect_node_module.architect_node(mock_state)
             
             assert result["mode"] == "fail"
@@ -159,6 +189,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service_instance), \
              patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
             mock_embed.return_value = Mock()
+            mock_embed.return_value.get_embedding_call_counts.return_value = {
+                "total": 0,
+                "embed_documents": 0,
+                "embed_query": 0,
+            }
             updates = architect_node_module.architect_node(mock_state)
             
             # Verify mapping from service dict to state keys
@@ -180,6 +215,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service_instance), \
              patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
             mock_embed.return_value = Mock()
+            mock_embed.return_value.get_embedding_call_counts.return_value = {
+                "total": 0,
+                "embed_documents": 0,
+                "embed_query": 0,
+            }
             result = architect_node_module.architect_node(mock_state)
             
             # Check for keys required by next node (Reviewer)
@@ -204,6 +244,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service_instance), \
              patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
             mock_embed.return_value = Mock()
+            mock_embed.return_value.get_embedding_call_counts.return_value = {
+                "total": 0,
+                "embed_documents": 0,
+                "embed_query": 0,
+            }
             updates = architect_node_module.architect_node(mock_state)
             
             # Verify selected_solver mapping (if returned by service)
@@ -233,6 +278,11 @@ class TestArchitectNodeServiceOrchestration:
         with patch("src.nodes.architect_node.ArchitectService", return_value=mock_service), \
              patch("src.services.embedding_service_factory.get_embedding_service") as mock_embed:
             mock_embed.return_value = Mock()
+            mock_embed.return_value.get_embedding_call_counts.return_value = {
+                "total": 0,
+                "embed_documents": 0,
+                "embed_query": 0,
+            }
             updates = architect_node_module.architect_node(mock_state)
             
             # Should have defaults

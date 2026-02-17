@@ -967,12 +967,12 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         if not directory.is_dir():
             return False
 
-        # Check for various input file patterns
-        has_inputs = (
-            any(directory.glob('inputs*')) or
-            any(directory.glob('*.inp')) or
-            any(directory.glob('*.inputs'))
-        )
+        patterns = list(getattr(cls, "inputs_file_patterns", [])) or [
+            'inputs*',
+            '*.inp',
+            '*.inputs',
+        ]
+        has_inputs = any(any(directory.glob(pattern)) for pattern in patterns)
 
         return has_inputs
 

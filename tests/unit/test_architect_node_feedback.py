@@ -18,6 +18,9 @@ class DummyEmbeddingService:
     def __init__(self):
         self.embeddings = object()
 
+    def get_embedding_call_counts(self):
+        return {"total": 0, "embed_documents": 0, "embed_query": 0}
+
 
 def _plan(selected_case="New/Case", selected_solver="PeleC"):
     return SimulationPlan(

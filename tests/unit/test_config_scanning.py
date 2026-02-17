@@ -154,7 +154,7 @@ class TestSubclassOverrides:
         
         Example: Some codes use .inp, others use inputs.*
         """
-        from database.configs import BaseAMReXConfig
+        from database.configs import BaseAMReXConfig, PeleCConfig
         
         # Arrange: Different input file styles
         standard = tmp_path / "Exec" / "Standard"
@@ -166,11 +166,13 @@ class TestSubclassOverrides:
         (alternate / "case.inp").write_text("# alternate")
         
         # Act
-        cases = BaseAMReXConfig.scan_for_cases(tmp_path)
+        base_cases = BaseAMReXConfig.scan_for_cases(tmp_path)
+        pele_cases = PeleCConfig.scan_for_cases(tmp_path)
         
         # Assert: Both styles should be recognized
-        assert standard in cases, "Should recognize 'inputs' file"
-        assert alternate in cases, "Should recognize '*.inp' file"
+        assert standard in base_cases, "Should recognize 'inputs' file"
+        assert alternate not in base_cases, "Base config should ignore '*.inp' file"
+        assert alternate in pele_cases, "PeleC should recognize '*.inp' file"
 
 
 class TestConsumerIntegration:

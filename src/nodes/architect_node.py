@@ -299,6 +299,14 @@ def architect_node(state: GraphState) -> dict[str, Any]:
 
     logger.debug(f"Total exclusions: {len(excluded_cases)} cases, {len(excluded_inputs_files)} inputs files")
 
+    embed_counts_before = {
+        "total": 0,
+        "embed_documents": 0,
+        "embed_query": 0,
+    }
+    if embedding_service and hasattr(embedding_service, "get_embedding_call_counts"):
+        embed_counts_before = embedding_service.get_embedding_call_counts()
+
     try:
         # Execute planning using strategy dispatcher
         # This calls create_plan_rag() or create_plan() based on config.indexing_strategy
@@ -374,16 +382,25 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     current_reasoning = plan_result.reasoning
     selected_case = plan_result.selected_case
 
-    # Compute indexing calls count (how many search operations performed)
-    # For simple strategy: 1 (single FAISS search)
-    # For hierarchical: 3 (L0, L1, L2 searches)
+    embed_counts_after = embed_counts_before
+    if embedding_service and hasattr(embedding_service, "get_embedding_call_counts"):
+        embed_counts_after = embedding_service.get_embedding_call_counts()
+
+    indexing_calls = max(0, embed_counts_after.get("total", 0) - embed_counts_before.get("total", 0))
+    indexing_calls_total = embed_counts_after.get("total", 0)
+    indexing_calls_detail = {
+        "embed_documents": max(
+            0,
+            embed_counts_after.get("embed_documents", 0) - embed_counts_before.get("embed_documents", 0),
+        ),
+        "embed_query": max(
+            0,
+            embed_counts_after.get("embed_query", 0) - embed_counts_before.get("embed_query", 0),
+        ),
+    }
+
+    # Compute indexing calls count (embedding invocations performed during planning)
     indexing_strategy = plan_result.indexing_strategy
-    if indexing_strategy == "hierarchical":
-        indexing_calls = 3  # L0 + L1 + L2
-    elif indexing_strategy == "override_static":
-        indexing_calls = 0  # No retrieval calls
-    else:
-        indexing_calls = 1  # Single search
 
     # Compute baseline metadata (Fix #1 - needed by runner)
     code_name = plan_result.selected_solver
@@ -423,6 +440,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             # Execution metadata for comparative testing
             "indexing_strategy": indexing_strategy,
             "indexing_calls_count": indexing_calls,
+            "indexing_calls_total": indexing_calls_total,
+            "indexing_calls_detail": indexing_calls_detail,
             # Performance metrics
             "confidence_score": plan_result.baseline_confidence,
             # Parameter resolution context (if applicable)

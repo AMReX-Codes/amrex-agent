@@ -19,15 +19,39 @@ import json
 from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 from typing import Dict, List, Tuple
+from types import SimpleNamespace
 
 # Import services
 from src.services.architect import ArchitectService
 
 
+def _make_mock_llm_response(content: str) -> Mock:
+    message = Mock()
+    message.content = content
+    choice = Mock()
+    choice.message = message
+    response = Mock()
+    response.choices = [choice]
+    return response
+
+
+def _make_mock_llm_client(content: str) -> Mock:
+    response = _make_mock_llm_response(content)
+    mock_llm = Mock()
+    mock_llm.chat.completions.create = Mock(return_value=response)
+    return mock_llm
+
+
+@pytest.fixture
+def force_json_fallback():
+    with patch("instructor.from_openai", side_effect=Exception("force fallback")):
+        yield
+
+
 class TestLLMPlanJSONOnly:
     """Test JSON-only enforcement (no conversational drift)."""
     
-    def test_llm_plan_json_only(self, tmp_path):
+    def test_llm_plan_json_only(self, tmp_path, force_json_fallback):
         """
         Given: LLM prompt for modifications
         When:  LLM responds with clean JSON
@@ -44,15 +68,13 @@ class TestLLMPlanJSONOnly:
         architect = ArchitectService(config, embedder)
         
         # Mock LLM client
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = json.dumps({
+        mock_response = json.dumps({
             "modifications": [
                 {"parameter": "amr.n_cell", "value": "128 128 128"}
             ],
             "reasoning": "Increased resolution for finer detail"
         })
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         # Baseline with valid schema
@@ -80,10 +102,10 @@ class TestLLMPlanJSONOnly:
         assert "resolution" in result.reasoning.lower()
         
         # Verify temperature setting
-        call_args = mock_llm.chat.call_args
-        assert call_args[1]['temperature'] == 0.2
+        call_args = mock_llm.chat.completions.create.call_args
+        assert call_args[1]["temperature"] == 0.2
     
-    def test_strips_markdown_code_blocks(self, tmp_path):
+    def test_strips_markdown_code_blocks(self, tmp_path, force_json_fallback):
         """
         Given: LLM response wrapped in markdown
         When:  Parser cleans the response
@@ -97,15 +119,13 @@ class TestLLMPlanJSONOnly:
         architect = ArchitectService(config, Mock())
         
         # Mock LLM with markdown formatting
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = '''```json
+        mock_response = '''```json
 {
     "modifications": [{"parameter": "amr.max_level", "value": "2"}],
     "reasoning": "Added AMR"
 }
 ```'''
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         baseline_case = {
@@ -130,7 +150,7 @@ class TestLLMPlanJSONOnly:
 class TestValidatesMetadataSchema:
     """Test anti-hallucination via metadata schema validation."""
     
-    def test_filters_hallucinated_parameters(self, tmp_path):
+    def test_filters_hallucinated_parameters(self, tmp_path, force_json_fallback):
         """
         Given: LLM suggests non-existent parameter
         When:  Validation against baseline inputs_content
@@ -144,16 +164,14 @@ class TestValidatesMetadataSchema:
         architect = ArchitectService(config, Mock())
         
         # Mock LLM suggesting invalid parameter
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = json.dumps({
+        mock_response = json.dumps({
             "modifications": [
                 {"parameter": "amr.n_cell", "value": "128 128 128"},  # Valid
                 {"parameter": "amr.magic_parameter", "value": "42"}   # Invalid!
             ],
             "reasoning": "Test"
         })
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         # Baseline with limited schema
@@ -178,7 +196,7 @@ class TestValidatesMetadataSchema:
         assert len(result.modifications) == 1
         assert result.modifications[0][0] == "amr.n_cell"
     
-    def test_allows_known_auxiliary_parameters(self, tmp_path):
+    def test_allows_known_auxiliary_parameters(self, tmp_path, force_json_fallback):
         """
         Given: LLM suggests chemistry parameters (not in baseline)
         When:  Parameter is in known auxiliary list
@@ -192,16 +210,14 @@ class TestValidatesMetadataSchema:
         architect = ArchitectService(config, Mock())
         
         # Mock LLM suggesting chemistry (baseline is pure hydro)
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = json.dumps({
+        mock_response = json.dumps({
             "modifications": [
                 {"parameter": "pelec.chem_file", "value": "drm19.dat"},
                 {"parameter": "pelec.do_react", "value": "1"}
             ],
             "reasoning": "Adding chemistry"
         })
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         # Baseline WITHOUT chemistry
@@ -229,7 +245,7 @@ class TestValidatesMetadataSchema:
 class TestFollowsPyAMReXPatterns:
     """Test AMReX namespace enforcement (pyAMReX standards)."""
     
-    def test_enforces_namespace_prefixes(self, tmp_path):
+    def test_enforces_namespace_prefixes(self, tmp_path, force_json_fallback):
         """
         Given: Parameter names without namespaces
         When:  Validation checks
@@ -243,15 +259,13 @@ class TestFollowsPyAMReXPatterns:
         architect = ArchitectService(config, Mock())
         
         # Mock LLM with missing namespace
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = json.dumps({
+        mock_response = json.dumps({
             "modifications": [
                 {"parameter": "n_cell", "value": "128 128 128"}  # Missing 'amr.' prefix!
             ],
             "reasoning": "Test"
         })
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         baseline_case = {
@@ -277,7 +291,7 @@ class TestFollowsPyAMReXPatterns:
 class TestExtensibleToPydantic:
     """Test preparation for Input Writer Pydantic migration."""
     
-    def test_output_structure_pydantic_ready(self, tmp_path):
+    def test_output_structure_pydantic_ready(self, tmp_path, force_json_fallback):
         """
         Given: LLM output modifications
         When:  Structure is examined
@@ -290,16 +304,14 @@ class TestExtensibleToPydantic:
         
         architect = ArchitectService(config, Mock())
         
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = json.dumps({
+        mock_response = json.dumps({
             "modifications": [
                 {"parameter": "amr.n_cell", "value": "128 128 128"},
                 {"parameter": "amr.max_level", "value": "2"}
             ],
             "reasoning": "Test"
         })
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         baseline_case = {
@@ -333,7 +345,7 @@ class TestExtensibleToPydantic:
 class TestErrorHandlingStructured:
     """Test error handling and recovery (yt-project standards)."""
     
-    def test_handles_malformed_json(self, tmp_path):
+    def test_handles_malformed_json(self, tmp_path, force_json_fallback):
         """
         Given: LLM returns malformed JSON
         When:  Parser attempts to parse
@@ -347,10 +359,8 @@ class TestErrorHandlingStructured:
         architect = ArchitectService(config, Mock())
         
         # Mock malformed JSON
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = '{"modifications": [invalid json'
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_response = '{"modifications": [invalid json'
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         baseline_case = {
@@ -376,7 +386,7 @@ class TestErrorHandlingStructured:
         # Verify error was logged
         mock_logger.error.assert_called()
     
-    def test_returns_partial_results_on_validation_failure(self, tmp_path):
+    def test_returns_partial_results_on_validation_failure(self, tmp_path, force_json_fallback):
         """
         Given: LLM returns mix of valid/invalid parameters
         When:  Validation filters invalid ones
@@ -389,9 +399,7 @@ class TestErrorHandlingStructured:
         
         architect = ArchitectService(config, Mock())
         
-        mock_llm = Mock()
-        mock_response = Mock()
-        mock_response.content = json.dumps({
+        mock_response = json.dumps({
             "modifications": [
                 {"parameter": "amr.n_cell", "value": "128 128 128"},  # Valid
                 {"parameter": "fake.parameter", "value": "bad"},       # Invalid
@@ -399,7 +407,7 @@ class TestErrorHandlingStructured:
             ],
             "reasoning": "Test"
         })
-        mock_llm.chat = Mock(return_value=mock_response)
+        mock_llm = _make_mock_llm_client(mock_response)
         architect.llm = mock_llm
         
         baseline_case = {
@@ -429,3 +437,54 @@ class TestErrorHandlingStructured:
 
 # Architect Service: LLM Planning Marker
 pytestmark = pytest.mark.architect_llm_planning
+
+
+class TestLLMPlanInstructorPath:
+    def test_instructor_response_model_parsing(self, tmp_path, monkeypatch):
+        config = SimpleNamespace(
+            faiss_db_path=tmp_path,
+            repositories={},
+            llm_temperature=0.2,
+            llm_model="test-model",
+            llm_retry_max_attempts=1,
+            llm_gate_strategy="off",
+        )
+        architect = ArchitectService(config, Mock())
+
+        mock_llm = Mock()
+        architect.llm = mock_llm
+
+        response_model = SimpleNamespace(
+            modifications=[
+                SimpleNamespace(parameter="amr.n_cell", value="128 128 128"),
+                SimpleNamespace(parameter="fake.param", value="1"),
+            ],
+            reasoning="Use higher resolution",
+        )
+        instr_client = Mock()
+        instr_client.chat.completions.create = Mock(return_value=response_model)
+
+        monkeypatch.setattr("instructor.from_openai", lambda _client: instr_client)
+        monkeypatch.setattr("src.config.wrap_llm_client", lambda client, _config: client)
+
+        baseline_case = {
+            "metadata": {
+                "inputs_content": {
+                    "amr.n_cell": "64 64 64",
+                    "amr.max_level": "0",
+                }
+            }
+        }
+
+        result = architect._llm_plan(
+            prompt="Increase resolution",
+            solver="AMReX",
+            documentation=[],
+            cases=[baseline_case],
+        )
+
+        assert result is not None
+        assert result.modifications == [("amr.n_cell", "128 128 128")]
+        assert "resolution" in result.reasoning.lower()
+        call_kwargs = instr_client.chat.completions.create.call_args.kwargs
+        assert call_kwargs["response_model"] is not None

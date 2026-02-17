@@ -2,48 +2,88 @@
   {
     "source": "README.md",
     "index_type": "solver_readme",
-    "section": "header"
+    "section": "header",
+    "chunk_parent": 0,
+    "chunk_index": 0
   },
   {
     "source": "README.md",
     "index_type": "solver_readme",
     "category": "Overview",
-    "section": "Overview"
+    "section": "Overview",
+    "chunk_parent": 1,
+    "chunk_index": 1
   },
   {
     "source": "README.md",
     "index_type": "solver_readme",
     "category": "Documentation",
-    "section": "Documentation"
+    "section": "Documentation",
+    "chunk_parent": 2,
+    "chunk_index": 2
   },
   {
     "source": "README.md",
     "index_type": "solver_readme",
     "category": "Installation",
-    "section": "Installation"
+    "section": "Installation",
+    "chunk_parent": 3,
+    "chunk_index": 3
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Installation",
+    "section": "Installation",
+    "chunk_parent": 3,
+    "chunk_index": 4
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Installation",
+    "section": "Installation",
+    "chunk_parent": 3,
+    "chunk_index": 5
   },
   {
     "source": "README.md",
     "index_type": "solver_readme",
     "category": "Getting help, contributing",
-    "section": "Getting help, contributing"
+    "section": "Getting help, contributing",
+    "chunk_parent": 4,
+    "chunk_index": 6
   },
   {
     "source": "README.md",
     "index_type": "solver_readme",
     "category": "Versioning",
-    "section": "Versioning"
+    "section": "Versioning",
+    "chunk_parent": 5,
+    "chunk_index": 7
   },
   {
     "source": "README.md",
     "index_type": "solver_readme",
     "category": "Acknowledgment",
-    "section": "Acknowledgment"
+    "section": "Acknowledgment",
+    "chunk_parent": 6,
+    "chunk_index": 8
   },
   {
     "source": "README.md",
     "index_type": "solver_readme",
     "category": "Citation",
-    "section": "Citation"
+    "section": "Citation",
+    "chunk_parent": 7,
+    "chunk_index": 9
+  },
+  {
+    "source": "README.md",
+    "index_type": "solver_readme",
+    "category": "Citation",
+    "section": "Citation",
+    "chunk_parent": 7,
+    "chunk_index": 10
   }
 ]
