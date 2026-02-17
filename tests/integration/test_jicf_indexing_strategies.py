@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import _resolve_repo_path
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEMO_DIR = REPO_ROOT / "demo"
 PELELMEX_PROMPT_PATH = DEMO_DIR / "pelelmex" / "user_requirements_test_DNS.txt"
@@ -22,22 +24,6 @@ def _run_cli(cmd: list[str], env: dict[str, str]) -> subprocess.CompletedProcess
         text=True,
         check=False,
     )
-
-
-def _resolve_repo_path(env_var: str, repo_name: str) -> Path | None:
-    env_path = os.getenv(env_var)
-    if env_path:
-        candidate = Path(env_path)
-        if candidate.exists():
-            return candidate
-        return None
-    candidate = REPO_ROOT.parent / repo_name
-    if candidate.exists():
-        return candidate
-    candidate = REPO_ROOT / repo_name
-    if candidate.exists():
-        return candidate
-    return None
 
 
 def _resolve_pelelmex_repo() -> Path | None:

@@ -1346,12 +1346,19 @@ class ArchitectService:
 
             base_client = unwrap_llm_client(llm)
             client = wrap_llm_client(base_client, self.config)
-            response = client.chat.completions.create(
-                model=getattr(self.config, "llm_model", None),
-                messages=messages,
-                response_format={"type": "json_object"},
-                temperature=temperature,
-            )
+            try:
+                response = client.chat.completions.create(
+                    model=getattr(self.config, "llm_model", None),
+                    messages=messages,
+                    response_format={"type": "json_object"},
+                    temperature=temperature,
+                )
+            except Exception:
+                response = client.chat.completions.create(
+                    model=getattr(self.config, "llm_model", None),
+                    messages=messages,
+                    temperature=temperature,
+                )
             if hasattr(response, "choices") and response.choices:
                 message = getattr(response.choices[0], "message", None)
                 content = getattr(message, "content", "") if message else ""
