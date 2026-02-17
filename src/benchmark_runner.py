@@ -10,6 +10,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from types import SimpleNamespace
 
 import yaml
 from jsonschema import Draft202012Validator
@@ -319,10 +320,25 @@ def _build_command(
     return cmd
 
 
-def _write_jsonl(path: Path, payload: dict[str, Any]) -> None:
+def _write_jsonl(path: Path, payload: dict[str, Any], config: Any | None = None) -> None:
     with path.open("a", encoding="utf-8") as handle:
+        if config is not None:
+            from src.utils.privacy import sanitize_payload
+
+            payload = sanitize_payload(payload, config=config)
         handle.write(json.dumps(payload, default=str))
         handle.write("\n")
+
+
+def _privacy_config(run_args: dict[str, Any]) -> Any | None:
+    mode = run_args.get("privacy_mode")
+    if not mode:
+        return None
+    return SimpleNamespace(
+        privacy_mode=mode,
+        privacy_scrubber=run_args.get("privacy_scrubber", "builtin"),
+        privacy_hash_salt=run_args.get("privacy_hash_salt"),
+    )
 
 
 def _slugify(value: str) -> str:
@@ -341,6 +357,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
 
     run_args = bench_config.get("run_args") or {}
     env_common = bench_config.get("env") or {}
+    privacy_config = _privacy_config(run_args)
 
     run_name = run_name or datetime.now().strftime("bench_%Y%m%d_%H%M%S")
     run_dir = output_dir / run_name
@@ -365,11 +382,16 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         if not prompt_text:
             raise ValueError(f"Prompt entry missing text/path: {normalized!r}")
         prompt_entries.append({**normalized, "prompt": prompt_text})
-        manifest["prompts"].append({
+        prompt_manifest = {
             "id": normalized["id"],
             "prompt_path": normalized.get("prompt_path"),
             "prompt_excerpt": prompt_text[:160],
-        })
+        }
+        if privacy_config is not None:
+            from src.utils.privacy import sanitize_payload
+
+            prompt_manifest = sanitize_payload(prompt_manifest, config=privacy_config)
+        manifest["prompts"].append(prompt_manifest)
 
     raw_metrics_path = run_dir / "benchmark_runs.jsonl"
 
@@ -383,14 +405,19 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         provider = (model.get("overrides") or {}).get("llm_provider")
 
         model_config_path = _build_config_for_model(model, run_dir)
-        manifest["models"].append({
+        model_manifest = {
             "id": model_id,
             "slug": model_slug,
             "config_path": str(model_config_path) if model_config_path else None,
             "config_source": model.get("config_path"),
             "override_keys": sorted((model.get("overrides") or {}).keys()),
             "env_keys": sorted((model.get("env") or {}).keys()),
-        })
+        }
+        if privacy_config is not None:
+            from src.utils.privacy import sanitize_payload
+
+            model_manifest = sanitize_payload(model_manifest, config=privacy_config)
+        manifest["models"].append(model_manifest)
 
         for prompt in prompt_entries:
             prompt_id = prompt["id"]
@@ -399,7 +426,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             env = os.environ.copy()
             env.update({k: str(v) for k, v in model_env.items()})
             benchmark_context = prompt_dir / "benchmark_context.json"
-            benchmark_context.write_text(json.dumps({
+            context_payload = {
                 "prompt_id": prompt_id,
                 "prompt_excerpt": prompt["prompt"][:160],
                 "case_id": prompt.get("case_id"),
@@ -408,7 +435,12 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "novelty_tier": prompt.get("novelty_tier"),
                 "model_id": model_id,
                 "provider": provider,
-            }, indent=2, default=str))
+            }
+            if privacy_config is not None:
+                from src.utils.privacy import sanitize_payload
+
+                context_payload = sanitize_payload(context_payload, config=privacy_config)
+            benchmark_context.write_text(json.dumps(context_payload, indent=2, default=str))
 
             cmd = _build_command(model_config_path, prompt, prompt_dir, run_args, benchmark_context)
 
@@ -481,17 +513,26 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "error": error,
                 "stderr_excerpt": stderr[:2000] if stderr else None,
             }
-            _write_jsonl(raw_metrics_path, record)
+            _write_jsonl(raw_metrics_path, record, config=privacy_config)
 
             per_run = prompt_dir / "result.json"
-            per_run.write_text(json.dumps({
+            per_run_payload = {
                 "command": cmd,
                 "exit_code": exit_code,
                 "stdout": stdout,
                 "stderr": stderr,
                 "result": result_data,
                 "record": record,
-            }, indent=2, default=str))
+            }
+            if privacy_config is not None:
+                from src.utils.privacy import sanitize_payload
 
+                per_run_payload = sanitize_payload(per_run_payload, config=privacy_config)
+            per_run.write_text(json.dumps(per_run_payload, indent=2, default=str))
+
+    if privacy_config is not None:
+        from src.utils.privacy import sanitize_payload
+
+        manifest = sanitize_payload(manifest, config=privacy_config)
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
     return {"run_dir": str(run_dir), "metrics": str(raw_metrics_path)}
