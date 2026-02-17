@@ -36,6 +36,10 @@ The MCP server exposes these tools:
 
 Use `tools/list` to discover schemas and required parameters.
 
+## Container runs
+
+Container usage examples live in `docs/container_runs.md`.
+
 ## Example: apply_plan
 
 Apply a previously generated plan to write inputs:

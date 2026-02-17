@@ -48,6 +48,7 @@ try:
     from src.services.input_writer import InputWriterService
     from src.services.knowledge import PeleKnowledgeService
     from src.services.plan import SimulationPlan
+    from src.services.run_container import ContainerRunner
     from src.services.run_local import LocalRunner
     from src.services.run_superfacility import SuperfacilityRunner
     from src.services.validation import ValidationService
@@ -62,6 +63,7 @@ except ModuleNotFoundError:
     from src.services.input_writer import InputWriterService
     from src.services.knowledge import PeleKnowledgeService
     from src.services.plan import SimulationPlan
+    from src.services.run_container import ContainerRunner
     from src.services.run_local import LocalRunner
     from src.services.run_superfacility import SuperfacilityRunner
     from src.services.validation import ValidationService
@@ -130,6 +132,12 @@ def _persist_session_context(session_id: str, context: dict[str, Any]) -> None:
 def _select_runner(active_config: AMReXAgentConfig):
     """Select execution runner based on config environment."""
     environment = (active_config.environment or "").lower()
+    container_image = getattr(active_config, "container_image", None)
+    container_runtime = getattr(active_config, "container_runtime", None)
+    has_container_image = isinstance(container_image, (str, Path)) and str(container_image).strip()
+    has_container_runtime = isinstance(container_runtime, str) and container_runtime.strip()
+    if has_container_image or has_container_runtime:
+        return ContainerRunner(active_config)
     if environment == "local":
         return LocalRunner(active_config)
     if environment in {"perlmutter", "mcp"}:

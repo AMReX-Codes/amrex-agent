@@ -1098,11 +1098,21 @@ def resolve_remote_output_dir(
         if candidate not in candidates:
             candidates.append(candidate)
 
+    shared_root = Path(f"/global/cfs/cdirs/{account}/superfacility")
+    user_root = (
+        Path(f"/global/cfs/cdirs/{account}/{user}/superfacility") if user else None
+    )
     create_budget = 2
     for candidate in candidates:
+        is_shared_candidate = str(candidate).startswith(str(shared_root))
+        if user_root and str(candidate).startswith(str(user_root)):
+            is_shared_candidate = False
         try:
             list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
         except Exception as exc:
+            if is_shared_candidate:
+                logger.debug("Shared output dir missing or unreadable: %s", candidate)
+                continue
             if create_budget > 0:
                 try:
                     ensure_remote_directory_rest(
@@ -1118,7 +1128,7 @@ def resolve_remote_output_dir(
             else:
                 logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
                 continue
-        if sfapi_available and not nersc_session:
+        if sfapi_available and not nersc_session and is_shared_candidate:
             logger.debug("Using SFAPI credentials for %s; skipping REST mkdir check", candidate)
             logger.info("Using remote output dir: %s", candidate)
             return candidate
