@@ -180,12 +180,24 @@ def _selected_llm_provider(config) -> str | None:
 
 def _has_required_llm_key(config) -> bool:
     provider = _selected_llm_provider(config)
+    provider_env = {
+        "alcf": "ALCF_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "pnnl": "LLM_API_KEY",
+        "litellm": "LLM_API_KEY",
+    }
+    env_var = provider_env.get(provider)
+    if env_var:
+        return bool(os.getenv(env_var))
     if provider == "alcf":
         return bool(os.getenv("ALCF_API_KEY"))
     if provider == "openai":
         return bool(os.getenv("OPENAI_API_KEY"))
     if provider == "anthropic":
         return bool(os.getenv("ANTHROPIC_API_KEY"))
+    if provider:
+        return bool(os.getenv("LLM_API_KEY"))
     return _has_cborg_key()
 
 
