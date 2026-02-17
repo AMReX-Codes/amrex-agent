@@ -78,6 +78,47 @@ class RedactingFilter(logging.Filter):
         return True
 
 
+class PrivacyFilter(logging.Filter):
+    """Scrub log messages based on configured privacy mode."""
+
+    def __init__(self, config: AMReXAgentConfig):
+        super().__init__()
+        self._config = config
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            from src.utils.privacy import scrub_log_message
+
+            msg = record.getMessage()
+            scrubbed = scrub_log_message(msg, config=self._config)
+            if scrubbed != msg:
+                record.msg = scrubbed
+                record.args = ()
+        except Exception:
+            pass
+        return True
+
+
+_privacy_filter_installed = False
+
+
+def apply_privacy_log_filter(config: AMReXAgentConfig) -> None:
+    global _privacy_filter_installed
+    if _privacy_filter_installed:
+        return
+    from src.utils.privacy import get_privacy_mode
+
+    if get_privacy_mode(config) == "off":
+        return
+    privacy_filter = PrivacyFilter(config)
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers:
+        handler.addFilter(privacy_filter)
+    for name in ("httpx", "openai", "anthropic"):
+        logging.getLogger(name).addFilter(privacy_filter)
+    _privacy_filter_installed = True
+
+
 class ColorFormatter(logging.Formatter):
     """Optional ANSI color formatting for log levels."""
 
@@ -697,6 +738,8 @@ def main(args: list[str] | None = None) -> None:
             if parsed_args.mpi_ranks < 1:
                 raise ValueError("--run-ntasks must be >= 1")
             config.mpi_ranks = parsed_args.mpi_ranks
+
+        apply_privacy_log_filter(config)
 
         _warn_if_schema_missing(config, getattr(parsed_args, "baseline_override", None))
 

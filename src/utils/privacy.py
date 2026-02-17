@@ -83,6 +83,10 @@ def should_scrub_key(key: str) -> bool:
     return key in _SENSITIVE_KEYS
 
 
+def detect_text(text: str) -> list[str]:
+    return _detect(text)
+
+
 def _scrub_with_builtin(text: str, mode: str) -> tuple[str, list[str]]:
     detections = _detect(text)
     redacted = text
@@ -148,6 +152,20 @@ def scrub_text(
 
     redacted, detections = _scrub_with_builtin(text, mode)
     return ScrubResult(text=redacted, hash=_hash_text(text, salt), detections=detections)
+
+
+def scrub_log_message(message: str, *, config: Any | None) -> str:
+    mode = get_privacy_mode(config)
+    if mode == "off":
+        return message
+    detections = detect_text(message)
+    if not detections:
+        return message
+    salt = get_privacy_salt(config)
+    if mode == "shared":
+        return scrub_text(message, mode=mode, salt=salt, config=config).text
+    result = scrub_text(message, mode="strict", salt=salt, config=config)
+    return f"[REDACTED:HASH:{result.hash}]"
 
 
 def sanitize_payload(

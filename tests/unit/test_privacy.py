@@ -1,4 +1,11 @@
-from src.utils.privacy import PrivacyViolation, enforce_strict, sanitize_payload, scrub_text
+from src.utils.privacy import (
+    PrivacyViolation,
+    detect_text,
+    enforce_strict,
+    sanitize_payload,
+    scrub_log_message,
+    scrub_text,
+)
 
 
 class DummyConfig:
@@ -37,3 +44,17 @@ def test_enforce_strict_blocks_on_detection():
         assert "unit_test" in str(exc)
     else:
         raise AssertionError("PrivacyViolation not raised")
+
+
+def test_scrub_log_message_shared_redacts():
+    config = DummyConfig("shared")
+    message = "contact user@example.com"
+    assert "user@example.com" in message
+    scrubbed = scrub_log_message(message, config=config)
+    assert "user@example.com" not in scrubbed
+    assert "[REDACTED:EMAIL]" in scrubbed
+
+
+def test_detect_text_reports_matches():
+    detections = detect_text("token=abc123 user@example.com")
+    assert "email" in detections
