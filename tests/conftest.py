@@ -187,6 +187,8 @@ def _has_required_llm_key(config) -> bool:
         "pnnl": "LLM_API_KEY",
         "litellm": "LLM_API_KEY",
     }
+    if provider in {None, "cborg"}:
+        return _has_cborg_key()
     env_var = provider_env.get(provider)
     if env_var:
         return bool(os.getenv(env_var))
