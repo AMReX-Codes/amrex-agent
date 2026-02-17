@@ -20,8 +20,9 @@ def test_score_kb_relevance_batch_uses_faiss_sources(tmp_path):
     architect.code_configs = {}
 
     case_list = ["Exec/RegTests/PMF", "Exec/RegTests/Sedov"]
-    architect.knowledge = Mock()
-    architect.knowledge.query = Mock(return_value={
+    architect._knowledge = Mock()
+    architect._knowledge.query = Mock(return_value={
+        "method": "faiss",
         "sources": [
             {"case": "Exec/RegTests/PMF", "score": 1.0},
         ]
@@ -67,7 +68,7 @@ def test_score_faiss_semantic_batch_combines_indices(tmp_path):
         def indices_available(self):
             return True
 
-        def retrieve_faiss(self, index_name, query, topk):
+        def retrieve_faiss(self, query, index_name, topk):
             if index_name.endswith("_case_names"):
                 return {
                     "results": [
