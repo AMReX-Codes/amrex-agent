@@ -1,3 +1,5 @@
+import json
+
 from src.utils.metrics import metrics_collector, metrics_context
 
 
@@ -27,3 +29,38 @@ def test_metrics_collector_aggregates_llm_tokens() -> None:
     assert summary["llm"]["prompt_tokens"] == 12
     assert summary["llm"]["completion_tokens"] == 8
     assert summary["llm"]["by_model"]["test-model"]["calls"] == 1
+
+
+def test_metrics_workflow_summary_tracks_stage_totals() -> None:
+    metrics_collector.reset()
+    architect = _FakeResponse("a-model", _FakeUsage(5, 7))
+    reviewer = _FakeResponse("r-model", _FakeUsage(3, 2))
+
+    with metrics_context("architect", node="architect", iteration=1):
+        metrics_collector.record_llm_usage(architect, model="a-model", provider="test")
+    with metrics_context("reviewer", node="reviewer", iteration=1):
+        metrics_collector.record_llm_usage(reviewer, model="r-model", provider="test")
+
+    summary = metrics_collector.build_workflow_summary()
+
+    assert summary["tokens_total_input"] == 8
+    assert summary["tokens_total_output"] == 9
+    assert summary["tokens_total"] == 17
+    assert summary["tokens_by_stage"]["architect"]["total"] == 12
+    assert summary["tokens_by_stage"]["reviewer"]["total"] == 5
+    assert "a-model" in summary["models"]
+    assert "r-model" in summary["models"]
+
+
+def test_metrics_write_jsonl_outputs_events(tmp_path) -> None:
+    metrics_collector.reset()
+    metrics_collector.record_event("custom", {"alpha": 1}, stage="test", node="node")
+
+    path = tmp_path / "metrics.jsonl"
+    metrics_collector.write_jsonl(str(path))
+
+    lines = path.read_text().strip().splitlines()
+    assert len(lines) == 1
+    payload = json.loads(lines[0])
+    assert payload["type"] == "custom"
+    assert payload["data"]["alpha"] == 1
