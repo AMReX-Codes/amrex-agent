@@ -90,6 +90,7 @@ Policy summary:
 
 Implementation:
 - Config: `privacy_mode`, `privacy_scrubber`, `privacy_hash_salt` in `src/config.py`.
+- Benchmark runner: `run_args.privacy_mode`, `run_args.privacy_scrubber`, `run_args.privacy_hash_salt` in `src/benchmark_runner.py`.
 - Scrubber: `src/utils/privacy.py`.
 - Hooks: `src/utils/llm_calls.py`, `src/utils/metrics.py`, `src/main.py`.
 
