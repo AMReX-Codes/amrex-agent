@@ -656,6 +656,14 @@ class AMReXAgentConfig(BaseModel):
         default="metrics.jsonl",
         description="Metrics JSONL filename for workflow summaries."
     )
+    privacy_mode: Literal["off", "shared", "strict"] = Field(
+        default="off",
+        description="Privacy mode for prompt/log persistence: off, shared, or strict."
+    )
+    privacy_hash_salt: Optional[str] = Field(
+        default_factory=lambda: os.getenv("AMREX_PRIVACY_SALT"),
+        description="Optional salt for prompt hashing in privacy modes."
+    )
     write_policy_mode: str = Field(
         default="warn",
         description="Filesystem write policy mode: off, warn, or deny."

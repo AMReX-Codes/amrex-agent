@@ -51,6 +51,14 @@ def call_llm(
     extra_context: dict[str, Any] | None = None,
     fallback_parser: Callable[[Any], Any] | None = None,
 ) -> Any:
+    if config is not None:
+        from src.utils.privacy import enforce_strict
+
+        for message in spec.messages:
+            content = message.get("content") if isinstance(message, dict) else None
+            if isinstance(content, str):
+                enforce_strict(content, config=config, purpose="llm_call")
+
     policy = policy or LLMPolicy()
     ok, reason = policy.check_rate_limit(spec)
     if not ok:

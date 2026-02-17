@@ -165,13 +165,18 @@ class MetricsCollector:
     def events(self) -> list[dict[str, Any]]:
         return list(self._events)
 
-    def write_jsonl(self, path: str) -> None:
+    def write_jsonl(self, path: str, *, config: Any | None = None) -> None:
         if not self._events:
             return
         try:
             with open(path, "w", encoding="utf-8") as handle:
                 for event in self._events:
-                    handle.write(json.dumps(event, default=str))
+                    payload = event
+                    if config is not None:
+                        from src.utils.privacy import sanitize_payload
+
+                        payload = sanitize_payload(event, config=config)
+                    handle.write(json.dumps(payload, default=str))
                     handle.write("\n")
         except Exception as exc:
             logger.warning("Failed to write metrics JSONL to %s: %s", path, exc)
