@@ -160,6 +160,36 @@ def _assert_wall_thermal_condition(config: dict, expect_isothermal: bool) -> Non
         assert "Isotherm" not in combined
 
 
+def _assert_turbulent_forcing(config: dict, intensity: float) -> None:
+    pele = config.get("peleLM", {})
+    do_forcing = str(pele.get("do_turbulent_forcing", "0")).strip()
+    assert do_forcing in {"1", "1.0"}, "Expected peleLM.do_turbulent_forcing=1 for turb5 prompt"
+
+    turbforce = config.get("turbforce", {})
+    urms = turbforce.get("urms")
+    assert urms is not None, "Expected turbforce.urms to be set for turb5 prompt"
+
+    prob = config.get("prob", {})
+    candidates = [
+        prob.get("cf_velocity"),
+        prob.get("jet_velocity"),
+    ]
+    for velocity in candidates:
+        if velocity is None:
+            continue
+        try:
+            target = float(velocity) * intensity
+        except (TypeError, ValueError):
+            continue
+        if _float_close(urms, target, rel_tol=0.15):
+            return
+
+    assert False, (
+        "turbforce.urms does not match 5% of cf_velocity or jet_velocity "
+        f"(urms={urms}, cf_velocity={prob.get('cf_velocity')}, jet_velocity={prob.get('jet_velocity')})"
+    )
+
+
 def _remote_tests_enabled(request: pytest.FixtureRequest) -> bool:
     return bool(request.config.getoption("pelelmex_remote"))
 
@@ -283,6 +313,8 @@ def test_pelelmex_test_matrix_case(
         inputs_config,
         "isothermal" in case.prompt_path.name,
     )
+    if "turb5" in case.prompt_path.name:
+        _assert_turbulent_forcing(inputs_config, intensity=0.05)
     if case.prompt_path.name == "user_requirements_test_DNS_mod.txt":
         amr = inputs_config.get("amr", {})
         assert _float_close(amr.get("max_step", "nan"), 200.0)

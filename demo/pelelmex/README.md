@@ -95,6 +95,24 @@ Expected outputs (dry run): `output/run_<timestamp>/inputs`, `run_local.sh`,
 The PeleLMeX test matrix is exercised via pytest (real services only). These
 tests are opt-in and require a local PeleLMeX repo plus schemas/indices.
 
+Focused rerun: isothermal_reacting
+
+Pytest:
+
+```bash
+pytest tests/integration/test_pelelmex_test_matrix.py -m "e2e and use_real_services" -k "isothermal_reacting and local" --llm-provider cborg --llm-model claude-sonnet-4-5
+```
+
+Direct CLI:
+
+```bash
+python amrex_agent.py \
+  --config demo/pelelmex/config_JICF.yaml \
+  --prompt-path demo/pelelmex/user_requirements_DNS_isothermal_reacting.txt \
+  --run-mode dry \
+  --save-workflow --save-transcript --save-log --verbose
+```
+
 Examples:
 
 ```bash

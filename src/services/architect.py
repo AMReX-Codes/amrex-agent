@@ -2062,7 +2062,7 @@ The following parameters were NOT recognized in a previous attempt:
                 tier1_pass = _run_guidance_pass("tier1", [tier1_guidance])
                 tier_mods = tier1_pass.get("modifications", [])
                 tier_warnings = tier1_pass.get("merge_warnings", [])
-                if tier_mods and tier2_params:
+                if tier2_params:
                     tier2_guidance = _build_tier_guidance("Tier 2", tier2_params, "")
                     tier2_pass = _run_guidance_pass("tier2", [tier2_guidance])
                     tier2_mods = tier2_pass.get("modifications", [])
