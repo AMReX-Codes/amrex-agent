@@ -304,7 +304,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         "embed_documents": 0,
         "embed_query": 0,
     }
-    if embedding_service:
+    if embedding_service and hasattr(embedding_service, "get_embedding_call_counts"):
         embed_counts_before = embedding_service.get_embedding_call_counts()
 
     try:
@@ -383,7 +383,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     selected_case = plan_result.selected_case
 
     embed_counts_after = embed_counts_before
-    if embedding_service:
+    if embedding_service and hasattr(embedding_service, "get_embedding_call_counts"):
         embed_counts_after = embedding_service.get_embedding_call_counts()
 
     indexing_calls = max(0, embed_counts_after.get("total", 0) - embed_counts_before.get("total", 0))
