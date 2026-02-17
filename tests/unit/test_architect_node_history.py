@@ -105,3 +105,35 @@ def test_retry_action_label(monkeypatch):
 
     entry = updates["workflow_history"][-1]
     assert entry["action"] == "plan_created_retry"
+
+
+def test_indexing_calls_are_cumulative(monkeypatch):
+    class CountingEmbeddingService:
+        def __init__(self):
+            self.embeddings = object()
+            self._counts = [
+                {"total": 2, "embed_documents": 1, "embed_query": 1},
+                {"total": 5, "embed_documents": 3, "embed_query": 2},
+            ]
+
+        def get_embedding_call_counts(self):
+            return self._counts.pop(0)
+
+    class FakeArchitectService:
+        def __init__(self, _config, embedding_service=None):
+            self.level0_searcher = object()
+
+        def execute_planning(self, **_kwargs):
+            return _plan()
+
+    monkeypatch.setattr(embedding_factory_module, "get_embedding_service", lambda _cfg: CountingEmbeddingService())
+    monkeypatch.setattr(architect_node_module, "ArchitectService", FakeArchitectService)
+
+    state = {"config": DummyConfig(), "prompt": "test", "workflow_history": []}
+    updates = architect_node_module.architect_node(state)
+
+    details = updates["workflow_history"][-1]["details"]
+    assert details["indexing_calls_count"] == 3
+    assert details["indexing_calls_total"] == 5
+    assert details["indexing_calls_detail"]["embed_documents"] == 2
+    assert details["indexing_calls_detail"]["embed_query"] == 1

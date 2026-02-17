@@ -19,6 +19,7 @@ import json
 from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 from typing import Dict, List, Tuple
+from types import SimpleNamespace
 
 # Import services
 from src.services.architect import ArchitectService
@@ -436,3 +437,54 @@ class TestErrorHandlingStructured:
 
 # Architect Service: LLM Planning Marker
 pytestmark = pytest.mark.architect_llm_planning
+
+
+class TestLLMPlanInstructorPath:
+    def test_instructor_response_model_parsing(self, tmp_path, monkeypatch):
+        config = SimpleNamespace(
+            faiss_db_path=tmp_path,
+            repositories={},
+            llm_temperature=0.2,
+            llm_model="test-model",
+            llm_retry_max_attempts=1,
+            llm_gate_strategy="off",
+        )
+        architect = ArchitectService(config, Mock())
+
+        mock_llm = Mock()
+        architect.llm = mock_llm
+
+        response_model = SimpleNamespace(
+            modifications=[
+                SimpleNamespace(parameter="amr.n_cell", value="128 128 128"),
+                SimpleNamespace(parameter="fake.param", value="1"),
+            ],
+            reasoning="Use higher resolution",
+        )
+        instr_client = Mock()
+        instr_client.chat.completions.create = Mock(return_value=response_model)
+
+        monkeypatch.setattr("instructor.from_openai", lambda _client: instr_client)
+        monkeypatch.setattr("src.config.wrap_llm_client", lambda client, _config: client)
+
+        baseline_case = {
+            "metadata": {
+                "inputs_content": {
+                    "amr.n_cell": "64 64 64",
+                    "amr.max_level": "0",
+                }
+            }
+        }
+
+        result = architect._llm_plan(
+            prompt="Increase resolution",
+            solver="AMReX",
+            documentation=[],
+            cases=[baseline_case],
+        )
+
+        assert result is not None
+        assert result.modifications == [("amr.n_cell", "128 128 128")]
+        assert "resolution" in result.reasoning.lower()
+        call_kwargs = instr_client.chat.completions.create.call_args.kwargs
+        assert call_kwargs["response_model"] is not None
