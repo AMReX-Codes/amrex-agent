@@ -549,6 +549,7 @@ def stage_run_directory_sfapi_client(
     secret: str | None = None,
     key_path: str | Path | None = None,
     exclude_names: list[str] | None = None,
+    upload_host: str = "perlmutter",
 ) -> None:
     """
     Stage a local run directory to a remote filesystem via sfapi_client.
@@ -592,10 +593,17 @@ def stage_run_directory_sfapi_client(
             target_dir = None
 
         if target_dir is None:
-            raise FileNotFoundError(
-                f"Remote run directory not found: {remote_run_dir}. "
-                "Create it on Perlmutter or via the SFAPI client."
-            )
+            try:
+                ensure_remote_directory_rest(
+                    remote_run_dir=remote_run_dir,
+                    upload_host=upload_host,
+                )
+                [target_dir] = perlmutter.ls(remote_run_dir, directory=True)
+            except Exception as exc:
+                raise FileNotFoundError(
+                    f"Remote run directory not found: {remote_run_dir}. "
+                    "Create it on Perlmutter or via the SFAPI client."
+                ) from exc
 
         for item in sorted(local_run_dir.iterdir()):
             if not item.is_file():
@@ -675,7 +683,10 @@ def ensure_remote_directory_rest(
     Ensure remote directory exists by uploading a placeholder file via REST.
     """
     import io
+    import json
     import requests
+    import shlex
+    import time
 
     if nersc_session is None:
         clients = find_nersc_clients()
@@ -686,7 +697,62 @@ def ensure_remote_directory_rest(
                     break
 
     if not nersc_session:
+        key_path = _resolve_sfapi_key_path()
+        if key_path:
+            try:
+                from authlib.integrations.requests_client import OAuth2Session
+                from authlib.oauth2.rfc7523 import PrivateKeyJWT
+
+                key_path = Path(key_path)
+                key_lines = key_path.read_text().splitlines()
+                if key_lines:
+                    client_id = key_lines[0].strip()
+                    private_key = "\n".join(key_lines[1:]).strip() or None
+                    if client_id and private_key:
+                        token_url = "https://oidc.nersc.gov/c2id/token"
+                        session = OAuth2Session(
+                            client_id,
+                            private_key,
+                            PrivateKeyJWT(token_url),
+                            grant_type="client_credentials",
+                            token_endpoint=token_url,
+                        )
+                        session.fetch_token()
+                        nersc_session = {"type": "oauth", "session": session}
+            except Exception:
+                pass
+
+    if not nersc_session:
         raise RuntimeError("No NERSC session for REST upload staging")
+
+    if nersc_session["type"] == "oauth":
+        try:
+            command_url = f"https://api.nersc.gov/api/v1.2/utilities/command/{upload_host}"
+            executable = f"bash -lc {shlex.quote(f'mkdir -p {remote_run_dir}')}"
+            response = nersc_session["session"].post(
+                command_url,
+                data={"executable": executable},
+            )
+            response.raise_for_status()
+            payload = response.json()
+            task_id = payload.get("task_id")
+            if task_id:
+                tasks_url = f"https://api.nersc.gov/api/v1.2/tasks/{task_id}"
+                for _ in range(15):
+                    task_resp = nersc_session["session"].get(tasks_url)
+                    task_resp.raise_for_status()
+                    task = task_resp.json()
+                    if task.get("status") == "completed":
+                        result = task.get("result")
+                        if isinstance(result, str):
+                            result = json.loads(result)
+                        if isinstance(result, dict) and result.get("status") == "ok":
+                            return
+                        raise RuntimeError(f"REST mkdir task failed: {result}")
+                    time.sleep(1)
+                raise RuntimeError(f"REST mkdir task did not complete: {task_id}")
+        except Exception:
+            pass
 
     upload_url = f"https://api.nersc.gov/api/v1.2/utilities/upload/{upload_host}"
     remote_path = str(Path(remote_run_dir) / ".keep")
@@ -1008,6 +1074,9 @@ def resolve_remote_output_dir(
     logger = logging.getLogger(__name__)
     candidates: list[Path] = []
     suffix: str | None = None
+    key_path = _resolve_sfapi_key_path()
+    client_id, secret = _resolve_sfapi_credentials()
+    sfapi_available = bool(key_path or (client_id and secret))
     if preferred_output_dir:
         preferred_path = Path(os.path.expandvars(str(preferred_output_dir)))
         if not str(preferred_path).startswith("/global/cfs/cdirs/"):
@@ -1029,22 +1098,30 @@ def resolve_remote_output_dir(
         if candidate not in candidates:
             candidates.append(candidate)
 
+    create_budget = 2
     for candidate in candidates:
         try:
             list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
         except Exception as exc:
-            logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
-            continue
-        if nersc_session is None:
-            rest_clients = find_nersc_clients()
-            if not rest_clients:
-                # REST write check needs a NERSC token/OAuth session; sfapi_client listing
-                # already proved the path is reachable, so accept for sfapi_client staging.
-                logger.info(
-                    "Using remote output dir without REST write check (sfapi_client-only auth): %s",
-                    candidate,
-                )
-                return candidate
+            if create_budget > 0:
+                try:
+                    ensure_remote_directory_rest(
+                        remote_run_dir=str(candidate),
+                        nersc_session=nersc_session,
+                        upload_host=system,
+                    )
+                    create_budget -= 1
+                    list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
+                except Exception as mkdir_exc:
+                    logger.debug("Remote output dir check failed for %s: %s", candidate, mkdir_exc)
+                    continue
+            else:
+                logger.debug("Remote output dir check failed for %s: %s", candidate, exc)
+                continue
+        if sfapi_available and not nersc_session:
+            logger.debug("Using SFAPI credentials for %s; skipping REST mkdir check", candidate)
+            logger.info("Using remote output dir: %s", candidate)
+            return candidate
         try:
             ensure_remote_directory_rest(
                 remote_run_dir=str(candidate),
