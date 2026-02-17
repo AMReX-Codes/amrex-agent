@@ -154,8 +154,17 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         if compile_selection.get("value") == "compile_only":
             run_after_compile = False
 
-        # Select runner based on environment
-        if config.environment == "local":
+        # Select runner based on environment or container settings
+        container_image = getattr(config, "container_image", None)
+        container_runtime = getattr(config, "container_runtime", None)
+        has_container_image = isinstance(container_image, (str, Path)) and str(container_image).strip()
+        has_container_runtime = isinstance(container_runtime, str) and container_runtime.strip()
+
+        if has_container_image or has_container_runtime:
+            from src.services.run_container import ContainerRunner
+            runner = ContainerRunner(config)
+            logger.info("Using ContainerRunner for containerized execution")
+        elif config.environment == "local":
             from src.services.run_local import LocalRunner
             runner = LocalRunner(config)
             logger.info("Using LocalRunner for local execution")

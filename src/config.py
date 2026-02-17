@@ -533,6 +533,47 @@ class AMReXAgentConfig(BaseModel):
                     "Auto-detected from PODMAN_HPC or SHIFTER env variables. "
                     "When True, visualization uses extraction (headless) + rendering (local) workflow."
     )
+    container_runtime: Optional[str] = Field(
+        default=None,
+        description="Container runtime override (docker, podman, podman-hpc, apptainer, singularity). "
+                    "When unset, inferred from environment."
+    )
+    container_image: Optional[str] = Field(
+        default=None,
+        description="Container image reference (e.g., docker image or apptainer .sif or docker:// ref)."
+    )
+    container_entrypoint: Optional[str] = Field(
+        default=None,
+        description="Container entrypoint or executable path to run (default: /usr/local/bin/run_pelelmex)."
+    )
+    container_workdir: str = Field(
+        default="/work",
+        description="Workdir inside the container for mounted run directory."
+    )
+    container_inputs_name: str = Field(
+        default="inputs",
+        description="Inputs filename passed to the container entrypoint."
+    )
+    container_extra_args: Optional[List[str]] = Field(
+        default_factory=list,
+        description="Extra runtime args passed to the container (e.g., --env, --network)."
+    )
+    container_account: Optional[str] = Field(
+        default=None,
+        description="Slurm account for container jobs (used for non-NERSC slurm submission)."
+    )
+    container_qos: Optional[str] = Field(
+        default=None,
+        description="Slurm QoS for container jobs (overrides default when set)."
+    )
+    container_constraint: Optional[str] = Field(
+        default=None,
+        description="Slurm constraint for container jobs (overrides default when set)."
+    )
+    container_walltime: Optional[str] = Field(
+        default=None,
+        description="Slurm walltime for container jobs (overrides default when set)."
+    )
 
     analysis_always_enabled: bool = Field(
         default=True,

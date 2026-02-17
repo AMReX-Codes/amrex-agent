@@ -1103,6 +1103,16 @@ def resolve_remote_output_dir(
         try:
             list_remote_entries(str(candidate), nersc_session=nersc_session, system=system)
         except Exception as exc:
+            shared_root = Path(f"/global/cfs/cdirs/{account}/superfacility")
+            user_root = (
+                Path(f"/global/cfs/cdirs/{account}/{user}/superfacility") if user else None
+            )
+            is_shared_candidate = str(candidate).startswith(str(shared_root))
+            if user_root and str(candidate).startswith(str(user_root)):
+                is_shared_candidate = False
+            if is_shared_candidate:
+                logger.debug("Shared output dir missing or unreadable: %s", candidate)
+                continue
             if create_budget > 0:
                 try:
                     ensure_remote_directory_rest(
