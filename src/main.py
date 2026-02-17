@@ -794,6 +794,7 @@ def main(args: list[str] | None = None) -> None:
                             prompt_text,
                             mode=privacy_mode,
                             salt=getattr(config, "privacy_hash_salt", None),
+                            config=config,
                         ).text
                     transcript_lines.append(f"User Prompt:\n{prompt_text}\n\n")
                     transcript_lines.append("=" * 80 + "\n\n")
@@ -856,11 +857,12 @@ def main(args: list[str] | None = None) -> None:
 
                     if privacy_mode == "shared":
                         transcript_lines = [
-                            scrub_text(
-                                line,
-                                mode=privacy_mode,
-                                salt=getattr(config, "privacy_hash_salt", None),
-                            ).text
+                        scrub_text(
+                            line,
+                            mode=privacy_mode,
+                            salt=getattr(config, "privacy_hash_salt", None),
+                            config=config,
+                        ).text
                             for line in transcript_lines
                         ]
                     with open(transcript_path, 'w') as f:

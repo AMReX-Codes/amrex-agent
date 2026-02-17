@@ -81,6 +81,22 @@ GitHub reference: https://github.com/agents4science/agents4science.github.io/tre
 Note: dynamic DAG construction means the workflow graph can be built or pruned
 at runtime based on context, instead of following a fixed node sequence.
 
+## Privacy and prompt scrubbing
+
+Policy summary:
+- Privacy modes: off, shared, strict.
+- Shared mode redacts sensitive content in persisted artifacts and logs.
+- Strict mode blocks LLM calls when sensitive content is detected and skips transcripts.
+
+Implementation:
+- Config: `privacy_mode`, `privacy_scrubber`, `privacy_hash_salt` in `src/config.py`.
+- Scrubber: `src/utils/privacy.py`.
+- Hooks: `src/utils/llm_calls.py`, `src/utils/metrics.py`, `src/main.py`.
+
+Tests:
+- `tests/unit/test_privacy.py`
+- `tests/unit/test_privacy_persistence.py`
+
 ## Collaboration expectations (Agents4Science)
 
 | Expectation | Status | Notes |

@@ -660,6 +660,10 @@ class AMReXAgentConfig(BaseModel):
         default="off",
         description="Privacy mode for prompt/log persistence: off, shared, or strict."
     )
+    privacy_scrubber: Literal["builtin", "scrubadub", "presidio"] = Field(
+        default="builtin",
+        description="Scrubber backend for privacy modes: builtin, scrubadub, or presidio."
+    )
     privacy_hash_salt: Optional[str] = Field(
         default_factory=lambda: os.getenv("AMREX_PRIVACY_SALT"),
         description="Optional salt for prompt hashing in privacy modes."
