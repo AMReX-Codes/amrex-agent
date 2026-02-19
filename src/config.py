@@ -163,7 +163,7 @@ class AMReXAgentConfig(BaseModel):
     """
     
     # === LLM Configuration ===
-    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm"] = Field(
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm", "amsc-i2"] = Field(
         default="cborg",
         description="LLM provider to use"
     )
@@ -248,6 +248,20 @@ class AMReXAgentConfig(BaseModel):
     pnnl_default_model: str = Field(
         default="claude-haiku-4-5-20251001-v1-birthright",
         description="Default model for PNNL AI API"
+    )
+
+    # === AmSC i2 API (American Science Cloud) ===
+    amsc_i2_api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("AMSC_I2_API_KEY"),
+        description="AmSC i2 API key (from AMSC_I2_API_KEY env var)"
+    )
+    amsc_i2_base_url: str = Field(
+        default="https://api.i2-core.american-science-cloud.org/v1",
+        description="AmSC i2 API base URL"
+    )
+    amsc_i2_default_model: str = Field(
+        default="claude-sonnet-4-5",
+        description="Default model for AmSC i2 API (claude-sonnet-4-5, llama-4-scout, llama-4-maverick)"
     )
     
     pelec_executable: Optional[Path] = Field(
@@ -940,7 +954,27 @@ def get_llm_client(config: AMReXAgentConfig):
             base_url=base_url
         )
         return _wrap_llm_client_if_needed(client, config)
-    
+
+    elif config.llm_provider == "amsc-i2":
+        if not config.amsc_i2_api_key:
+            raise ValueError("AMSC_I2_API_KEY environment variable not set for AmSC i2 API")
+
+        # Use default model if not explicitly set
+        if not config.llm_model:
+            config.llm_model = config.amsc_i2_default_model
+            logger.info(f" Using AmSC i2 default model: {config.llm_model}")
+
+        # AmSC i2 API requires specific headers to bypass WAF
+        client = OpenAI(
+            api_key=config.amsc_i2_api_key,
+            base_url=config.amsc_i2_base_url,
+            default_headers={
+                "User-Agent": "amrex-agent/1.0",
+                "Accept": "application/json",
+            }
+        )
+        return _wrap_llm_client_if_needed(client, config)
+
     else:
         raise ValueError(f"Unknown LLM provider: {config.llm_provider}")
 

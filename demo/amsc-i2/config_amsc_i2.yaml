@@ -1,0 +1,31 @@
+# AmSC i2 API Configuration
+# American Science Cloud - i2 LiteLLM API
+llm_provider: amsc-i2
+
+# Model selection (see https://docs.i2-core.american-science-cloud.org/docs/api-available-models)
+# claude-sonnet-4-5: Latest Sonnet (alias)
+# claude-sonnet-4-5-high: High reasoning mode
+# llama-4-scout: Cost-effective option
+# llama-4-maverick: Alternative Llama model
+llm_model: claude-sonnet-4-5
+
+# Indexing / retrieval
+indexing_strategy: simple
+
+# NOTE: FAISS semantic weight set to 0.0 because amsc-i2 embedding models
+# (cohere-embed-v4, titan-embed-text-v2, etc.) don't match the models used
+# to build existing FAISS indices (CBORG nomic-embed-text or OpenAI embeddings)
+faiss_semantic_weight: 0.0
+
+faiss_fallback_to_llm: true
+faiss_topk: 3
+
+# Inputs selection
+inputs_file_strategy: newest
+
+# Execution
+allow_local_run: true
+max_iterations: 3
+
+# Output
+output_dir: output
