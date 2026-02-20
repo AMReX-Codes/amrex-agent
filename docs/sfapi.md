@@ -187,3 +187,14 @@ python amrex_agent.py \
 
 - Demo configs: `demo/superfacility/`
 - Demo notes: `demo/superfacility/README.md`
+
+## Globus stage-out (MCP)
+
+If you use the MCP `stage_out_globus` tool, it will build a Globus CLI transfer
+command. Default endpoints are preconfigured for common NERSC→ALCF transfers:
+
+- Source (NERSC DTN): `9d6d994a-6d04-11e5-ba46-22000b92c6ec`
+- Destination (ALCF): `05d2c76a-e867-4f67-aa57-76edeb0beda0`
+
+Override these by passing `globus.source_endpoint` / `globus.destination_endpoint`
+in the tool payload or by setting `GLOBUS_SRC_ENDPOINT` / `GLOBUS_DST_ENDPOINT`.
