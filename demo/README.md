@@ -2,6 +2,18 @@
 
 Quick start guide for running AMReXAgent demos and sanity checks.
 
+## Interface Paths
+
+Use the path that matches your integration target:
+
+| Path | Entry point | Best for |
+|---|---|---|
+| CLI | `python amrex_agent.py ...` | direct workflows and full CLI options |
+| MCP stdio | `python -u mcp_server.py` + `demo/mcp/*client*` | MCP tool contract and transport smoke tests |
+| Academy exchange | `python demo/mcp/academy_amrex_agent.py` | Academy/AISAC discovery with AMReX MCP actions |
+
+For MCP and Academy payload-level guidance, use `demo/mcp/README.md` and `docs/mcp.md`.
+
 ## Demo Layout
 
 ```
@@ -119,6 +131,11 @@ You can upload once and then set `vector_store_backend: openai` in your config.
 ## Running the Demo
 
 Note: Run commands from the repo root so relative paths like `demo/...` resolve correctly.
+
+If you are testing MCP or Academy behavior (instead of CLI-only behavior), start with:
+
+- `demo/mcp/README.md` for runnable examples
+- `docs/mcp.md` for canonical payload/contract definitions
 
 ### Option 0: AMReX baseline + inputs only (no modifications)
 
