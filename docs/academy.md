@@ -44,6 +44,25 @@ Once registered, invoke `execute_workflow` through the Academy path with payload
 
 For full MCP payload templates and field mapping, see `docs/mcp.md`.
 
+## Single-workflow demo (Academy)
+
+Start the Academy agent, then run the Perlmutter DNS workflow example
+(isothermal prompt) to execute a single `execute_workflow` path end-to-end:
+
+```bash
+python demo/mcp/academy_amrex_agent.py
+```
+
+Copy the printed agent UUID and pass it to the workflow script:
+
+```bash
+python demo/mcp/academy_execute_workflow_perlmutter_dns.py --agent-id <uuid>
+```
+
+This script mirrors the minimal payload above (plan → run) and is a good starting
+point for validating Academy connectivity and MCP tool wiring. The prompt content
+comes from `demo/pelelmex/user_requirements_DNS_isothermal.txt`.
+
 ## Upstream Academy documentation
 
 - Academy repository (GitHub): <https://github.com/academy-agents/academy>
