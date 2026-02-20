@@ -100,9 +100,12 @@ def route_after_runner(state: GraphState) -> str:
         logger.warning("[ROUTE] Runner job still active (%s) → Visualization", job_status)
         return "visualization"
 
-    if job_status in {"skipped", "cancelled", "timeout"}:
+    if job_status in {"skipped", "cancelled"}:
         logger.warning("[ROUTE] Runner %s → END", state.get("job_status"))
         return END
+    if job_status == "timeout":
+        logger.warning("[ROUTE] Runner timeout → Visualization")
+        return "visualization"
 
     # Terminal system failures (cannot be fixed by changing inputs)
     terminal_errors = [
