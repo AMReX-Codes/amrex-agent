@@ -26,6 +26,7 @@ Usage:
 """
 
 import asyncio
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -353,6 +354,7 @@ def mcp_execute_workflow(payload: dict) -> dict:
         "analyze_results": mcp_analyze_results,
         "get_workflow_status": mcp_analyze_results,
         "generate_visualizations": mcp_generate_visualizations,
+        "stage_out_globus": mcp_stage_out_globus,
     }
 
     invalid_steps = [step for step in steps if step not in step_map]
@@ -776,6 +778,45 @@ def mcp_generate_visualizations(payload: dict) -> dict:
     }
 
 
+def mcp_stage_out_globus(payload: dict) -> dict:
+    """Prepare a Globus CLI transfer command for staging outputs."""
+    remote_run_dir = payload.get("remote_run_dir") or payload.get("run_directory")
+    local_run_dir = payload.get("local_run_dir") or payload.get("output_dir")
+
+    if not remote_run_dir:
+        raise ValueError("Missing remote_run_dir")
+    if not local_run_dir:
+        raise ValueError("Missing local_run_dir")
+
+    globus_cfg = payload.get("globus") or {}
+    src_endpoint = globus_cfg.get("source_endpoint") or os.getenv("GLOBUS_SRC_ENDPOINT")
+    dst_endpoint = globus_cfg.get("destination_endpoint") or os.getenv("GLOBUS_DST_ENDPOINT")
+    label = globus_cfg.get("label") or f"amrex-agent-{Path(remote_run_dir).name}"
+
+    if not src_endpoint or not dst_endpoint:
+        return {
+            "status": "skipped",
+            "reason": "Missing Globus endpoints (set globus.source_endpoint/destination_endpoint or env vars)",
+            "remote_run_dir": str(remote_run_dir),
+            "local_run_dir": str(local_run_dir),
+        }
+
+    command = (
+        f"globus transfer {src_endpoint}:{remote_run_dir} "
+        f"{dst_endpoint}:{local_run_dir} --recursive --label \"{label}\""
+    )
+
+    return {
+        "status": "ready",
+        "command": command,
+        "source_endpoint": src_endpoint,
+        "destination_endpoint": dst_endpoint,
+        "remote_run_dir": str(remote_run_dir),
+        "local_run_dir": str(local_run_dir),
+        "label": label,
+    }
+
+
 # ============================================================================
 # MCP Server (if MCP library available)
 # ============================================================================
@@ -844,7 +885,8 @@ async def list_tools():
                                 "run_simulation",
                                 "analyze_results",
                                 "get_workflow_status",
-                                "generate_visualizations"
+                                "generate_visualizations",
+                                "stage_out_globus"
                             ]
                         },
                         "description": "Ordered list of workflow steps to execute. Defaults to plan→run→analyze→visualize."
@@ -880,6 +922,18 @@ async def list_tools():
                     "run_directory": {
                         "type": "string",
                         "description": "Run directory for analysis/visualization."
+                    },
+                    "remote_run_dir": {
+                        "type": "string",
+                        "description": "Remote run directory for staging outputs."
+                    },
+                    "local_run_dir": {
+                        "type": "string",
+                        "description": "Local run directory for staged outputs."
+                    },
+                    "globus": {
+                        "type": "object",
+                        "description": "Globus transfer options (source_endpoint, destination_endpoint, label)."
                     }
                 },
                 "required": []
@@ -894,6 +948,58 @@ async def list_tools():
                     "final": {
                         "type": "object",
                         "description": "Merged context after all steps."
+                    }
+                }
+            }
+        },
+        {
+            "name": "stage_out_globus",
+            "description": "Prepare a Globus CLI transfer command for staging outputs.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "remote_run_dir": {
+                        "type": "string",
+                        "description": "Remote run directory to stage out."
+                    },
+                    "local_run_dir": {
+                        "type": "string",
+                        "description": "Local destination directory."
+                    },
+                    "globus": {
+                        "type": "object",
+                        "properties": {
+                            "source_endpoint": {
+                                "type": "string",
+                                "description": "Globus source endpoint ID."
+                            },
+                            "destination_endpoint": {
+                                "type": "string",
+                                "description": "Globus destination endpoint ID."
+                            },
+                            "label": {
+                                "type": "string",
+                                "description": "Optional transfer label."
+                            }
+                        }
+                    }
+                },
+                "required": ["remote_run_dir", "local_run_dir"]
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "ready or skipped."
+                    },
+                    "command": {
+                        "type": "string",
+                        "description": "Globus CLI transfer command to run."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for skipping, if applicable."
                     }
                 }
             }
@@ -1698,6 +1804,9 @@ async def call_tool(name: str, arguments: dict) -> Any:
 
         elif name == "generate_visualizations":
             result = mcp_generate_visualizations(context)
+
+        elif name == "stage_out_globus":
+            result = mcp_stage_out_globus(context)
 
         else:
             result = {"error": f"Unknown tool: {name}"}
