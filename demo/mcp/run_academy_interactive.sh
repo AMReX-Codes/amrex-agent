@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Interactive helper for Academy handoff validation.
+# Interactive helper for Academy validation.
 # Usage:
-#   demo/mcp/run_academy_handoff_interactive.sh agent
-#   demo/mcp/run_academy_handoff_interactive.sh client --agent-id <agent_id>
-#   demo/mcp/run_academy_handoff_interactive.sh extract-agent-id
+#   demo/mcp/run_academy_interactive.sh agent
+#   demo/mcp/run_academy_interactive.sh client --agent-id <agent_id> [--profile dns-perlmutter|suite]
+#   demo/mcp/run_academy_interactive.sh extract-agent-id
 
 MODE="${1:-}"
 shift || true
 
-EVIDENCE_DIR="${EVIDENCE_DIR:-output/handoff_runs/2026-02-20}"
+EVIDENCE_DIR="${EVIDENCE_DIR:-output/academy_runs/2026-02-20}"
 mkdir -p "${EVIDENCE_DIR}"
 
 export PYTHONPATH="${PYTHONPATH:-.}"
@@ -18,14 +18,14 @@ export HOME="${HOME:-/tmp/amrex_agent_home}"
 mkdir -p "${HOME}"
 
 AGENT_LOG="${EVIDENCE_DIR}/academy_agent.log"
-CLIENT_LOG="${EVIDENCE_DIR}/academy_execute_workflow_smoke.log"
+CLIENT_LOG="${EVIDENCE_DIR}/academy_client.log"
 
 print_usage() {
   cat <<'EOF'
 Usage:
-  demo/mcp/run_academy_handoff_interactive.sh agent
-  demo/mcp/run_academy_handoff_interactive.sh client --agent-id <agent_id>
-  demo/mcp/run_academy_handoff_interactive.sh extract-agent-id
+  demo/mcp/run_academy_interactive.sh agent
+  demo/mcp/run_academy_interactive.sh client --agent-id <agent_id> [--profile dns-perlmutter|suite]
+  demo/mcp/run_academy_interactive.sh extract-agent-id
 
 Notes:
   - Run `agent` in one terminal and keep it running.
@@ -56,10 +56,15 @@ run_agent() {
 
 run_client() {
   local agent_id=""
+  local profile="dns-perlmutter"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --agent-id)
         agent_id="${2:-}"
+        shift 2
+        ;;
+      --profile)
+        profile="${2:-}"
         shift 2
         ;;
       *)
@@ -76,9 +81,26 @@ run_client() {
     exit 1
   fi
 
+  local script=""
+  case "${profile}" in
+    dns-perlmutter)
+      script="demo/mcp/academy_execute_workflow_perlmutter_dns.py"
+      CLIENT_LOG="${EVIDENCE_DIR}/academy_execute_workflow_perlmutter_dns.log"
+      ;;
+    suite)
+      script="demo/mcp/academy_validation_suite.py"
+      CLIENT_LOG="${EVIDENCE_DIR}/academy_validation_suite.log"
+      ;;
+    *)
+      echo "Unsupported --profile '${profile}'." >&2
+      print_usage
+      exit 1
+      ;;
+  esac
+
   echo "Writing client log to ${CLIENT_LOG}"
-  echo "Calling Academy actions against agent: ${agent_id}"
-  python demo/mcp/academy_execute_workflow_smoke.py --agent-id "${agent_id}" 2>&1 | tee "${CLIENT_LOG}"
+  echo "Calling Academy actions against agent: ${agent_id} (profile=${profile})"
+  python "${script}" --agent-id "${agent_id}" 2>&1 | tee "${CLIENT_LOG}"
 }
 
 case "${MODE}" in

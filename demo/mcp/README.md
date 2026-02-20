@@ -92,35 +92,50 @@ Notes:
 - Keep this process running while bridge/client discovery occurs.
 - Use this mode instead of stdio when validating Academy/AISAC integration.
 
-### Academy execute_workflow smoke calls
+### Academy DNS Perlmutter smoke call
 
 After startup prints `AMReXMCPAgent uid: <uuid>`, run:
 
 ```bash
-python demo/mcp/academy_execute_workflow_smoke.py --agent-id <uuid>
+python demo/mcp/academy_execute_workflow_perlmutter_dns.py --agent-id <uuid>
 ```
 
-This issues `list_tools`, `execute_workflow` (plan+run dry-run), `execute_workflow`
-with `config_overrides`, and a `generate_visualizations` tool call.
+This runs one `execute_workflow` call for DNS on Perlmutter in dry-run mode.
+
+### Academy validation suite (long form)
+
+```bash
+python demo/mcp/academy_validation_suite.py --agent-id <uuid>
+```
+
+This runs a broader sequence: `list_tools`, plan+run dry-run, config-overrides
+run, and `generate_visualizations`.
 
 ### Interactive two-terminal helper
 
-Use the helper script to run and log both sides consistently:
+Use the helper script to run and log both sides consistently.
 
 Terminal A:
 
 ```bash
-demo/mcp/run_academy_handoff_interactive.sh agent
+demo/mcp/run_academy_interactive.sh agent
 ```
 
 Terminal B:
 
 ```bash
-AGENT_ID=$(demo/mcp/run_academy_handoff_interactive.sh extract-agent-id)
-demo/mcp/run_academy_handoff_interactive.sh client --agent-id "$AGENT_ID"
+AGENT_ID=$(demo/mcp/run_academy_interactive.sh extract-agent-id)
+demo/mcp/run_academy_interactive.sh client --agent-id "$AGENT_ID"
 ```
 
-Default evidence output is `output/handoff_runs/2026-02-20/`.
+Default client profile is `dns-perlmutter`.
+For the long suite profile:
+
+```bash
+demo/mcp/run_academy_interactive.sh client --agent-id "$AGENT_ID" --profile suite
+```
+
+Default evidence output is `output/academy_runs/2026-02-20/`.
 
 ## Recipe Payload Examples
 

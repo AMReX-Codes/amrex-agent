@@ -1,4 +1,4 @@
-"""Call AMReXMCPAgent actions over Academy exchange for smoke validation."""
+"""Run Academy validation suite across key AMReX MCP action patterns."""
 
 from __future__ import annotations
 
@@ -15,18 +15,13 @@ from academy.manager import Manager
 
 EXCHANGE = "https://exchange.academy-agents.org"
 BASELINE_JICF = "PeleLMeX/Exec/Production/JetInCrossflow"
-
 DNS_TEST_PATH = "demo/pelelmex/user_requirements_test_DNS.txt"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--agent-id", required=True, help="Academy agent ID to call.")
-    parser.add_argument(
-        "--exchange",
-        default=EXCHANGE,
-        help="Academy exchange URL.",
-    )
+    parser.add_argument("--agent-id", required=True, help="Academy agent ID (full UUID).")
+    parser.add_argument("--exchange", default=EXCHANGE, help="Academy exchange URL.")
     parser.add_argument(
         "--prompt-path",
         default=DNS_TEST_PATH,
@@ -34,48 +29,45 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="output/handoff_runs/2026-02-20",
+        default="output/academy_runs/2026-02-20",
         help="Directory for writing call summaries.",
     )
     return parser.parse_args()
 
 
 def _parse_agent_id(agent_id_arg: str) -> AgentId:
-    """
-    Parse full UUID agent id into academy AgentId.
-
-    The short repr form (for example ``AgentId<70545964>``) is not reversible.
-    """
     value = agent_id_arg.strip()
     if value.startswith("AgentId<") and value.endswith(">"):
-        inner = value[len("AgentId<") : -1]
         raise ValueError(
-            "Received short AgentId repr "
-            f"'{value}'. Use full UUID instead (for example from "
-            "'AMReXMCPAgent uid: <uuid>')."
+            f"Received short AgentId repr '{value}'. Use full UUID from "
+            "'AMReXMCPAgent uid: <uuid>'."
         )
     try:
         uid = uuid.UUID(value)
     except ValueError as exc:
-        raise ValueError(
-            f"Invalid --agent-id '{agent_id_arg}'. Expected full UUID."
-        ) from exc
+        raise ValueError(f"Invalid --agent-id '{agent_id_arg}'. Expected full UUID.") from exc
     return AgentId(uid=uid)
 
 
 def _result_summary(result: Any) -> dict[str, Any]:
-    """Return compact response summary for stable logging."""
     if isinstance(result, dict):
         if "error" in result:
             return {"ok": False, "error": str(result.get("error"))}
         steps = result.get("steps")
         if isinstance(steps, dict):
+            final = result.get("final") or {}
             return {
                 "ok": True,
                 "step_names": list(steps.keys()),
-                "final_keys": sorted(list((result.get("final") or {}).keys())),
+                "final_keys": sorted(list(final.keys())),
+                "run_directory": final.get("run_directory"),
+                "job_status": final.get("job_status"),
+                "script_path": final.get("script_path"),
+                "selected_case": final.get("selected_case"),
             }
         return {"ok": True, "keys": sorted(list(result.keys()))}
+    if isinstance(result, list):
+        return {"ok": True, "type": "list", "size": len(result)}
     return {"ok": True, "type": type(result).__name__}
 
 
@@ -112,12 +104,7 @@ async def main() -> None:
         handle = manager.get_handle(_parse_agent_id(args.agent_id))
 
         tools = await handle.action("list_tools")
-        calls.append(
-            {
-                "action": "list_tools",
-                "summary": _result_summary(tools),
-            }
-        )
+        calls.append({"action": "list_tools", "summary": _result_summary(tools)})
 
         plan_run = await handle.action("execute_workflow", payload=plan_run_payload)
         calls.append(
@@ -153,10 +140,11 @@ async def main() -> None:
     report = {
         "agent_id": args.agent_id,
         "exchange": args.exchange,
+        "profile": "validation_suite",
         "calls": calls,
     }
     print(json.dumps(report, indent=2))
-    (output_dir / "academy_execute_workflow_smoke.summary.json").write_text(
+    (output_dir / "academy_validation_suite.summary.json").write_text(
         json.dumps(report, indent=2) + "\n"
     )
 
