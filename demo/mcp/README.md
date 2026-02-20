@@ -87,8 +87,40 @@ Press Ctrl+C to stop
 
 Notes:
 - First run may require Globus auth.
+- Globus auth is interactive: you must open the URL and paste the auth code in the terminal.
+- Non-interactive execution (for example CI/background jobs) will fail during Academy login.
 - Keep this process running while bridge/client discovery occurs.
 - Use this mode instead of stdio when validating Academy/AISAC integration.
+
+### Academy execute_workflow smoke calls
+
+After startup prints `AMReXMCPAgent uid: <uuid>`, run:
+
+```bash
+python demo/mcp/academy_execute_workflow_smoke.py --agent-id <uuid>
+```
+
+This issues `list_tools`, `execute_workflow` (plan+run dry-run), `execute_workflow`
+with `config_overrides`, and a `generate_visualizations` tool call.
+
+### Interactive two-terminal helper
+
+Use the helper script to run and log both sides consistently:
+
+Terminal A:
+
+```bash
+demo/mcp/run_academy_handoff_interactive.sh agent
+```
+
+Terminal B:
+
+```bash
+AGENT_ID=$(demo/mcp/run_academy_handoff_interactive.sh extract-agent-id)
+demo/mcp/run_academy_handoff_interactive.sh client --agent-id "$AGENT_ID"
+```
+
+Default evidence output is `output/handoff_runs/2026-02-20/`.
 
 ## Recipe Payload Examples
 

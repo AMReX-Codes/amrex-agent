@@ -25,6 +25,7 @@ async def main() -> None:
     ) as manager:
         handle = await manager.launch(AMReXMCPAgent)
         print(f"AMReXMCPAgent running: {handle.agent_id}")
+        print(f"AMReXMCPAgent uid: {handle.agent_id.uid}")
         print("Press Ctrl+C to stop")
         await asyncio.Event().wait()
 
