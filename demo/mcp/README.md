@@ -5,13 +5,8 @@ This folder documents two integration paths for AMReXAgent tools:
 - `stdio MCP`: local subprocess client/server using `mcp_server.py`
 - `Academy exchange`: register `AMReXMCPAgent` to the Academy exchange
 
-## Mode Matrix
-
-| Mode | Entry point | Transport | Best for | Not for |
-|---|---|---|---|---|
-| CLI | `python amrex_agent.py ...` | none | direct local workflows, full CLI config support (`--config`) | remote MCP/Academy tool integration |
-| MCP stdio | `python -u mcp_server.py` + `demo/mcp/*client*` | stdio JSON-RPC | MCP tool schema/testing and local orchestration | Academy exchange registration |
-| Academy exchange | `python demo/mcp/academy_amrex_agent.py` | Academy exchange + Globus auth | AISAC/Academy discovery and delegation | direct stdio MCP transport tests |
+Mode selection and interface mapping are defined in `docs/mcp.md`.
+This page focuses on runnable setup and example requests.
 
 ## Setup
 
@@ -95,20 +90,7 @@ Notes:
 - Keep this process running while bridge/client discovery occurs.
 - Use this mode instead of stdio when validating Academy/AISAC integration.
 
-## CLI to MCP Mapping
-
-MCP uses payload fields, not CLI flags.
-
-| CLI concept | MCP payload equivalent |
-|---|---|
-| `--prompt-path file.txt` | caller reads file, sends `prompt: "..."` |
-| `--baseline-override` | `baseline_override` |
-| `--run-mode dry` | `submit: {"dry_run": true}` |
-| `--environment perlmutter` | `config_overrides: {"environment": "perlmutter"}` |
-| `--output-dir ...` | `output_dir` or `config_overrides.output_dir` |
-| `--config some.yaml` | no direct MCP file-path input; use `config_overrides` per request |
-
-## Canonical MCP Payload Examples
+## Recipe Payload Examples
 
 ### 1) Plan + run only (no analysis)
 
@@ -168,6 +150,6 @@ Perlmutter/account override:
 
 ## Related docs and scripts
 
-- Canonical MCP contract: `docs/mcp.md`
+- Current MCP contract templates: `docs/mcp.md`
 - In-process memory stream demo: `demo/mcp/mcp_inprocess_examples.py`
 - CLI comparison scripts: `demo/mcp/run_dns_cli_examples.sh`, `demo/mcp/run_dns_cli_examples_dry_verbose.sh`

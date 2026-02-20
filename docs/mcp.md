@@ -3,7 +3,7 @@
 AMReXAgent exposes MCP tool endpoints in `mcp_server.py`, and the same tool surface
 can be registered through Academy using `src/academy_mcp_agent.py`.
 
-This page is the canonical reference for:
+This page is the current reference for:
 - which integration mode to use,
 - how CLI concepts map to MCP payloads,
 - supported `execute_workflow` payload patterns.
@@ -16,25 +16,7 @@ This page is the canonical reference for:
 | MCP stdio | `python -u mcp_server.py` + MCP client | stdio JSON-RPC | tool schema testing and external MCP orchestrators |
 | Academy exchange | `python demo/mcp/academy_amrex_agent.py` | Academy exchange + Globus | AISAC/Academy discovery and delegated execution |
 
-## Start Commands
-
-### MCP stdio server
-
-```bash
-python -u mcp_server.py
-```
-
-### MCP stdio smoke client
-
-```bash
-python demo/mcp/mcp_stdio_client_smoke.py
-```
-
-### Academy exchange launcher (AMReX wrapper)
-
-```bash
-python demo/mcp/academy_amrex_agent.py
-```
+For runnable command sequences and solver-specific recipes, see `demo/mcp/README.md`.
 
 ## Tool Inventory
 
@@ -70,17 +52,17 @@ MCP takes payload objects; it does not take CLI argument strings.
 | `--output-dir ...` | `output_dir` and/or `config_overrides.output_dir` |
 | `--config demo/superfacility/config_perlmutter_remote.yaml` | no direct MCP config-file-path field; use `config_overrides` |
 
-## Canonical Payloads
+## Current Payload Templates
 
 ### execute_workflow: plan + run only (no analysis)
 
 ```json
 {
-  "prompt": "<contents of demo/pelelmex/user_requirements_DNS_isothermal_reacting.txt>",
+  "prompt": "<required: natural-language request>",
   "steps": ["create_simulation_plan", "run_simulation"],
-  "output_dir": "output/mcp/pelelmex",
-  "submit": {"dry_run": true},
-  "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow"
+  "baseline_override": "<optional: solver case path>",
+  "output_dir": "<optional: output path override>",
+  "submit": {"dry_run": true}
 }
 ```
 
@@ -88,12 +70,11 @@ MCP takes payload objects; it does not take CLI argument strings.
 
 ```json
 {
-  "run_directory": "output/mcp/pelelmex/run_001",
-  "output_dir": "output/mcp/pelelmex/run_001/visualization",
+  "run_directory": "<required: existing run directory>",
+  "output_dir": "<optional: visualization output directory>",
   "visualization_config": {
     "plots": [
-      {"type": "slice", "field": "Temp", "axis": "z", "colormap": "inferno", "vmin": 300, "vmax": 2500},
-      {"type": "slice", "field": "density", "axis": "z"}
+      {"type": "slice", "field": "<field_name>", "axis": "z"}
     ]
   }
 }
@@ -105,11 +86,11 @@ Local run target:
 
 ```json
 {
-  "prompt": "...",
+  "prompt": "<required>",
   "steps": ["create_simulation_plan", "run_simulation"],
   "config_overrides": {
     "environment": "local",
-    "output_dir": "output/local_runs"
+    "output_dir": "<optional local output dir>"
   }
 }
 ```
@@ -118,21 +99,19 @@ Perlmutter/account override:
 
 ```json
 {
-  "prompt": "...",
+  "prompt": "<required>",
   "steps": ["create_simulation_plan", "run_simulation"],
   "config_overrides": {
     "environment": "perlmutter",
-    "superfacility_account": "m1234"
+    "superfacility_account": "<project account>"
   },
-  "submit": {"nodes": 2, "walltime": "00:30:00"}
+  "submit": {"dry_run": true, "nodes": 2, "walltime": "00:30:00"}
 }
 ```
 
-## Smoke Test Ladder
-
-1. **Transport smoke**: `python demo/mcp/mcp_stdio_client_smoke.py`
-2. **Workflow smoke**: `python demo/mcp/mcp_execute_workflow_examples.py`
-3. **Academy registration smoke**: `python demo/mcp/academy_amrex_agent.py`
+For runnable solver-specific examples (PeleLMeX/JetInCrossflow/Perlmutter), see:
+- `demo/mcp/mcp_execute_workflow_examples.py`
+- `demo/mcp/README.md`
 
 ## Operational Notes
 
