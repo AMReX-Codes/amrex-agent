@@ -64,6 +64,7 @@ PyGithub  # from conda: PyGithub
 globus-sdk  # from conda: globus-sdk
 
 # === Pip-only packages ===
+academy-py  # from pip: academy-py
 langchain-anthropic>=0.3.22  # from pip: langchain-anthropic>=0.3.22
 langchain-openai>=0.3.35  # from pip: langchain-openai>=0.3.35
 langsmith>=0.4.46  # from pip: langsmith>=0.4.46
