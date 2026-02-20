@@ -42,6 +42,7 @@ try:
         mcp_query_knowledge,
         mcp_run_simulation,
         mcp_select_baseline_case,
+        mcp_stage_out_globus,
         mcp_setup_job,
         mcp_validate_config,
         mcp_validate_inputs,
@@ -75,6 +76,7 @@ except ModuleNotFoundError:
         mcp_query_knowledge,
         mcp_run_simulation,
         mcp_select_baseline_case,
+        mcp_stage_out_globus,
         mcp_setup_job,
         mcp_validate_config,
         mcp_validate_inputs,
@@ -148,6 +150,8 @@ async def call_tool(name: str, arguments: dict) -> Any:
             result = mcp_analyze_results(context)
         elif name == "generate_visualizations":
             result = mcp_generate_visualizations(context)
+        elif name == "stage_out_globus":
+            result = mcp_stage_out_globus(context)
         else:
             result = {"error": f"Unknown tool: {name}"}
 

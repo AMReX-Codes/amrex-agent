@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+import os
 import sys
 
 from src.config import AMReXAgentConfig
@@ -27,6 +28,7 @@ __all__ = [
     "mcp_create_simulation_plan",
     "mcp_execute_workflow",
     "mcp_generate_visualizations",
+    "mcp_stage_out_globus",
     "mcp_query_knowledge",
     "mcp_run_simulation",
     "mcp_select_baseline_case",
@@ -270,6 +272,7 @@ def mcp_execute_workflow(payload: dict) -> dict:
         "generate_visualizations": _resolve_mcp_callable(
             "mcp_generate_visualizations", mcp_generate_visualizations
         ),
+        "stage_out_globus": _resolve_mcp_callable("mcp_stage_out_globus", mcp_stage_out_globus),
     }
 
     invalid_steps = [step for step in steps if step not in step_map]
@@ -626,6 +629,56 @@ def mcp_generate_visualizations(payload: dict) -> dict:
     }
 
 
+def mcp_stage_out_globus(payload: dict) -> dict:
+    """Prepare a Globus CLI transfer command for staging outputs."""
+    default_src_endpoint = "9d6d994a-6d04-11e5-ba46-22000b92c6ec"
+    default_dst_endpoint = "05d2c76a-e867-4f67-aa57-76edeb0beda0"
+
+    remote_run_dir = payload.get("remote_run_dir") or payload.get("run_directory")
+    local_run_dir = payload.get("local_run_dir") or payload.get("output_dir")
+
+    if not remote_run_dir:
+        raise ValueError("Missing remote_run_dir")
+    if not local_run_dir:
+        raise ValueError("Missing local_run_dir")
+
+    globus_cfg = payload.get("globus") or {}
+    src_endpoint = (
+        globus_cfg.get("source_endpoint")
+        or os.getenv("GLOBUS_SRC_ENDPOINT")
+        or default_src_endpoint
+    )
+    dst_endpoint = (
+        globus_cfg.get("destination_endpoint")
+        or os.getenv("GLOBUS_DST_ENDPOINT")
+        or default_dst_endpoint
+    )
+    label = globus_cfg.get("label") or f"amrex-agent-{Path(remote_run_dir).name}"
+
+    if not src_endpoint or not dst_endpoint:
+        return {
+            "status": "skipped",
+            "reason": "Missing Globus endpoints (set globus.source_endpoint/destination_endpoint or env vars)",
+            "remote_run_dir": str(remote_run_dir),
+            "local_run_dir": str(local_run_dir),
+        }
+
+    command = (
+        f"globus transfer {src_endpoint}:{remote_run_dir} "
+        f"{dst_endpoint}:{local_run_dir} --recursive --label \"{label}\""
+    )
+
+    return {
+        "status": "ready",
+        "command": command,
+        "source_endpoint": src_endpoint,
+        "destination_endpoint": dst_endpoint,
+        "remote_run_dir": str(remote_run_dir),
+        "local_run_dir": str(local_run_dir),
+        "label": label,
+    }
+
+
 def get_tool_specs() -> list[dict[str, Any]]:
     """Return MCP tool specifications as dictionaries."""
     available_solvers = config.available_solvers
@@ -674,6 +727,7 @@ def get_tool_specs() -> list[dict[str, Any]]:
                                 "analyze_results",
                                 "get_workflow_status",
                                 "generate_visualizations",
+                                "stage_out_globus",
                             ],
                         },
                         "description": "Ordered list of workflow steps to execute. "
@@ -711,6 +765,18 @@ def get_tool_specs() -> list[dict[str, Any]]:
                         "type": "string",
                         "description": "Run directory for analysis/visualization.",
                     },
+                    "remote_run_dir": {
+                        "type": "string",
+                        "description": "Remote run directory for staging outputs.",
+                    },
+                    "local_run_dir": {
+                        "type": "string",
+                        "description": "Local run directory for staged outputs.",
+                    },
+                    "globus": {
+                        "type": "object",
+                        "description": "Globus transfer options (source_endpoint, destination_endpoint, label).",
+                    },
                 },
                 "required": [],
             },
@@ -724,6 +790,58 @@ def get_tool_specs() -> list[dict[str, Any]]:
                     "final": {
                         "type": "object",
                         "description": "Merged context after all steps.",
+                    },
+                },
+            },
+        },
+        {
+            "name": "stage_out_globus",
+            "description": "Prepare a Globus CLI transfer command for staging outputs.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "remote_run_dir": {
+                        "type": "string",
+                        "description": "Remote run directory to stage out.",
+                    },
+                    "local_run_dir": {
+                        "type": "string",
+                        "description": "Local destination directory.",
+                    },
+                    "globus": {
+                        "type": "object",
+                        "properties": {
+                            "source_endpoint": {
+                                "type": "string",
+                                "description": "Globus source endpoint ID.",
+                            },
+                            "destination_endpoint": {
+                                "type": "string",
+                                "description": "Globus destination endpoint ID.",
+                            },
+                            "label": {
+                                "type": "string",
+                                "description": "Optional transfer label.",
+                            },
+                        },
+                    },
+                },
+                "required": ["remote_run_dir", "local_run_dir"],
+            },
+            "outputSchema": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "ready or skipped.",
+                    },
+                    "command": {
+                        "type": "string",
+                        "description": "Globus CLI transfer command to run.",
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for skipping, if applicable.",
                     },
                 },
             },
