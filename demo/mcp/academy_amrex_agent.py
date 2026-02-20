@@ -4,10 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import multiprocessing
+import sys
 from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 
 from academy.exchange.cloud.client import HttpExchangeFactory
 from academy.manager import Manager
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from src.academy_mcp_agent import AMReXMCPAgent
 
