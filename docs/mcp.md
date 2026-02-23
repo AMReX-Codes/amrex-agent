@@ -139,13 +139,33 @@ python -u mcp_server.py
 
 Superfacility runner checks:
 
+- `SBATCH_ACCOUNT` (default account if unset)
 - `SBATCH_ACCOUNT`
 - `SUPERFACILITY_CLIENT_ID`, `SUPERFACILITY_SECRET`
 - `NERSC_API_TOKEN` or `SFAPI_TOKEN`
 - `SFAPI_KEY_PATH`, `SUPERFACILITY_KEY_PATH`, `NERSC_SFAPI_KEY_PATH`
+- `~/.superfacility/` containing:
+- `clientid.txt` + `priv_key.jwk` (flat)
+- or `<color>_client/` with the same pair
+- `*.pem`, `key.pem`, or `priv_key.pem` (first line client ID, rest PEM key)
 - `~/.superfacility/` key material
 
-MCP requests do not switch server credentials per call; server process credentials are used.
+The PEM format expects the client ID on the first line; a standard
+`-----BEGIN` header on the first line is ignored.
+
+If using PEM key files, restrict permissions:
+
+```bash
+chmod 600 ~/.superfacility/*.pem
+```
+
+Note: MCP server submissions use the credentials available to the server
+process (env vars and `~/.superfacility`). There is no per-request credential
+switching, so start the server under the account you want to bill.
+
+The same applies to LLM providers: CBORG, ALCF, OpenAI, etc. use the server
+process credentials. Running the MCP server under your account means LLM calls
+consume your quota and SFAPI submissions use your key.
 
 ### Session persistence
 
