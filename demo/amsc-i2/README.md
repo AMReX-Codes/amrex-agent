@@ -2,13 +2,13 @@
 
 Setup for using the American Science Cloud i2 LiteLLM API.
 
-## Setup
+Access portal: the appropriate American Science Cloud API page
 
-Full setup instructions: https://docs.i2-core.american-science-cloud.org/docs/api-access
+## Setup
 
 Quick start:
 
-1. Get API key from https://api.i2-core.american-science-cloud.org/
+1. Get API key from your provider portal
 2. Set environment variable:
    ```bash
    export AMSC_I2_API_KEY=<your-key>
@@ -36,7 +36,7 @@ python amrex_agent.py \
 
 ## Available Models
 
-See available models and pricing: https://docs.i2-core.american-science-cloud.org/docs/api-available-models
+See available models and pricing in your provider docs.
 
 ## FAISS Note
 
@@ -46,6 +46,4 @@ To use FAISS with amsc-i2, rebuild indices with compatible embeddings.
 
 ## Documentation
 
-- API Access & Setup: https://docs.i2-core.american-science-cloud.org/docs/api-access
-- Available Models: https://docs.i2-core.american-science-cloud.org/docs/api-available-models
-- API Reference: https://api.i2-core.american-science-cloud.org/
+- Provider docs and API reference are available from your portal.

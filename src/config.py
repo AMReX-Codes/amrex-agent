@@ -256,8 +256,8 @@ class AMReXAgentConfig(BaseModel):
         description="AmSC i2 API key (from AMSC_I2_API_KEY env var)"
     )
     amsc_i2_base_url: str = Field(
-        default="https://api.i2-core.american-science-cloud.org/v1",
-        description="AmSC i2 API base URL"
+        default="",
+        description="AmSC i2 API base URL (set AMSC_I2_BASE_URL)"
     )
     amsc_i2_default_model: str = Field(
         default="claude-sonnet-4-5",
@@ -964,7 +964,7 @@ def get_llm_client(config: AMReXAgentConfig):
             config.llm_model = config.amsc_i2_default_model
             logger.info(f" Using AmSC i2 default model: {config.llm_model}")
 
-        # AmSC i2 API requires specific headers to bypass WAF
+        # Provider-specific defaults can be set here when required.
         client = OpenAI(
             api_key=config.amsc_i2_api_key,
             base_url=config.amsc_i2_base_url,

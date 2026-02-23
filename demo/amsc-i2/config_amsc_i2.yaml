@@ -2,7 +2,7 @@
 # American Science Cloud - i2 LiteLLM API
 llm_provider: amsc-i2
 
-# Model selection (see https://docs.i2-core.american-science-cloud.org/docs/api-available-models)
+# Model selection (see provider docs for available models)
 # claude-sonnet-4-5: Latest Sonnet (alias)
 # claude-sonnet-4-5-high: High reasoning mode
 # llama-4-scout: Cost-effective option
