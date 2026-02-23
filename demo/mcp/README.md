@@ -1,7 +1,12 @@
-# MCP Demo (ALCF + NERSC stdio)
+# MCP + Academy Demo
 
-This folder contains a minimal stdio-based MCP server/client demo intended for
-ALCF (Crux) or NERSC Perlmutter login nodes.
+This folder documents two integration paths for AMReXAgent tools:
+
+- `stdio MCP`: local subprocess client/server using `mcp_server.py`
+- `Academy exchange`: register `AMReXMCPAgent` to the Academy exchange
+
+Mode selection and interface mapping are defined in `docs/mcp.md`.
+This page focuses on runnable setup and example requests.
 
 ## Setup
 
@@ -12,7 +17,7 @@ cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent
 conda activate amrex-agent-dev
 ```
 
-If you need a fresh env on Perlmutter:
+If needed:
 
 ```bash
 conda env create -f environment.yaml
@@ -35,114 +40,163 @@ python -m pip install -U pip
 python -m pip install -e .
 ```
 
-This follows ALCF guidance (base conda + venv overlay). We do not recommend
-running without a venv because the shared base env is not writable and `pip
-install` into it is blocked, making dependency changes brittle.
+This follows ALCF guidance (base conda + venv overlay). Running without a venv is not recommended because shared base envs are not writable for `pip install`.
 
-Note: A best-effort `requirements.txt` is under test for ALCF. The conda
-environment path on ALCF is non-recommended, so prefer the base+venv flow unless
-you need the full `environment.yaml` stack.
+## Path A: MCP stdio
 
-If you do use `requirements.txt`, run it inside the venv:
+### Start server
 
 ```bash
-source "${VENV_DIR}/bin/activate"
-python -m pip install -r requirements.txt
-```
-
-
-If you must match the NERSC-style conda flow, here is the non-recommended
-alternative for ALCF:
-
-```bash
-conda env create -f environment.yaml -n amrex-agent-dev
-conda activate amrex-agent-dev
-python -m pip install -U pip
-python -m pip install -e .
-```
-
-## Run server (stdio)
-
-### NERSC (Perlmutter login)
-
-```bash
-cd /global/cfs/cdirs/amsc014/superfacility/amrex-agent
-conda activate amrex-agent-dev
 python -u mcp_server.py
 ```
 
-### ALCF (Crux)
-
-```bash
-cd /lus/eagle/projects/COMB-FLOW-UNI/mcp/amrex-agent
-python -u mcp_server.py
-```
-
-## Run anyio client (stdio subprocess)
+### Run stdio smoke client
 
 ```bash
 python demo/mcp/mcp_stdio_client_smoke.py
 ```
 
-The anyio client starts a stdio MCP server subprocess, lists tools, and calls
-`validate_inputs` against a temporary inputs file to verify wiring.
+Expected abridged output:
 
-Expected output (abridged):
-
-```
+```text
 tools: ['query_knowledge', 'execute_workflow', ...]
 structuredContent={'valid': False, 'errors': [...], 'warnings': [...]}
 ```
 
-Note: The anyio client uses `StdioServerParameters`, required by recent MCP
-client versions.
-
-## Example execute_workflow calls (stdio subprocess)
-
-DNS isothermal (PeleLMeX):
-
-```json
-{
-  "prompt": "<contents of demo/pelelmex/user_requirements_DNS_isothermal.txt>",
-  "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow",
-  "steps": ["create_simulation_plan", "run_simulation"],
-  "submit": {"dry_run": true}
-}
-```
-
-DNS test case:
-
-```json
-{
-  "prompt": "<contents of demo/pelelmex/user_requirements_test_DNS.txt>",
-  "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow",
-  "steps": ["create_simulation_plan", "run_simulation"],
-  "submit": {"dry_run": true}
-}
-```
-
-Run them via the helper:
+### Run execute_workflow examples (stdio)
 
 ```bash
 python demo/mcp/mcp_execute_workflow_examples.py
 ```
 
-## In-process (memory stream) demo
+## Path B: Academy exchange
 
-This runs the MCP server in-process using memory streams (no subprocess, no stdio).
-
-```bash
-python demo/mcp/mcp_inprocess_examples.py
-```
-
-CLI equivalents (no dry-run/verbose, includes save flags):
+Run the Academy wrapper for AMReX MCP tools:
 
 ```bash
-./demo/mcp/run_dns_cli_examples.sh
+conda activate amrex-agent-dev
+python demo/mcp/academy_amrex_agent.py
 ```
 
-CLI equivalents (dry-run + verbose):
+Expected startup:
+
+```text
+AMReXMCPAgent running: <agent_id>
+Press Ctrl+C to stop
+```
+
+Notes:
+- First run may require Globus auth.
+- Globus auth is interactive: you must open the URL and paste the auth code in the terminal.
+- Non-interactive execution (for example CI/background jobs) will fail during Academy login.
+- Keep this process running while bridge/client discovery occurs.
+- Use this mode instead of stdio when validating Academy/AISAC integration.
+
+### Academy DNS Perlmutter smoke call
+
+After startup prints `AMReXMCPAgent uid: <uuid>`, run:
 
 ```bash
-./demo/mcp/run_dns_cli_examples_dry_verbose.sh
+python demo/mcp/academy_execute_workflow_perlmutter_dns.py --agent-id <uuid>
 ```
+
+This runs one `execute_workflow` call for DNS on Perlmutter in dry-run mode.
+
+### Academy validation suite (long form)
+
+```bash
+python demo/mcp/academy_validation_suite.py --agent-id <uuid>
+```
+
+This runs a broader sequence: `list_tools`, plan+run dry-run, config-overrides
+run, and `generate_visualizations`.
+
+### Interactive two-terminal helper
+
+Use the helper script to run and log both sides consistently.
+
+Terminal A:
+
+```bash
+demo/mcp/run_academy_interactive.sh agent
+```
+
+Terminal B:
+
+```bash
+AGENT_ID=$(demo/mcp/run_academy_interactive.sh extract-agent-id)
+demo/mcp/run_academy_interactive.sh client --agent-id "$AGENT_ID"
+```
+
+Default client profile is `dns-perlmutter`.
+For the long suite profile:
+
+```bash
+demo/mcp/run_academy_interactive.sh client --agent-id "$AGENT_ID" --profile suite
+```
+
+Default evidence output is `output/academy_runs/2026-02-20/`.
+
+## Recipe Payload Examples
+
+### 1) Plan + run only (no analysis)
+
+```json
+{
+  "prompt": "<contents of demo/pelelmex/user_requirements_DNS_isothermal_reacting.txt>",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "output_dir": "output/mcp/pelelmex",
+  "submit": {"dry_run": true},
+  "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow"
+}
+```
+
+### 2) Visualization only
+
+```json
+{
+  "run_directory": "output/mcp/pelelmex/run_001",
+  "output_dir": "output/mcp/pelelmex/run_001/visualization",
+  "visualization_config": {
+    "plots": [
+      {"type": "slice", "field": "Temp", "axis": "z", "colormap": "inferno", "vmin": 300, "vmax": 2500},
+      {"type": "slice", "field": "density", "axis": "z"}
+    ]
+  }
+}
+```
+
+### 3) Config overrides per call
+
+Local run override:
+
+```json
+{
+  "prompt": "...",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "config_overrides": {
+    "environment": "local",
+    "output_dir": "output/local_runs"
+  }
+}
+```
+
+Perlmutter/account override:
+
+```json
+{
+  "prompt": "...",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "config_overrides": {
+    "environment": "perlmutter",
+    "superfacility_account": "m1234"
+  },
+  "submit": {"nodes": 2, "walltime": "00:30:00"}
+}
+```
+
+## Related docs and scripts
+
+- Current MCP contract templates: `docs/mcp.md`
+- In-process memory stream demo: `demo/mcp/mcp_inprocess_examples.py`
+- CLI comparison scripts: `demo/mcp/run_dns_cli_examples.sh`, `demo/mcp/run_dns_cli_examples_dry_verbose.sh`

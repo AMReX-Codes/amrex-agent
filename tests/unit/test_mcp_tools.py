@@ -116,7 +116,10 @@ def test_mcp_execute_workflow_defaults_steps(mcp_server_module, monkeypatch):
 
     def _stub(step_name, payload):
         calls.append(step_name)
-        return {f"{step_name}_result": True}
+        result = {f"{step_name}_result": True}
+        if step_name == "run_simulation":
+            result["run_directory"] = "/tmp/fake_run"
+        return result
 
     monkeypatch.setattr(
         mcp_server_module,
@@ -154,7 +157,10 @@ def test_mcp_execute_workflow_runs_steps_in_order(mcp_server_module, monkeypatch
 
     def _stub(step_name, payload):
         calls.append((step_name, dict(payload)))
-        return {f"{step_name}_result": True, "step": step_name}
+        result = {f"{step_name}_result": True, "step": step_name}
+        if step_name == "run_simulation":
+            result["run_directory"] = "/tmp/fake_run"
+        return result
 
     monkeypatch.setattr(
         mcp_server_module,

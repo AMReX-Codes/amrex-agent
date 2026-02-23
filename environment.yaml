@@ -68,6 +68,9 @@ dependencies:
   
   # === Pip-only packages ===
   - pip:
+      # Academy exchange agents/tools
+      - academy-py
+
       # LangChain integrations (not in conda-forge)
       - langchain-anthropic>=0.3.22
       - langchain-openai>=0.3.35

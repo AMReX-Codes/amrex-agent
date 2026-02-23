@@ -684,6 +684,10 @@ class ArchitectService:
                     parameter_resolution_feedback=parameter_resolution_feedback
                 )
                 logger.debug("Hierarchical indexing succeeded")
+                plan.baseline = self._normalize_baseline_metadata(
+                    plan.baseline,
+                    selected_case=plan.selected_case,
+                )
                 return plan
             except Exception as e:
                 logger.exception("Hierarchical indexing failed: %s", e)
@@ -696,6 +700,10 @@ class ArchitectService:
         # Simple strategy
         plan = self.create_plan(user_prompt=user_prompt, **kwargs)
         logger.debug("Simple indexing succeeded")
+        plan.baseline = self._normalize_baseline_metadata(
+            plan.baseline,
+            selected_case=plan.selected_case,
+        )
         return plan
 
 
@@ -761,7 +769,7 @@ class ArchitectService:
 
         # === Step 4: Strategy-specific handling ===
         if strategy == "override_static":
-            return self._override_static(
+            plan = self._override_static(
                 user_prompt,
                 code_name,
                 baseline_result,
@@ -770,12 +778,22 @@ class ArchitectService:
                 repo_path,
                 parameter_resolution_feedback,
             )
+            plan.baseline = self._normalize_baseline_metadata(
+                plan.baseline,
+                selected_case=plan.selected_case,
+            )
+            return plan
         if strategy == "hierarchical":
-            return self._override_hierarchical(
+            plan = self._override_hierarchical(
                 user_prompt, code_name, baseline_result, **kwargs
             )
+            plan.baseline = self._normalize_baseline_metadata(
+                plan.baseline,
+                selected_case=plan.selected_case,
+            )
+            return plan
         else:
-            return self._override_simple(
+            plan = self._override_simple(
                 user_prompt,
                 code_name,
                 baseline_result,
@@ -784,6 +802,11 @@ class ArchitectService:
                 repo_path,
                 parameter_resolution_feedback,
             )
+            plan.baseline = self._normalize_baseline_metadata(
+                plan.baseline,
+                selected_case=plan.selected_case,
+            )
+            return plan
 
 
     def _parse_baseline_override(self, baseline_override: str) -> dict:
@@ -843,6 +866,33 @@ class ArchitectService:
             'repo_path': repo_path,
             'local_path': local_path
         }
+
+    def _normalize_baseline_metadata(
+        self,
+        baseline: dict[str, Any] | None,
+        selected_case: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Normalize baseline metadata to include code_name/case_path/local_path."""
+        if not baseline:
+            return baseline
+
+        normalized = dict(baseline)
+
+        if not normalized.get("code_name") and normalized.get("code"):
+            normalized["code_name"] = normalized.get("code")
+
+        if not normalized.get("case_path"):
+            if normalized.get("path"):
+                normalized["case_path"] = normalized.get("path")
+            elif selected_case:
+                normalized["case_path"] = selected_case
+
+        repo_path = normalized.get("repo_path")
+        case_path = normalized.get("case_path")
+        if not normalized.get("local_path") and repo_path and case_path:
+            normalized["local_path"] = str(Path(repo_path) / case_path)
+
+        return normalized
 
     def _ensure_baseline_inputs_content(
         self,

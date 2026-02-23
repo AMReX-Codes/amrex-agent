@@ -13,6 +13,7 @@ mkdocs serve
 
 - `docs/workflows.md` holds design and workflow notes.
 - `docs/standards.md` tracks C6 standards mapping and evidence.
+- `docs/academy.md` documents Academy integration and launcher usage.
 - `docs/api_keys.md` documents API key setup and OpenAI usage.
 - `docs/sfapi.md` documents Superfacility API (SFAPI) usage.
 - `docs/deployment_readiness.md` covers testing, deployment, and release gates.

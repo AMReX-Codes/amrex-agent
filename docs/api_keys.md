@@ -11,6 +11,7 @@ usage in the codebase.
 | ALCF | supported | OpenAI-compatible endpoint |
 | OpenAI | supported | Direct OpenAI API |
 | PNNL | supported | OpenAI-compatible endpoint |
+| AmSC i2 | supported | OpenAI-compatible endpoint |
 | Anthropic | config only | Provider not implemented in get_llm_client |
 
 ## Environment variables
@@ -26,19 +27,21 @@ Provider specific:
 - `ALCF_API_KEY`
 - `ALCF_CLUSTER`
 - `ALCF_BASE_URL`
+- `AMSC_I2_API_KEY`
 - `ANTHROPIC_API_KEY`
 
 ## Config fields
 
 These are defined in `src/config.py`.
 
-- `llm_provider`: `cborg`, `alcf`, `openai`, `anthropic`, `pnnl`
+- `llm_provider`: `cborg`, `alcf`, `openai`, `anthropic`, `pnnl`, `litellm`, `amsc-i2`
 - `llm_model`: provider model name (auto-detected for CBORG if unset)
 - `cborg_api_key`, `cborg_base_url`
 - `alcf_api_key`, `alcf_cluster`, `alcf_base_url`
 - `openai_api_key`, `openai_base_url`
 - `anthropic_api_key`
 - `pnnl_api_key`, `pnnl_base_url`, `pnnl_default_model`
+- `amsc_i2_api_key`, `amsc_i2_base_url`, `amsc_i2_default_model`
 - `openai_vector_store_id`, `openai_vector_store_ids`
 
 ## Base URL overrides (explicit examples)
@@ -125,6 +128,17 @@ llm_provider: pnnl
 llm_model: claude-haiku-4-5-20251001-v1-birthright
 ```
 
+AmSC i2 (American Science Cloud):
+
+```bash
+export AMSC_I2_API_KEY="..."
+```
+
+```yaml
+llm_provider: amsc-i2
+llm_model: claude-sonnet-4-5
+```
+
 Hosted OpenAI vector store upload:
 
 ```bash
@@ -139,6 +153,7 @@ bash demo/vector_store/upload_openai_vector_store.sh --config all --type all
 - `demo/vector_store/README.md` (hosted OpenAI vector store)
 - `demo/alcf/README.md` (ALCF OpenAI-compatible endpoint)
 - `demo/pnnl/README.md` (PNNL setup and config)
+- `demo/amsc-i2/README.md` (AmSC i2 setup and config)
 
 ## OpenAI SDK usage (functions and call sites)
 

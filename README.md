@@ -158,9 +158,9 @@ It exposes the AMReXAgent workflow as a tool for external orchestration (early f
 - LLM provider selection, endpoints, and API keys are configured via `src/config.py`
   and optional `--config` overrides (defaults live in `src/config.py`).
 - Example configs live in `demo/amrex/config.yaml` and `demo/pelelmex/config_JICF.yaml`.
-- Supported providers include CBORG, ALCF, OpenAI, Anthropic, PNNL, and LiteLLM
+- Supported providers include CBORG, ALCF, OpenAI, Anthropic, PNNL, AmSC i2, and LiteLLM
   (via `CBORG_API_KEY`, `ALCF_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,
-  `LLM_API_KEY`, `LITELLM_BASE_URL`, optional `LITELLM_API_KEY`).
+  `LLM_API_KEY`, `AMSC_I2_API_KEY`, `LITELLM_BASE_URL`, optional `LITELLM_API_KEY`).
 
 ## Solver configuration pointers
 

@@ -1,21 +1,24 @@
-# MCP Integration
+# MCP and Academy Integration
 
-AMReXAgent exposes an MCP server in `mcp_server.py`. The MCP server provides
-tool endpoints that wrap the core services (planning, validation, running,
-analysis, visualization).
+AMReXAgent exposes MCP tool endpoints in `mcp_server.py`, and the same tool surface
+can be registered through Academy using `src/academy_mcp_agent.py`.
 
-## Run the MCP server (stdio)
+This page is the current reference for:
+- which integration mode to use,
+- how CLI concepts map to MCP payloads,
+- supported `execute_workflow` payload patterns.
 
-Start the server in stdio mode:
+## Integration Mode Matrix
 
-```bash
-python -u mcp_server.py
-```
+| Mode | Entry point | Transport | Best for |
+|---|---|---|---|
+| CLI | `python amrex_agent.py ...` | none | direct workflows and full CLI behavior (`--config`, local iteration) |
+| MCP stdio | `python -u mcp_server.py` + MCP client | stdio JSON-RPC | tool schema testing and external MCP orchestrators |
+| Academy exchange | `python demo/mcp/academy_amrex_agent.py` | Academy exchange + Globus | AISAC/Academy discovery and delegated execution |
 
-MCP clients should spawn `mcp_server.py` and communicate over stdin/stdout.
-The server writes logs to stderr to keep stdout clean for JSON-RPC.
+For runnable command sequences and solver-specific recipes, see `demo/mcp/README.md`.
 
-## Tool inventory
+## Tool Inventory
 
 The MCP server exposes these tools:
 
@@ -27,136 +30,94 @@ The MCP server exposes these tools:
 - `select_baseline_case`
 - `search_cases` (alias for `select_baseline_case`)
 - `validate_inputs`
-- `validate_config` (alias for `validate_inputs`)
+- `validate_config` (schema-level config validation)
 - `setup_job`
 - `run_simulation`
 - `analyze_results`
 - `get_workflow_status` (alias for `analyze_results`)
 - `generate_visualizations`
 
-Use `tools/list` to discover schemas and required parameters.
+Use MCP `tools/list` to inspect exact schemas.
 
-## Example: apply_plan
+## CLI to MCP Payload Mapping
 
-Apply a previously generated plan to write inputs:
+MCP takes payload objects; it does not take CLI argument strings.
+
+| CLI concept | MCP equivalent |
+|---|---|
+| `--prompt-path file.txt` | caller reads file and sends `prompt: "..."` |
+| `--baseline-override ...` | `baseline_override` |
+| `--run-mode dry` | `submit: {"dry_run": true}` |
+| `--environment perlmutter` | `config_overrides: {"environment": "perlmutter"}` |
+| `--output-dir ...` | `output_dir` and/or `config_overrides.output_dir` |
+| `--config demo/superfacility/config_perlmutter_remote.yaml` | no direct MCP config-file-path field; use `config_overrides` |
+
+## Current Payload Templates
+
+### execute_workflow: plan + run only (no analysis)
 
 ```json
 {
-  "selected_case": "PeleLMeX/Exec/RegTests/FlameSheet",
-  "modifications": [["amr.max_level", "2"], ["geometry.prob_hi", "0.02 0.08"]],
-  "baseline": {"code_name": "PeleLMeX"},
-  "reasoning": "Increase AMR for sharper flame structure.",
-  "output_dir": "output/mcp/pelelmex"
+  "prompt": "<required: natural-language request>",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "baseline_override": "<optional: solver case path>",
+  "output_dir": "<optional: output path override>",
+  "submit": {"dry_run": true}
 }
 ```
 
-Example response:
+### generate_visualizations: visualization only
 
 ```json
 {
-  "run_directory": "output/mcp/pelelmex/run_001",
-  "inputs_file_path": "output/mcp/pelelmex/run_001/inputs",
-  "modifications_applied": 2,
-  "status": "ok",
-  "requires_parameter_resolution": false,
-  "unresolved_parameters": [],
-  "available_schema_params": [],
-  "suggested_params": {},
-  "resolution_guidance": ""
+  "run_directory": "<required: existing run directory>",
+  "output_dir": "<optional: visualization output directory>",
+  "visualization_config": {
+    "plots": [
+      {"type": "slice", "field": "<field_name>", "axis": "z"}
+    ]
+  }
 }
 ```
 
-## Demo: execute_workflow (in-process)
+### execute_workflow: per-call config overrides
 
-This mirrors the unit test wiring and runs `execute_workflow` without stdio:
+Local run target:
 
-```python
-import anyio
-from mcp.client.session import ClientSession
-import mcp_server
-
-
-async def main() -> None:
-    client_to_server_send, client_to_server_recv = anyio.create_memory_object_stream(0)
-    server_to_client_send, server_to_client_recv = anyio.create_memory_object_stream(0)
-
-    init_options = mcp_server.app.create_initialization_options()
-
-    async with anyio.create_task_group() as tg:
-        tg.start_soon(
-            mcp_server.app.run,
-            client_to_server_recv,
-            server_to_client_send,
-            init_options,
-        )
-
-        async with ClientSession(server_to_client_recv, client_to_server_send) as session:
-            await session.initialize()
-
-            remora = await session.call_tool(
-                "execute_workflow",
-                {
-                    "prompt": "Run the REMORA Upwelling case to demonstrate wind-driven upwelling over a periodic channel.",
-                    "baseline_override": "REMORA/Exec/Upwelling",
-                    "strategy": "override_static",
-                    "submit": {"dry_run": True},
-                },
-            )
-
-            pelelmex = await session.call_tool(
-                "execute_workflow",
-                {
-                    "prompt": "2D hydrogen premixed flame with 32x128 grid cells, 2 AMR levels, 200 timesteps",
-                    "baseline_override": "PeleLMeX/Exec/RegTests/FlameSheet",
-                    "strategy": "simple",
-                    "steps": ["create_simulation_plan", "run_simulation"],
-                    "submit": {"dry_run": True},
-                },
-            )
-
-            staged = await session.call_tool(
-                "execute_workflow",
-                {
-                    "prompt": "Run the JetInCrossflow DNS prompt from demo/pelelmex/user_requirements_test_DNS.txt",
-                    "baseline_override": "PeleLMeX/Exec/Production/JetInCrossflow",
-                    "strategy": "simple",
-                    "steps": ["create_simulation_plan", "run_simulation"],
-                    "submit": {"dry_run": True},
-                    "config_overrides": {
-                        "environment": "perlmutter",
-                        "run_mode": "stage"
-                    }
-                },
-            )
-
-            print(remora)
-            print(pelelmex)
-            print(staged)
-
-
-anyio.run(main)
+```json
+{
+  "prompt": "<required>",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "config_overrides": {
+    "environment": "local",
+    "output_dir": "<optional local output dir>"
+  }
+}
 ```
 
-## Smoke test (initialize response)
+Perlmutter/account override:
 
-You can sanity-check the stdio transport with a JSON-RPC initialize request:
-
-```bash
-echo '{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"probe","version":"0.0.0"}}}' > /tmp/mcp_init.json
-python /tmp/mcp_probe.py /tmp/mcp_init.json
+```json
+{
+  "prompt": "<required>",
+  "steps": ["create_simulation_plan", "run_simulation"],
+  "config_overrides": {
+    "environment": "perlmutter",
+    "superfacility_account": "<project account>"
+  },
+  "submit": {"dry_run": true, "nodes": 2, "walltime": "00:30:00"}
+}
 ```
 
-`/tmp/mcp_probe.py` can be created with the helper from the CLI workflow or by
-mirroring the test logic in `tests/unit/test_mcp_tools.py`.
+For runnable solver-specific examples (PeleLMeX/JetInCrossflow/Perlmutter), see:
+- `demo/mcp/mcp_execute_workflow_examples.py`
+- `demo/mcp/README.md`
 
-## Testing
+## Operational Notes
 
-MCP tests live in `tests/unit/test_mcp_tools.py`:
+### Crux stdio runbook (ALCF)
 
-## Crux stdio runbook (ALCF)
-
-This is the recommended stdio-only setup for Crux using the shared conda base +
-venv overlay. It is intended for local runs only (no Perlmutter dispatch yet).
+Recommended setup is shared conda base + venv overlay:
 
 ```bash
 module use /soft/modulefiles
@@ -174,31 +135,29 @@ python -m pip install -e .
 python -u mcp_server.py
 ```
 
-We do not recommend running without a venv because the shared base env is not
-writable and `pip install` into it is blocked, making dependency changes
-brittle.
+### SFAPI credential discovery
 
-Note: A best-effort `requirements.txt` is under test for ALCF. The conda
-environment path on ALCF is non-recommended, so prefer the base+venv flow unless
-you need the full `environment.yaml` stack.
-
-For an anyio subprocess client, see `demo/mcp/mcp_stdio_client_smoke.py`.
-
-## SFAPI credential discovery (for later Perlmutter dispatch)
-
-The superfacility runner checks these environment variables and files:
+Superfacility runner checks:
 
 - `SBATCH_ACCOUNT` (default account if unset)
+- `SBATCH_ACCOUNT`
 - `SUPERFACILITY_CLIENT_ID`, `SUPERFACILITY_SECRET`
 - `NERSC_API_TOKEN` or `SFAPI_TOKEN`
 - `SFAPI_KEY_PATH`, `SUPERFACILITY_KEY_PATH`, `NERSC_SFAPI_KEY_PATH`
 - `~/.superfacility/` containing:
-  - `clientid.txt` + `priv_key.jwk` (flat)
-  - or `<color>_client/` with the same pair
-  - `*.pem`, `key.pem`, or `priv_key.pem` (first line client ID, rest PEM key)
+- `clientid.txt` + `priv_key.jwk` (flat)
+- or `<color>_client/` with the same pair
+- `*.pem`, `key.pem`, or `priv_key.pem` (first line client ID, rest PEM key)
+- `~/.superfacility/` key material
 
 The PEM format expects the client ID on the first line; a standard
 `-----BEGIN` header on the first line is ignored.
+
+If using PEM key files, restrict permissions:
+
+```bash
+chmod 600 ~/.superfacility/*.pem
+```
 
 Note: MCP server submissions use the credentials available to the server
 process (env vars and `~/.superfacility`). There is no per-request credential
@@ -208,43 +167,12 @@ The same applies to LLM providers: CBORG, ALCF, OpenAI, etc. use the server
 process credentials. Running the MCP server under your account means LLM calls
 consume your quota and SFAPI submissions use your key.
 
-## Data placement (shared filesystem today)
+### Session persistence
 
-The MCP server currently assumes shared filesystem paths for indices, schemas,
-and the workflow store (e.g., a shared CFS directory). This keeps deployment
-simple for HPC environments where all users share a read-only data root.
+If `session_id` is provided on calls via `src/academy_mcp_agent.py`, merged tool context is stored in SQLite (`workflow_store_path` in `AMReXAgentConfig`, default `~/.amrex_agent/workflow_store.db`).
 
-Longer term, these storage locations are intended to be abstracted so the
-indices/artifacts live in a remote object store and the session metadata lives
-in a dedicated DB. The current split between data paths and session storage is
-designed to make that migration straightforward when external infrastructure
-is available.
-
-## Session persistence (SQLite)
-
-If a tool call includes `session_id`, the MCP server persists the merged
-context in a SQLite store (WAL) and reuses it on subsequent calls with the same
-`session_id`. The store path is configured by `workflow_store_path` in
-`AMReXAgentConfig` (default `~/.amrex_agent/workflow_store.db`).
-
-Note: `execute_workflow` does not reuse prior `steps` unless `steps` is
-explicitly provided in the current request. Longer term, the session context
-may be namespaced per tool to avoid cross-tool bleed.
-- In-process integration: uses memory streams with the MCP client session.
-- Stdio integration: spawns `mcp_server.py` and sends JSON-RPC over stdio.
-
-Run the MCP unit suite:
+## Testing
 
 ```bash
 pytest tests/unit/test_mcp_tools.py
 ```
-
-## Tool-calling LLMs
-
-MCP provides the transport and tool definitions. Tool-calling from an LLM
-still requires an orchestrator to map model tool calls into MCP tool calls.
-AMReXAgent currently exposes the tools; orchestration happens outside.
-
-## Standards alignment note
-
-For standards alignment and capability mapping, see `docs/standards.md`.
