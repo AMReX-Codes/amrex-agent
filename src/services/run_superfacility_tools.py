@@ -300,6 +300,7 @@ def submit_via_sfapi_client(
         Submission result with job_id or error details.
     """
     import logging
+    import shlex
 
     try:
         from sfapi_client import Client
@@ -564,6 +565,8 @@ def stage_run_directory_sfapi_client(
     secret : str or None
         SFAPI private key (PEM).
     """
+    import logging
+
     try:
         from sfapi_client import Client
         from sfapi_client.compute import Machine
@@ -578,6 +581,8 @@ def stage_run_directory_sfapi_client(
     if not local_run_dir.exists():
         raise FileNotFoundError(f"Local run directory not found: {local_run_dir}")
 
+    logger = logging.getLogger(__name__)
+
     if key_path:
         client = Client(key=Path(key_path))
     else:
@@ -590,6 +595,20 @@ def stage_run_directory_sfapi_client(
             [target_dir] = perlmutter.ls(remote_run_dir, directory=True)
         except Exception:
             target_dir = None
+
+        if target_dir is None:
+            try:
+                mkdir_cmd = f"mkdir -p {shlex.quote(remote_run_dir)}"
+                # sfapi_client perlmutter.run(...) maps to /utilities/command/{machine}.
+                perlmutter.run(mkdir_cmd)
+            except Exception as exc:
+                logger.warning(
+                    "sfapi_client mkdir failed for %s: %s", remote_run_dir, exc
+                )
+            try:
+                [target_dir] = perlmutter.ls(remote_run_dir, directory=True)
+            except Exception:
+                target_dir = None
 
         if target_dir is None:
             raise FileNotFoundError(
