@@ -46,7 +46,13 @@ async def main() -> None:
         res2 = await handle.action(
             "call_tool",
             name="query_knowledge",
-            arguments={"question": "What CFL should I use?", "code": "PeleLMeX"},
+            arguments={
+                "question": (
+                    "For PeleLMeX methane flames, how should I structure a grid refinement "
+                    "study, and what chemistry mechanisms are commonly available?"
+                ),
+                "code": "PeleLMeX",
+            },
             include_response_rationale=True,
         )
         print(json.dumps(res2, indent=2, default=str))
