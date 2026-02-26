@@ -24,15 +24,23 @@ class AMReXMCPAgent(Agent):
             return result
 
         if isinstance(result, dict):
-            response = (
-                result.get("response")
-                or result.get("answer")
-                or result.get("status")
-                or result.get("selected_case")
-                or "ok"
-            )
+            has_error = bool(result.get("error"))
+            if has_error:
+                response = f"error: {result.get('error')}"
+            else:
+                response = (
+                    result.get("response")
+                    or result.get("answer")
+                    or result.get("status")
+                    or result.get("selected_case")
+                    or "ok"
+                )
             rationale = result.get("rationale") or result.get("reasoning")
-            wrapped: dict[str, Any] = {"response": response, "data": result}
+            wrapped: dict[str, Any] = {
+                "response": response,
+                "status": "error" if has_error else "ok",
+                "data": result,
+            }
             if rationale:
                 wrapped["rationale"] = rationale
             return wrapped

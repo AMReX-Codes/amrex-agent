@@ -117,13 +117,13 @@ async def call_tool(name: str, arguments: dict) -> Any:
         if "session_id" in context:
             session_id = str(context.get("session_id") or uuid.uuid4())
             context.pop("session_id", None)
-        caller_action = context.pop("caller_action", None)
         return invoke_tool(
             name,
             context,
             session_id=session_id,
             surface="mcp",
-            caller_action=caller_action if isinstance(caller_action, str) else None,
+            # Do not accept caller_action from untrusted MCP payloads.
+            caller_action=None,
         )
 
     except Exception as exc:
