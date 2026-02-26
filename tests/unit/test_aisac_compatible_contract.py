@@ -9,31 +9,41 @@ import sys
 import types
 
 
-def _install_stub_mcp_tools(monkeypatch, captured_payloads: dict):
-    module = types.ModuleType("src.mcp_tools")
+def _install_stub_interactive_service(monkeypatch, captured_payloads: dict):
+    module = types.ModuleType("src.interactive_service")
 
-    def _query(payload):
-        captured_payloads["knowledge"] = payload
-        return {
-            "answer": "stub-answer",
-            "method": "stub-method",
-            "confidence": 0.9,
-            "sources": ["stub-source"],
-        }
-
-    def _execute(payload):
-        captured_payloads["demo"] = payload
-        return {
-            "final": {
-                "selected_case": "PeleLMeX/Exec/Production/JetInCrossflow",
-                "job_status": "completed",
-                "run_directory": "/tmp/demo-run",
+    def _invoke_tool(name, arguments=None, **kwargs):
+        payload = dict(arguments or {})
+        captured_payloads.setdefault("calls", []).append(
+            {
+                "name": name,
+                "arguments": payload,
+                "kwargs": kwargs,
             }
+        )
+        if name == "query_knowledge":
+            captured_payloads["knowledge"] = payload
+            return {
+                "answer": "stub-answer",
+                "method": "stub-method",
+                "confidence": 0.9,
+                "sources": ["stub-source"],
+            }
+        if name == "execute_workflow":
+            captured_payloads["demo"] = payload
+            return {
+                "final": {
+                    "selected_case": "PeleLMeX/Exec/Production/JetInCrossflow",
+                    "job_status": "completed",
+                    "run_directory": "/tmp/demo-run",
+                }
+            }
+        return {
+            "error": f"unknown tool {name}",
         }
 
-    module.mcp_query_knowledge = _query
-    module.mcp_execute_workflow = _execute
-    monkeypatch.setitem(sys.modules, "src.mcp_tools", module)
+    module.invoke_tool = _invoke_tool
+    monkeypatch.setitem(sys.modules, "src.interactive_service", module)
 
 
 def _install_stub_academy(monkeypatch):
@@ -79,7 +89,7 @@ def _install_stub_academy(monkeypatch):
 
 def test_aisac_logic_contracts(monkeypatch):
     captured = {}
-    _install_stub_mcp_tools(monkeypatch, captured)
+    _install_stub_interactive_service(monkeypatch, captured)
 
     code = importlib.import_module("aisac_compatible_amrex_agent_code")
 
@@ -101,10 +111,11 @@ def test_aisac_logic_contracts(monkeypatch):
     assert "execute_workflow" in demo["rationale"]
     assert captured["demo"]["steps"] == ["create_simulation_plan", "run_simulation"]
     assert captured["demo"]["submit"]["dry_run"] is True
+    assert captured["calls"][1]["kwargs"]["caller_action"] == "amrex_demo_agent"
 
 
 def test_aisac_agent_actions_return_answer_rationale_json(monkeypatch):
-    _install_stub_mcp_tools(monkeypatch, {})
+    _install_stub_interactive_service(monkeypatch, {})
     _install_stub_academy(monkeypatch)
 
     wrapper = importlib.import_module("aisac_compatible_amrex_mcp_agent")

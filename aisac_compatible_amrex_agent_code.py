@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from src.mcp_tools import mcp_execute_workflow, mcp_query_knowledge
+from src.interactive_service import invoke_tool
 
 
 DEFAULT_SOLVER = "PeleLMeX"
@@ -45,7 +45,12 @@ def process_task(task: str, context: str | dict[str, Any] | None = "{}") -> dict
     )
     payload["code"] = solver
 
-    result = mcp_query_knowledge(payload)
+    result = invoke_tool(
+        "query_knowledge",
+        payload,
+        surface="aisac",
+        caller_action="amrex_knowledge_agent",
+    )
     base_answer = str(result.get("answer", "No answer available"))
     method = result.get("method", "unknown")
     confidence = result.get("confidence", 0.0)
@@ -106,7 +111,12 @@ def run_demo_workflow(
         },
     }
 
-    result = mcp_execute_workflow(payload)
+    result = invoke_tool(
+        "execute_workflow",
+        payload,
+        surface="aisac",
+        caller_action="amrex_demo_agent",
+    )
     final = result.get("final", {}) if isinstance(result, dict) else {}
     run_dir = final.get("run_directory")
     job_status = final.get("job_status")

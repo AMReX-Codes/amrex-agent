@@ -42,13 +42,14 @@ try:
         mcp_query_knowledge,
         mcp_run_simulation,
         mcp_select_baseline_case,
-        mcp_stage_out_globus,
         mcp_setup_job,
+        mcp_stage_out_globus,
         mcp_validate_config,
         mcp_validate_inputs,
         _get_session_context,
         _persist_session_context,
     )
+    from src.interactive_service import invoke_tool
 except ModuleNotFoundError:
     import pathlib
 
@@ -76,13 +77,14 @@ except ModuleNotFoundError:
         mcp_query_knowledge,
         mcp_run_simulation,
         mcp_select_baseline_case,
-        mcp_stage_out_globus,
         mcp_setup_job,
+        mcp_stage_out_globus,
         mcp_validate_config,
         mcp_validate_inputs,
         _get_session_context,
         _persist_session_context,
     )
+    from src.interactive_service import invoke_tool
 
 if not HAS_MCP:
     print("[ERROR] MCP library required for server mode", file=sys.stderr)
@@ -112,57 +114,17 @@ async def call_tool(name: str, arguments: dict) -> Any:
     try:
         session_id = None
         context = dict(arguments)
-        provided_steps = "steps" in context
         if "session_id" in context:
             session_id = str(context.get("session_id") or uuid.uuid4())
             context.pop("session_id", None)
-            session_context = _get_session_context(session_id)
-            session_context.update(context)
-            if not provided_steps:
-                session_context.pop("steps", None)
-            context = session_context
-
-        if name == "query_knowledge":
-            result = mcp_query_knowledge(context)
-        elif name == "execute_workflow":
-            result = mcp_execute_workflow(context)
-        elif name == "create_simulation_plan":
-            result = mcp_create_simulation_plan(context)
-        elif name == "create_proposed_modifications_with_plan":
-            result = mcp_create_proposed_modifications_with_plan(context)
-        elif name == "apply_plan":
-            result = mcp_apply_plan(context)
-        elif name == "select_baseline_case":
-            result = mcp_select_baseline_case(context)
-        elif name == "search_cases":
-            result = mcp_select_baseline_case(context)
-        elif name == "validate_inputs":
-            result = mcp_validate_inputs(context)
-        elif name == "validate_config":
-            result = mcp_validate_config(context)
-        elif name == "setup_job":
-            result = mcp_setup_job(context)
-        elif name == "run_simulation":
-            result = mcp_run_simulation(context)
-        elif name == "analyze_results":
-            result = mcp_analyze_results(context)
-        elif name == "get_workflow_status":
-            result = mcp_analyze_results(context)
-        elif name == "generate_visualizations":
-            result = mcp_generate_visualizations(context)
-        elif name == "stage_out_globus":
-            result = mcp_stage_out_globus(context)
-        else:
-            result = {"error": f"Unknown tool: {name}"}
-
-        if session_id:
-            merged_context = dict(context)
-            if isinstance(result, dict):
-                merged_context.update(result)
-            _persist_session_context(session_id, merged_context)
-            if isinstance(result, dict):
-                result.setdefault("session_id", session_id)
-        return result
+        caller_action = context.pop("caller_action", None)
+        return invoke_tool(
+            name,
+            context,
+            session_id=session_id,
+            surface="mcp",
+            caller_action=caller_action if isinstance(caller_action, str) else None,
+        )
 
     except Exception as exc:
         import traceback
