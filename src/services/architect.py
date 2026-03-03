@@ -452,6 +452,9 @@ class ArchitectService:
                 logger.warning("No candidates remaining after exclusion filter")
                 return None
 
+        # Apply a small boost for solver-config priority cases.
+        candidates = self._apply_priority_case_boost(candidates, solver_config)
+
         selected = candidates[0]  # Top ranked
 
         logger.info(
@@ -465,6 +468,64 @@ class ArchitectService:
             "candidates": candidates,
             "confidence": selected["score"]
         }
+
+    def _apply_priority_case_boost(self, candidates: list[dict], solver_config) -> list[dict]:
+        """
+        Apply a small score boost to configured priority cases.
+
+        Keeps baseline scoring primarily semantic while favoring canonical
+        starter cases when scores are close.
+        """
+        if not candidates or not solver_config:
+            return candidates
+
+        priority_cases_raw = getattr(solver_config, "priority_cases", None)
+        if priority_cases_raw is None:
+            return candidates
+
+        if isinstance(priority_cases_raw, str):
+            priority_cases = [priority_cases_raw]
+        elif isinstance(priority_cases_raw, (list, tuple, set)):
+            priority_cases = list(priority_cases_raw)
+        else:
+            # Mock objects in tests (or malformed config fields) should not
+            # activate boost logic.
+            return candidates
+
+        if not priority_cases:
+            return candidates
+
+        priority_set = {str(p).strip().lower() for p in priority_cases if str(p).strip()}
+        if not priority_set:
+            return candidates
+
+        boosted = []
+        for candidate in candidates:
+            case_path = (
+                candidate.get("metadata", {}).get("repo_path")
+                or candidate.get("case")
+                or ""
+            )
+            case_norm = str(case_path).strip().lower()
+            base_score = float(candidate.get("score", 0.0))
+            bonus = 0.0
+
+            # Exact priority path gets full bonus; path-prefix/suffix matches get smaller bonus.
+            if case_norm in priority_set:
+                bonus = 0.08
+            elif any(case_norm.endswith(p) or p.endswith(case_norm) for p in priority_set):
+                bonus = 0.04
+
+            if bonus > 0:
+                updated = dict(candidate)
+                updated["score_raw"] = base_score
+                updated["score_bonus"] = bonus
+                updated["score"] = base_score + bonus
+                boosted.append(updated)
+            else:
+                boosted.append(candidate)
+
+        return sorted(boosted, key=lambda c: c.get("score", 0.0), reverse=True)
 
     def plan_modifications(self, query: str, baseline: dict, solver_code: str = None, parameter_resolution_feedback: dict[str, Any] = None) -> dict:
         """

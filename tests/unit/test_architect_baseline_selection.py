@@ -434,5 +434,47 @@ class TestLevel2SolverIsolation:
             assert 'Exec/' in result['selected_case']['case']
 
 
+class TestPriorityCaseBoost:
+    """Test that priority cases receive a small tie-breaker boost."""
+
+    def test_priority_case_boost_prefers_canonical_case(self, tmp_path):
+        query = "wind-driven upwelling over a periodic channel"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+        architect = ArchitectService(mock_config, mock_embedder)
+
+        solver_config = Mock()
+        solver_config.code_name = "REMORA"
+        solver_config.priority_cases = ["Exec/Upwelling", "Exec/Seamount"]
+
+        # Upwelling_ML starts slightly higher; boost should flip to canonical Upwelling.
+        mock_candidates = [
+            {
+                "case": "Exec/Upwelling_ML",
+                "score": 0.38,
+                "metadata": {"repo_path": "Exec/Upwelling_ML"},
+            },
+            {
+                "case": "Exec/Upwelling",
+                "score": 0.36,
+                "metadata": {"repo_path": "Exec/Upwelling"},
+            },
+        ]
+
+        with patch('database.indexing.level2_searcher.Level2Searcher') as MockLevel2:
+            mock_searcher = Mock()
+            mock_searcher.search_all_cases = Mock(return_value=mock_candidates)
+            MockLevel2.return_value = mock_searcher
+
+            result = architect.select_baseline(query, solver_config)
+
+        assert result is not None
+        assert result['selected_case']['case'] == 'Exec/Upwelling'
+        assert result['selected_case']['score'] > 0.38
+        assert result['selected_case'].get('score_bonus', 0) > 0
+
+
 # Architect Service: Baseline Selection Marker
 pytestmark = pytest.mark.architect_baseline_selection
