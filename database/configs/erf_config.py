@@ -33,6 +33,29 @@ class ERFConfig(BaseAMReXConfig):
 
     selection_keywords = ["atmospheric", "weather", "wind"]
     selection_guidance = ["Atmospheric/weather -> ERF"]
+    level0_physics_regimes = [
+        {
+            "family": "Atmospheric Modeling",
+            "description": "Atmospheric boundary layer, weather, and mesoscale dynamics",
+            "aliases": ["atmospheric", "boundary layer", "weather", "wind"],
+        }
+    ]
+    level0_capabilities = [
+        "atmospheric boundary layer modeling",
+        "terrain-influenced weather dynamics",
+        "buoyancy-driven and density-current flows",
+        "moist convection and squall-line simulations",
+        "hurricane and tropical-cyclone test workflows",
+        "radiation and land-surface coupling tests",
+        "wind-farm parameterization workflows",
+        "data-assimilation and initialization from netcdf",
+    ]
+    level0_lineage = {
+        "description": "ERF is an AMReX atmospheric and weather modeling solver.",
+    }
+    level0_cross_cutting_guidance = [
+        "Use ERF for atmospheric, ABL, and weather-oriented simulations.",
+    ]
     github_search_paths = ["Exec/RegTests", "Exec/ABL"]
 
     priority_cases = [

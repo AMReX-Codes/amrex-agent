@@ -64,55 +64,42 @@ class Level0Builder:
     def _build_physics_regimes(self, output_dir: Path):
         """
         Build physics_regimes index (40% weight).
-        
-        Maps high-level physics families to codes:
-        - Combustion → PeleC, PeleLMeX
-        - Astrophysics → Castro, Nyx
-        - Plasma → WarpX
+
+        Sources only config.level0_physics_regimes entries.
         """
         documents = []
         metadata = []
-        
-        # Define physics families
-        physics_families = {
-            'Combustion': {
-                'codes': ['PeleC', 'PeleLMeX'],
-                'description': 'Reacting flows, flames, detonations, chemical kinetics'
-            },
-            'Compressible Flow': {
-                'codes': ['PeleC', 'Castro'],
-                'description': 'Supersonic flows, shocks, high Mach number, compressibility effects'
-            },
-            'Low Mach Flow': {
-                'codes': ['PeleLMeX', 'incflo'],
-                'description': 'Low speed flows, incompressible limit, detailed chemistry'
-            },
-            'Astrophysics': {
-                'codes': ['Castro', 'Nyx'],
-                'description': 'Stellar dynamics, cosmology, gravity, radiation hydrodynamics'
-            },
-            'Plasma Physics': {
-                'codes': ['WarpX'],
-                'description': 'Particle beams, electromagnetic fields, accelerators'
-            },
-            'Atmospheric Modeling': {
-                'codes': ['ERF'],
-                'description': 'Weather, climate, mesoscale dynamics'
-            },
-        }
-        
-        for family, info in physics_families.items():
-            for code in info['codes']:
-                # Check if code exists in our registry
-                if any(cfg.code_name == code for cfg in self.configs):
-                    # Include code name in document for better matching when code is mentioned
-                    doc = f"{code} - {family}: {info['description']}"
-                    documents.append(doc)
-                    metadata.append({
-                        'code_name': code,
-                        'physics_family': family,
-                        'description': info['description']
-                    })
+
+        for config in self.configs:
+            entries = getattr(config, "level0_physics_regimes", []) or []
+            if not entries:
+                logger.warning(
+                    "No level0_physics_regimes entries for %s",
+                    config.code_name,
+                )
+                continue
+
+            for entry in entries:
+                family = (entry.get("family") or "").strip()
+                description = (entry.get("description") or "").strip()
+                aliases = [a.strip() for a in entry.get("aliases", []) if str(a).strip()]
+                if not family or not description:
+                    logger.warning(
+                        "Skipping malformed regime entry for %s: %s",
+                        config.code_name,
+                        entry,
+                    )
+                    continue
+
+                alias_text = f" Keywords: {', '.join(aliases)}" if aliases else ""
+                doc = f"{config.code_name} - {family}: {description}.{alias_text}"
+                documents.append(doc)
+                metadata.append({
+                    'code_name': config.code_name,
+                    'physics_family': family,
+                    'description': description,
+                    'aliases': aliases,
+                })
         
         # Embed and save
         self._save_index(
@@ -124,31 +111,57 @@ class Level0Builder:
     def _build_solver_capabilities(self, output_dir: Path):
         """
         Build solver_capabilities index (30% weight).
-        
-        Uses code descriptions and specific capabilities.
+
+        Sources:
+        - config.description (generic description)
+        - config.level0_capabilities (explicit capabilities)
+        - config.selection_keywords (routing-oriented capability hints)
         """
         documents = []
         metadata = []
-        
+
         for config in self.configs:
-            # Main description
-            if hasattr(config, 'description'):
-                doc = f"{config.code_name}: {config.description}"
+            description = (getattr(config, "description", "") or "").strip()
+            if description:
+                doc = f"{config.code_name}: {description}"
                 documents.append(doc)
                 metadata.append({
                     'code_name': config.code_name,
-                    'capability_type': 'description'
+                    'capability': description,
+                    'capability_type': 'description',
                 })
-            
-            # Add specific capabilities if available
-            capabilities = self._extract_capabilities(config)
-            for capability in capabilities:
+
+            seen: set[str] = set()
+            for capability in getattr(config, "level0_capabilities", []) or []:
+                capability = str(capability).strip()
+                if not capability:
+                    continue
+                key = capability.lower()
+                if key in seen:
+                    continue
+                seen.add(key)
                 doc = f"{config.code_name}: {capability}"
                 documents.append(doc)
                 metadata.append({
                     'code_name': config.code_name,
                     'capability': capability,
-                    'capability_type': 'specific'
+                    'capability_type': 'specific',
+                })
+
+            for keyword in getattr(config, "selection_keywords", []) or []:
+                keyword = str(keyword).strip()
+                if not keyword:
+                    continue
+                key = keyword.lower()
+                if key in seen:
+                    continue
+                seen.add(key)
+                doc = f"{config.code_name}: {keyword}"
+                documents.append(doc)
+                metadata.append({
+                    'code_name': config.code_name,
+                    'capability': keyword,
+                    'capability_type': 'keyword',
                 })
         
         self._save_index(
@@ -160,36 +173,32 @@ class Level0Builder:
     def _build_code_lineage(self, output_dir: Path):
         """
         Build code_lineage index (20% weight).
-        
-        Captures evolution history and legacy names.
+
+        Sources only config.level0_lineage entries.
         """
         documents = []
         metadata = []
-        
-        # Define lineage relationships
-        lineage_info = {
-            'PeleLMeX': {
-                'evolved_from': 'PeleLM',
-                'description': 'PeleLMeX is the modernized version of PeleLM with improved numerics'
-            },
-            'PeleC': {
-                'related': ['CNS', 'Combustion'],
-                'description': 'PeleC evolved from CNS (Compressible Navier-Stokes)'
-            },
-            'Castro': {
-                'related': ['Astrophysics'],
-                'description': 'Castro is the AMReX astrophysics hydrodynamics code'
-            },
-        }
-        
-        for code, info in lineage_info.items():
-            if any(cfg.code_name == code for cfg in self.configs):
-                doc = f"{code} lineage: {info['description']}"
-                documents.append(doc)
-                metadata.append({
-                    'code_name': code,
-                    'lineage_info': info
-                })
+
+        for config in self.configs:
+            info = getattr(config, "level0_lineage", {}) or {}
+            description = (info.get("description") or "").strip()
+            if not description:
+                logger.warning("No level0_lineage description for %s", config.code_name)
+                continue
+
+            text_parts = [f"{config.code_name} lineage: {description}"]
+            evolved_from = info.get("evolved_from")
+            if evolved_from:
+                text_parts.append(f"Evolved from: {evolved_from}")
+            related = info.get("related", [])
+            if related:
+                text_parts.append(f"Related: {', '.join(str(r) for r in related)}")
+
+            documents.append(". ".join(text_parts))
+            metadata.append({
+                'code_name': config.code_name,
+                'lineage_info': info,
+            })
         
         self._save_index(
             documents, metadata,
@@ -200,12 +209,15 @@ class Level0Builder:
     def _build_cross_cutting_guidance(self, output_dir: Path):
         """
         Build cross_cutting_guidance index (10% weight).
-        
-        Extracts decision frameworks from knowledge base reports.
+
+        Sources in order:
+        1) decision frameworks extracted from KB reports
+        2) config.level0_cross_cutting_guidance per solver
+        3) synthesized neutral fallback from config metadata
         """
         documents = []
         metadata = []
-        
+
         # Look for decision framework reports
         if self.knowledge_base_path.exists():
             for report_file in self.knowledge_base_path.glob("report_*_solver*.md"):
@@ -223,13 +235,28 @@ class Level0Builder:
                         metadata.append({
                             'source': report_file.name,
                             'section': title,
-                            'guidance_type': 'decision_framework'
+                            'guidance_type': 'decision_framework',
                         })
-        
-        # Add default guidance if no reports found
+
+        # Add per-solver config guidance
+        for config in self.configs:
+            guidance_lines = getattr(config, "level0_cross_cutting_guidance", []) or []
+            for line in guidance_lines:
+                line = str(line).strip()
+                if not line:
+                    continue
+                documents.append(line)
+                metadata.append({
+                    'code_name': config.code_name,
+                    'guidance_type': 'solver_guidance',
+                    'source': 'config',
+                })
+
+        # Add neutral fallback guidance only if still empty
         if not documents:
-            documents.append("Default guidance: Use PeleC for compressible flows, PeleLMeX for low Mach")
-            metadata.append({'guidance_type': 'default'})
+            neutral = self._synthesize_neutral_guidance()
+            documents.extend(neutral["documents"])
+            metadata.extend(neutral["metadata"])
         
         self._save_index(
             documents, metadata,
@@ -237,42 +264,24 @@ class Level0Builder:
             index_type='cross_cutting_guidance'
         )
     
-    def _extract_capabilities(self, config) -> List[str]:
-        """Extract specific capabilities from config."""
-        capabilities = []
-        
-        # Capability mapping based on code name
-        capability_map = {
-            'PeleC': [
-                'handles strong shocks',
-                'compressible reacting flow',
-                'supersonic combustion',
-                'detonation physics'
-            ],
-            'PeleLMeX': [
-                'low Mach number formulation',
-                'detailed chemical kinetics',
-                'flame dynamics',
-                'diffusion-dominated physics'
-            ],
-            'WarpX': [
-                'particle-in-cell method',
-                'electromagnetic field solver',
-                'plasma accelerators',
-                'beam dynamics'
-            ],
-            'ERF': [
-                'atmospheric dynamics',
-                'mesoscale modeling',
-                'terrain-following coordinates',
-                # Hard-coded common ERF test cases for better routing
-                'buoyancy-driven flows',
-                'rising bubble simulations',
-                'atmospheric boundary layer'
-            ],
-        }
-        
-        return capability_map.get(config.code_name, [])
+    def _synthesize_neutral_guidance(self) -> Dict[str, List[Dict[str, Any]] | List[str]]:
+        """Generate neutral fallback guidance from config metadata."""
+        documents: List[str] = []
+        metadata: List[Dict[str, Any]] = []
+        for config in self.configs:
+            description = (getattr(config, "description", "") or "").strip()
+            keywords = getattr(config, "selection_keywords", []) or []
+            keyword_text = ", ".join(str(k) for k in keywords if str(k).strip())
+            line = f"{config.code_name}: {description}" if description else f"{config.code_name}: domain solver"
+            if keyword_text:
+                line = f"{line}. Keywords: {keyword_text}"
+            documents.append(line)
+            metadata.append({
+                "code_name": config.code_name,
+                "guidance_type": "neutral_synthesized",
+                "source": "config",
+            })
+        return {"documents": documents, "metadata": metadata}
     
     def _save_index(self, documents: List[str], metadata: List[Dict], 
                     output_path: Path, index_type: str):

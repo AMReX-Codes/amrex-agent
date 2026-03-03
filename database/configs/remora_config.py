@@ -33,6 +33,25 @@ class REMORAConfig(BaseAMReXConfig):
 
     selection_keywords = ["ocean", "coastal", "circulation", "seamount", "upwelling"]
     selection_guidance = ["Ocean/coastal modeling -> REMORA"]
+    level0_physics_regimes = [
+        {
+            "family": "Ocean Modeling",
+            "description": "Ocean circulation, coastal dynamics, and upwelling physics",
+            "aliases": ["ocean", "coastal", "upwelling", "channel circulation"],
+        }
+    ]
+    level0_capabilities = [
+        "regional ocean circulation modeling",
+        "wind-driven upwelling configurations",
+        "periodic channel and coastal flow setups",
+    ]
+    level0_lineage = {
+        "related": ["ERF"],
+        "description": "REMORA shares setup patterns with ERF and specializes them for ocean/coastal circulation.",
+    }
+    level0_cross_cutting_guidance = [
+        "Use REMORA for ocean/coastal circulation and upwelling-style workflows.",
+    ]
     github_search_paths = ["Exec/Seamount", "Exec/Upwelling", "Exec/DoubleGyre"]
 
     priority_cases = [

@@ -31,6 +31,24 @@ class WarpXConfig(BaseAMReXConfig):
 
     selection_keywords = ["plasma", "laser", "accelerator"]
     selection_guidance = ["Laser/plasma -> WarpX"]
+    level0_physics_regimes = [
+        {
+            "family": "Plasma Physics",
+            "description": "Electromagnetic and plasma particle simulations",
+            "aliases": ["plasma", "pic", "accelerator", "laser-plasma"],
+        }
+    ]
+    level0_capabilities = [
+        "particle-in-cell method",
+        "electromagnetic field evolution",
+        "laser-plasma and beam dynamics",
+    ]
+    level0_lineage = {
+        "description": "WarpX is an AMReX-based electromagnetic PIC solver.",
+    }
+    level0_cross_cutting_guidance = [
+        "Use WarpX for plasma, beam, and electromagnetic particle-in-cell problems.",
+    ]
     github_search_paths = ["Examples/Physics_applications", "Examples/Tests"]
 
 

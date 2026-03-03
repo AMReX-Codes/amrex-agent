@@ -1,0 +1,29 @@
+[
+  {"id": "pelec_01", "class": "explicit", "prompt": "Use PeleC to run a detonation in a supersonic channel.", "expected_solver": "PeleC"},
+  {"id": "pelec_02", "class": "implicit", "prompt": "Model a compressible methane-air flame with shock interactions and detailed chemistry.", "expected_solver": "PeleC"},
+  {"id": "pelec_03", "class": "implicit", "prompt": "Simulate a high-Mach reacting jet ignition problem with strong compressibility effects.", "expected_solver": "PeleC"},
+  {"id": "pelec_04", "class": "implicit", "prompt": "Run detonation wave propagation in a compressible combustion chamber.", "expected_solver": "PeleC"},
+  {"id": "pelec_05", "class": "explicit", "prompt": "Run PeleC for premixed combustion with strong shocks.", "expected_solver": "PeleC"},
+  {"id": "pelec_06", "class": "implicit", "prompt": "Supersonic combustion benchmark with reacting flow and detonation physics.", "expected_solver": "PeleC"},
+
+  {"id": "pelelmex_01", "class": "explicit", "prompt": "Use PeleLMeX to model a low-Mach premixed methane flame.", "expected_solver": "PeleLMeX"},
+  {"id": "pelelmex_02", "class": "implicit", "prompt": "Diffusion-dominated low-speed reacting flow with detailed transport.", "expected_solver": "PeleLMeX"},
+  {"id": "pelelmex_03", "class": "implicit", "prompt": "Incompressible-limit combustion case with detailed chemical kinetics.", "expected_solver": "PeleLMeX"},
+  {"id": "pelelmex_04", "class": "explicit", "prompt": "Run the PeleLMeX FlameSheet case for low Mach chemistry.", "expected_solver": "PeleLMeX"},
+  {"id": "pelelmex_05", "class": "implicit", "prompt": "Laminar low-speed flame dynamics with transport-driven diffusion.", "expected_solver": "PeleLMeX"},
+  {"id": "pelelmex_06", "class": "implicit", "prompt": "Low Mach reacting channel flow without shock-dominated dynamics.", "expected_solver": "PeleLMeX"},
+
+  {"id": "erf_01", "class": "explicit", "prompt": "Use ERF to simulate an atmospheric boundary layer over terrain.", "expected_solver": "ERF"},
+  {"id": "erf_02", "class": "implicit", "prompt": "Simulate a tropical cyclone workflow for mesoscale weather dynamics.", "expected_solver": "ERF"},
+  {"id": "erf_03", "class": "implicit", "prompt": "Model wind-farm parameterization in atmospheric flow.", "expected_solver": "ERF"},
+  {"id": "erf_04", "class": "implicit", "prompt": "Run a moist squall-line convection case for weather simulation.", "expected_solver": "ERF"},
+  {"id": "erf_05", "class": "implicit", "prompt": "Atmospheric density-current benchmark with buoyancy effects.", "expected_solver": "ERF"},
+  {"id": "erf_06", "class": "implicit", "prompt": "Initialize mesoscale weather from WPS/metgrid inputs.", "expected_solver": "ERF"},
+
+  {"id": "remora_01", "class": "explicit", "prompt": "Run the REMORA Upwelling case to demonstrate wind-driven upwelling over a periodic channel in the ocean.", "expected_solver": "REMORA"},
+  {"id": "remora_02", "class": "implicit", "prompt": "Ocean double-gyre circulation in a periodic basin.", "expected_solver": "REMORA"},
+  {"id": "remora_03", "class": "implicit", "prompt": "Coastal seamount circulation with tracer transport.", "expected_solver": "REMORA"},
+  {"id": "remora_04", "class": "implicit", "prompt": "Wind-driven boundary layer dynamics in an ocean channel.", "expected_solver": "REMORA"},
+  {"id": "remora_05", "class": "explicit", "prompt": "Use REMORA for coastal circulation around idealized topography.", "expected_solver": "REMORA"},
+  {"id": "remora_06", "class": "implicit", "prompt": "Regional ocean advection and upwelling dynamics.", "expected_solver": "REMORA"}
+]
