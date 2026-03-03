@@ -49,6 +49,9 @@ and tailor:
 The goal is to reuse the existing validation framework while encoding your
 solver-specific constraints.
 
+If you are tuning case selection between canonical and variant baselines, see
+[Level-2 Metadata and Variant Selection](level2_metadata_and_variant_selection.md).
+
 ## Step 3: Index existing test cases
 
 Run the indexing scripts against your repo to build the searchable baseline
