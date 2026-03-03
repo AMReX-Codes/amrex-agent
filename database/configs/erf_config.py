@@ -57,8 +57,10 @@ class ERFConfig(BaseAMReXConfig):
         "Use ERF for atmospheric, ABL, and weather-oriented simulations.",
     ]
     github_search_paths = ["Exec/RegTests", "Exec/ABL"]
+    schema_pattern = "erf_complete_*.json"
 
     priority_cases = [
+        "Exec/MoistRegTests/SquallLine_2D",
         "Exec/RegTests/Bubble",
         "Exec/RegTests/DensityCurrent",
         "Exec/ABL",
