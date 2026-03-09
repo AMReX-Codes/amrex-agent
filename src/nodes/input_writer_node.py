@@ -112,6 +112,7 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     modifications = plan_details.get("modifications", [])
     baseline = plan_details.get("baseline")
     reasoning = plan_details.get("reasoning", "")
+    requested_plot_vars = state.get("requested_plot_vars", []) or []
 
     logger.debug(f"[InputWriter] Plan extracted from workflow_history: {selected_case}")
     logger.debug(f"[InputWriter] Extracted {len(modifications)} modifications: {modifications[:3]}...")
@@ -223,7 +224,8 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
                 modifications=modifications,
                 baseline=baseline,
                 reasoning=reasoning,
-                output_dir=str(run_dir)  # Service physically creates this
+                output_dir=str(run_dir),  # Service physically creates this
+                requested_plot_vars=requested_plot_vars,
             )
 
         logger.info(f"Files written to: {result.get('run_dir', 'unknown')}")

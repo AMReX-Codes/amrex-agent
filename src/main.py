@@ -36,6 +36,7 @@ from src.router_func import (
     route_after_reviewer,
     route_after_runner,  # Phase 4
 )
+from src.services.viz_param_extractor import extract_viz_params_from_prompt
 
 
 class RedactingFilter(logging.Filter):
@@ -979,11 +980,15 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
     if not prompt_content:
         raise ValueError("User requirement prompt cannot be empty")
 
+    requested_plot_vars, visualization_config = extract_viz_params_from_prompt(prompt_content)
+
     # 3. Initialize state with defaults
     return {
         # Inputs
         "prompt": prompt_content,
         "config": config,
+        "requested_plot_vars": requested_plot_vars,
+        "visualization_config": visualization_config,
 
         # Flow control
         "mode": "initial",

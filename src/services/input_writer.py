@@ -6,6 +6,7 @@ Uses the tested pattern from 02_llm_qa_notebook.md
 """
 
 import logging
+import re
 from pathlib import Path
 
 from amrex_tools import dict_to_pele_inputs, parse_pele_inputs
@@ -15,12 +16,90 @@ from src.services.config_model_factory import ConfigModelFactory
 from src.services.files import AMReXInputsService
 from src.services.inputs_file_selector import InputsFileSelector
 from src.services.inputs_file_writer import InputsFileWriter
+from src.services.viz_param_extractor import (
+    PLOTFILE_VAR_PARAM,
+    PLOTFILE_VAR_PARAM_DEFAULT,
+    get_plotfile_var_param,
+)
 
 # Input Writer imports (Schema-Based Configuration System)
 from src.services.rule_engine import RuleEngine
 from src.services.validation import ValidationService
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_param_value_from_inputs(inputs_text: str, param_name: str) -> str | None:
+    pattern = re.compile(r"^\s*" + re.escape(param_name) + r"\s*=\s*(.*?)\s*$")
+    for line in inputs_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = pattern.match(line)
+        if match:
+            return match.group(1).strip()
+    return None
+
+
+def _all_known_plotfile_params() -> set[str]:
+    params = set(PLOTFILE_VAR_PARAM.values())
+    params.add(PLOTFILE_VAR_PARAM_DEFAULT)
+    return params
+
+
+def _resolve_plotfile_vars(
+    requested: list[str],
+    baseline_inputs_content: str,
+    code_name: str,
+) -> tuple[str, str] | None:
+    """
+    Resolve plotfile variable write based on priority order.
+
+    Priority 1: non-empty requested list.
+    Priority 2: requested empty, preserve baseline param value for this solver.
+    Priority 3: requested empty, baseline missing param -> write nothing.
+    """
+    param_name = get_plotfile_var_param(code_name)
+
+    if requested:
+        return param_name, " ".join(requested)
+
+    baseline_value = _extract_param_value_from_inputs(baseline_inputs_content, param_name)
+    if baseline_value:
+        return param_name, baseline_value
+
+    return None
+
+
+def apply_plotfile_vars_to_inputs_text(
+    inputs_text: str,
+    plotfile_setting: tuple[str, str] | None,
+) -> str:
+    """
+    Apply plotfile variable line update to inputs text.
+
+    If plotfile_setting is None, remove known plotfile var lines.
+    """
+    known_params = _all_known_plotfile_params()
+    kept_lines: list[str] = []
+    for line in inputs_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in line:
+            kept_lines.append(line)
+            continue
+        lhs = line.split("=", maxsplit=1)[0].strip()
+        if lhs in known_params:
+            continue
+        kept_lines.append(line)
+
+    if plotfile_setting is not None:
+        param_name, value = plotfile_setting
+        kept_lines.append(f"{param_name} = {value}")
+
+    output = "\n".join(kept_lines)
+    if inputs_text.endswith("\n"):
+        output += "\n"
+    return output
 
 class InputWriterService:
     """Applies architect's plan to generate final configuration.
@@ -141,7 +220,8 @@ class InputWriterService:
                    modifications: list,
                    baseline: dict[str, str],
                    reasoning: str = "",
-                   output_dir: Path | None = None) -> dict:
+                   output_dir: Path | None = None,
+                   requested_plot_vars: list[str] | None = None) -> dict:
         """
         Apply execution plan using Input Writer pipeline.
 
@@ -349,11 +429,21 @@ class InputWriterService:
                 logger.warning(f"Empty baseline for {baseline_case} at {local_path}")
                 baseline_text = "# Empty baseline\n"
 
+            plotfile_setting = _resolve_plotfile_vars(
+                requested=requested_plot_vars or [],
+                baseline_inputs_content=baseline_text,
+                code_name=code_name,
+            )
+
             if not modifications and baseline_text and selected_inputs_path:
                 logger.info("[2/5] Skipping model hydration (no modifications)")
                 inputs_path = output_dir / "inputs"
-                inputs_path.write_text(baseline_text)
-                logger.info(f"Wrote {len(baseline_text)} bytes to {inputs_path}")
+                output_text = apply_plotfile_vars_to_inputs_text(
+                    baseline_text,
+                    plotfile_setting,
+                )
+                inputs_path.write_text(output_text)
+                logger.info(f"Wrote {len(output_text)} bytes to {inputs_path}")
 
                 if hasattr(self, "_copy_auxiliary_files"):
                     logger.debug("Copying auxiliary files...")
@@ -513,6 +603,10 @@ class InputWriterService:
             output_text = InputsFileWriter.serialize(
                 config_model,
                 **serialize_kwargs
+            )
+            output_text = apply_plotfile_vars_to_inputs_text(
+                output_text,
+                plotfile_setting,
             )
 
             # Write to file
