@@ -194,6 +194,9 @@ class InputWriterService:
 
         # Ensure output directory exists
         output_dir = Path(output_dir)
+        from src.utils.write_policy import ensure_write_allowed
+
+        ensure_write_allowed(output_dir, self.config, purpose="input_writer.apply_plan")
         output_dir.mkdir(parents=True, exist_ok=True)
 
         try:

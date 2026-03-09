@@ -328,6 +328,9 @@ class AMReXInputsService:
             JSON-encoded mapping of generated files.
         """
         output_dir = Path(output_dir)
+        from src.utils.write_policy import ensure_write_allowed
+
+        ensure_write_allowed(output_dir, self.config, purpose="files.write_full_setup")
         output_dir.mkdir(parents=True, exist_ok=True)
 
         from src.services.file_generation import FileGenerationService

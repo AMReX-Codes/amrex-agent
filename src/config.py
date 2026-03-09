@@ -163,7 +163,7 @@ class AMReXAgentConfig(BaseModel):
     """
     
     # === LLM Configuration ===
-    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm", "amsc-i2"] = Field(
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm"] = Field(
         default="cborg",
         description="LLM provider to use"
     )
@@ -248,20 +248,6 @@ class AMReXAgentConfig(BaseModel):
     pnnl_default_model: str = Field(
         default="claude-haiku-4-5-20251001-v1-birthright",
         description="Default model for PNNL AI API"
-    )
-
-    # === AmSC i2 API (American Science Cloud) ===
-    amsc_i2_api_key: Optional[str] = Field(
-        default_factory=lambda: os.getenv("AMSC_I2_API_KEY"),
-        description="AmSC i2 API key (from AMSC_I2_API_KEY env var)"
-    )
-    amsc_i2_base_url: str = Field(
-        default="",
-        description="AmSC i2 API base URL (set AMSC_I2_BASE_URL)"
-    )
-    amsc_i2_default_model: str = Field(
-        default="claude-sonnet-4-5",
-        description="Default model for AmSC i2 API (claude-sonnet-4-5, llama-4-scout, llama-4-maverick)"
     )
     
     pelec_executable: Optional[Path] = Field(
@@ -427,7 +413,7 @@ class AMReXAgentConfig(BaseModel):
     )
 
     llm_retry_max_attempts: int = Field(
-        default=6,
+        default=3,
         ge=1,
         description="Max retry attempts for LLM chat completions (1 disables retries)."
     )
@@ -669,6 +655,34 @@ class AMReXAgentConfig(BaseModel):
     metrics_filename: str = Field(
         default="metrics.jsonl",
         description="Metrics JSONL filename for workflow summaries."
+    )
+    privacy_mode: Literal["off", "shared", "strict"] = Field(
+        default="off",
+        description="Privacy mode for prompt/log persistence: off, shared, or strict."
+    )
+    privacy_scrubber: Literal["builtin", "scrubadub", "presidio"] = Field(
+        default="builtin",
+        description="Scrubber backend for privacy modes: builtin, scrubadub, or presidio."
+    )
+    privacy_hash_salt: Optional[str] = Field(
+        default_factory=lambda: os.getenv("AMREX_PRIVACY_SALT"),
+        description="Optional salt for prompt hashing in privacy modes."
+    )
+    write_policy_mode: str = Field(
+        default="warn",
+        description="Filesystem write policy mode: off, warn, or deny."
+    )
+    allow_write_paths: List[Path] = Field(
+        default=[],
+        description="Optional allowlist of writable path roots."
+    )
+    require_run_dir_prefix: bool = Field(
+        default=False,
+        description="Require run directories to start with run_dir_prefix."
+    )
+    run_dir_prefix: str = Field(
+        default="run_",
+        description="Prefix required for run directories when require_run_dir_prefix is true."
     )
     save_intermediate: bool = Field(
         default=True,
@@ -966,27 +980,7 @@ def get_llm_client(config: AMReXAgentConfig):
             base_url=base_url
         )
         return _wrap_llm_client_if_needed(client, config)
-
-    elif config.llm_provider == "amsc-i2":
-        if not config.amsc_i2_api_key:
-            raise ValueError("AMSC_I2_API_KEY environment variable not set for AmSC i2 API")
-
-        # Use default model if not explicitly set
-        if not config.llm_model:
-            config.llm_model = config.amsc_i2_default_model
-            logger.info(f" Using AmSC i2 default model: {config.llm_model}")
-
-        # Provider-specific defaults can be set here when required.
-        client = OpenAI(
-            api_key=config.amsc_i2_api_key,
-            base_url=config.amsc_i2_base_url,
-            default_headers={
-                "User-Agent": "amrex-agent/1.0",
-                "Accept": "application/json",
-            }
-        )
-        return _wrap_llm_client_if_needed(client, config)
-
+    
     else:
         raise ValueError(f"Unknown LLM provider: {config.llm_provider}")
 
@@ -1119,7 +1113,7 @@ class _LLMRetryCompletions:
                 return self._completions.create(*args, **kwargs)
             except Exception as exc:
                 status_code = _get_http_status(exc)
-                retryable = status_code in self._retryable_statuses or _is_retryable_exception(exc)
+                retryable = status_code in self._retryable_statuses
                 if not retryable or attempt >= self._max_attempts:
                     raise
                 base_delay = 1.0
@@ -1149,24 +1143,6 @@ def _get_http_status(error: Exception) -> int | None:
     if isinstance(status, int):
         return status
     return None
-
-
-def _is_retryable_exception(error: Exception) -> bool:
-    try:
-        import httpx
-    except Exception:
-        httpx = None
-    if httpx is not None and isinstance(
-        error,
-        (
-            httpx.ConnectError,
-            httpx.ConnectTimeout,
-            httpx.ReadTimeout,
-            httpx.WriteTimeout,
-        ),
-    ):
-        return True
-    return False
 
 
 class _LLMGateClient:

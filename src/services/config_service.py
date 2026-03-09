@@ -283,11 +283,17 @@ class ConfigService:
                 prompt = prompt
 
             logger.debug(" Testing API connection...")
-            response = client.chat.completions.create(
+            from src.utils.llm_calls import LLMCallSpec, call_llm
+
+            spec = LLMCallSpec(
                 model=config.llm_model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=5
+                max_tokens=5,
+                purpose="llm_connectivity_test",
+                template_name="llm_connectivity_test",
+                template_source="base_config.misc",
             )
+            response = call_llm(client, spec, config=config)
             if config.llm_provider == "cborg":
                 logger.debug("[ OK ] CBORG API connection successful")
             else:
