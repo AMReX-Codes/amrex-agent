@@ -94,6 +94,26 @@ class GraphState(TypedDict, total=False):
     resource_estimate: Optional[Dict[str, Any]]      # Memory, nodes, walltime
     retry_guidance: Optional[Dict[str, Any]]         # Inputs/baseline retry hints
 
+    # Fields added in Amendment B1/B2 (v26.05.1-draft)
+    # All fields are additive with defaults.
+    # Serialization: List[Dict[str, Any]] pattern
+    # matching workflow_history. Pydantic validation
+    # at node read time, not at state storage time.
+    # Stateless deployment: no migration required.
+    resolved_config: Optional[Dict[str, Any]]
+    intent_extraction_applied: bool
+    intent_extraction_error: Optional[str]
+    intent_locked_fields: List[str]
+    clarification_history: List[Dict[str, Any]]
+    clarification_turns: int
+    unresolved_level: Optional[int]
+    reviewer_failure_category: Optional[str]
+    gate_approvals: List[Dict[str, Any]]
+    sweep_id: Optional[str]
+    sweep_child_id: Optional[str]
+    sweep_parameter: Optional[str]
+    sweep_parameter_value: Optional[Any]
+
     # ========================================
     # EXECUTION PHASE (Writer/Runner outputs)
     # ========================================
@@ -218,6 +238,25 @@ class GraphState(TypedDict, total=False):
     timestamp_end: Optional[str]    # Workflow end time (ISO 8601)
     timestamp_plan_created: Optional[str]       # Plan creation timestamp (ISO 8601) (Fix 6)
     timestamp_generated: Optional[str]          # Input generation timestamp (ISO 8601) (Fix 6)
+
+
+# Default values for additive B1/B2 GraphState fields.
+# Use dict(...) copies at initialization to avoid shared mutable state.
+GRAPH_STATE_B1_B2_DEFAULTS: Dict[str, Any] = {
+    "resolved_config": None,
+    "intent_extraction_applied": False,
+    "intent_extraction_error": None,
+    "intent_locked_fields": [],
+    "clarification_history": [],
+    "clarification_turns": 0,
+    "unresolved_level": None,
+    "reviewer_failure_category": None,
+    "gate_approvals": [],
+    "sweep_id": None,
+    "sweep_child_id": None,
+    "sweep_parameter": None,
+    "sweep_parameter_value": None,
+}
 
 
 # ========================================
