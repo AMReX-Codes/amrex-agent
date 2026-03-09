@@ -1,51 +1,115 @@
 [
   {
-    "code_name": "PeleC",
-    "physics_family": "Combustion",
-    "description": "Reacting flows, flames, detonations, chemical kinetics",
+    "code_name": "AMReX",
+    "physics_family": "Framework Infrastructure",
+    "description": "Core AMReX AMR and framework-level reference workflows",
+    "aliases": [
+      "framework",
+      "core amr",
+      "tutorial"
+    ],
     "chunk_parent": 0,
     "chunk_index": 0
   },
   {
-    "code_name": "PeleLMeX",
+    "code_name": "PeleC",
     "physics_family": "Combustion",
-    "description": "Reacting flows, flames, detonations, chemical kinetics",
+    "description": "Reacting flows, flames, detonations, and chemical kinetics",
+    "aliases": [
+      "reacting flow",
+      "flame",
+      "detonation",
+      "chemistry"
+    ],
     "chunk_parent": 1,
     "chunk_index": 1
   },
   {
     "code_name": "PeleC",
     "physics_family": "Compressible Flow",
-    "description": "Supersonic flows, shocks, high Mach number, compressibility effects",
+    "description": "Compressible and shock-driven reacting flow physics",
+    "aliases": [
+      "supersonic",
+      "shock",
+      "high mach",
+      "compressible"
+    ],
     "chunk_parent": 2,
     "chunk_index": 2
   },
   {
     "code_name": "PeleLMeX",
-    "physics_family": "Low Mach Flow",
-    "description": "Low speed flows, incompressible limit, detailed chemistry",
+    "physics_family": "Combustion",
+    "description": "Reacting low-speed combustion with detailed chemistry",
+    "aliases": [
+      "reacting flow",
+      "flame",
+      "chemistry"
+    ],
     "chunk_parent": 3,
     "chunk_index": 3
   },
   {
-    "code_name": "incflo",
+    "code_name": "PeleLMeX",
     "physics_family": "Low Mach Flow",
-    "description": "Low speed flows, incompressible limit, detailed chemistry",
+    "description": "Low Mach and incompressible-limit reacting flows",
+    "aliases": [
+      "low mach",
+      "incompressible limit",
+      "diffusion dominated"
+    ],
     "chunk_parent": 4,
     "chunk_index": 4
   },
   {
-    "code_name": "WarpX",
-    "physics_family": "Plasma Physics",
-    "description": "Particle beams, electromagnetic fields, accelerators",
+    "code_name": "incflo",
+    "physics_family": "Low Mach Flow",
+    "description": "Incompressible and weakly compressible fluid flow",
+    "aliases": [
+      "incompressible",
+      "navier-stokes",
+      "low speed flow"
+    ],
     "chunk_parent": 5,
     "chunk_index": 5
   },
   {
-    "code_name": "ERF",
-    "physics_family": "Atmospheric Modeling",
-    "description": "Weather, climate, mesoscale dynamics",
+    "code_name": "WarpX",
+    "physics_family": "Plasma Physics",
+    "description": "Electromagnetic and plasma particle simulations",
+    "aliases": [
+      "plasma",
+      "pic",
+      "accelerator",
+      "laser-plasma"
+    ],
     "chunk_parent": 6,
     "chunk_index": 6
+  },
+  {
+    "code_name": "ERF",
+    "physics_family": "Atmospheric Modeling",
+    "description": "Atmospheric boundary layer, weather, and mesoscale dynamics",
+    "aliases": [
+      "atmospheric",
+      "boundary layer",
+      "weather",
+      "wind"
+    ],
+    "chunk_parent": 7,
+    "chunk_index": 7
+  },
+  {
+    "code_name": "REMORA",
+    "physics_family": "Ocean Modeling",
+    "description": "Ocean circulation, coastal dynamics, and upwelling physics",
+    "aliases": [
+      "ocean",
+      "coastal",
+      "upwelling",
+      "channel circulation"
+    ],
+    "chunk_parent": 8,
+    "chunk_index": 8
   }
 ]
