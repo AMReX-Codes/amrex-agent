@@ -239,3 +239,250 @@ class TestFullGraphExecution:
         assert state["max_retries"] == 3
         assert isinstance(state["workflow_history"], list)
         assert isinstance(state["errors_active"], list)
+
+
+@pytest.mark.integration_full
+@pytest.mark.slow
+class TestVisualizationParameterExtraction:
+    """
+    Visualization parameter extraction end-to-end.
+
+    Architecture: Prompt visualization language must
+    flow through to inputs file plotfile variable list.
+    These tests are expected to FAIL before Session 5.
+    They define the acceptance criteria for Session 5.
+    """
+
+    DEFAULT_PLOT_VARS = ["density", "pressure"]
+
+    def _plan(
+        self,
+        prompt: str,
+        baseline_dir: Path,
+        visualization: dict | None = None,
+    ) -> SimulationPlan:
+        return SimulationPlan(
+            selected_solver="PeleC",
+            selected_case="PeleC/Exec/RegTests/PMF",
+            modifications=[],
+            reasoning="Visualization extraction baseline test",
+            baseline_confidence=0.9,
+            prompt=prompt,
+            baseline={
+                "code_name": "PeleC",
+                "repo_path": str(baseline_dir.parents[3]),
+                "case_path": "Exec/RegTests/PMF",
+                "local_path": str(baseline_dir),
+            },
+            visualization=visualization or {},
+        )
+
+    def _make_baseline_dir(self, tmp_path: Path) -> Path:
+        baseline = tmp_path / "PeleC" / "Exec" / "RegTests" / "PMF"
+        baseline.mkdir(parents=True, exist_ok=True)
+        (baseline / "AMReX.ex").write_text("#!/bin/bash\nexit 0\n")
+        (baseline / "inputs").write_text(
+            "\n".join(
+                [
+                    "# Mock inputs file",
+                    "amr.n_cell = 64 64 64",
+                    "amr.max_level = 0",
+                    f"amr.plot_vars = {' '.join(self.DEFAULT_PLOT_VARS)}",
+                    "",
+                ]
+            )
+        )
+        return baseline
+
+    def _run_pipeline(self, prompt: str, tmp_path: Path, visualization: dict | None = None) -> dict:
+        baseline_dir = self._make_baseline_dir(tmp_path)
+        config = AMReXAgentConfig()
+        config.output_dir = tmp_path / "output"
+        config.environment = "perlmutter"
+        config.repositories = {"PeleC": baseline_dir.parents[3]}
+        config.run_mode = "dry_run"
+        config.dry_run = True
+
+        class DummyEmbeddingService:
+            embeddings = None
+
+        class DummyRunner:
+            def __init__(self, _config):
+                pass
+
+            def setup_job(self, output_dir, case_dir, inputs_path=None):
+                return {
+                    "run_dir": output_dir,
+                    "executable": "AMReX.ex",
+                }
+
+            def submit(self, run_directory, nodes=None, run_mode=None, dry_run=None, case_dir=None):
+                return {
+                    "job_id": "viz_gate_test_123",
+                    "method": "sbatch",
+                    "script_path": str(Path(run_directory) / "submit.sh"),
+                    "job_status": "completed",
+                }
+
+        with patch("src.services.embedding_service_factory.get_embedding_service", return_value=DummyEmbeddingService()), \
+             patch("src.nodes.architect_node.ArchitectService") as MockArch, \
+             patch("src.nodes.reviewer_node.ReviewerOrchestrator") as MockRev, \
+             patch("src.services.cases.AMReXCasesService", return_value=object()), \
+             patch("src.nodes.runner_node.SuperfacilityRunner", DummyRunner), \
+             patch("src.nodes.analysis_node.AnalysisService") as MockAnalysis:
+
+            MockArch.return_value.execute_planning.return_value = self._plan(
+                prompt=prompt,
+                baseline_dir=baseline_dir,
+                visualization=visualization,
+            )
+
+            MockRev.return_value.validate_plan.return_value = ValidationResult(
+                mode="proceed",
+                violations=[],
+                summary="ok",
+                available_schema_params=[],
+            )
+
+            MockAnalysis.return_value.analyze_simulation.return_value = {
+                "status": "success",
+                "total_steps": 100,
+                "final_time": 1.0,
+                "issues": [],
+                "warnings": [],
+                "completed": True,
+            }
+
+            return run_agent(user_requirement=prompt, config=config)
+
+    def _read_inputs_text(self, final_state: dict) -> str:
+        inputs_path = final_state.get("inputs_file_path")
+        assert inputs_path, "inputs_file_path missing from final state"
+        path = Path(inputs_path)
+        assert path.exists(), f"inputs file missing at {path}"
+        return path.read_text()
+
+    def _plot_vars(self, inputs_text: str) -> list[str]:
+        for line in inputs_text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if stripped.startswith("amr.plot_vars"):
+                _, rhs = stripped.split("=", maxsplit=1)
+                return rhs.strip().split()
+        return []
+
+    def _baseline_plot_vars(self, baseline_inputs_path: Path) -> list[str]:
+        return self._plot_vars(baseline_inputs_path.read_text())
+
+    def test_temperature_in_prompt_produces_plotfile_var(
+            self, tmp_path):
+        """
+        Given: Prompt requesting temperature visualization
+        When:  Full pipeline runs in dry mode
+        Then:  Generated inputs file contains temperature
+               in amr.plot_vars
+
+        EXPECTED: FAIL (Input Writer ignores viz params)
+        """
+        final_state = self._run_pipeline(
+            prompt="Run a PMF case and visualize temperature as pseudocolor.",
+            tmp_path=tmp_path,
+            visualization={"quantities": ["temperature"]},
+        )
+        plot_vars = self._plot_vars(self._read_inputs_text(final_state))
+        assert "temperature" in plot_vars
+
+    def test_multiple_quantities_all_in_plotfile_vars(
+            self, tmp_path):
+        """
+        Given: Prompt requesting temp, velocity, vorticity
+        When:  Full pipeline runs in dry mode
+        Then:  All three quantities in amr.plot_vars
+
+        EXPECTED: FAIL
+        """
+        final_state = self._run_pipeline(
+            prompt=(
+                "Run PMF and plot temperature, velocity, and vorticity fields."
+            ),
+            tmp_path=tmp_path,
+            visualization={
+                "quantities": ["temperature", "velocity", "vorticity"],
+            },
+        )
+        plot_vars = self._plot_vars(self._read_inputs_text(final_state))
+        assert "temperature" in plot_vars
+        assert "velocity" in plot_vars
+        assert "vorticity" in plot_vars
+
+    def test_log_scale_in_prompt_sets_viz_metadata(
+            self, tmp_path):
+        """
+        Given: Prompt specifying log scale visualization
+        When:  Full pipeline runs
+        Then:  GraphState visualization config contains
+               color_scale = logarithmic
+        """
+        final_state = self._run_pipeline(
+            prompt="Visualize temperature with logarithmic color scale.",
+            tmp_path=tmp_path,
+            visualization={
+                "quantities": ["temperature"],
+                "color_scale": "logarithmic",
+            },
+        )
+        assert "visualization_config" in final_state
+        assert final_state["visualization_config"]["color_scale"] == "logarithmic"
+
+    def test_no_visualization_prompt_preserves_baseline(
+            self, tmp_path):
+        """
+        Given: Prompt with no visualization language
+        When:  Full pipeline runs in dry mode
+        Then:  inputs file preserves baseline plotfile vars
+               exactly, if baseline defines them.
+        """
+        baseline_dir = self._make_baseline_dir(tmp_path)
+        baseline_inputs = baseline_dir / "inputs"
+        baseline_plot_vars = self._baseline_plot_vars(baseline_inputs)
+
+        final_state = self._run_pipeline(
+            prompt="Run PMF baseline with default settings.",
+            tmp_path=tmp_path,
+            visualization={},
+        )
+
+        inputs_text = self._read_inputs_text(final_state)
+        plot_vars = self._plot_vars(self._read_inputs_text(final_state))
+        if baseline_plot_vars:
+            assert plot_vars == baseline_plot_vars
+        else:
+            assert "amr.plot_vars" not in inputs_text
+            assert "plot_vars" not in inputs_text
+
+    def test_squall_line_with_viz_params(self, tmp_path):
+        """
+        Given: Squall line prompt with visualization language
+               "plot vertical velocity and temperature
+                as pseudocolor, log scale"
+        When:  Full pipeline runs in dry mode
+        Then:  inputs file contains velocity and temperature
+               in amr.plot_vars
+
+        EXPECTED: FAIL
+        """
+        final_state = self._run_pipeline(
+            prompt=(
+                "Set up a squall line case; plot vertical velocity and "
+                "temperature as pseudocolor, log scale."
+            ),
+            tmp_path=tmp_path,
+            visualization={
+                "quantities": ["vertical_velocity", "temperature"],
+                "color_scale": "logarithmic",
+            },
+        )
+        plot_vars = self._plot_vars(self._read_inputs_text(final_state))
+        assert "vertical_velocity" in plot_vars
+        assert "temperature" in plot_vars
