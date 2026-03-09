@@ -70,6 +70,14 @@ class SimulationPlan(BaseModel):
     requires_parameter_resolution: bool = False                    # Flag for reviewer routing
     available_schema_params: list[str] | None = None         # Valid schema params from validator
 
+    # === Solver Selection Trace (Level-0 / Level-2 override observability) ===
+    level0_solver: str | None = None
+    level0_confidence: float | None = None
+    level2_override_applied: bool = False
+    level2_override_solver: str | None = None
+    level2_override_case: str | None = None
+    level2_override_confidence: float | None = None
+
     # === Metadata ===
     used_llm: bool = False                  # Whether LLM was used for generation
     indexing_strategy: str = "simple"       # "simple", "hierarchical", or "override_static"

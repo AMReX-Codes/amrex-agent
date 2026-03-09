@@ -126,6 +126,7 @@ class ArchitectService:
 
         # Initialize Level 2 Searcher placeholder
         self.level2_searcher = None
+        self._level2_case_catalog_cache: list[dict[str, Any]] | None = None
 
         # Initialize Config Registry (Cases Service: Config-Driven Discovery)
         from database.configs import discover_code_configs
@@ -284,6 +285,279 @@ class ArchitectService:
                 "architect", templates
             )
         return templates[template_name]
+
+    @staticmethod
+    def _normalize_solver_key(value: str | None) -> str:
+        return re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
+
+    @staticmethod
+    def _normalize_match_text(value: str | None) -> str:
+        tokens = re.findall(r"[a-z0-9]+", str(value or "").lower())
+        return "".join(tokens)
+
+    @staticmethod
+    def _tokenize_match_text(value: str | None) -> list[str]:
+        return re.findall(r"[a-z0-9]+", str(value or "").lower())
+
+    def _config_bool(self, name: str, default: bool) -> bool:
+        raw = getattr(self.config, name, default)
+        if isinstance(raw, bool):
+            return raw
+        if isinstance(raw, str):
+            value = raw.strip().lower()
+            if value in {"1", "true", "yes", "on"}:
+                return True
+            if value in {"0", "false", "no", "off"}:
+                return False
+        return default
+
+    def _config_float(self, name: str, default: float) -> float:
+        raw = getattr(self.config, name, default)
+        if isinstance(raw, bool):
+            return default
+        if isinstance(raw, (int, float)):
+            return float(raw)
+        if isinstance(raw, str):
+            try:
+                return float(raw)
+            except ValueError:
+                return default
+        return default
+
+    def _config_int(self, name: str, default: int) -> int:
+        raw = getattr(self.config, name, default)
+        if isinstance(raw, bool):
+            return default
+        if isinstance(raw, int):
+            return raw
+        if isinstance(raw, float):
+            return int(raw)
+        if isinstance(raw, str):
+            try:
+                return int(raw)
+            except ValueError:
+                return default
+        return default
+
+    def _solver_family_labels(self, solver_config) -> set[str]:
+        if not solver_config:
+            return set()
+        families: set[str] = set()
+        regimes = getattr(solver_config, "level0_physics_regimes", []) or []
+        for regime in regimes:
+            if not isinstance(regime, dict):
+                continue
+            family = regime.get("family")
+            if family:
+                families.add(self._normalize_match_text(str(family)))
+        if not families:
+            code_name = getattr(solver_config, "code_name", "") or ""
+            if code_name:
+                families.add(self._normalize_match_text(code_name))
+        return families
+
+    def _build_level2_case_name_catalog(self) -> list[dict[str, Any]]:
+        if self._level2_case_catalog_cache is not None:
+            return self._level2_case_catalog_cache
+
+        solver_lookup = {
+            self._normalize_solver_key(code_name): code_name
+            for code_name in self.code_configs
+        }
+
+        level2_dir = Path(self.config.faiss_db_path) / "level2"
+        metadata_files = sorted(level2_dir.glob("*_case_*_metadata.json"))
+        if not metadata_files:
+            self._level2_case_catalog_cache = []
+            return self._level2_case_catalog_cache
+
+        aggregated: dict[tuple[str, str, str], dict[str, Any]] = {}
+        for metadata_path in metadata_files:
+            solver_prefix = metadata_path.name.split("_case_", 1)[0]
+            solver_name = solver_lookup.get(self._normalize_solver_key(solver_prefix))
+            if not solver_name:
+                continue
+
+            try:
+                payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+            except Exception as exc:
+                logger.debug("[L2 Override] Failed to parse %s: %s", metadata_path, exc)
+                continue
+
+            if isinstance(payload, list):
+                entries = payload
+            elif isinstance(payload, dict):
+                entries = payload.get("cases", [])
+            else:
+                entries = []
+
+            seen_cases_in_file: set[tuple[str, str, str]] = set()
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                case_name = str(entry.get("case_name") or "").strip()
+                repo_path = str(entry.get("repo_path") or "").strip()
+                canonical_case = repo_path or case_name
+                if not canonical_case:
+                    continue
+
+                key = (
+                    solver_name,
+                    self._normalize_match_text(case_name),
+                    self._normalize_match_text(repo_path),
+                )
+                if key in seen_cases_in_file:
+                    continue
+                seen_cases_in_file.add(key)
+
+                if key not in aggregated:
+                    aggregated[key] = {
+                        "solver": solver_name,
+                        "case_name": case_name or Path(repo_path).name,
+                        "repo_path": repo_path,
+                        "metadata_hits": 0,
+                    }
+                aggregated[key]["metadata_hits"] += 1
+
+        self._level2_case_catalog_cache = list(aggregated.values())
+        return self._level2_case_catalog_cache
+
+    def _score_case_name_match(self, prompt: str, candidate: dict[str, Any]) -> float:
+        prompt_norm = self._normalize_match_text(prompt)
+        prompt_tokens = set(self._tokenize_match_text(prompt))
+
+        best = 0.0
+        candidate_fields = [
+            candidate.get("case_name", ""),
+            candidate.get("repo_path", ""),
+            Path(str(candidate.get("repo_path") or "")).name,
+        ]
+        for field in candidate_fields:
+            field_norm = self._normalize_match_text(field)
+            if not field_norm:
+                continue
+            if field_norm == prompt_norm:
+                return 1.0
+
+            field_tokens = set(self._tokenize_match_text(field))
+            if field_tokens and field_tokens.issubset(prompt_tokens):
+                best = max(best, 0.9)
+            elif field_norm in prompt_norm or prompt_norm in field_norm:
+                best = max(best, 0.9)
+
+        return best
+
+    def _find_level2_case_name_candidate(
+        self,
+        prompt: str,
+        min_metadata_hits: int,
+    ) -> dict[str, Any] | None:
+        catalog = self._build_level2_case_name_catalog()
+        if not catalog:
+            return None
+
+        matches: list[dict[str, Any]] = []
+        for candidate in catalog:
+            hits = int(candidate.get("metadata_hits", 0))
+            if hits < min_metadata_hits:
+                continue
+            confidence = self._score_case_name_match(prompt, candidate)
+            if confidence < 0.9:
+                continue
+            matched = dict(candidate)
+            matched["match_confidence"] = confidence
+            matches.append(matched)
+
+        if not matches:
+            return None
+
+        matches.sort(
+            key=lambda item: (
+                float(item.get("match_confidence", 0.0)),
+                int(item.get("metadata_hits", 0)),
+                str(item.get("solver", "")),
+                str(item.get("repo_path", "")),
+            ),
+            reverse=True,
+        )
+        return matches[0]
+
+    def _apply_level2_case_name_override(
+        self,
+        prompt: str,
+        solver_config,
+        solver_confidence: float,
+    ) -> tuple[Any, dict[str, Any]]:
+        try:
+            level0_confidence = float(solver_confidence)
+        except (TypeError, ValueError):
+            level0_confidence = 0.0
+
+        trace = {
+            "level0_solver": getattr(solver_config, "code_name", None),
+            "level0_confidence": level0_confidence,
+            "level2_override_applied": False,
+            "level2_override_solver": None,
+            "level2_override_case": None,
+            "level2_override_confidence": None,
+        }
+
+        enabled = self._config_bool("level2_override_enabled", True)
+        l0_threshold = self._config_float("level2_override_l0_threshold", 0.15)
+        case_threshold = self._config_float("level2_override_case_match_threshold", 0.90)
+        min_hits = self._config_int("level2_override_min_metadata_hits", 3)
+
+        if not enabled:
+            return solver_config, trace
+        if level0_confidence >= l0_threshold:
+            return solver_config, trace
+
+        candidate = self._find_level2_case_name_candidate(
+            prompt=prompt,
+            min_metadata_hits=min_hits,
+        )
+        if not candidate:
+            return solver_config, trace
+
+        candidate_confidence = float(candidate.get("match_confidence", 0.0))
+        if candidate_confidence < case_threshold:
+            return solver_config, trace
+
+        candidate_solver_name = candidate.get("solver")
+        candidate_solver_config = self.code_configs.get(candidate_solver_name)
+        if not candidate_solver_config:
+            return solver_config, trace
+
+        level0_families = self._solver_family_labels(solver_config)
+        candidate_families = self._solver_family_labels(candidate_solver_config)
+        same_family = bool(level0_families.intersection(candidate_families))
+        if same_family:
+            return solver_config, trace
+
+        trace["level2_override_applied"] = True
+        trace["level2_override_solver"] = candidate_solver_name
+        trace["level2_override_case"] = candidate.get("repo_path") or candidate.get("case_name")
+        trace["level2_override_confidence"] = candidate_confidence
+
+        logger.info(
+            "[L2 Override] Switching solver %s -> %s (L0=%.3f, case=%s, confidence=%.2f)",
+            trace["level0_solver"],
+            candidate_solver_name,
+            level0_confidence,
+            trace["level2_override_case"],
+            candidate_confidence,
+        )
+        return candidate_solver_config, trace
+
+    @staticmethod
+    def _apply_solver_selection_trace(plan: SimulationPlan, trace: dict[str, Any]) -> SimulationPlan:
+        plan.level0_solver = trace.get("level0_solver")
+        plan.level0_confidence = trace.get("level0_confidence")
+        plan.level2_override_applied = bool(trace.get("level2_override_applied", False))
+        plan.level2_override_solver = trace.get("level2_override_solver")
+        plan.level2_override_case = trace.get("level2_override_case")
+        plan.level2_override_confidence = trace.get("level2_override_confidence")
+        return plan
 
     def select_solver(self, query: str, confidence_threshold: float = 0.15) -> tuple:
         """
@@ -1767,6 +2041,11 @@ class ArchitectService:
         if not solver_config:
             raise ValueError("No suitable solver found")
 
+        solver_config, solver_selection_trace = self._apply_level2_case_name_override(
+            prompt=user_prompt,
+            solver_config=solver_config,
+            solver_confidence=solver_confidence,
+        )
         solver_name = solver_config.code_name
 
         # 2. Retrieve Context (Architect Service: Context Retrieval)
@@ -1802,7 +2081,7 @@ class ArchitectService:
                         "similar_cases": [],
                         "used_llm": True,
                     }
-                    return SimulationPlanFactory.create_from_rag(
+                    plan = SimulationPlanFactory.create_from_rag(
                         solver_name=solver_name,
                         baseline_result=baseline_result,
                         cbr_plan=cbr_plan,
@@ -1811,6 +2090,7 @@ class ArchitectService:
                         solver_confidence=solver_confidence,
                         used_llm=True,
                     )
+                    return self._apply_solver_selection_trace(plan, solver_selection_trace)
                 else:
                     raise ValueError("No baseline found and LLM not available")
             else:
@@ -1862,7 +2142,7 @@ class ArchitectService:
                 ],
                 "used_llm": True,
             }
-            return SimulationPlanFactory.create_from_rag(
+            plan = SimulationPlanFactory.create_from_rag(
                 solver_name=solver_name,
                 baseline_result=baseline_result,
                 cbr_plan=cbr_plan,
@@ -1871,8 +2151,9 @@ class ArchitectService:
                 solver_confidence=solver_confidence,
                 used_llm=True,
             )
+            return self._apply_solver_selection_trace(plan, solver_selection_trace)
 
-        return SimulationPlanFactory.create_from_rag(
+        plan = SimulationPlanFactory.create_from_rag(
             solver_name=solver_name,
             baseline_result=baseline_result,
             cbr_plan=cbr_plan,
@@ -1881,6 +2162,7 @@ class ArchitectService:
             solver_confidence=solver_confidence,
             used_llm=False
         )
+        return self._apply_solver_selection_trace(plan, solver_selection_trace)
 
     def create_plan(
         self,

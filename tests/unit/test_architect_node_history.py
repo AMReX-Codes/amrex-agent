@@ -137,3 +137,39 @@ def test_indexing_calls_are_cumulative(monkeypatch):
     assert details["indexing_calls_total"] == 5
     assert details["indexing_calls_detail"]["embed_documents"] == 2
     assert details["indexing_calls_detail"]["embed_query"] == 1
+
+
+def test_history_includes_level0_and_level2_override_trace(monkeypatch):
+    class FakeArchitectService:
+        def __init__(self, _config, embedding_service=None):
+            self.level0_searcher = object()
+
+        def execute_planning(self, **_kwargs):
+            return SimulationPlan(
+                selected_solver="ERF",
+                selected_case="Exec/DryRegTests/TaylorGreenVortex",
+                modifications=[("amr.n_cell", "128 128 128")],
+                reasoning="Override based on case-name match",
+                baseline_confidence=0.91,
+                indexing_strategy="hierarchical",
+                case_candidates=[],
+                level0_solver="PeleC",
+                level0_confidence=0.1,
+                level2_override_applied=True,
+                level2_override_solver="ERF",
+                level2_override_case="Exec/DryRegTests/TaylorGreenVortex",
+                level2_override_confidence=0.9,
+            )
+
+    monkeypatch.setattr(embedding_factory_module, "get_embedding_service", lambda _cfg: DummyEmbeddingService())
+    monkeypatch.setattr(architect_node_module, "ArchitectService", FakeArchitectService)
+
+    updates = architect_node_module.architect_node({"config": DummyConfig(), "prompt": "test", "workflow_history": []})
+    details = updates["workflow_history"][-1]["details"]
+
+    assert details["level0_solver"] == "PeleC"
+    assert details["level0_confidence"] == 0.1
+    assert details["level2_override_applied"] is True
+    assert details["level2_override_solver"] == "ERF"
+    assert details["level2_override_case"] == "Exec/DryRegTests/TaylorGreenVortex"
+    assert details["level2_override_confidence"] == 0.9

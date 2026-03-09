@@ -434,6 +434,28 @@ class AMReXAgentConfig(BaseModel):
                     "'hierarchical' uses integration_ladder's L0/L1/L2 multi-index approach (experimental). "
                     "'override_static' skips L0/L1/L2 and uses raw docs/inputs (requires baseline_override)."
     )
+
+    level2_override_enabled: bool = Field(
+        default=True,
+        description="Enable Level-2 case-name override of Level-0 solver selection for low-confidence L0 matches."
+    )
+    level2_override_l0_threshold: float = Field(
+        default=0.15,
+        ge=0.0,
+        le=1.0,
+        description="Apply Level-2 case-name override only when Level-0 solver confidence is below this threshold."
+    )
+    level2_override_case_match_threshold: float = Field(
+        default=0.90,
+        ge=0.0,
+        le=1.0,
+        description="Minimum normalized case-name match confidence required for Level-2 override."
+    )
+    level2_override_min_metadata_hits: int = Field(
+        default=3,
+        ge=1,
+        description="Minimum number of Level-2 metadata files that must contain the matched case."
+    )
     
     inputs_file_strategy: Literal["oldest", "newest", "smallest", "llm_compare", "override"] = Field(
         default="newest",

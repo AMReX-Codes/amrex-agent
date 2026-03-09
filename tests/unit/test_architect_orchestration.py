@@ -14,12 +14,46 @@ References:
 """
 
 import pytest
+import json
 from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch, call
 from typing import Dict, List
 
 # Import services
 from src.services.architect import ArchitectService
+from database.configs.pelec_config import PeleCConfig
+from database.configs.erf_config import ERFConfig
+
+
+def _write_level2_metadata(
+    tmp_path: Path,
+    solver_prefix: str,
+    case_name: str,
+    repo_path: str,
+    files: int,
+) -> None:
+    level2_dir = tmp_path / "level2"
+    level2_dir.mkdir(parents=True, exist_ok=True)
+    index_types = [
+        "grid_specifications",
+        "domain_models",
+        "path_hierarchy",
+        "physics_parameters",
+        "development_activity",
+    ]
+    for idx in range(files):
+        metadata_path = level2_dir / f"{solver_prefix}_case_{index_types[idx]}_metadata.json"
+        metadata_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "case_name": case_name,
+                        "repo_path": repo_path,
+                    }
+                ]
+            ),
+            encoding="utf-8",
+        )
 
 
 class TestArchitectOrchestration:
@@ -306,6 +340,112 @@ class TestArchitectOrchestration:
         
         # Verify plan structure
         assert plan is not None
+
+
+class TestLevel2CaseNameOverride:
+    def _make_architect(self, tmp_path):
+        config = Mock()
+        config.faiss_db_path = tmp_path
+        config.faiss_fallback_to_llm = False
+        config.level2_override_enabled = True
+        config.level2_override_l0_threshold = 0.15
+        config.level2_override_case_match_threshold = 0.90
+        config.level2_override_min_metadata_hits = 3
+        architect = ArchitectService(config, Mock())
+        architect.select_baseline = Mock(return_value={
+            "selected_case": {
+                "case": "Exec/RegTests/PMF",
+                "metadata": {
+                    "repo_path": "Exec/RegTests/PMF",
+                    "inputs_content": {"amr.n_cell": "64 64 64"},
+                },
+            },
+            "confidence": 0.9,
+            "candidates": [],
+        })
+        architect.plan_modifications = Mock(return_value={
+            "modifications": [("amr.n_cell", "128 128 128")],
+            "confidence": 1.0,
+            "similar_cases": [],
+            "used_llm": False,
+        })
+        architect.retrieve_context = Mock(return_value=[{"content": "doc"}])
+        return architect
+
+    def test_low_l0_confidence_cross_family_case_match_overrides_solver(self, tmp_path):
+        _write_level2_metadata(
+            tmp_path,
+            solver_prefix="erf",
+            case_name="TaylorGreenVortex",
+            repo_path="Exec/DryRegTests/TaylorGreenVortex",
+            files=3,
+        )
+        architect = self._make_architect(tmp_path)
+        architect.select_solver = Mock(return_value=(PeleCConfig, 0.10))
+
+        plan = architect.create_plan_rag("Please use the TaylorGreenVortex setup")
+
+        assert plan.selected_solver == "ERF"
+        assert plan.level0_solver == "PeleC"
+        assert plan.level0_confidence == 0.10
+        assert plan.level2_override_applied is True
+        assert plan.level2_override_solver == "ERF"
+        assert plan.level2_override_case == "Exec/DryRegTests/TaylorGreenVortex"
+        assert plan.level2_override_confidence == 0.9
+        assert architect.retrieve_context.call_args.args[1] == ERFConfig
+        assert architect.plan_modifications.call_args.kwargs["solver_code"] == "ERF"
+
+    def test_low_l0_confidence_same_family_match_does_not_override(self, tmp_path):
+        _write_level2_metadata(
+            tmp_path,
+            solver_prefix="pelelmex",
+            case_name="FlameSheet",
+            repo_path="Exec/RegTests/FlameSheet",
+            files=3,
+        )
+        architect = self._make_architect(tmp_path)
+        architect.select_solver = Mock(return_value=(PeleCConfig, 0.10))
+
+        plan = architect.create_plan_rag("Use FlameSheet as the baseline pattern")
+
+        assert plan.selected_solver == "PeleC"
+        assert plan.level2_override_applied is False
+        assert plan.level2_override_solver is None
+        assert architect.retrieve_context.call_args.args[1] == PeleCConfig
+
+    def test_high_l0_confidence_does_not_override_even_with_case_match(self, tmp_path):
+        _write_level2_metadata(
+            tmp_path,
+            solver_prefix="erf",
+            case_name="TaylorGreenVortex",
+            repo_path="Exec/DryRegTests/TaylorGreenVortex",
+            files=3,
+        )
+        architect = self._make_architect(tmp_path)
+        architect.select_solver = Mock(return_value=(PeleCConfig, 0.20))
+
+        plan = architect.create_plan_rag("Please use the TaylorGreenVortex setup")
+
+        assert plan.selected_solver == "PeleC"
+        assert plan.level2_override_applied is False
+        assert plan.level2_override_solver is None
+
+    def test_low_l0_confidence_weak_case_evidence_does_not_override(self, tmp_path):
+        _write_level2_metadata(
+            tmp_path,
+            solver_prefix="erf",
+            case_name="TaylorGreenVortex",
+            repo_path="Exec/DryRegTests/TaylorGreenVortex",
+            files=2,
+        )
+        architect = self._make_architect(tmp_path)
+        architect.select_solver = Mock(return_value=(PeleCConfig, 0.10))
+
+        plan = architect.create_plan_rag("Please use the TaylorGreenVortex setup")
+
+        assert plan.selected_solver == "PeleC"
+        assert plan.level2_override_applied is False
+        assert plan.level2_override_solver is None
 
 
 class TestEdgeCases:
