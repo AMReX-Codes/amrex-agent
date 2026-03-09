@@ -23,7 +23,7 @@
   {"id": "remora_01", "class": "explicit", "prompt": "Run the REMORA Upwelling case to demonstrate wind-driven upwelling over a periodic channel in the ocean.", "expected_solver": "REMORA"},
   {"id": "remora_02", "class": "implicit", "prompt": "Ocean double-gyre circulation in a periodic basin.", "expected_solver": "REMORA"},
   {"id": "remora_03", "class": "implicit", "prompt": "Coastal seamount circulation with tracer transport.", "expected_solver": "REMORA"},
-  {"id": "remora_04", "class": "implicit", "prompt": "Wind-driven boundary layer dynamics in an ocean channel.", "expected_solver": "REMORA"},
+  {"id": "remora_04", "class": "implicit", "prompt": "Regional ocean boundary-layer dynamics in a coastal channel using ROMS-derived REMORA physics with sigma terrain-following vertical coordinates and tidal forcing.", "expected_solver": "REMORA"},
   {"id": "remora_05", "class": "explicit", "prompt": "Use REMORA for coastal circulation around idealized topography.", "expected_solver": "REMORA"},
   {"id": "remora_06", "class": "implicit", "prompt": "Regional ocean advection and upwelling dynamics.", "expected_solver": "REMORA"}
 ]
