@@ -320,7 +320,158 @@ def _build_command(
     return cmd
 
 
+def _as_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _as_float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_violations(payload: dict[str, Any], graph_state: dict[str, Any]) -> list[dict[str, Any]]:
+    review_analysis = payload.get("review_analysis")
+    if not isinstance(review_analysis, dict):
+        review_analysis = graph_state.get("review_analysis")
+    if not isinstance(review_analysis, dict):
+        return []
+    violations = review_analysis.get("violations")
+    if not isinstance(violations, list):
+        return []
+    return [item for item in violations if isinstance(item, dict)]
+
+
+def _derive_validation_fields(payload: dict[str, Any], graph_state: dict[str, Any]) -> dict[str, Any]:
+    violations = _extract_violations(payload, graph_state)
+    schema_errors = [v.get("message") for v in violations if "schema" in str(v.get("rule_name", "")).lower()]
+    schema_errors = [msg for msg in schema_errors if isinstance(msg, str) and msg]
+
+    physics_warnings = [
+        v.get("message")
+        for v in violations
+        if "physics" in str(v.get("rule_name", "")).lower()
+        and str(v.get("severity", "")).lower() == "warning"
+        and isinstance(v.get("message"), str)
+    ]
+
+    has_physics_error = any(
+        "physics" in str(v.get("rule_name", "")).lower()
+        and str(v.get("severity", "error")).lower() == "error"
+        for v in violations
+    )
+    has_resource_error = any(
+        (
+            "resource" in str(v.get("rule_name", "")).lower()
+            or "build" in str(v.get("rule_name", "")).lower()
+        )
+        and str(v.get("severity", "error")).lower() == "error"
+        for v in violations
+    )
+
+    schema_valid = payload.get("schema_valid")
+    if not isinstance(schema_valid, bool):
+        schema_valid = len(schema_errors) == 0 if violations else False
+
+    physics_valid = payload.get("physics_valid")
+    if not isinstance(physics_valid, bool):
+        physics_valid = (not has_physics_error) if violations else False
+
+    resource_valid = payload.get("resource_valid")
+    if not isinstance(resource_valid, bool):
+        resource_valid = (not has_resource_error) if violations else False
+
+    if schema_valid and not schema_errors:
+        schema_errors = []
+
+    return {
+        "schema_valid": schema_valid,
+        "physics_valid": physics_valid,
+        "resource_valid": resource_valid,
+        "schema_errors": schema_errors,
+        "physics_warnings": physics_warnings or [],
+    }
+
+
+def _derive_iteration_fields(payload: dict[str, Any], graph_state: dict[str, Any]) -> dict[str, Any]:
+    iteration_count = _as_int(payload.get("iteration_count"))
+    if iteration_count is None:
+        iteration_count = _as_int(payload.get("iteration"))
+    if iteration_count is None:
+        iteration_count = _as_int(graph_state.get("iteration"))
+
+    reviewer_retry_count = _as_int(payload.get("reviewer_retry_count"))
+    if reviewer_retry_count is None:
+        reviewer_retry_count = _as_int(payload.get("retry_count"))
+    if reviewer_retry_count is None:
+        reviewer_retry_count = _as_int(graph_state.get("retry_count"))
+
+    out: dict[str, Any] = {
+        "iteration_count": iteration_count,
+        "reviewer_retry_count": reviewer_retry_count,
+    }
+    if iteration_count is None:
+        out["iteration_count_unavailable_reason"] = "graph_state.iteration_missing"
+    if reviewer_retry_count is None:
+        out["reviewer_retry_count_unavailable_reason"] = "graph_state.retry_count_missing"
+    return out
+
+
+def _derive_benchmark_metrics_fields(payload: dict[str, Any], graph_state: dict[str, Any]) -> dict[str, Any]:
+    wall_time_seconds = _as_float(payload.get("wall_time_seconds"))
+    if wall_time_seconds is None:
+        wall_time_seconds = _as_float(payload.get("duration_seconds"))
+    if wall_time_seconds is None:
+        wall_time_seconds = _as_float(graph_state.get("wall_time_seconds"))
+    if wall_time_seconds is None:
+        wall_time_seconds = _as_float(graph_state.get("duration_seconds"))
+    if wall_time_seconds is None:
+        wall_time_seconds = 0.0
+
+    architect_time_seconds = _as_float(payload.get("architect_time_seconds"))
+    if architect_time_seconds is None:
+        architect_time_seconds = _as_float(graph_state.get("architect_time_seconds"))
+    if architect_time_seconds is None:
+        architect_time_seconds = 0.0
+
+    llm_call_count = _as_int(payload.get("llm_call_count"))
+    if llm_call_count is None:
+        llm_total = (((graph_state.get("metrics") or {}).get("stages") or {}).get("architect") or {}).get("llm")
+        llm_call_count = _as_int((llm_total or {}).get("total_calls"))
+    if llm_call_count is None:
+        llm_call_count = 0
+
+    converged = payload.get("converged")
+    if not isinstance(converged, bool):
+        status = str(payload.get("analysis_status") or graph_state.get("job_status") or "").lower()
+        converged = status in {"success", "completed"}
+
+    return {
+        "converged": converged,
+        "wall_time_seconds": wall_time_seconds,
+        "architect_time_seconds": architect_time_seconds,
+        "llm_call_count": llm_call_count,
+    }
+
+
+def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(payload)
+    graph_state = normalized.pop("__graph_state", None)
+    if not isinstance(graph_state, dict):
+        graph_state = {}
+
+    normalized.update(_derive_validation_fields(normalized, graph_state))
+    normalized.update(_derive_iteration_fields(normalized, graph_state))
+    normalized.update(_derive_benchmark_metrics_fields(normalized, graph_state))
+    return normalized
+
+
 def _write_jsonl(path: Path, payload: dict[str, Any], config: Any | None = None) -> None:
+    payload = _normalize_benchmark_record(payload)
     with path.open("a", encoding="utf-8") as handle:
         if config is not None:
             from src.utils.privacy import sanitize_payload
@@ -512,6 +663,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "exit_code": exit_code,
                 "error": error,
                 "stderr_excerpt": stderr[:2000] if stderr else None,
+                "__graph_state": result_data,
             }
             _write_jsonl(raw_metrics_path, record, config=privacy_config)
 
