@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 """Generate a paper-focused workflow architecture figure."""
 
+from typing import Any
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 
-def box(ax, x, y, w, h, title, subtitle="", fc="#f8fafc", ec="#334155", lw=1.4):
+def box(
+    ax: Any,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    title: str,
+    subtitle: str = "",
+    fc: str = "#f8fafc",
+    ec: str = "#334155",
+    lw: float = 1.4,
+) -> None:
     p = FancyBboxPatch(
         (x, y), w, h,
         boxstyle="round,pad=0.01,rounding_size=0.015",
@@ -19,7 +32,16 @@ def box(ax, x, y, w, h, title, subtitle="", fc="#f8fafc", ec="#334155", lw=1.4):
         ax.text(x + w/2, y + h*0.28, subtitle, ha="center", va="center", fontsize=8.6, color="#475569")
 
 
-def arrow(ax, a, b, color="#334155", lw=1.6, style="-|>", rad=0.0, linestyle="solid"):
+def arrow(
+    ax: Any,
+    a: tuple[float, float],
+    b: tuple[float, float],
+    color: str = "#334155",
+    lw: float = 1.6,
+    style: str = "-|>",
+    rad: float = 0.0,
+    linestyle: str = "solid",
+) -> None:
     arr = FancyArrowPatch(
         posA=a,
         posB=b,
@@ -33,7 +55,7 @@ def arrow(ax, a, b, color="#334155", lw=1.6, style="-|>", rad=0.0, linestyle="so
     ax.add_patch(arr)
 
 
-def main(path="workflow_architecture_paper.png"):
+def main(path: str = "workflow_architecture_paper.png") -> None:
     fig, ax = plt.subplots(figsize=(13, 5.2), dpi=220)
     fig.patch.set_facecolor("white")
     ax.set_facecolor("white")

@@ -28,6 +28,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
@@ -84,7 +85,10 @@ except Exception as e:
     traceback.print_exc()
     AGENT_CONFIG = None
 
-def get_embedding_model(provider: str = "openai", model_name: str = "text-embedding-3-small"):
+def get_embedding_model(
+    provider: str = "openai",
+    model_name: str = "text-embedding-3-small",
+) -> Any:
     """
     Get an embeddings client for a provider/model.
 
@@ -115,15 +119,19 @@ def get_embedding_model(provider: str = "openai", model_name: str = "text-embedd
             self.embeddings = embeddings_obj
             self.config = config
 
-        def embed_documents(self, texts):
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
             return self.embeddings.embed_documents(texts)
 
-        def embed_query(self, text):
+        def embed_query(self, text: str) -> list[float]:
             if hasattr(self.embeddings, "embed_query"):
                 return self.embeddings.embed_query(text)
             raise RuntimeError("Embedding provider does not support embed_query")
 
-        def expand_documents(self, documents, metadata=None):
+        def expand_documents(
+            self,
+            documents: list[str],
+            metadata: list[dict[str, Any]] | None = None,
+        ) -> tuple[list[str], list[dict[str, Any]]]:
             chunk_size = 0
             if self.config is not None:
                 chunk_size = getattr(self.config, "embedding_chunk_size_chars", 0) or 0
@@ -238,7 +246,7 @@ def build_case_structure_index(
         code_config: type[BaseAMReXConfig],
         source_dir: Path,
         output_dir: Path,
-        embedding_model,
+        embedding_model: Any,
         max_cases: int = None,
         skip_tokenize: bool = True
 ) -> None:
@@ -359,7 +367,7 @@ def build_case_details_index(
         code_config: type[BaseAMReXConfig],
         source_dir: Path,
         output_dir: Path,
-        embedding_model,
+        embedding_model: Any,
         max_cases: int = None,
         skip_tokenize: bool = True
 ) -> None:
@@ -473,7 +481,7 @@ def build_input_templates_index(
         code_config: type[BaseAMReXConfig],
         source_dir: Path,
         output_dir: Path,
-        embedding_model,
+        embedding_model: Any,
         max_cases: int = None,
         skip_tokenize: bool = True
 ) -> None:
@@ -615,7 +623,7 @@ def build_case_names_index(
     code_config: type[BaseAMReXConfig],
     source_dir: Path,
     output_dir: Path,
-    embedding_model,
+    embedding_model: Any,
     max_cases: int = None,
     skip_tokenize: bool = True
 ) -> None:
@@ -732,7 +740,7 @@ This mechanism ({mechanism}) is used for {fuel_list} combustion simulations.
 def build_chemistry_index(
         code_config: type[BaseAMReXConfig],
         output_dir: Path,
-        embedding_model,
+        embedding_model: Any,
         skip_tokenize: bool = True
 ) -> None:
     """
@@ -775,7 +783,7 @@ def build_chemistry_index(
     logger.debug(f"[OK] Index saved to {output_dir}")
 
 
-def main():
+def main() -> None:
     """
     Run the FAISS index builder CLI.
 

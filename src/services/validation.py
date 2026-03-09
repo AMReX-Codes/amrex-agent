@@ -56,7 +56,7 @@ class ValidationService:
         logger.debug(" Validating configuration...")
 
         # Convert Path objects to strings
-        def path_to_str(obj):
+        def path_to_str(obj: Any) -> Any:
             """
             Normalize Path values to strings within nested structures.
 

@@ -12,6 +12,7 @@ Based on: Plan at /home/jmsexton/.claude/plans/dynamic-foraging-pond.md
 
 import logging
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -98,7 +99,7 @@ class VisualizationService:
         logger.debug(f" Found {len(plotfiles)} plotfiles in {run_dir}")
         return plotfiles
 
-    def load_latest(self, run_dir: Path):
+    def load_latest(self, run_dir: Path) -> Any:
         """
         Load most recent plotfile with yt.
 
@@ -402,7 +403,7 @@ class VisualizationService:
 
         return images
 
-    def detect_interesting_features(self, ds) -> dict:
+    def detect_interesting_features(self, ds: Any) -> dict[str, Any]:
         """
         Auto-detect features worth visualizing.
 

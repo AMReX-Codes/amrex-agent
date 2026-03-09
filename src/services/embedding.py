@@ -556,7 +556,7 @@ class EmbeddingService:
         }
 
 
-def get_embedding_service(config) -> EmbeddingService:
+def get_embedding_service(config: Any) -> EmbeddingService:
     """
     Get embedding service instance.
 

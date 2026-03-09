@@ -16,6 +16,7 @@ from .pelec_config import PeleCConfig
 from .pelelmex_config import PeleLMeXConfig
 from .remora_config import REMORAConfig
 from .warpx_config import WarpXConfig
+from typing import Type
 
 __all__ = [
     'get_config_for_path',
@@ -30,7 +31,7 @@ __all__ = [
 ]
 
 
-def discover_code_configs():
+def discover_code_configs() -> list[Type[BaseAMReXConfig]]:
     """
     Auto-discover all registered code configurations.
 
@@ -56,7 +57,7 @@ def discover_code_configs():
     ]
 
 
-def get_config_for_path(path_text: str):
+def get_config_for_path(path_text: str) -> Type[BaseAMReXConfig]:
     """
     Detect config class from path string.
 

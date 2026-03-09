@@ -32,6 +32,7 @@ from src.services.cases import AMReXCasesService
 from src.services.config_model_factory import ConfigModelFactory
 from src.services.knowledge import PeleKnowledgeService
 from src.services.plan import SimulationPlan, SimulationPlanFactory
+from src.utils.llm_calls import LLMCallSpec, call_llm
 from database.indexing.level2_constants import LEVEL2_BASE_KEYS
 
 
@@ -345,7 +346,7 @@ class ArchitectService:
 
         raise ValueError(f"Solver {code_name} found in index but not in registry")
 
-    def retrieve_context(self, query: str, solver_config) -> list:
+    def retrieve_context(self, query: str, solver_config: Any) -> list[dict[str, Any]]:
         """
         Level 1: Retrieve technical documentation for selected solver.
 
@@ -387,7 +388,12 @@ class ArchitectService:
 
         return results
 
-    def select_baseline(self, query: str, solver_config, excluded_cases: list = None) -> dict:
+    def select_baseline(
+        self,
+        query: str,
+        solver_config: Any,
+        excluded_cases: list[str] | None = None,
+    ) -> dict[str, Any] | None:
         """
         Level 2: Select specific baseline case using 7 weighted indices.
 
@@ -1431,57 +1437,80 @@ class ArchitectService:
             {"role": "user", "content": prompt},
         ]
 
+        from pydantic import Field
+
+        class Modification(BaseModel):
+            parameter: str
+            value: str
+
+        class LLMPlanResponse(BaseModel):
+            modifications: list[Modification]
+            reasoning: str = Field(default="")
+
+        model_name = getattr(self.config, "llm_model", None)
         content = ""
+        raw_mods: list[dict[str, str]] = []
+        reasoning = ""
+
+        spec = LLMCallSpec(
+            model=model_name,
+            response_model=LLMPlanResponse,
+            response_format={"type": "json_object"},
+            messages=messages,
+            temperature=temperature,
+            purpose="architect_llm_plan",
+            template_name="architect_llm_plan",
+            template_source="architect",
+        )
+
+        result = None
         try:
-            import instructor
-            from pydantic import BaseModel, Field
-            from src.config import unwrap_llm_client, wrap_llm_client
-
-            class Modification(BaseModel):
-                parameter: str
-                value: str
-
-            class LLMPlanResponse(BaseModel):
-                modifications: list[Modification]
-                reasoning: str = Field(default="")
-
-            base_client = unwrap_llm_client(llm)
-            instr_client = instructor.from_openai(base_client)
-            instr_client = wrap_llm_client(instr_client, self.config)
-            result = instr_client.chat.completions.create(
-                model=getattr(self.config, "llm_model", None),
-                response_model=LLMPlanResponse,
+            result = call_llm(llm, spec, config=self.config)
+        except Exception:
+            # Fallback to plain JSON completion if response_model route fails.
+            fallback_spec = LLMCallSpec(
+                model=model_name,
+                response_format={"type": "json_object"},
                 messages=messages,
                 temperature=temperature,
+                purpose="architect_llm_plan",
+                template_name="architect_llm_plan",
+                template_source="architect",
             )
-            raw_mods = [
-                {"parameter": mod.parameter, "value": mod.value}
-                for mod in result.modifications
-            ]
-            reasoning = result.reasoning or ""
-        except Exception:
-            from src.config import unwrap_llm_client, wrap_llm_client
-
-            base_client = unwrap_llm_client(llm)
-            client = wrap_llm_client(base_client, self.config)
             try:
-                response = client.chat.completions.create(
-                    model=getattr(self.config, "llm_model", None),
-                    messages=messages,
-                    response_format={"type": "json_object"},
-                    temperature=temperature,
-                )
+                result = call_llm(llm, fallback_spec, config=self.config)
             except Exception:
-                response = client.chat.completions.create(
-                    model=getattr(self.config, "llm_model", None),
+                fallback_spec = LLMCallSpec(
+                    model=model_name,
                     messages=messages,
                     temperature=temperature,
+                    purpose="architect_llm_plan",
+                    template_name="architect_llm_plan",
+                    template_source="architect",
                 )
-            if hasattr(response, "choices") and response.choices:
-                message = getattr(response.choices[0], "message", None)
-                content = getattr(message, "content", "") if message else ""
-            raw_mods = []
-            reasoning = ""
+                try:
+                    result = call_llm(llm, fallback_spec, config=self.config)
+                except Exception as exc:
+                    logger.error("LLM plan call failed: %s", exc)
+                    result = None
+
+        model_modifications = getattr(result, "modifications", None)
+        if isinstance(model_modifications, (list, tuple)):
+            parsed_mods = []
+            for mod in model_modifications:
+                if isinstance(mod, dict):
+                    parameter = mod.get("parameter")
+                    value = mod.get("value")
+                else:
+                    parameter = getattr(mod, "parameter", None)
+                    value = getattr(mod, "value", None)
+                if isinstance(parameter, str) and isinstance(value, str):
+                    parsed_mods.append({"parameter": parameter, "value": value})
+            raw_mods = parsed_mods
+            reasoning = getattr(result, "reasoning", "") or ""
+        elif hasattr(result, "choices") and result.choices:
+            message = getattr(result.choices[0], "message", None)
+            content = getattr(message, "content", "") if message else ""
 
         if not raw_mods:
             # Strip markdown code fences if present.
@@ -2001,9 +2030,9 @@ class ArchitectService:
             case_description: str,
             inputs_content: str | dict,
             parameter_resolution_feedback: dict[str, Any] = None,
-            solver_config=None,
-            client=None
-    ) -> dict:
+            solver_config: Any | None = None,
+            client: Any | None = None
+    ) -> dict[str, Any]:
         """
         Extract parameter modifications from a physics description using an LLM.
 
@@ -3336,15 +3365,23 @@ Answer with the solver name and brief justification."""
         problem_type = self._infer_problem_type(user_prompt, requirements)
         dimensionality = f"{len(requirements.get('grid', [0,0]))}D"
 
-        # Build case list for display
+        # Build case list for display and explicit JSON instructions.
         case_names = [case.split('/')[-1] for case in case_list[:15]]  # Limit to 15
-        # === CLEAN SEMANTIC QUERY (for embedding/FAISS) ===
+        case_names_json = json.dumps(case_names)
+        # === CLEAN SEMANTIC QUERY (for embedding/FAISS + LLM scoring) ===
         semantic_query = f"""Simulation request: {user_prompt}
 
 Physics: {requirements.get('physics', 'fluid dynamics')}
 Problem type: {problem_type}
 Dimensionality: {dimensionality}
-Solver: {code_name}"""
+Solver: {code_name}
+Candidate case names: {case_names_json}
+
+Score ONLY the candidate case names above for relevance to this request.
+Return STRICT JSON only (no markdown, no prose), as one object:
+{{"CaseNameA": 0-10, "CaseNameB": 0-10, ...}}
+Use only keys from the candidate case names list.
+If uncertain, still return numeric scores for all candidates."""
 
         try:
             # Use semantic query for FAISS search
@@ -3353,7 +3390,8 @@ Solver: {code_name}"""
                 context={
                     'cases': case_names,
                     'code': code_name,
-                    'use_instruction': False  # Flag to skip instruction wrapper
+                    'use_instruction': True,
+                    'response_format': 'json_object',
                 }
             )
             logger.debug(
@@ -3402,8 +3440,6 @@ Solver: {code_name}"""
             # === LLM PATH: Parse JSON scores ===
             elif 'answer' in answer:
                 logger.debug(" Using LLM JSON scores")
-                import json
-                import re
 
                 # Extract JSON from response
                 json_match = re.search(r'\{[^}]+\}', answer['answer'], re.DOTALL)

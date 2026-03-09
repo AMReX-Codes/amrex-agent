@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,20 @@ def _is_within(child: Path, root: Path) -> bool:
         return False
 
 
+def _coerce_path(value: Any) -> Path | None:
+    """Best-effort conversion to Path; ignores mocks and non-path values."""
+    if isinstance(value, Path):
+        return value
+    if isinstance(value, str):
+        return Path(value)
+    if isinstance(value, os.PathLike):
+        try:
+            return Path(value)
+        except TypeError:
+            return None
+    return None
+
+
 def ensure_write_allowed(
     output_dir: str | Path,
     config: Any | None,
@@ -35,7 +50,8 @@ def ensure_write_allowed(
     - run_dir_prefix: str (default: "run_")
     - output_dir / metrics_output_dir / remote_output_dir: allowed roots
     """
-    mode = getattr(config, "write_policy_mode", "warn")
+    mode_raw = getattr(config, "write_policy_mode", "warn")
+    mode = mode_raw if isinstance(mode_raw, str) else "warn"
     if mode == "off":
         return
 
@@ -43,18 +59,26 @@ def ensure_write_allowed(
     allow_paths = []
     for attr in ("output_dir", "metrics_output_dir", "remote_output_dir"):
         value = getattr(config, attr, None) if config is not None else None
-        if value:
-            allow_paths.append(Path(value))
+        path_value = _coerce_path(value)
+        if path_value is not None:
+            allow_paths.append(path_value)
 
     allow_list = getattr(config, "allow_write_paths", None) if config is not None else None
-    if allow_list:
-        allow_paths.extend(Path(p) for p in allow_list)
+    if isinstance(allow_list, (str, Path, os.PathLike)):
+        allow_list = [allow_list]
+    if isinstance(allow_list, (list, tuple, set)):
+        for item in allow_list:
+            item_path = _coerce_path(item)
+            if item_path is not None:
+                allow_paths.append(item_path)
 
     allowed = any(_is_within(output_path, root) for root in allow_paths)
 
-    require_prefix = bool(getattr(config, "require_run_dir_prefix", False)) if config is not None else False
+    require_prefix_raw = getattr(config, "require_run_dir_prefix", False) if config is not None else False
+    require_prefix = require_prefix_raw if isinstance(require_prefix_raw, bool) else False
     if require_prefix:
-        prefix = getattr(config, "run_dir_prefix", "run_")
+        prefix_raw = getattr(config, "run_dir_prefix", "run_")
+        prefix = prefix_raw if isinstance(prefix_raw, str) and prefix_raw else "run_"
         allowed = allowed and output_path.name.startswith(prefix)
 
     if allowed:

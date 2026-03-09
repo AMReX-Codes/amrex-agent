@@ -34,7 +34,7 @@ class Level1Builder:
         self.embedder = embedder
         self.code_name = config.code_name
     
-    def build(self, source_dir: Path, output_dir: Path):
+    def build(self, source_dir: Path, output_dir: Path) -> None:
         """
         Build all documentation indices specified in config.
         

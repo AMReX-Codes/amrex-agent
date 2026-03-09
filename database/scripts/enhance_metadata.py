@@ -683,7 +683,7 @@ def _extract_code_context(case_path: Path) -> str:
     return '\n\n'.join(context) if context else "No additional code context available"
 
 
-def process_batch(root_path: Path, pattern: str = "*/", save: bool = False):
+def process_batch(root_path: Path, pattern: str = "*/", save: bool = False) -> None:
     """
     Process multiple cases in batch mode.
 
@@ -749,7 +749,7 @@ def process_batch(root_path: Path, pattern: str = "*/", save: bool = False):
         logger.debug(f"\n[OK] Saved {successful} README.md files")
 
 
-def main():
+def main() -> None:
     """
     Run the metadata enhancement CLI.
 

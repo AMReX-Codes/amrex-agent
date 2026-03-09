@@ -297,7 +297,7 @@ class TroubleshootingInfo:
         return info
 
     @staticmethod
-    def display(repo_path: Path, missing_packages: list[str]):
+    def display(repo_path: Path, missing_packages: list[str]) -> None:
         """
         Display troubleshooting info for missing packages.
 

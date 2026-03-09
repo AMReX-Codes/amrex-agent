@@ -743,7 +743,7 @@ class AMReXAgentConfig(BaseModel):
         # Fallback: assume config.py is in src/
         return Path(__file__).parent.parent
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context: Any) -> None:
         """Populate repositories dict from individual paths."""
         fields_set = getattr(self, "model_fields_set", set())
         if self.indexing_strategy == "override_static":
@@ -792,7 +792,7 @@ class AMReXAgentConfig(BaseModel):
         # Remove None values
         self.repositories = {k: v for k, v in self.repositories.items() if v}
 
-    def test_connection(self):
+    def test_connection(self) -> None:
         """DEPRECATED: Use ConfigService.initialize() instead.
         
         This method has side effects (mutates self, makes API calls, modifies os.environ).
@@ -823,7 +823,7 @@ class AMReXAgentConfig(BaseModel):
         
         service.test_llm_connection(updated)
     
-    def setup_environment(self):
+    def setup_environment(self) -> None:
         """DEPRECATED: Use ConfigService.setup_environment_vars() instead.
         
         This method has side effects (modifies os.environ).
@@ -884,7 +884,7 @@ def resolve_alcf_base_url(config: AMReXAgentConfig) -> str:
     return _resolve_alcf_base_url(config.alcf_cluster, config.alcf_base_url)
 
 
-def get_llm_client(config: AMReXAgentConfig):
+def get_llm_client(config: AMReXAgentConfig) -> Any:
     """Get LLM client based on config
     
     Returns OpenAI-compatible client (CBORG, ALCF, OpenAI, or Anthropic)
@@ -1020,17 +1020,17 @@ def _wrap_llm_client_with_metrics(client, config: AMReXAgentConfig):
     return _LLMMetricsClient(client, config)
 
 
-def wrap_llm_client(client, config: AMReXAgentConfig):
+def wrap_llm_client(client: Any, config: AMReXAgentConfig) -> Any:
     """Public helper to apply LLM gating to an existing client instance."""
     return _wrap_llm_client_if_needed(client, config)
 
 
-def wrap_llm_client_with_retry(client, config: AMReXAgentConfig):
+def wrap_llm_client_with_retry(client: Any, config: AMReXAgentConfig) -> Any:
     """Public helper to apply retry behavior without LLM gating."""
     return _wrap_llm_client_with_retry(client, config)
 
 
-def unwrap_llm_client(client):
+def unwrap_llm_client(client: Any) -> Any:
     """Return the underlying client if wrapped by the LLM gate."""
     wrapped_types = (_LLMGateClient, _LLMRetryClient, _LLMMetricsClient)
     current = client

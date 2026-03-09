@@ -42,7 +42,7 @@ class Level0Builder:
         # Discover available codes
         self.configs = discover_code_configs()
         
-    def build(self, output_dir: Path):
+    def build(self, output_dir: Path) -> None:
         """
         Build all 4 Level 0 sub-indices.
         
