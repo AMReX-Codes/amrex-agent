@@ -308,16 +308,19 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         embed_counts_before = embedding_service.get_embedding_call_counts()
 
     try:
+        from src.utils.metrics import metrics_context
+
         # Execute planning using strategy dispatcher
         # This calls create_plan_rag() or create_plan() based on config.indexing_strategy
         # and normalizes the output to canonical format
-        plan_result = service.execute_planning(
-            user_prompt=prompt,
-            prefer_quality="excellent",
-            excluded_cases=excluded_cases,
-            excluded_inputs_files=excluded_inputs_files,
-            parameter_resolution_feedback=parameter_resolution_feedback,  # NEW: pass to service
-        )
+        with metrics_context("architect", node="architect", iteration=new_iteration):
+            plan_result = service.execute_planning(
+                user_prompt=prompt,
+                prefer_quality="excellent",
+                excluded_cases=excluded_cases,
+                excluded_inputs_files=excluded_inputs_files,
+                parameter_resolution_feedback=parameter_resolution_feedback,  # NEW: pass to service
+            )
         logger.debug(f"[DATA TRANSFER] Called architect service with feedback={parameter_resolution_feedback is not None}")
 
         logger.info(f"Plan created: {plan_result.selected_case}")
@@ -423,6 +426,13 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     else:
         action = "plan_created"
 
+    try:
+        from src.utils.metrics import metrics_collector
+
+        metrics_summary = metrics_collector.summarize_stage("architect", iteration=new_iteration)
+    except Exception:
+        metrics_summary = {}
+
     # Create structured history entry (Fix #7 - canonical format with complete computation output)
     # CRITICAL: Store FULL computation output here, not snippets or counts
     history_entry = {
@@ -452,6 +462,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             ),
         }
     }
+    if metrics_summary:
+        history_entry["details"]["metrics"] = metrics_summary
 
     # Append to history (immutable - create new list)
     new_history = workflow_history + [history_entry]

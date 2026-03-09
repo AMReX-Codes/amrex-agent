@@ -1,0 +1,143 @@
+schema_version: "1.0"
+suite_id: "remora_scaling_v1"
+solver: "REMORA"
+cases:
+  - id: "remora_seamount_strong"
+    solver: "REMORA"
+    case_name: "Seamount"
+    case_dir: "Exec/Seamount"
+    inputs: "inputs"
+    description: "Stably stratified fluid at rest over a seamount (ROMS standard test)."
+    dimension: 3
+    physics: [ocean, stratification, bathymetry]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, topography]
+    status: "ready"
+
+  - id: "remora_upwelling_strong"
+    solver: "REMORA"
+    case_name: "Upwelling"
+    case_dir: "Exec/Upwelling"
+    inputs: "inputs"
+    description: "Wind-driven upwelling over a periodic channel (ROMS upwelling case)."
+    dimension: 3
+    physics: [ocean, upwelling, wind_forcing]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, coastal]
+    status: "ready"
+
+  - id: "remora_double_gyre_weak"
+    solver: "REMORA"
+    case_name: "DoubleGyre"
+    case_dir: "Exec/DoubleGyre"
+    inputs: "inputs"
+    description: "Classic wind-driven double gyre test (ROMS double gyre case)."
+    dimension: 3
+    physics: [ocean, gyre, wind_forcing]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, wind]
+    status: "ready"
+
+  - id: "remora_channel_test_strong"
+    solver: "REMORA"
+    case_name: "Channel_Test"
+    case_dir: "Exec/Channel_Test"
+    inputs: "inputs"
+    description: "Reentrant channel test for turbulence and GLS mixing scheme."
+    dimension: 3
+    physics: [ocean, channel, turbulence]
+    difficulty_tier: "hard"
+    prompt_length_band: "short"
+    concept_density: "high"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "256x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x192x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x256x128"
+          amr_levels: 0
+    tags: [ocean, test]
+    status: "ready"
+
+  - id: "remora_doubly_periodic_weak"
+    solver: "REMORA"
+    case_name: "DoublyPeriodic"
+    case_dir: "Exec/DoublyPeriodic"
+    inputs: "inputs"
+    description: "Doubly periodic domain with depth-dependent velocity/temperature profile."
+    dimension: 3
+    physics: [ocean, periodic, stratification]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "256x256x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "384x384x96"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x128"
+          amr_levels: 0
+    tags: [ocean, idealized]
+    status: "ready"

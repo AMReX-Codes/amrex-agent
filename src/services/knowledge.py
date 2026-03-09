@@ -104,12 +104,22 @@ class PeleKnowledgeService:
             # If FAISS has high confidence, return it directly
             if faiss_result and faiss_result.get('confidence', 0) > 0.8:
                 logger.debug(f" Using FAISS result (confidence: {faiss_result['confidence']:.2f})")
+                _record_retrieval_metrics(
+                    strategy="faiss",
+                    confidence=faiss_result.get("confidence", 0.0),
+                    source=faiss_result.get("source"),
+                )
                 return faiss_result
 
         tools, solver_config = self._get_tools_for_context(context)
         if not tools or not tools.get("ask"):
             solver_name = getattr(solver_config, "code_name", "unknown")
             if faiss_result:
+                _record_retrieval_metrics(
+                    strategy="faiss",
+                    confidence=faiss_result.get("confidence", 0.0),
+                    source=faiss_result.get("source"),
+                )
                 return faiss_result
             return {
                 "answer": f"Knowledge tools not available for solver {solver_name}",
@@ -122,6 +132,11 @@ class PeleKnowledgeService:
         if not self.knowledge_loaded:
             if faiss_result:
                 # Return FAISS result even if low confidence
+                _record_retrieval_metrics(
+                    strategy="faiss",
+                    confidence=faiss_result.get("confidence", 0.0),
+                    source=faiss_result.get("source"),
+                )
                 return faiss_result
             return {
                 "answer": "Knowledge base not loaded",
@@ -156,8 +171,19 @@ class PeleKnowledgeService:
 
             # Combine FAISS and LLM results if both available
             if faiss_result:
+                _record_retrieval_metrics(
+                    strategy="hybrid",
+                    confidence=llm_result.get("confidence", 0.0),
+                    source=llm_result.get("method"),
+                    faiss_confidence=faiss_result.get("confidence", 0.0),
+                )
                 return self._combine_results(faiss_result, llm_result)
 
+            _record_retrieval_metrics(
+                strategy="llm",
+                confidence=llm_result.get("confidence", 0.0),
+                source=llm_result.get("method"),
+            )
             return llm_result
 
         except Exception as e:
@@ -166,6 +192,11 @@ class PeleKnowledgeService:
             # Return FAISS result if available as fallback
             if faiss_result:
                 logger.debug(" Using FAISS result as fallback after LLM failure")
+                _record_retrieval_metrics(
+                    strategy="faiss_fallback",
+                    confidence=faiss_result.get("confidence", 0.0),
+                    source=faiss_result.get("source"),
+                )
                 return faiss_result
 
             return {
@@ -543,6 +574,29 @@ LLM analysis:
         # TODO: Implement CBORG embeddings RAG
         # See: https://api.cborg.lbl.gov/models for lbl/nomic-embed-text
         pass
+
+
+def _record_retrieval_metrics(
+    *,
+    strategy: str,
+    confidence: float | None = None,
+    source: str | None = None,
+    faiss_confidence: float | None = None,
+) -> None:
+    try:
+        from src.utils.metrics import metrics_collector
+
+        metrics_collector.record_event(
+            "retrieval_strategy",
+            {
+                "strategy": strategy,
+                "confidence": confidence,
+                "faiss_confidence": faiss_confidence,
+                "source": source,
+            },
+        )
+    except Exception:
+        return
 
 
 # Test the service

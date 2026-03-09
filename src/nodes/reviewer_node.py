@@ -624,6 +624,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         and getattr(config, "retry_guidance_use_llm", False)
     ):
         try:
+            from src.utils.metrics import metrics_context
+
             from database.configs import get_config_for_path
 
             from src.config import get_llm_client
@@ -650,16 +652,17 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                         baseline_base_action: str = Field(description="keep or switch")
                         rationale: str | None = None
 
-                    base_client = unwrap_llm_client(llm_client)
-                    instr_client = instructor.from_openai(base_client)
-                    instr_client = wrap_llm_client(instr_client, config)
-                    parsed = instr_client.chat.completions.create(
-                        model=config.llm_model,
-                        response_model=RetryGuidance,
-                        messages=[{"role": "user", "content": filled}],
-                        temperature=0.0,
-                        max_retries=2,
-                    )
+                    with metrics_context("reviewer", node="reviewer", iteration=iteration):
+                        base_client = unwrap_llm_client(llm_client)
+                        instr_client = instructor.from_openai(base_client)
+                        instr_client = wrap_llm_client(instr_client, config)
+                        parsed = instr_client.chat.completions.create(
+                            model=config.llm_model,
+                            response_model=RetryGuidance,
+                            messages=[{"role": "user", "content": filled}],
+                            temperature=0.0,
+                            max_retries=2,
+                        )
                     retry_guidance.update({
                         "inputs_base_action": parsed.inputs_base_action or "keep",
                         "baseline_base_action": parsed.baseline_base_action or "keep",
@@ -667,12 +670,13 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                         "baseline_reason": parsed.rationale,
                     })
                 except (ImportError, ModuleNotFoundError):
-                    response = llm_client.chat.completions.create(
-                        model=config.llm_model,
-                        messages=[{"role": "user", "content": filled}],
-                        temperature=0.0,
-                        max_tokens=200,
-                    )
+                    with metrics_context("reviewer", node="reviewer", iteration=iteration):
+                        response = llm_client.chat.completions.create(
+                            model=config.llm_model,
+                            messages=[{"role": "user", "content": filled}],
+                            temperature=0.0,
+                            max_tokens=200,
+                        )
                     content = response.choices[0].message.content.strip()
                     import json
                     parsed = json.loads(content)
@@ -695,6 +699,29 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     logger.debug(f"[REVIEWER NODE] validation_result.available_schema_params: {len(validation_result.available_schema_params)} items")
     if validation_result.available_schema_params:
         logger.debug(f"[REVIEWER NODE] Sample schema params: {validation_result.available_schema_params[:10]}")
+
+    try:
+        from src.utils.metrics import metrics_collector
+
+        validation_metrics = {
+            "error_count": len(errors_current),
+            "warning_count": len(warnings),
+            "violation_count": len(validation_result.violations),
+            "unknown_param_count": unknown_param_count,
+            "persistent_unknown_count": persistent_unknown_count,
+            "schema_missing": has_schema_missing,
+            "solver_unknown": has_solver_unknown,
+        }
+        metrics_collector.record_event(
+            "validation_metrics",
+            validation_metrics,
+            stage="reviewer",
+            node="reviewer",
+            iteration=iteration,
+        )
+        metrics_summary = metrics_collector.summarize_stage("reviewer", iteration=iteration)
+    except Exception:
+        metrics_summary = {}
 
     history_entry = {
         "node": "reviewer",
@@ -723,6 +750,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             "plan_rejected_inputs_file": rejected_inputs,
         }
     }
+    if metrics_summary:
+        history_entry["details"]["metrics"] = metrics_summary
 
     new_history = workflow_history + [history_entry]
 
