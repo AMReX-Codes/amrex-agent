@@ -431,9 +431,11 @@
         "UNNUMBERED-237",
         "UNNUMBERED-238"
       ],
-      "status": "pending",
+      "status": "completed",
       "assigned_worktree": "wt-3",
-      "output_file": "docs/audits/semantic/batch_12.md"
+      "output_file": "docs/audits/semantic/batch_12.md",
+      "completed_at_utc": "2026-03-10 16:55:49 UTC",
+      "completed_head": "3250d5c"
     },
     {
       "batch_id": "batch_13",
