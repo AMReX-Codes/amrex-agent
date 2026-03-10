@@ -323,6 +323,20 @@ class AMReXAgentConfig(BaseModel):
         description="Path to FAISS vector indices directory - environment-aware"
     )
 
+    database_mismatch_policy: Literal[
+        "auto_rebuild",
+        "warn_continue",
+        "fail",
+    ] = Field(
+        default="warn_continue",
+        description=(
+            "Policy when solver schema repo_commits do not match sibling repo HEADs. "
+            "warn_continue: log and proceed. "
+            "fail: raise with rebuild command. "
+            "auto_rebuild: trigger rebuild and proceed."
+        ),
+    )
+
     environment: str = Field(
         default_factory=detect_environment,
         description="Deployment environment (perlmutter, local, mcp)"
