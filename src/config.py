@@ -499,6 +499,10 @@ class AMReXAgentConfig(BaseModel):
         default=False,
         description="Enable sweep fan-out orchestration for parameter studies."
     )
+    enable_clarification_subgraph: bool = Field(
+        default=False,
+        description="Enable Session 8 clarification subgraph decision checks before input writing."
+    )
 
     llm_gate_strategy: Literal[
         "off",
