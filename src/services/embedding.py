@@ -147,6 +147,7 @@ class EmbeddingService:
                 faiss_root=self.config.faiss_db_path,
                 base_url=base_url,
                 manifest_url=manifest_url,
+                expected_embedding_model=getattr(self.config, "faiss_embedding_model", None),
             )
             logger.debug(f"Downloaded {downloaded} FAISS artifact files")
         except Exception as e:

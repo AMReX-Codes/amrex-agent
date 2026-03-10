@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 from collections.abc import Iterable
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import urljoin
 from urllib.request import urlopen
@@ -24,17 +25,89 @@ def _sha256(file_path: Path) -> str:
 def _load_manifest_from_url(url: str) -> dict:
     with urlopen(url) as response:
         payload = response.read()
-    return json.loads(payload.decode("utf-8"))
+    manifest = json.loads(payload.decode("utf-8"))
+    _validate_manifest_metadata(manifest)
+    return manifest
 
 
 def _load_manifest_from_path(manifest_path: Path) -> dict:
-    return json.loads(manifest_path.read_text())
+    manifest = json.loads(manifest_path.read_text())
+    _validate_manifest_metadata(manifest)
+    return manifest
+
+
+def _is_iso8601_timestamp(value: str) -> bool:
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
+def _parse_major_version(version: str) -> int | None:
+    try:
+        return int(version.strip().split(".", 1)[0])
+    except (TypeError, ValueError):
+        return None
+
+
+def _validate_manifest_metadata(manifest: dict) -> None:
+    version = manifest.get("version")
+    if version is None:
+        logger.warning(
+            "FAISS manifest missing version metadata; accepting legacy format."
+        )
+        return
+    if not isinstance(version, str) or not version.strip():
+        raise RuntimeError("Invalid manifest: missing version")
+
+    timestamp = manifest.get("generated_at") or manifest.get("timestamp")
+    if not isinstance(timestamp, str) or not _is_iso8601_timestamp(timestamp):
+        raise RuntimeError("Invalid manifest: missing valid generated_at/timestamp")
+
+    major = _parse_major_version(version)
+    embedding_model = manifest.get("embedding_model")
+    if major is not None and major >= 2:
+        if not isinstance(embedding_model, str) or not embedding_model.strip():
+            raise RuntimeError("Invalid manifest: missing embedding_model for version >= 2")
+    elif embedding_model is None:
+        logger.warning(
+            "FAISS manifest missing embedding_model metadata; compatibility checks are limited."
+        )
+
+
+def _validate_manifest_embedding_compatibility(
+    manifest: dict,
+    expected_embedding_model: str | None = None,
+) -> None:
+    if not expected_embedding_model:
+        return
+
+    manifest_embedding_model = manifest.get("embedding_model")
+    if not isinstance(manifest_embedding_model, str) or not manifest_embedding_model.strip():
+        logger.warning(
+            "FAISS manifest has no embedding_model; cannot verify compatibility with configured model %s.",
+            expected_embedding_model,
+        )
+        return
+
+    if manifest_embedding_model != expected_embedding_model:
+        version = manifest.get("version")
+        major = _parse_major_version(version) if isinstance(version, str) else None
+        message = (
+            "FAISS manifest embedding_model '%s' does not match configured model '%s'."
+            % (manifest_embedding_model, expected_embedding_model)
+        )
+        if major is not None and major >= 2:
+            raise RuntimeError(message)
+        logger.warning("%s Accepting legacy manifest.", message)
 
 
 def ensure_faiss_indices(
     faiss_root: Path,
     base_url: str | None = None,
     manifest_url: str | None = None,
+    expected_embedding_model: str | None = None,
 ) -> int:
     """
     Download missing/changed FAISS files into faiss_root.
@@ -63,6 +136,11 @@ def ensure_faiss_indices(
         manifest = _load_manifest_from_url(urljoin(base_url.rstrip("/") + "/", "manifest.json"))
     else:
         raise RuntimeError("No manifest_url or base_url provided for FAISS download")
+
+    _validate_manifest_embedding_compatibility(
+        manifest=manifest,
+        expected_embedding_model=expected_embedding_model,
+    )
 
     files = manifest.get("files", [])
     if not isinstance(files, Iterable):
