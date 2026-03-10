@@ -1,4 +1,6 @@
 import json
+import importlib.util
+from pathlib import Path
 
 from src.models.sweep_schemas import (
     ChildJobStatus,
@@ -181,3 +183,66 @@ class TestAggregatedMetrics:
         assert wall_time["mean"] == 10.0
         assert wall_time["min"] == 10.0
         assert wall_time["max"] == 10.0
+
+
+def _load_aggregate_metrics_module() -> object:
+    module_path = Path(__file__).resolve().parents[2] / "scripts" / "aggregate_metrics.py"
+    spec = importlib.util.spec_from_file_location("aggregate_metrics", module_path)
+    module = importlib.util.module_from_spec(spec)
+    if spec.loader is None:
+        raise RuntimeError("Failed to load aggregate_metrics module.")
+    spec.loader.exec_module(module)
+    return module
+
+
+class TestSweepSavingsVsNaive:
+    def test_by_strategy_includes_naive_savings_delta(self):
+        module = _load_aggregate_metrics_module()
+        records = [
+            {
+                "retrieval_strategy": "naive",
+                "job_status": "completed",
+                "tokens_total": 100,
+                "tokens_total_input": 70,
+                "tokens_total_output": 30,
+            },
+            {
+                "retrieval_strategy": "sweep",
+                "job_status": "completed",
+                "tokens_total": 80,
+                "tokens_total_input": 55,
+                "tokens_total_output": 25,
+            },
+        ]
+
+        rows = module._group_summary(records, "retrieval_strategy", "retrieval_strategy")
+        sweep_row = next(row for row in rows if row["retrieval_strategy"] == "sweep")
+        naive_row = next(row for row in rows if row["retrieval_strategy"] == "naive")
+
+        assert naive_row["savings_tokens_total_vs_naive"] == 0.0
+        assert naive_row["savings_tokens_total_pct_vs_naive"] == 0.0
+        assert sweep_row["naive_avg_tokens_total"] == 100.0
+        assert sweep_row["savings_tokens_total_vs_naive"] == 20.0
+        assert sweep_row["savings_tokens_total_pct_vs_naive"] == 20.0
+        assert sweep_row["savings_tokens_input_vs_naive"] == 15.0
+        assert sweep_row["savings_tokens_output_vs_naive"] == 5.0
+
+    def test_by_strategy_without_naive_sets_savings_fields_none(self):
+        module = _load_aggregate_metrics_module()
+        records = [
+            {
+                "retrieval_strategy": "sweep",
+                "job_status": "completed",
+                "tokens_total": 80,
+                "tokens_total_input": 55,
+                "tokens_total_output": 25,
+            }
+        ]
+
+        rows = module._group_summary(records, "retrieval_strategy", "retrieval_strategy")
+        row = rows[0]
+
+        assert row["retrieval_strategy"] == "sweep"
+        assert row["naive_avg_tokens_total"] is None
+        assert row["savings_tokens_total_vs_naive"] is None
+        assert row["savings_tokens_total_pct_vs_naive"] is None

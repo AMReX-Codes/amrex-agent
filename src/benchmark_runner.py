@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import hashlib
 import subprocess
 import time
 from datetime import datetime, timezone
@@ -14,6 +15,8 @@ from types import SimpleNamespace
 
 import yaml
 from jsonschema import Draft202012Validator
+
+DEFAULT_BENCHMARK_SEED = 1729
 
 
 # ===== Shared helpers =====
@@ -471,6 +474,77 @@ def _derive_gate_approval_fields(payload: dict[str, Any], graph_state: dict[str,
     }
 
 
+def _is_non_empty(value: Any) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, tuple, set, dict)):
+        return len(value) > 0
+    return value is not None
+
+
+def _extract_migration_candidates(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = [manifest]
+    migration_plan = manifest.get("migration_plan")
+    if isinstance(migration_plan, dict):
+        candidates.append(migration_plan)
+
+    sessions = manifest.get("sessions")
+    if isinstance(sessions, dict):
+        for key in ("unnumbered_161", "migration_plan", "db_migration"):
+            entry = sessions.get(key)
+            if isinstance(entry, dict):
+                candidates.append(entry)
+    return candidates
+
+
+def _migration_mapping_and_rollback_flags(manifest: dict[str, Any]) -> tuple[bool, bool, bool]:
+    mapping_any = False
+    rollback_any = False
+    ready_any = False
+    for candidate in _extract_migration_candidates(manifest):
+        has_mapping = any(
+            _is_non_empty(candidate.get(key))
+            for key in ("schema_mapping", "schema_map", "field_mapping", "table_mapping")
+        )
+        has_rollback = any(
+            _is_non_empty(candidate.get(key))
+            for key in ("rollback", "rollback_plan", "rollback_steps", "rollback_sql")
+        )
+        mapping_any = mapping_any or has_mapping
+        rollback_any = rollback_any or has_rollback
+        ready_any = ready_any or (has_mapping and has_rollback)
+    return mapping_any, rollback_any, ready_any
+
+
+def has_migration_plan_schema_mapping_and_rollback(context: dict[str, Any]) -> bool:
+    """
+    Return True when validation_manifest contains both mapping and rollback artifacts.
+    """
+    manifest = context.get("validation_manifest")
+    if not isinstance(manifest, dict):
+        return False
+    _, _, ready = _migration_mapping_and_rollback_flags(manifest)
+    return ready
+
+
+def _derive_migration_plan_fields(payload: dict[str, Any], graph_state: dict[str, Any]) -> dict[str, Any]:
+    manifest = payload.get("validation_manifest")
+    if not isinstance(manifest, dict):
+        manifest = graph_state.get("validation_manifest")
+    if not isinstance(manifest, dict):
+        return {
+            "migration_plan_schema_mapping_present": False,
+            "migration_plan_rollback_present": False,
+            "migration_plan_ready": False,
+        }
+    mapping_present, rollback_present, ready = _migration_mapping_and_rollback_flags(manifest)
+    return {
+        "migration_plan_schema_mapping_present": mapping_present,
+        "migration_plan_rollback_present": rollback_present,
+        "migration_plan_ready": ready,
+    }
+
+
 def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(payload)
     graph_state = normalized.pop("__graph_state", None)
@@ -481,6 +555,7 @@ def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized.update(_derive_iteration_fields(normalized, graph_state))
     normalized.update(_derive_benchmark_metrics_fields(normalized, graph_state))
     normalized.update(_derive_gate_approval_fields(normalized, graph_state))
+    normalized.update(_derive_migration_plan_fields(normalized, graph_state))
     return normalized
 
 
@@ -510,6 +585,42 @@ def _slugify(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", value)
 
 
+def _build_determinism_controls(run_args: dict[str, Any], config_path: Path) -> dict[str, Any]:
+    seed = run_args.get("seed", run_args.get("deterministic_seed", DEFAULT_BENCHMARK_SEED))
+    try:
+        deterministic_seed = int(seed)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("run_args.seed must be an integer for deterministic benchmark runs.") from exc
+
+    enforce_replay = run_args.get("enforce_replay", run_args.get("deterministic_replay", True))
+    if enforce_replay is False:
+        raise ValueError("run_args.enforce_replay cannot be false for deterministic benchmark runs.")
+
+    replay_basis = {
+        "benchmark_config": str(config_path),
+        "run_args": run_args,
+        "seed": deterministic_seed,
+    }
+    replay_fingerprint = hashlib.sha256(
+        json.dumps(replay_basis, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
+    return {
+        "seed": deterministic_seed,
+        "enforce_replay": True,
+        "replay_fingerprint": replay_fingerprint,
+    }
+
+
+def _deterministic_env_overrides(controls: dict[str, Any]) -> dict[str, str]:
+    seed = str(controls["seed"])
+    return {
+        "PYTHONHASHSEED": seed,
+        "AMREX_AGENT_BENCHMARK_SEED": seed,
+        "AMREX_AGENT_DETERMINISTIC_REPLAY": "1",
+        "AMREX_AGENT_REPLAY_FINGERPRINT": str(controls["replay_fingerprint"]),
+    }
+
+
 def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | None) -> dict[str, Any]:
     bench_config = _load_data(config_path)
 
@@ -523,6 +634,8 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
     run_args = bench_config.get("run_args") or {}
     env_common = bench_config.get("env") or {}
     privacy_config = _privacy_config(run_args)
+    determinism_controls = _build_determinism_controls(run_args, config_path)
+    deterministic_env = _deterministic_env_overrides(determinism_controls)
 
     run_name = run_name or datetime.now().strftime("bench_%Y%m%d_%H%M%S")
     run_dir = output_dir / run_name
@@ -538,6 +651,21 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         "prompts": [],
         "run_args": run_args,
         "env_keys": sorted(set(env_common.keys())),
+        "determinism": {
+            "seed": determinism_controls["seed"],
+            "enforce_replay": determinism_controls["enforce_replay"],
+            "replay_fingerprint": determinism_controls["replay_fingerprint"],
+            "replay_manifest": "replay_manifest.json",
+        },
+    }
+    replay_manifest: dict[str, Any] = {
+        "schema_version": 1,
+        "run_name": run_name,
+        "benchmark_config": str(config_path),
+        "seed": determinism_controls["seed"],
+        "enforce_replay": determinism_controls["enforce_replay"],
+        "replay_fingerprint": determinism_controls["replay_fingerprint"],
+        "planned_runs": [],
     }
 
     prompt_entries = []
@@ -590,6 +718,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             prompt_dir.mkdir(parents=True, exist_ok=True)
             env = os.environ.copy()
             env.update({k: str(v) for k, v in model_env.items()})
+            env.update(deterministic_env)
             benchmark_context = prompt_dir / "benchmark_context.json"
             context_payload = {
                 "prompt_id": prompt_id,
@@ -600,6 +729,8 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "novelty_tier": prompt.get("novelty_tier"),
                 "model_id": model_id,
                 "provider": provider,
+                "deterministic_seed": determinism_controls["seed"],
+                "replay_fingerprint": determinism_controls["replay_fingerprint"],
             }
             if privacy_config is not None:
                 from src.utils.privacy import sanitize_payload
@@ -608,6 +739,14 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             benchmark_context.write_text(json.dumps(context_payload, indent=2, default=str))
 
             cmd = _build_command(model_config_path, prompt, prompt_dir, run_args, benchmark_context)
+            replay_manifest["planned_runs"].append(
+                {
+                    "model_id": model_id,
+                    "prompt_id": prompt_id,
+                    "command": cmd,
+                    "output_dir": str(prompt_dir),
+                }
+            )
 
             started_at = datetime.now().isoformat()
             start_time = time.time()
@@ -677,6 +816,8 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "exit_code": exit_code,
                 "error": error,
                 "stderr_excerpt": stderr[:2000] if stderr else None,
+                "deterministic_seed": determinism_controls["seed"],
+                "replay_fingerprint": determinism_controls["replay_fingerprint"],
                 "__graph_state": result_data,
             }
             _write_jsonl(raw_metrics_path, record, config=privacy_config)
@@ -701,4 +842,5 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
 
         manifest = sanitize_payload(manifest, config=privacy_config)
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    (run_dir / "replay_manifest.json").write_text(json.dumps(replay_manifest, indent=2))
     return {"run_dir": str(run_dir), "metrics": str(raw_metrics_path)}
