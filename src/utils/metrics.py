@@ -292,8 +292,8 @@ def _aggregate_models(events: list[dict[str, Any]]) -> tuple[list[str], list[str
     return models, providers
 
 
-def normalize_unnumbered_227(row: dict[str, Any]) -> dict[str, float | None]:
-    """Normalize average-token fields for UNNUMBERED-227 strategy comparison."""
+def normalize_average_token_fields(row: dict[str, Any]) -> dict[str, float | None]:
+    """Normalize average-token summary fields to numeric-or-null values."""
     normalized: dict[str, float | None] = {}
     for field in ("avg_tokens_total", "avg_tokens_input", "avg_tokens_output"):
         value = row.get(field)

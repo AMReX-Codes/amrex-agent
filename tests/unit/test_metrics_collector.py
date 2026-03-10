@@ -1,6 +1,10 @@
 import importlib
 
-from src.utils.metrics import metrics_collector, metrics_context
+from src.utils.metrics import (
+    metrics_collector,
+    metrics_context,
+    normalize_average_token_fields,
+)
 
 reviewer_node_module = importlib.import_module("src.nodes.reviewer_node")
 
@@ -110,3 +114,26 @@ def test_reviewer_node_logs_validator_latency_and_outcomes(monkeypatch) -> None:
     assert metrics["validator_outcome"] == "proceed"
     assert metrics["review_outcome"] == "approved"
     assert metrics["transition_mode"] == "proceed"
+
+
+def test_normalize_average_token_fields_normalizes_expected_fields() -> None:
+    normalized = normalize_average_token_fields(
+        {
+            "avg_tokens_total": 10,
+            "avg_tokens_input": 2.5,
+            "avg_tokens_output": True,
+            "ignored": "value",
+        }
+    )
+    assert normalized == {
+        "avg_tokens_total": 10.0,
+        "avg_tokens_input": 2.5,
+        "avg_tokens_output": None,
+    }
+
+    missing = normalize_average_token_fields({})
+    assert missing == {
+        "avg_tokens_total": None,
+        "avg_tokens_input": None,
+        "avg_tokens_output": None,
+    }

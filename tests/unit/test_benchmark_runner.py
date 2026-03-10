@@ -3,7 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.benchmark_runner import _write_jsonl, run_model_benchmark
+from src.benchmark_runner import (
+    _write_jsonl,
+    has_migration_plan_schema_mapping_and_rollback,
+    run_model_benchmark,
+)
 
 
 def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) -> None:
@@ -286,3 +290,66 @@ def test_gate_approvals_missing_from_state_safe(tmp_path):
     _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "__graph_state": {}})
     record = _read_first_jsonl(path)
     assert record["gate_approval_count"] == 0
+
+
+def _valid_manifest_with_migration_plan() -> dict:
+    return {
+        "migration_plan": {
+            "schema_mapping": {
+                "workflow_sessions": {
+                    "session_id": "uuid",
+                    "state_json": "jsonb",
+                }
+            },
+            "rollback_steps": [
+                "disable_writes",
+                "restore_snapshot",
+                "repoint_connection",
+            ],
+        },
+    }
+
+
+def test_migration_plan_helper_accepts_mapping_and_rollback() -> None:
+    context = {"validation_manifest": _valid_manifest_with_migration_plan()}
+    assert has_migration_plan_schema_mapping_and_rollback(context) is True
+
+
+def test_migration_plan_helper_rejects_missing_mapping_or_rollback() -> None:
+    missing_mapping = {
+        "validation_manifest": {
+            "migration_plan": {"rollback_steps": ["restore_snapshot"]},
+        }
+    }
+    missing_rollback = {
+        "validation_manifest": {
+            "migration_plan": {"schema_mapping": {"workflow_sessions": {"state_json": "jsonb"}}},
+        }
+    }
+    assert has_migration_plan_schema_mapping_and_rollback(missing_mapping) is False
+    assert has_migration_plan_schema_mapping_and_rollback(missing_rollback) is False
+
+
+def test_jsonl_records_migration_plan_fields_from_graph_state(tmp_path) -> None:
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {"validation_manifest": _valid_manifest_with_migration_plan()},
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["migration_plan_schema_mapping_present"] is True
+    assert record["migration_plan_rollback_present"] is True
+    assert record["migration_plan_ready"] is True
+
+
+def test_jsonl_records_migration_plan_fields_when_artifact_missing(tmp_path) -> None:
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "__graph_state": {}})
+    record = _read_first_jsonl(path)
+    assert record["migration_plan_schema_mapping_present"] is False
+    assert record["migration_plan_rollback_present"] is False
+    assert record["migration_plan_ready"] is False
