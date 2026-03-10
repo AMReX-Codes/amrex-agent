@@ -394,7 +394,7 @@
         "UNNUMBERED-212",
         "UNNUMBERED-213"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-2",
       "output_file": "docs/audits/semantic/batch_11.md"
     },
