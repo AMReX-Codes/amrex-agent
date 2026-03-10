@@ -216,3 +216,91 @@ class TestGraphConditionalWiring:
             assert app is not None
         except Exception as e:
             pytest.fail(f"Graph with cycles should compile: {e}")
+
+
+class TestIntentClarificationWiring:
+    @pytest.fixture
+    def graph_builder(self):
+        from src.graph import create_graph
+
+        return create_graph()
+
+    @pytest.fixture
+    def compiled_app(self, graph_builder):
+        return graph_builder.compile()
+
+    def test_intent_extraction_node_in_graph(self, compiled_app):
+        """
+        Given: compiled graph
+        When:  nodes listed
+        Then:  intent_extraction_node present
+        """
+        graph_def = compiled_app.get_graph()
+        assert "intent_extraction_node" in graph_def.nodes
+
+    def test_clarification_node_in_graph(self, compiled_app):
+        """
+        Given: compiled graph
+        When:  nodes listed
+        Then:  clarification_node present
+        """
+        graph_def = compiled_app.get_graph()
+        assert "clarification_node" in graph_def.nodes
+
+    def test_intent_extraction_runs_before_input_writer(self, compiled_app):
+        """
+        Given: graph execution order
+        When:  traced from START
+        Then:  intent_extraction_node appears before
+               input_writer_node in reachable path
+        """
+        graph_def = compiled_app.get_graph()
+        edges = {(edge.source, edge.target) for edge in graph_def.edges}
+        assert ("architect_node", "intent_extraction_node") in edges
+        assert ("intent_extraction_node", "clarification_node") in edges
+        assert ("clarification_node", "input_writer_node") in edges
+
+    def test_clarification_runs_after_intent_extraction(self, compiled_app):
+        """
+        Given: graph execution order
+        When:  traced from intent_extraction_node
+        Then:  clarification_node is next reachable node
+        """
+        graph_def = compiled_app.get_graph()
+        edges = {(edge.source, edge.target) for edge in graph_def.edges}
+        assert ("intent_extraction_node", "clarification_node") in edges
+
+    def test_clarification_needed_false_routes_to_writer(self):
+        """
+        Given: state with clarification_needed = False
+        When:  conditional edge from clarification_node
+               evaluated
+        Then:  routes to input_writer_node
+        """
+        from src.graph import _route_after_clarification
+
+        assert _route_after_clarification({"clarification_needed": False}) == "input_writer_node"
+        assert _route_after_clarification({}) == "input_writer_node"
+
+    def test_clarification_needed_true_routes_to_handler(self):
+        """
+        Given: state with clarification_needed = True
+        When:  conditional edge from clarification_node
+               evaluated
+        Then:  routes to clarification_handler or END
+               NOT to input_writer_node
+        """
+        from src.graph import _route_after_clarification
+
+        route = _route_after_clarification({"clarification_needed": True})
+        assert route == "clarification_handler"
+        assert route != "input_writer_node"
+
+    def test_graph_compiles_without_error(self, graph_builder):
+        """
+        Given: graph definition with new nodes wired
+        When:  graph.compile() runs
+        Then:  no exception raised
+        """
+        app = graph_builder.compile()
+        assert app is not None
