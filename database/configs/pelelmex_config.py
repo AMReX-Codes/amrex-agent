@@ -106,7 +106,15 @@ class PeleLMeXConfig(BaseAMReXConfig):
     default_exec_repo_path = "Exec/RegTests/FlameSheet"
     default_exec_pattern = "PeleLMeX*ex"
 
-    selection_keywords = ["low mach", "incompressible combustion", "diffusion flame"]
+    selection_keywords = [
+        "low mach",
+        "incompressible combustion",
+        "diffusion flame",
+        "counterflow",
+        "counter-flow",
+        "opposed-flow",
+        "counterflow diffusion",
+    ]
     selection_guidance = ["Combustion/flames -> PeleC or PeleLMeX"]
     level0_physics_regimes = [
         {
@@ -124,6 +132,8 @@ class PeleLMeXConfig(BaseAMReXConfig):
         "low Mach number formulation",
         "detailed chemical kinetics",
         "diffusion-dominated combustion",
+        "counterflow and counter-flow diffusion flame configurations",
+        "opposed-flow reacting flame setups",
         "flame dynamics with transport effects",
     ]
     level0_lineage = {

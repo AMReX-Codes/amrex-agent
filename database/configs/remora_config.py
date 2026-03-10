@@ -31,7 +31,17 @@ class REMORAConfig(BaseAMReXConfig):
     default_exec_repo_path = "Exec/Seamount"
     default_exec_pattern = "REMORA*ex"
 
-    selection_keywords = ["ocean", "coastal", "circulation", "seamount", "upwelling"]
+    selection_keywords = [
+        "ocean",
+        "coastal",
+        "circulation",
+        "seamount",
+        "upwelling",
+        "baroclinic flow",
+        "coastal ocean",
+        "topography",
+        "ocean circulation",
+    ]
     selection_guidance = ["Ocean/coastal modeling -> REMORA"]
     level0_physics_regimes = [
         {
@@ -42,8 +52,11 @@ class REMORAConfig(BaseAMReXConfig):
     ]
     level0_capabilities = [
         "regional ocean circulation modeling",
+        "ocean circulation",
         "wind-driven upwelling configurations",
         "periodic channel and coastal flow setups",
+        "baroclinic flow over coastal ocean topography",
+        "seamount and bathymetry-driven circulation dynamics",
     ]
     level0_lineage = {
         "related": ["ERF"],

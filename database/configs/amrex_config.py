@@ -13,7 +13,16 @@ class AMReXConfig(BaseAMReXConfig):
 
     code_name = "AMReX"
     description = "AMReX framework reference and core AMR tutorials"
-    selection_keywords = ["amrex", "amrex tutorial", "amrex amrcore"]
+    selection_keywords = [
+        "amrex",
+        "amrex tutorial",
+        "amrex amrcore",
+        "advection tutorial",
+        "amr advection",
+        "passive scalar",
+        "nested grid advection",
+        "advection_amrcore",
+    ]
     selection_guidance = ["Framework/core AMR tutorial workflows -> AMReX"]
     level0_physics_regimes = [
         {
@@ -24,7 +33,9 @@ class AMReXConfig(BaseAMReXConfig):
     ]
     level0_capabilities = [
         "amrex framework tutorials",
+        "advection tutorial and nested grid advection examples",
         "amrcore reference advection tests",
+        "AMR advection and passive scalar transport workflows",
     ]
     level0_lineage = {
         "description": "AMReX is the base framework supporting solver applications.",
