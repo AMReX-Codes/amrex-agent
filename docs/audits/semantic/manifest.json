@@ -361,7 +361,7 @@
         "UNNUMBERED-187",
         "UNNUMBERED-188"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-1",
       "output_file": "docs/audits/semantic/batch_10.md"
     },
