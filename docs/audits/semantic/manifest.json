@@ -460,7 +460,7 @@
         "UNNUMBERED-263",
         "UNNUMBERED-264"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-4",
       "output_file": "docs/audits/semantic/batch_13.md"
     },
