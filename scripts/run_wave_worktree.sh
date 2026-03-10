@@ -22,6 +22,7 @@ AGENT_BIN="${AGENT_BIN:-codex}"
 PLAN_ROOT=""
 DRY_RUN=0
 RESUME=0
+CODEX_EXEC_ARGS="${CODEX_EXEC_ARGS:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -135,6 +136,38 @@ already_completed() {
   [[ -f "$COMPLETE_FILE" ]] && grep -qx "$sn" "$COMPLETE_FILE"
 }
 
+run_agent_for_session() {
+  local sn="$1"
+  local title="$2"
+  local prompt
+  prompt=$(cat <<PROMPT
+Read docs/audits/semantic/session_plan.md.
+Find Session ${sn}.
+Execute only Session ${sn}.
+Implement the changes, run that session's CI verify command, and commit.
+Commit message format: Session ${sn}: ${title}
+Stop after that commit. Do not execute any other session.
+PROMPT
+)
+
+  # Use non-interactive Codex mode when available so launcher can run without a TTY.
+  if [[ "$(basename "$AGENT_BIN")" == "codex" ]]; then
+    if [[ -n "$CODEX_EXEC_ARGS" ]]; then
+      # shellcheck disable=SC2206
+      local extra_args=( $CODEX_EXEC_ARGS )
+      "$AGENT_BIN" exec "${extra_args[@]}" "$prompt"
+    else
+      "$AGENT_BIN" exec "$prompt"
+    fi
+    return
+  fi
+
+  # Fallback for other CLIs that read prompts from stdin.
+  "$AGENT_BIN" <<PROMPT
+$prompt
+PROMPT
+}
+
 mapfile -t SESSIONS < <(extract_sessions)
 if [[ ${#SESSIONS[@]} -eq 0 ]]; then
   echo "No sessions found for wave ${WAVE}, wt-${WT}." >&2
@@ -162,19 +195,16 @@ for sn in "${SESSIONS[@]}"; do
   echo "[start] Session $sn | $title"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
-    echo "[dry-run] $AGENT_BIN for Session $sn" | tee -a "$session_log"
+    if [[ "$(basename "$AGENT_BIN")" == "codex" ]]; then
+      echo "[dry-run] $AGENT_BIN exec for Session $sn" | tee -a "$session_log"
+    else
+      echo "[dry-run] $AGENT_BIN for Session $sn" | tee -a "$session_log"
+    fi
     continue
   fi
 
   {
-    "$AGENT_BIN" <<PROMPT
-Read docs/audits/semantic/session_plan.md.
-Find Session ${sn}.
-Execute only Session ${sn}.
-Implement the changes, run that session's CI verify command, and commit.
-Commit message format: Session ${sn}: ${title}
-Stop after that commit. Do not execute any other session.
-PROMPT
+    run_agent_for_session "$sn" "$title"
   } 2>&1 | tee "$session_log"
 
   status=${PIPESTATUS[0]}
