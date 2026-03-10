@@ -495,6 +495,10 @@ class AMReXAgentConfig(BaseModel):
         default=False,
         description="Enable Intent Extraction node LLM parsing of prompt into structured simulation config."
     )
+    enable_sweep_orchestration: bool = Field(
+        default=False,
+        description="Enable sweep fan-out orchestration for parameter studies."
+    )
 
     llm_gate_strategy: Literal[
         "off",
