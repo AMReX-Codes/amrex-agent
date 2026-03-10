@@ -196,7 +196,7 @@
         "UNNUMBERED-059",
         "UNNUMBERED-060"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-1",
       "output_file": "docs/audits/semantic/batch_05.md"
     },
