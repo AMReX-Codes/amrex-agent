@@ -12,6 +12,59 @@ from src.nodes.clarification_node import clarification_node
 from src.nodes.input_writer_node import input_writer_node
 from src.nodes.intent_extraction_node import intent_extraction_node
 from src.nodes.sweep_detection_node import sweep_detection_node
+from src.benchmark_runner import has_migration_plan_schema_mapping_and_rollback
+from src.services.plan import has_checklist_implementation_locations
+from src.session_manager import is_b4_implementation_sequence_complete
+
+
+_ACCEPTANCE_MAPPING_KEYS = (
+    "mapped_tests",
+    "tests",
+    "test_cases",
+    "test_ids",
+)
+
+
+def _normalize_test_mappings(value: Any) -> list[str]:
+    if isinstance(value, str):
+        normalized = value.strip()
+        return [normalized] if normalized else []
+
+    if not isinstance(value, list):
+        return []
+
+    mappings: list[str] = []
+    for entry in value:
+        if isinstance(entry, str):
+            normalized = entry.strip()
+            if normalized:
+                mappings.append(normalized)
+    return mappings
+
+
+def has_acceptance_checklist_mapped_tests(context: dict[str, Any]) -> bool:
+    """
+    Validate acceptance checklist entries include at least one mapped test.
+    """
+    manifest = context.get("validation_manifest")
+    if not isinstance(manifest, dict):
+        return False
+
+    checklist = manifest.get("acceptance_checklist")
+    if not isinstance(checklist, list) or not checklist:
+        return False
+
+    for entry in checklist:
+        if not isinstance(entry, dict):
+            return False
+        has_mapping = any(
+            _normalize_test_mappings(entry.get(key))
+            for key in _ACCEPTANCE_MAPPING_KEYS
+        )
+        if not has_mapping:
+            return False
+
+    return True
 
 
 def _route_after_clarification(state: dict) -> str:
@@ -21,7 +74,13 @@ def _route_after_clarification(state: dict) -> str:
 
 
 def _route_after_sweep_detection(state: dict) -> str:
-    if state.get("sweep_id") is not None:
+    if (
+        state.get("sweep_id") is not None
+        and is_b4_implementation_sequence_complete(state)
+        and has_checklist_implementation_locations(state)
+        and has_acceptance_checklist_mapped_tests(state)
+        and has_migration_plan_schema_mapping_and_rollback(state)
+    ):
         return "sweep_execution_handler"
     return "architect_node"
 

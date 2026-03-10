@@ -11,6 +11,25 @@ from src.services.rules.base import RuleViolation
 
 
 class TestPhysicsValidator:
+    @staticmethod
+    def _make_validator_for_success_path(monkeypatch):
+        validator = PhysicsValidator(AMReXAgentConfig())
+        monkeypatch.setattr(validator, "code_configs", {"AMReX": object()})
+
+        class FakeModel:
+            def __init__(self, **_kwargs):
+                pass
+
+        def fake_create_from_schema(*_args, **_kwargs):
+            return FakeModel
+
+        monkeypatch.setattr(
+            "src.services.validators.physics_validator.ConfigModelFactory.create_from_schema",
+            fake_create_from_schema,
+        )
+        monkeypatch.setattr(validator.rule_engine, "validate", lambda **_kwargs: [])
+        return validator
+
     def test_skips_when_no_selected_solver(self):
         validator = PhysicsValidator(AMReXAgentConfig())
         assert validator.validate({}) == []
@@ -89,3 +108,77 @@ class TestPhysicsValidator:
         assert merged["geometry"]["prob_lo"] == "0 0 0"
         assert merged["geometry"]["prob_hi"] == "1 1 1"
         assert merged["amr"]["n_cell"] == "32 32 32"
+
+    def test_reports_violation_when_injected_error_catch_rate_below_threshold(self, monkeypatch):
+        validator = self._make_validator_for_success_path(monkeypatch)
+
+        violations = validator.validate({
+            "selected_solver": "AMReX",
+            "schema": {},
+            "baseline": {},
+            "modifications": [],
+            "injected_error_benchmark": {"total_injected": 10, "caught": 8},
+        })
+
+        assert len(violations) == 1
+        assert violations[0].rule_name == "InjectedPhysicsErrorCatchRate"
+        assert violations[0].severity == "critical"
+
+    def test_accepts_injected_error_catch_rate_at_threshold(self, monkeypatch):
+        validator = self._make_validator_for_success_path(monkeypatch)
+
+        violations = validator.validate({
+            "selected_solver": "AMReX",
+            "schema": {},
+            "baseline": {},
+            "modifications": [],
+            "injected_error_benchmark": {"total_injected": 10, "caught": 9},
+        })
+
+        assert violations == []
+
+    def test_supports_results_payload_for_injected_error_benchmark(self, monkeypatch):
+        validator = self._make_validator_for_success_path(monkeypatch)
+
+        violations = validator.validate({
+            "selected_solver": "AMReX",
+            "schema": {},
+            "baseline": {},
+            "modifications": [],
+            "injected_error_benchmark": {
+                "results": [
+                    {"caught": True},
+                    {"caught": True},
+                    {"caught": False},
+                    {"caught": True},
+                ]
+            },
+        })
+
+        assert len(violations) == 1
+        assert violations[0].rule_name == "InjectedPhysicsErrorCatchRate"
+        assert violations[0].severity == "critical"
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"total_injected": 0, "caught": 0},
+            {"total_injected": 10, "caught": 11},
+            {"results": "not-a-list"},
+            "bad-payload",
+        ],
+    )
+    def test_reports_invalid_injected_error_benchmark_payload(self, monkeypatch, payload):
+        validator = self._make_validator_for_success_path(monkeypatch)
+
+        violations = validator.validate({
+            "selected_solver": "AMReX",
+            "schema": {},
+            "baseline": {},
+            "modifications": [],
+            "injected_error_benchmark": payload,
+        })
+
+        assert len(violations) == 1
+        assert violations[0].rule_name == "InjectedPhysicsErrorCatchRate"
+        assert violations[0].severity == "error"

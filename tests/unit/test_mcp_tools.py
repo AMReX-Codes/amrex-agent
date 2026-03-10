@@ -4,6 +4,13 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from src.session_manager import (
+    append_policy_audit,
+    evaluate_inheritance_cost_reduction,
+    is_b4_implementation_sequence_complete,
+    merge_session_context,
+    persist_session_result,
+)
 
 
 @pytest.fixture
@@ -528,3 +535,240 @@ def test_list_sweeps_empty_session(tmp_path, mcp_server_module, monkeypatch):
 
     assert "error" not in result
     assert result["sweep_ids"] == []
+
+
+def test_b4_sequence_gate_accepts_supported_manifest_shapes():
+    flat_context = {
+        "validation_manifest": {
+            "b4_implementation_sequence": [
+                "overview",
+                "graph topology addition",
+                "paper-parser-service",
+                "validation_manifest_schema",
+                "paper_validator_mode_1",
+                "paper validator mode 2",
+                "new_cli_arguments",
+                "implementation sequencing",
+            ]
+        }
+    }
+    nested_context = {
+        "validation_manifest": {
+            "b4": {
+                "implementation_sequence": [
+                    "overview",
+                    "graph_topology_addition",
+                    "paper_parser_service",
+                    "validation_manifest_schema",
+                    "paper_validator_mode_1",
+                    "paper_validator_mode_2",
+                    "new_cli_arguments",
+                    "implementation_sequencing",
+                ]
+            }
+        }
+    }
+    sessions_context = {
+        "validation_manifest": {
+            "sessions": {
+                "b4": {
+                    "implementation_sequence": [
+                        "overview",
+                        "graph_topology_addition",
+                        "paper_parser_service",
+                        "validation_manifest_schema",
+                        "paper_validator_mode_1",
+                        "paper_validator_mode_2",
+                        "new_cli_arguments",
+                        "implementation_sequencing",
+                    ]
+                }
+            }
+        }
+    }
+
+    assert is_b4_implementation_sequence_complete(flat_context) is True
+    assert is_b4_implementation_sequence_complete(nested_context) is True
+    assert is_b4_implementation_sequence_complete(sessions_context) is True
+
+
+def test_b4_sequence_gate_rejects_invalid_or_out_of_order_sequence():
+    assert is_b4_implementation_sequence_complete({}) is False
+    assert is_b4_implementation_sequence_complete({"validation_manifest": []}) is False
+    assert (
+        is_b4_implementation_sequence_complete(
+            {"validation_manifest": {"b4_implementation_sequence": "not-a-list"}}
+        )
+        is False
+    )
+    assert (
+        is_b4_implementation_sequence_complete(
+            {"validation_manifest": {"b4_implementation_sequence": ["overview", 1]}}
+        )
+        is False
+    )
+    assert (
+        is_b4_implementation_sequence_complete(
+            {
+                "validation_manifest": {
+                    "b4_implementation_sequence": [
+                        "overview",
+                        "paper_parser_service",
+                        "graph_topology_addition",
+                        "validation_manifest_schema",
+                        "paper_validator_mode_1",
+                        "paper_validator_mode_2",
+                        "new_cli_arguments",
+                        "implementation_sequencing",
+                    ]
+                }
+            }
+        )
+        is False
+    )
+    assert (
+        is_b4_implementation_sequence_complete(
+            {
+                "validation_manifest": {
+                    "b4_implementation_sequence": [
+                        "overview",
+                        "graph_topology_addition",
+                    ]
+                }
+            }
+        )
+        is False
+    )
+
+
+def test_evaluate_inheritance_cost_reduction_handles_valid_and_invalid_inputs():
+    assert (
+        evaluate_inheritance_cost_reduction(
+            {
+                "independent_planning_cost_usd": 0.5,
+                "inherited_planning_cost_usd": 0.19,
+            }
+        )["target_met"]
+        is True
+    )
+    under_target = evaluate_inheritance_cost_reduction(
+        {
+            "independent_planning_cost_usd": 0.5,
+            "inherited_planning_cost_usd": 0.25,
+        }
+    )
+    assert under_target is not None
+    assert under_target["target_met"] is False
+    assert evaluate_inheritance_cost_reduction({}) is None
+    assert (
+        evaluate_inheritance_cost_reduction(
+            {
+                "independent_planning_cost_usd": 0,
+                "inherited_planning_cost_usd": 0.1,
+            }
+        )
+        is None
+    )
+    assert (
+        evaluate_inheritance_cost_reduction(
+            {
+                "independent_planning_cost_usd": True,
+                "inherited_planning_cost_usd": 0.1,
+            }
+        )
+        is None
+    )
+
+
+def test_merge_session_context_tracks_inheritance_cost_reduction(monkeypatch):
+    args_only = merge_session_context(
+        session_id=None,
+        arguments={
+            "independent_planning_cost_usd": 0.5,
+            "inherited_planning_cost_usd": 0.18,
+        },
+    )
+    assert args_only["inheritance_cost_reduction"]["target_met"] is True
+
+    def _fake_get_store_functions():
+        def _get(_session_id: str):
+            return {
+                "independent_planning_cost_usd": 0.5,
+                "steps": ["run_simulation"],
+            }
+
+        def _persist(_session_id: str, _context: dict):
+            return None
+
+        return _get, _persist
+
+    monkeypatch.setattr("src.session_manager._get_store_functions", _fake_get_store_functions)
+    merged = merge_session_context(
+        session_id="sess-1",
+        arguments={"inherited_planning_cost_usd": 0.24},
+    )
+    assert "steps" not in merged
+    assert merged["inheritance_cost_reduction"]["target_met"] is False
+
+    merged_with_steps = merge_session_context(
+        session_id="sess-1",
+        arguments={"steps": ["create_simulation_plan"]},
+    )
+    assert merged_with_steps["steps"] == ["create_simulation_plan"]
+    assert "inheritance_cost_reduction" not in merged_with_steps
+
+
+def test_append_policy_audit_and_persist_session_result(monkeypatch):
+    context = {}
+    append_policy_audit(
+        context,
+        tool_name="run_simulation",
+        surface="mcp",
+        gate_required=True,
+        bypass_applied=False,
+        reason_code="approval_required",
+        policy_version="v1",
+    )
+    assert len(context["policy_audit"]) == 1
+    assert context["policy_audit"][0]["tool_name"] == "run_simulation"
+
+    non_list_context = {"policy_audit": "invalid"}
+    append_policy_audit(
+        non_list_context,
+        tool_name="run_simulation",
+        surface="mcp",
+        gate_required=True,
+        bypass_applied=False,
+        reason_code="approval_required",
+        policy_version="v1",
+    )
+    assert non_list_context["policy_audit"] == "invalid"
+
+    persisted: list[tuple[str, dict]] = []
+
+    def _fake_get_store_functions():
+        def _get(_session_id: str):
+            return {}
+
+        def _persist(session_id: str, merged_context: dict):
+            persisted.append((session_id, merged_context))
+
+        return _get, _persist
+
+    monkeypatch.setattr("src.session_manager._get_store_functions", _fake_get_store_functions)
+
+    result = {"status": "ok"}
+    returned = persist_session_result(session_id="s-2", context={"a": 1}, result=result)
+    assert returned["session_id"] == "s-2"
+    assert persisted[0][1]["status"] == "ok"
+
+    non_dict = persist_session_result(session_id="s-2", context={"b": 2}, result="done")
+    assert non_dict == "done"
+    assert persisted[1][1] == {"b": 2}
+
+    passthrough = persist_session_result(
+        session_id=None,
+        context={"x": 1},
+        result={"status": "noop"},
+    )
+    assert passthrough == {"status": "noop"}

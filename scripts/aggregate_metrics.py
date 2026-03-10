@@ -98,6 +98,8 @@ def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[
     rows = []
     for value, items in sorted(grouped.items(), key=lambda item: item[0]):
         rows.append(_summarize_items(items, label, value))
+    if key == "retrieval_strategy":
+        rows = _add_naive_savings(rows, label)
     return rows
 
 
@@ -116,6 +118,85 @@ def _summarize_items(items: list[dict[str, Any]], label: str, value: str) -> dic
         "avg_tokens_input": tokens_input,
         "avg_tokens_output": tokens_output,
     }
+
+
+def _add_naive_savings(rows: list[dict[str, Any]], label: str) -> list[dict[str, Any]]:
+    naive_row = next((row for row in rows if row.get(label) == "naive"), None)
+    if naive_row is None:
+        for row in rows:
+            row.update(_empty_savings_fields())
+        return rows
+
+    baseline_total = _numeric_or_none(naive_row.get("avg_tokens_total"))
+    baseline_input = _numeric_or_none(naive_row.get("avg_tokens_input"))
+    baseline_output = _numeric_or_none(naive_row.get("avg_tokens_output"))
+
+    for row in rows:
+        row.update({
+            "naive_avg_tokens_total": baseline_total,
+            "naive_avg_tokens_input": baseline_input,
+            "naive_avg_tokens_output": baseline_output,
+            "savings_tokens_total_vs_naive": _savings_abs(
+                baseline_total,
+                _numeric_or_none(row.get("avg_tokens_total")),
+            ),
+            "savings_tokens_input_vs_naive": _savings_abs(
+                baseline_input,
+                _numeric_or_none(row.get("avg_tokens_input")),
+            ),
+            "savings_tokens_output_vs_naive": _savings_abs(
+                baseline_output,
+                _numeric_or_none(row.get("avg_tokens_output")),
+            ),
+            "savings_tokens_total_pct_vs_naive": _savings_pct(
+                baseline_total,
+                _numeric_or_none(row.get("avg_tokens_total")),
+            ),
+            "savings_tokens_input_pct_vs_naive": _savings_pct(
+                baseline_input,
+                _numeric_or_none(row.get("avg_tokens_input")),
+            ),
+            "savings_tokens_output_pct_vs_naive": _savings_pct(
+                baseline_output,
+                _numeric_or_none(row.get("avg_tokens_output")),
+            ),
+        })
+
+    return rows
+
+
+def _empty_savings_fields() -> dict[str, None]:
+    return {
+        "naive_avg_tokens_total": None,
+        "naive_avg_tokens_input": None,
+        "naive_avg_tokens_output": None,
+        "savings_tokens_total_vs_naive": None,
+        "savings_tokens_input_vs_naive": None,
+        "savings_tokens_output_vs_naive": None,
+        "savings_tokens_total_pct_vs_naive": None,
+        "savings_tokens_input_pct_vs_naive": None,
+        "savings_tokens_output_pct_vs_naive": None,
+    }
+
+
+def _numeric_or_none(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    return None
+
+
+def _savings_abs(naive_avg: float | None, strategy_avg: float | None) -> float | None:
+    if naive_avg is None or strategy_avg is None:
+        return None
+    return round(naive_avg - strategy_avg, 2)
+
+
+def _savings_pct(naive_avg: float | None, strategy_avg: float | None) -> float | None:
+    if naive_avg is None or strategy_avg is None or naive_avg == 0:
+        return None
+    return round(((naive_avg - strategy_avg) / naive_avg) * 100, 2)
 
 
 def _avg(values: list[Any]) -> float:
@@ -195,6 +276,15 @@ def main() -> None:
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
+        "naive_avg_tokens_total",
+        "naive_avg_tokens_input",
+        "naive_avg_tokens_output",
+        "savings_tokens_total_vs_naive",
+        "savings_tokens_input_vs_naive",
+        "savings_tokens_output_vs_naive",
+        "savings_tokens_total_pct_vs_naive",
+        "savings_tokens_input_pct_vs_naive",
+        "savings_tokens_output_pct_vs_naive",
     ])
 
     by_difficulty = _group_summary(records, "difficulty_tier", "difficulty_tier")
