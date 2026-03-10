@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+import json
 import os
 import sys
+from pathlib import Path
+from typing import Any
 
 from src.config import AMReXAgentConfig
 from src.services.analysis import AnalysisService
@@ -28,6 +29,9 @@ __all__ = [
     "mcp_create_simulation_plan",
     "mcp_execute_workflow",
     "mcp_generate_visualizations",
+    "mcp_get_sweep_results",
+    "mcp_get_sweep_status",
+    "mcp_list_sweeps",
     "mcp_stage_out_globus",
     "mcp_query_knowledge",
     "mcp_run_simulation",
@@ -679,6 +683,78 @@ def mcp_stage_out_globus(payload: dict) -> dict:
     }
 
 
+def _sweeps_root() -> Path:
+    return Path(config.output_dir) / "sweeps"
+
+
+def _sweep_metadata_path(sweep_id: str) -> Path:
+    return _sweeps_root() / sweep_id / "sweep_metadata.json"
+
+
+def _load_json(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def mcp_get_sweep_status(payload: dict) -> dict:
+    """Return persisted sweep status from sweep_metadata.json."""
+    sweep_id = payload.get("sweep_id")
+    if not sweep_id:
+        return {"error": "Missing sweep_id"}
+
+    metadata = _load_json(_sweep_metadata_path(str(sweep_id)))
+    if metadata is None:
+        return {"error": f"Sweep metadata not found for {sweep_id}"}
+
+    return {
+        "sweep_id": metadata.get("sweep_id", str(sweep_id)),
+        "session_id": metadata.get("session_id"),
+        "status": metadata.get("status", "unknown"),
+        "created_at": metadata.get("created_at"),
+    }
+
+
+def mcp_get_sweep_results(payload: dict) -> dict:
+    """Return sweep summary when sweep is complete."""
+    status_payload = mcp_get_sweep_status(payload)
+    if status_payload.get("error"):
+        return status_payload
+
+    status = str(status_payload.get("status", "")).strip().lower()
+    if status not in {"complete", "completed"}:
+        return {"error": f"Sweep {status_payload['sweep_id']} is not complete"}
+
+    summary_path = _sweeps_root() / status_payload["sweep_id"] / "sweep_summary.json"
+    summary = _load_json(summary_path)
+    if summary is None:
+        return {"error": f"Sweep summary not found for {status_payload['sweep_id']}"}
+    return summary
+
+
+def mcp_list_sweeps(payload: dict) -> dict:
+    """List persisted sweep ids filtered by session id."""
+    session_id = payload.get("session_id")
+    if not session_id:
+        return {"error": "Missing session_id"}
+
+    sweep_ids: list[str] = []
+    for metadata_path in sorted(_sweeps_root().glob("*/sweep_metadata.json")):
+        metadata = _load_json(metadata_path)
+        if metadata is None:
+            continue
+        if metadata.get("session_id") != session_id:
+            continue
+        sweep_id = str(metadata.get("sweep_id") or metadata_path.parent.name)
+        sweep_ids.append(sweep_id)
+
+    return {"session_id": session_id, "sweep_ids": sweep_ids}
+
+
 def get_tool_specs() -> list[dict[str, Any]]:
     """Return MCP tool specifications as dictionaries."""
     available_solvers = config.available_solvers
@@ -844,6 +920,48 @@ def get_tool_specs() -> list[dict[str, Any]]:
                         "description": "Reason for skipping, if applicable.",
                     },
                 },
+            },
+        },
+        {
+            "name": "get_sweep_status",
+            "description": "Read sweep status from persisted sweep metadata.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "sweep_id": {
+                        "type": "string",
+                        "description": "Sweep identifier.",
+                    }
+                },
+                "required": ["sweep_id"],
+            },
+        },
+        {
+            "name": "get_sweep_results",
+            "description": "Read persisted sweep summary for a completed sweep.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "sweep_id": {
+                        "type": "string",
+                        "description": "Sweep identifier.",
+                    }
+                },
+                "required": ["sweep_id"],
+            },
+        },
+        {
+            "name": "list_sweeps",
+            "description": "List sweep identifiers for a session.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "description": "Session identifier.",
+                    }
+                },
+                "required": ["session_id"],
             },
         },
         {

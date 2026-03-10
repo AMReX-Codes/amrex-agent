@@ -16,6 +16,9 @@ def _tool_handlers() -> dict[str, ToolHandler]:
         mcp_create_simulation_plan,
         mcp_execute_workflow,
         mcp_generate_visualizations,
+        mcp_get_sweep_results,
+        mcp_get_sweep_status,
+        mcp_list_sweeps,
         mcp_query_knowledge,
         mcp_run_simulation,
         mcp_select_baseline_case,
@@ -41,6 +44,9 @@ def _tool_handlers() -> dict[str, ToolHandler]:
         "get_workflow_status": mcp_analyze_results,
         "generate_visualizations": mcp_generate_visualizations,
         "stage_out_globus": mcp_stage_out_globus,
+        "get_sweep_status": mcp_get_sweep_status,
+        "get_sweep_results": mcp_get_sweep_results,
+        "list_sweeps": mcp_list_sweeps,
     }
 
 
