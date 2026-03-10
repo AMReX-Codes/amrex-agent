@@ -64,7 +64,7 @@
         "UNNUMBERED-002",
         "UNNUMBERED-003"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-2",
       "output_file": "docs/audits/semantic/batch_01.md"
     },
@@ -229,7 +229,7 @@
         "UNNUMBERED-084",
         "UNNUMBERED-085"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-2",
       "output_file": "docs/audits/semantic/batch_06.md"
     },
@@ -394,7 +394,7 @@
         "UNNUMBERED-212",
         "UNNUMBERED-213"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-2",
       "output_file": "docs/audits/semantic/batch_11.md"
     },
