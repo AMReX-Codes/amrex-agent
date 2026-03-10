@@ -74,15 +74,22 @@ def _route_after_clarification(state: dict) -> str:
 
 
 def _route_after_sweep_detection(state: dict) -> str:
-    if (
-        state.get("sweep_id") is not None
-        and is_b4_implementation_sequence_complete(state)
-        and has_checklist_implementation_locations(state)
-        and has_acceptance_checklist_mapped_tests(state)
-        and has_migration_plan_schema_mapping_and_rollback(state)
-    ):
-        return "sweep_execution_handler"
-    return "architect_node"
+    if state.get("sweep_id") is None:
+        return "architect_node"
+
+    # Preserve existing sweep behavior unless a validation_manifest is present.
+    # When manifest context exists, enforce additional quality gates.
+    manifest = state.get("validation_manifest")
+    if isinstance(manifest, dict):
+        if not (
+            is_b4_implementation_sequence_complete(state)
+            and has_checklist_implementation_locations(state)
+            and has_acceptance_checklist_mapped_tests(state)
+            and has_migration_plan_schema_mapping_and_rollback(state)
+        ):
+            return "architect_node"
+
+    return "sweep_execution_handler"
 
 
 def clarification_handler_node(state: dict) -> dict:
