@@ -304,3 +304,93 @@ class TestIntentClarificationWiring:
         """
         app = graph_builder.compile()
         assert app is not None
+
+
+class TestSweepWiring:
+    @pytest.fixture
+    def graph_builder(self):
+        from src.graph import create_graph
+
+        return create_graph()
+
+    @pytest.fixture
+    def compiled_app(self, graph_builder):
+        return graph_builder.compile()
+
+    def test_sweep_detection_node_in_graph(self, compiled_app):
+        """
+        Given: compiled graph
+        When:  nodes listed
+        Then:  sweep_detection_node present
+        """
+        graph_def = compiled_app.get_graph()
+        assert "sweep_detection_node" in graph_def.nodes
+
+    def test_sweep_detection_runs_before_architect(self, compiled_app):
+        """
+        Given: graph execution order
+        When:  traced from START
+        Then:  sweep_detection_node appears before
+               architect_node in reachable path
+        Sweep must be known before Architect plans.
+        """
+        graph_def = compiled_app.get_graph()
+        edges = {(edge.source, edge.target) for edge in graph_def.edges}
+        assert ("__start__", "sweep_detection_node") in edges
+        assert ("sweep_detection_node", "architect_node") in edges
+
+    def test_no_sweep_routes_to_architect(self):
+        """
+        Given: state with sweep_id = None
+        When:  conditional edge from
+               sweep_detection_node evaluated
+        Then:  routes to architect_node
+        """
+        from src.graph import _route_after_sweep_detection
+
+        assert _route_after_sweep_detection({"sweep_id": None}) == "architect_node"
+        assert _route_after_sweep_detection({}) == "architect_node"
+
+    def test_sweep_detected_routes_to_sweep_handler(self):
+        """
+        Given: state with sweep_id set (non-None)
+        When:  conditional edge from
+               sweep_detection_node evaluated
+        Then:  routes to sweep_execution_handler
+               NOT to architect_node directly
+        """
+        from src.graph import _route_after_sweep_detection
+
+        route = _route_after_sweep_detection({"sweep_id": "sweep_001"})
+        assert route == "sweep_execution_handler"
+        assert route != "architect_node"
+
+    def test_graph_still_compiles_after_sweep_wiring(self, graph_builder):
+        """
+        Given: graph with sweep nodes wired
+        When:  graph.compile() runs
+        Then:  no exception raised
+        """
+        app = graph_builder.compile()
+        assert app is not None
+
+    def test_oracle_paths_unaffected_by_sweep_wiring(self):
+        """
+        Given: oracle prompts with no sweep language
+        When:  sweep_detection_node evaluates them
+        Then:  sweep_id remains None
+               all route to architect_node
+        """
+        import json
+        from pathlib import Path
+
+        from src.graph import _route_after_sweep_detection
+        from src.nodes.sweep_detection_node import sweep_detection_node
+
+        prompts_path = Path(__file__).resolve().parents[1] / "data" / "level0_ab_prompts.json"
+        prompts = json.loads(prompts_path.read_text(encoding="utf-8"))
+
+        for item in prompts:
+            result = sweep_detection_node({"prompt": item["prompt"]})
+            assert result["sweep_id"] is None
+            assert _route_after_sweep_detection(result) == "architect_node"
