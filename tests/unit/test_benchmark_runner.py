@@ -170,3 +170,78 @@ def test_jsonl_no_new_required_field_breaks_existing(tmp_path):
     assert record["schema_errors"] == []
     assert record["physics_warnings"] == []
     assert record["converged"] is False
+
+
+def test_gate_approvals_written_to_jsonl(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {
+                "gate_approvals": [
+                    {"interface_path": "cli", "decision": "approved"},
+                    {"interface_path": "api", "decision": "rejected"},
+                ]
+            },
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approval_count"] == 2
+    assert isinstance(record["gate_approvals"], list)
+    assert all(isinstance(item, dict) for item in record["gate_approvals"])
+
+
+def test_gate_approvals_empty_writes_zero_count(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {"gate_approvals": []},
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approval_count"] == 0
+    assert record["gate_approvals"] == []
+
+
+def test_gate_approval_interface_path_preserved(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {
+                "gate_approvals": [{"interface_path": "cli", "decision": "approved"}]
+            },
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approvals"][0]["interface_path"] == "cli"
+
+
+def test_gate_approval_decision_preserved(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {
+                "gate_approvals": [{"interface_path": "cli", "decision": "approved"}]
+            },
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approvals"][0]["decision"] == "approved"
+
+
+def test_gate_approvals_missing_from_state_safe(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "__graph_state": {}})
+    record = _read_first_jsonl(path)
+    assert record["gate_approval_count"] == 0

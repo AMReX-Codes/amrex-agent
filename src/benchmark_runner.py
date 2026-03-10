@@ -458,6 +458,19 @@ def _derive_benchmark_metrics_fields(payload: dict[str, Any], graph_state: dict[
     }
 
 
+def _derive_gate_approval_fields(payload: dict[str, Any], graph_state: dict[str, Any]) -> dict[str, Any]:
+    gate_approvals = payload.get("gate_approvals")
+    if gate_approvals is None:
+        gate_approvals = graph_state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+
+    return {
+        "gate_approval_count": len(gate_approvals),
+        "gate_approvals": gate_approvals,
+    }
+
+
 def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(payload)
     graph_state = normalized.pop("__graph_state", None)
@@ -467,6 +480,7 @@ def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized.update(_derive_validation_fields(normalized, graph_state))
     normalized.update(_derive_iteration_fields(normalized, graph_state))
     normalized.update(_derive_benchmark_metrics_fields(normalized, graph_state))
+    normalized.update(_derive_gate_approval_fields(normalized, graph_state))
     return normalized
 
 
