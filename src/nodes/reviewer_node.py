@@ -5,6 +5,7 @@ L1 Integration: Architect + Reviewer (State Machine Logic)
 """
 
 import logging
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -297,7 +298,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     # Phase 1: Review the plan
     logger.info("Reviewing plan...")
     orchestrator = ReviewerOrchestrator(config)
+    validation_started_at = time.perf_counter()
     validation_result = orchestrator.validate_plan(plan)
+    validator_latency_ms = round((time.perf_counter() - validation_started_at) * 1000.0, 3)
 
     # Convert ValidationResult to structured format
     approved = validation_result.mode == "proceed"
@@ -552,29 +555,30 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         match = re.search(r"Parameter '([^']+)'", message or "")
         return match.group(1) if match else None
 
+    unknown_param_count = sum(
+        1 for v in validation_result.violations if v.rule_name == "SchemaExistence"
+    )
+    persistent_unknown_count = 0
+    if errors_all_found:
+        found_params = {
+            _extract_param_from_error(e) for e in errors_all_found if e
+        }
+        fixed_params = {
+            _extract_param_from_error(e) for e in errors_all_fixed if e
+        }
+        for v in validation_result.violations:
+            if v.rule_name != "SchemaExistence":
+                continue
+            param_name = v.parameter or _extract_param_from_error(v.message)
+            if param_name and param_name in found_params and param_name not in fixed_params:
+                persistent_unknown_count += 1
+
     def _derive_retry_guidance(violations, rejected_inputs_file, rejected_baseline_case, baseline_dir_rejected_flag, solver_unknown_flag):
         inputs_action = "keep"
         baseline_action = "keep"
         inputs_reason = None
         baseline_reason = None
 
-        unknown_param_count = sum(
-            1 for v in violations if v.rule_name == "SchemaExistence"
-        )
-        persistent_unknown_count = 0
-        if errors_all_found:
-            found_params = {
-                _extract_param_from_error(e) for e in errors_all_found if e
-            }
-            fixed_params = {
-                _extract_param_from_error(e) for e in errors_all_fixed if e
-            }
-            for v in violations:
-                if v.rule_name != "SchemaExistence":
-                    continue
-                param_name = v.parameter or _extract_param_from_error(v.message)
-                if param_name and param_name in found_params and param_name not in fixed_params:
-                    persistent_unknown_count += 1
         has_schema_missing = any(v.rule_name in {"SchemaMissing", "SchemaLoadError"} for v in violations)
         has_solver_unknown = solver_unknown_flag
 
@@ -700,13 +704,17 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         from src.utils.metrics import metrics_collector
 
         validation_metrics = {
+            "validator_latency_ms": validator_latency_ms,
+            "validator_outcome": validation_result.mode,
+            "review_outcome": "approved" if approved else "rejected",
+            "transition_mode": next_mode,
             "error_count": len(errors_current),
             "warning_count": len(warnings),
             "violation_count": len(validation_result.violations),
             "unknown_param_count": unknown_param_count,
             "persistent_unknown_count": persistent_unknown_count,
-            "schema_missing": has_schema_missing,
-            "solver_unknown": has_solver_unknown,
+            "schema_missing": schema_missing,
+            "solver_unknown": solver_unknown,
         }
         metrics_collector.record_event(
             "validation_metrics",

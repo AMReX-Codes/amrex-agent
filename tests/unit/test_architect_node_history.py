@@ -28,7 +28,13 @@ def _plan(selected_case="PeleC/Exec/RegTests/PMF", selected_solver="PeleC"):
         selected_case=selected_case,
         modifications=[("amr.n_cell", "64 64 64"), ("pelec.cfl", "0.5")],
         reasoning="Reasoning text",
+        solver_confidence=0.89,
+        level0_confidence=0.89,
+        level1_confidence=0.78,
         baseline_confidence=0.92,
+        level0_latency_per_query_ms=6.0,
+        level1_latency_per_query_ms=14.5,
+        level2_latency_per_query_ms=11.25,
         indexing_strategy="simple",
         case_candidates=[],
     )
@@ -173,3 +179,26 @@ def test_history_includes_level0_and_level2_override_trace(monkeypatch):
     assert details["level2_override_solver"] == "ERF"
     assert details["level2_override_case"] == "Exec/DryRegTests/TaylorGreenVortex"
     assert details["level2_override_confidence"] == 0.9
+
+
+def test_plan_includes_l0_l1_l2_confidence_and_latency_per_query(monkeypatch):
+    class FakeArchitectService:
+        def __init__(self, _config, embedding_service=None):
+            self.level0_searcher = object()
+
+        def execute_planning(self, **_kwargs):
+            return _plan()
+
+    monkeypatch.setattr(embedding_factory_module, "get_embedding_service", lambda _cfg: DummyEmbeddingService())
+    monkeypatch.setattr(architect_node_module, "ArchitectService", FakeArchitectService)
+
+    updates = architect_node_module.architect_node({"config": DummyConfig(), "prompt": "test", "workflow_history": []})
+    plan = SimulationPlan(**updates["plan"])
+    level_metrics = plan.get_query_level_metrics()
+
+    assert plan.level0_confidence == 0.89
+    assert plan.level1_confidence == 0.78
+    assert plan.baseline_confidence == 0.92
+    assert level_metrics["L0"]["latency_ms"] == 6.0
+    assert level_metrics["L1"]["latency_ms"] == 14.5
+    assert level_metrics["L2"]["latency_ms"] == 11.25
