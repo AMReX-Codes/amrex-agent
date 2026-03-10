@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from src.policy.gate_policy import evaluate_gate_policy
 from src.interactive_service import invoke_tool
 
@@ -113,3 +115,66 @@ def test_invoke_tool_allows_demo_bypass(monkeypatch):
     )
     assert result["status"] == "ok"
     assert result["gate"]["gate_bypassed"] is True
+
+
+def test_invoke_tool_writes_gate_approval_record(monkeypatch):
+    """
+    Given: interactive_service.invoke_tool called
+    When:  gate confirmation occurs
+    Then:  gate_approvals in state has one new record
+           record contains interface_path = 'mcp'
+    """
+    state = {"approval_token": "approved"}
+
+    monkeypatch.setattr(
+        "src.interactive_service.merge_session_context",
+        lambda session_id, arguments: state,
+    )
+    monkeypatch.setattr(
+        "src.interactive_service.append_policy_audit",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        "src.interactive_service.persist_session_result",
+        lambda session_id, context, result: result,
+    )
+    monkeypatch.setattr(
+        "src.interactive_service.dispatch_tool",
+        lambda name, context: {"status": "ok"},
+    )
+
+    result = invoke_tool("run_simulation", {}, surface="mcp")
+
+    assert result["status"] == "ok"
+    assert len(state["gate_approvals"]) == 1
+    assert state["gate_approvals"][0]["interface_path"] == "mcp"
+
+
+def test_preconfirm_gate_writes_gate_approval_record(monkeypatch):
+    """
+    Given: run_preconfirm_gate called
+    When:  gate confirmation occurs
+    Then:  gate_approvals in state has one new record
+           record contains interface_path = 'cli'
+    """
+    from src.utils import gate as gate_utils
+
+    state = {}
+
+    monkeypatch.setattr(
+        gate_utils,
+        "sys",
+        SimpleNamespace(stdin=SimpleNamespace(isatty=lambda: True)),
+    )
+
+    gate_utils.run_preconfirm_gate(
+        node_name="architect_node",
+        summary_lines=["preview"],
+        options=[{"label": "Proceed", "value": "go"}],
+        enabled=True,
+        auto_approve=True,
+        state=state,
+    )
+
+    assert len(state["gate_approvals"]) == 1
+    assert state["gate_approvals"][0]["interface_path"] == "cli"
