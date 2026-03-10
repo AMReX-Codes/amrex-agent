@@ -48,6 +48,11 @@ try:
 except ImportError:
     visualization_node = None
 
+try:
+    from .router_gate_node import router_gate_node
+except ImportError:
+    router_gate_node = None
+
 __all__ = [
     'architect_node',
     'input_writer_node',
@@ -55,4 +60,5 @@ __all__ = [
     'reviewer_node',
     'analysis_node',
     'visualization_node',
+    'router_gate_node',
 ]

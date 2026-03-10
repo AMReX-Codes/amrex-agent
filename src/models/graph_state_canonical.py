@@ -161,6 +161,9 @@ class GraphState(TypedDict, total=False):
     errors_fixed: List[str]         # Errors successfully resolved
     error_logs: List[str]           # Runtime error messages from execution/analysis
     preconfirm_action: Optional[str]            # "proceed" | "cancel"
+    router_gate: Optional[Dict[str, Any]]       # Router-level gate state
+    gate_proposal: Optional[Dict[str, Any]]     # Router gate proposal payload
+    gate_resolution: Optional[Dict[str, Any]]   # Router gate resolution payload
 
     # ========================================
     # OBSERVABILITY (Immutable Audit Log)

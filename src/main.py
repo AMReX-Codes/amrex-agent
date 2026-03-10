@@ -30,11 +30,15 @@ from src.nodes import (
     reviewer_node,
     runner_node,
     visualization_node,  # Phase 4
+    router_gate_node,
 )
 from src.router_func import (
     route_after_analysis,  # Phase 4
+    route_after_architect,
+    route_after_input_writer,
     route_after_reviewer,
     route_after_runner,  # Phase 4
+    route_after_router_gate,
 )
 
 
@@ -438,6 +442,28 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
         help='Pause for a pre-confirmation gate before validation'
     )
     parser.add_argument(
+        '--gate-strategy',
+        choices=['auto', 'terminal', 'selective'],
+        dest='gate_strategy',
+        help='Decision gate strategy: auto, terminal, selective'
+    )
+    parser.add_argument(
+        '--gate-points',
+        dest='gate_points',
+        help='Comma-separated decision points to gate (solver,baseline,modifications,execution,input_writer,analysis,visualization)'
+    )
+    parser.add_argument(
+        '--router-gate-strategy',
+        choices=['off', 'terminal', 'selective'],
+        dest='router_gate_strategy',
+        help='Router gate strategy: off, terminal, selective'
+    )
+    parser.add_argument(
+        '--router-gate-points',
+        dest='router_gate_points',
+        help='Comma-separated router steps to gate (architect,reviewer,input_writer,runner,analysis,visualization)'
+    )
+    parser.add_argument(
         '--llm-gate-strategy',
         choices=[
             'off',
@@ -559,6 +585,48 @@ def load_prompt_content(args: argparse.Namespace) -> str:
     return path.read_text().strip()
 
 
+def apply_gate_cli_settings(config, parsed_args) -> None:
+    if getattr(parsed_args, "preconfirm", False):
+        logger.warning(
+            "Preconfirm gating is deprecated; prefer router gating for new workflows."
+        )
+        config.preconfirm_gate = True
+
+    gate_strategy = getattr(parsed_args, "gate_strategy", None)
+    gate_points_raw = getattr(parsed_args, "gate_points", None)
+    gate_points = []
+    if gate_points_raw:
+        gate_points = [p.strip() for p in gate_points_raw.split(",") if p.strip()]
+
+    if gate_strategy:
+        config.gate_strategy = gate_strategy
+    elif gate_points:
+        config.gate_strategy = "selective"
+    else:
+        config.gate_strategy = getattr(config, "gate_strategy", "auto") or "auto"
+
+    config.gate_points = gate_points
+
+    router_gate_strategy = getattr(parsed_args, "router_gate_strategy", None)
+    router_gate_points_raw = getattr(parsed_args, "router_gate_points", None)
+    router_gate_points = []
+    if router_gate_points_raw:
+        router_gate_points = [
+            p.strip() for p in router_gate_points_raw.split(",") if p.strip()
+        ]
+
+    if router_gate_strategy:
+        config.router_gate_strategy = router_gate_strategy
+    elif router_gate_points:
+        config.router_gate_strategy = "selective"
+    else:
+        config.router_gate_strategy = (
+            getattr(config, "router_gate_strategy", "off") or "off"
+        )
+
+    config.router_gate_points = router_gate_points
+
+
 def _warn_if_schema_missing(config: AMReXAgentConfig, baseline_override: str | None) -> None:
     """Warn if schema is missing for the baseline override solver."""
     if not baseline_override:
@@ -647,8 +715,7 @@ def main(args: list[str] | None = None) -> None:
         if parsed_args.environment:
             config.environment = parsed_args.environment
 
-        if parsed_args.preconfirm:
-            config.preconfirm_gate = True
+        apply_gate_cli_settings(config, parsed_args)
 
         if parsed_args.llm_gate_strategy:
             config.llm_gate_strategy = parsed_args.llm_gate_strategy
@@ -694,14 +761,23 @@ def main(args: list[str] | None = None) -> None:
                 if 'run_directory' in result:
                     run_dir = Path(result['run_directory'])
                     workflow_path = run_dir / "workflow_history.json"
+                    gate_history_path = run_dir / "gate_history.json"
                 else:
                     base_dir = Path(parsed_args.output_dir) if parsed_args.output_dir else Path("output")
                     base_dir.mkdir(parents=True, exist_ok=True)
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     workflow_path = base_dir / f"workflow_history_{timestamp}.json"
+                    gate_history_path = base_dir / f"gate_history_{timestamp}.json"
                 with open(workflow_path, 'w') as f:
                     json.dump(result.get('workflow_history', []), f, indent=2, default=str)
                 logger.info(f"Workflow history saved to {workflow_path}")
+                from src.utils.gate import build_gate_history_from_workflow_history
+                gate_history = build_gate_history_from_workflow_history(
+                    result.get('workflow_history', [])
+                )
+                with open(gate_history_path, 'w') as f:
+                    json.dump({"gates": gate_history}, f, indent=2, default=str)
+                logger.info(f"Gate history saved to {gate_history_path}")
             except Exception as e:
                 logger.warning(f"Failed to save workflow history: {e}")
 
@@ -887,6 +963,7 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     workflow.add_node("runner", runner_node)
     workflow.add_node("analysis", analysis_node)
     workflow.add_node("visualization", visualization_node)
+    workflow.add_node("router_gate", router_gate_node)
 
     # Add edges
     workflow.add_edge(START, "architect")
@@ -898,8 +975,16 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     # 1. Entry point
     workflow.add_edge(START, "architect")
 
-    # 2. Architect always sends plan to reviewer
-    workflow.add_edge("architect", "reviewer")
+    # 2. Architect routing (includes router-level gating)
+    workflow.add_conditional_edges(
+        "architect",
+        route_after_architect,
+        {
+            "reviewer": "reviewer",
+            "router_gate": "router_gate",
+            END: END,
+        }
+    )
 
     # 3. Reviewer conditional routing (reflexion loop)
     workflow.add_conditional_edges(
@@ -908,12 +993,21 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
         {
             "input_writer": "input_writer",  # Proceed (validation passed)
             "architect": "architect",         # Retry (validation failed, attempts remain)
+            "router_gate": "router_gate",
             END: END                          # Fail (max retries or critical error)
         }
     )
 
     # 4. Linear execution path
-    workflow.add_edge("input_writer", "runner")
+    workflow.add_conditional_edges(
+        "input_writer",
+        route_after_input_writer,
+        {
+            "runner": "runner",
+            "router_gate": "router_gate",
+            END: END,
+        }
+    )
 
     # 4b. Conditional routing from runner (check for failures)
     workflow.add_conditional_edges(
@@ -921,6 +1015,7 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
         route_after_runner,
         {
             "analysis": "analysis",  # Proceed to analysis on success
+            "router_gate": "router_gate",
             END: END                 # Stop execution if runner fails
         }
     )
@@ -932,12 +1027,28 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
         {
             "visualization": "visualization",  # Success (simulation completed)
             "reviewer": "reviewer",            # Failure (post-execution diagnosis)
+            "router_gate": "router_gate",
             END: END                           # Terminal analysis failure
         }
     )
 
     # 6. Terminal node
     workflow.add_edge("visualization", END)
+
+    # 7. Router-level gate resume path
+    workflow.add_conditional_edges(
+        "router_gate",
+        route_after_router_gate,
+        {
+            "architect": "architect",
+            "reviewer": "reviewer",
+            "input_writer": "input_writer",
+            "runner": "runner",
+            "analysis": "analysis",
+            "visualization": "visualization",
+            END: END,
+        }
+    )
 
     # ========================================
     # COMPILATION

@@ -3,14 +3,242 @@ Terminal gating helpers for pre-confirm pauses and LLM prompt checks.
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
 import sys
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+GateStrategy = str
+GatePoint = str
+
+
+@dataclass
+class GateDecision:
+    gate_point: GatePoint
+    selected_option: str
+    user_action: str
+    reasoning: str
+    alternatives: List[str]
+    evidence: Dict[str, Any]
+    timestamp: str
+    user_modification: Optional[Dict[str, Any]] = None
+
+
+class GateManager:
+    def __init__(self, strategy: GateStrategy, gate_points: List[GatePoint]) -> None:
+        self.strategy = strategy
+        self.gate_points = set(gate_points)
+        self.history: List[GateDecision] = []
+
+    def should_gate(self, gate_point: GatePoint) -> bool:
+        if self.strategy == "auto":
+            return False
+        if self.strategy == "llm":
+            return True
+        if self.strategy == "terminal":
+            return gate_point in self.gate_points if self.gate_points else True
+        if self.strategy == "selective":
+            return gate_point in self.gate_points
+        return False
+
+    def present_gate(
+        self,
+        gate_point: GatePoint,
+        selected: str,
+        confidence: float,
+        reasoning: str,
+        evidence: Dict[str, Any],
+        alternatives: List[Dict[str, str]],
+        current_parameters: Optional[Dict[str, Any]] = None,
+        resource_context: Optional[Dict[str, Any]] = None,
+    ) -> GateDecision:
+        print(f"\n[GATE: {gate_point}]")
+        print(f"Selected: {selected}")
+        print(f"Confidence: {confidence:.2f}")
+        print(f"Reasoning: {reasoning}")
+        if evidence:
+            print("Evidence:")
+            for key, value in evidence.items():
+                print(f"- {key}: {value}")
+        if alternatives:
+            print("Alternatives:")
+            for alt in alternatives:
+                name = alt.get("name", "unknown")
+                reason = alt.get("rejected_reason", "")
+                print(f"- {name}: {reason}")
+
+        while True:
+            print("\nOptions:")
+            print("  [a] Approve and continue")
+            print("  [v] View detailed evidence")
+            print("  [r] Reject and refine prompt")
+            print("  [m] Manually select alternative")
+            print("  [s] Skip this decision")
+            if gate_point in {"baseline", "modifications"}:
+                print("  [e] Edit/modify")
+            choice = input("Choice: ").strip().lower()
+
+            if choice == "v":
+                self._display_evidence_detail(evidence)
+                continue
+
+            if choice == "a":
+                decision = GateDecision(
+                    gate_point=gate_point,
+                    selected_option=selected,
+                    user_action="approved",
+                    reasoning=reasoning,
+                    alternatives=[a.get("name", "") for a in alternatives],
+                    evidence=evidence,
+                    timestamp=datetime.utcnow().isoformat() + "Z",
+                )
+                break
+
+            if choice == "s":
+                decision = GateDecision(
+                    gate_point=gate_point,
+                    selected_option=selected,
+                    user_action="skipped",
+                    reasoning=reasoning,
+                    alternatives=[a.get("name", "") for a in alternatives],
+                    evidence=evidence,
+                    timestamp=datetime.utcnow().isoformat() + "Z",
+                )
+                break
+
+            if choice == "r":
+                try:
+                    feedback = input("Feedback: ").strip()
+                except (EOFError, StopIteration):
+                    feedback = ""
+                decision = GateDecision(
+                    gate_point=gate_point,
+                    selected_option=selected,
+                    user_action="rejected",
+                    reasoning=reasoning,
+                    alternatives=[a.get("name", "") for a in alternatives],
+                    evidence=evidence,
+                    timestamp=datetime.utcnow().isoformat() + "Z",
+                    user_modification={"feedback": feedback},
+                )
+                break
+
+            if choice == "m":
+                manual_selection = self._manual_select(alternatives)
+                decision = GateDecision(
+                    gate_point=gate_point,
+                    selected_option=manual_selection,
+                    user_action="modified",
+                    reasoning=reasoning,
+                    alternatives=[a.get("name", "") for a in alternatives],
+                    evidence=evidence,
+                    timestamp=datetime.utcnow().isoformat() + "Z",
+                    user_modification={"manual_selection": manual_selection},
+                )
+                break
+
+            if choice == "e" and gate_point in {"baseline", "modifications"}:
+                modifications = self._edit_parameters(
+                    current_parameters=current_parameters,
+                    resource_context=resource_context,
+                )
+                decision = GateDecision(
+                    gate_point=gate_point,
+                    selected_option=selected,
+                    user_action="modified",
+                    reasoning=reasoning,
+                    alternatives=[a.get("name", "") for a in alternatives],
+                    evidence=evidence,
+                    timestamp=datetime.utcnow().isoformat() + "Z",
+                    user_modification=modifications,
+                )
+                break
+
+            print("Invalid choice. Please select a, v, r, m, s, or e.")
+
+        self.history.append(decision)
+        return decision
+
+    def save_history(self, output_dir: str) -> None:
+        history_file = os.path.join(output_dir, "gate_history.json")
+        with open(history_file, "w", encoding="utf-8") as handle:
+            json.dump({"gates": [asdict(d) for d in self.history]}, handle, indent=2)
+
+    def _display_evidence_detail(self, evidence: Dict[str, Any]) -> None:
+        print("\n[DETAIL]")
+        for key, value in evidence.items():
+            print(f"{key}: {value}")
+
+    def _manual_select(self, alternatives: List[Dict[str, str]]) -> str:
+        print("\n[MANUAL SELECTION]")
+        for idx, alt in enumerate(alternatives, 1):
+            print(f"{idx}. {alt.get('name', 'unknown')}")
+        while True:
+            choice = input(f"Select 1-{len(alternatives)}: ").strip()
+            try:
+                idx = int(choice) - 1
+            except ValueError:
+                print("Invalid input. Enter a number.")
+                continue
+            if 0 <= idx < len(alternatives):
+                return alternatives[idx].get("name", "")
+            print(f"Invalid choice. Enter 1-{len(alternatives)}")
+
+    def _edit_parameters(
+        self,
+        current_parameters: Optional[Dict[str, Any]] = None,
+        resource_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Dict[str, Any]]:
+        print("\n[EDIT MODE]")
+        modifications: Dict[str, str] = {}
+        originals: Dict[str, Any] = {}
+        while True:
+            param_input = input("Parameter (or 'done'): ").strip()
+            if param_input.lower() == "done":
+                break
+            value_input = input(f"New value for {param_input}: ").strip()
+            modifications[param_input] = value_input
+            if current_parameters and param_input in current_parameters:
+                originals[param_input] = current_parameters[param_input]
+            print(f"Set {param_input} = {value_input}")
+        if modifications:
+            self._validate_modifications(modifications, resource_context=resource_context)
+        payload: Dict[str, Dict[str, Any]] = {"parameters": modifications}
+        if originals:
+            payload["original"] = originals
+        return payload
+
+    def _validate_modifications(
+        self,
+        modifications: Dict[str, str],
+        resource_context: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        from src.services.validators.resource_validator import ResourceValidator
+
+        config = None
+        solver_name = None
+        if resource_context:
+            config = resource_context.get("config")
+            solver_name = resource_context.get("solver_name")
+        warnings = ResourceValidator.check_modifications(
+            modifications,
+            config=config,
+            solver_name=solver_name,
+        )
+        if warnings:
+            print("\n[RESOURCE WARNINGS]")
+            for warning in warnings:
+                print(f"- {warning}")
+            confirm = input("Continue with these modifications? (y/n): ").strip().lower()
+            if confirm != "y":
+                raise ValueError("User canceled due to resource warnings")
 
 
 def run_preconfirm_gate(
@@ -91,9 +319,10 @@ def run_preconfirm_gate(
         }
 
     print("\n" + "=" * 72)
-    print(f"Pre-confirmation Gate: {node_name}")
+    print(f"Pre-confirm Gate: {node_name}")
     print("=" * 72)
     redactor = _redactor()
+    print("Decision: select an option to continue, or cancel.")
     print("Context:")
     for line in summary_lines:
         print(f"- {redactor(line)}")
@@ -108,7 +337,7 @@ def run_preconfirm_gate(
     print("")
 
     choice = input(
-        f"Select option [1-{len(options)}] (Enter for default) or c to cancel: "
+        f"Select option [1-{len(options)}] (Enter for default, c to cancel): "
     ).strip().lower()
     if allow_cancel and choice in {"c", "q", "cancel"}:
         logger.info("Pre-confirm gate canceled for %s.", node_name)
@@ -222,8 +451,17 @@ def _build_gate_history(
     reason: str | None,
     details: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    if action == "cancel":
+        decision_type = "cancel"
+    elif action == "skipped":
+        decision_type = "skip"
+    else:
+        decision_type = "select"
+
     gate_details = {
         "gate_node": node_name,
+        "gate_type": "preconfirm",
+        "decision_type": decision_type,
         "selection": selection,
         "reason": reason,
     }
@@ -348,3 +586,54 @@ def _build_options_metadata(options: list[dict[str, Any]]) -> list[dict[str, Any
             }
         )
     return metadata
+
+
+def build_gate_history_from_workflow_history(
+    workflow_history: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """
+    Build PRD gate_history.json payload from workflow_history gate entries.
+    """
+    gate_entries: list[dict[str, Any]] = []
+    for entry in workflow_history or []:
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("node") != "preconfirm_gate":
+            continue
+        details = entry.get("details", {}) if isinstance(entry.get("details", {}), dict) else {}
+        selection = details.get("selection")
+        selected_value = None
+        if isinstance(selection, dict):
+            selected_value = (
+                selection.get("value")
+                or selection.get("label")
+                or selection.get("case")
+            )
+        elif selection is not None:
+            selected_value = str(selection)
+        action = entry.get("action")
+        if action == "proceed":
+            user_action = "approved"
+        elif action == "cancel":
+            user_action = "cancel"
+        elif action == "skipped":
+            user_action = "skipped"
+        elif action in {"reject", "rejected"}:
+            user_action = "rejected"
+        else:
+            user_action = action or "unknown"
+        gate_record = {
+            "gate_point": details.get("gate_node"),
+            "selected": selected_value,
+            "user_action": user_action,
+            "timestamp": entry.get("timestamp"),
+        }
+        user_modification = (
+            details.get("user_modification")
+            or details.get("modification")
+            or details.get("parameters")
+        )
+        if user_modification:
+            gate_record["user_modification"] = user_modification
+        gate_entries.append(gate_record)
+    return gate_entries

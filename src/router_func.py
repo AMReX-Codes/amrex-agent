@@ -27,7 +27,37 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def route_after_architect(state: GraphState) -> str:
+
+def _should_router_gate(state: GraphState, gate_point: str) -> bool:
+    config = state.get("config")
+    if not config:
+        return False
+    strategy = getattr(config, "router_gate_strategy", "off") or "off"
+    gate_points = set(getattr(config, "router_gate_points", []) or [])
+    if strategy == "off":
+        return False
+    if strategy == "terminal":
+        return gate_point in gate_points if gate_points else True
+    if strategy == "selective":
+        return gate_point in gate_points
+    return False
+
+
+def _maybe_route_with_gate(state: GraphState, gate_point: str, next_node: str) -> str:
+    if next_node == END:
+        return END
+    router_gate = state.get("router_gate", {}) if isinstance(state.get("router_gate", {}), dict) else {}
+    if router_gate.get("status") == "pending" and router_gate.get("gate_point") == gate_point:
+        return "router_gate"
+    if router_gate.get("status") in {"approved", "rejected", "canceled"}:
+        if router_gate.get("gate_point") == gate_point and router_gate.get("resume_node") == next_node:
+            return next_node if router_gate.get("status") == "approved" else END
+    if _should_router_gate(state, gate_point):
+        return "router_gate"
+    return next_node
+
+
+def _route_after_architect_core(state: GraphState) -> str:
     """
     Route after architect node.
 
@@ -46,7 +76,23 @@ def route_after_architect(state: GraphState) -> str:
     return "reviewer"
 
 
-def route_after_input_writer(state: GraphState) -> str:
+def route_after_architect(state: GraphState) -> str:
+    """
+    Route after architect node.
+
+    Phase 4: Always proceed to reviewer for pre-execution validation.
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        Next node name: 'reviewer'
+    """
+    next_node = _route_after_architect_core(state)
+    return _maybe_route_with_gate(state, "architect", next_node)
+
+
+def _route_after_input_writer_core(state: GraphState) -> str:
     """
     Route after input_writer node.
     
@@ -65,7 +111,23 @@ def route_after_input_writer(state: GraphState) -> str:
     return "runner"
 
 
-def route_after_runner(state: GraphState) -> str:
+def route_after_input_writer(state: GraphState) -> str:
+    """
+    Route after input_writer node.
+
+    Always proceed to runner to setup job directory.
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        Next node name: 'runner'
+    """
+    next_node = _route_after_input_writer_core(state)
+    return _maybe_route_with_gate(state, "input_writer", next_node)
+
+
+def _route_after_runner_core(state: GraphState) -> str:
     """
     Route after runner node.
 
@@ -86,10 +148,10 @@ def route_after_runner(state: GraphState) -> str:
     if state.get("compilation_failed"):
         logger.error("[ROUTE] Compilation failed (terminal) → END")
         return END
-    
+
     mode = state.get("mode", "fail")
     error = state.get("error", "")
-    
+
     # Also check mode == "terminal" (explicit terminal state)
     if mode == "terminal":
         logger.error(f"[ROUTE] Terminal mode → END: {error}")
@@ -133,7 +195,28 @@ def route_after_runner(state: GraphState) -> str:
     return "analysis"
 
 
-def route_after_reviewer(state: GraphState) -> str:
+def route_after_runner(state: GraphState) -> str:
+    """
+    Route after runner node.
+
+    Per PRD error handling strategy:
+    - System failures (compilation, permissions) → TERMINAL (END)
+    - Runtime failures (job crashes, physics issues) → RETRYABLE (Analysis)
+
+    System failures cannot be fixed by changing inputs. Runtime failures may be
+    addressable through input modifications discovered during analysis.
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        'analysis' for success or runtime failures, END for system failures
+    """
+    next_node = _route_after_runner_core(state)
+    return _maybe_route_with_gate(state, "runner", next_node)
+
+
+def _route_after_reviewer_core(state: GraphState) -> str:
     """
     Route after Reviewer validation.
     
@@ -145,14 +228,14 @@ def route_after_reviewer(state: GraphState) -> str:
     mode = state.get("mode", "fail")
     retry_count = state.get("retry_count", 0)
     max_retries = state.get("max_retries", 3)
-    
+
     if mode == "terminal":
         logger.warning("[ROUTE] Reviewer → END (Terminal mode)")
         return END
     if mode == "proceed":
         logger.debug("[ROUTE] Reviewer → Input Writer (Approved)")
         return "input_writer"
-    
+
     elif mode == "retry":
         if retry_count < max_retries:
             logger.debug(f"[ROUTE] Reviewer → Architect (Retry {retry_count + 1}/{max_retries})")
@@ -160,13 +243,26 @@ def route_after_reviewer(state: GraphState) -> str:
         else:
             logger.warning(f"[ROUTE] Reviewer → END (Max retries {max_retries} exceeded)")
             return END
-    
+
     else:  # mode == "fail" or unknown
         logger.warning(f"[ROUTE] Reviewer → END (Validation Failed: {mode})")
         return END
 
 
-def route_after_analysis(state: GraphState) -> str:
+def route_after_reviewer(state: GraphState) -> str:
+    """
+    Route after Reviewer validation.
+
+    Graph Assembly: Routing Logic: Conditional routing logic.
+    - proceed → input_writer
+    - retry (with attempts) → architect
+    - fail or max retries → END
+    """
+    next_node = _route_after_reviewer_core(state)
+    return _maybe_route_with_gate(state, "reviewer", next_node)
+
+
+def _route_after_analysis_core(state: GraphState) -> str:
     """
     Route after analysis node.
 
@@ -200,7 +296,25 @@ def route_after_analysis(state: GraphState) -> str:
     return "visualization"
 
 
-def route_after_visualization(state: GraphState) -> str:
+def route_after_analysis(state: GraphState) -> str:
+    """
+    Route after analysis node.
+
+    Phase 4 Decision:
+    - If analysis passed → visualization
+    - If analysis failed → reviewer (for retry loop)
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        Next node name: 'visualization' or 'reviewer'
+    """
+    next_node = _route_after_analysis_core(state)
+    return _maybe_route_with_gate(state, "analysis", next_node)
+
+
+def _route_after_visualization_core(state: GraphState) -> str:
     """
     Route after visualization node.
 
@@ -217,6 +331,31 @@ def route_after_visualization(state: GraphState) -> str:
     return END
 
 
+def route_after_visualization(state: GraphState) -> str:
+    """
+    Route after visualization node.
+
+    Phase 4: Always end workflow after visualization.
+
+    Args:
+        state: Current graph state
+
+    Returns:
+        Next node name: END
+    """
+    next_node = _route_after_visualization_core(state)
+    return _maybe_route_with_gate(state, "visualization", next_node)
+
+
+def route_after_router_gate(state: GraphState) -> str:
+    router_gate = state.get("router_gate", {}) if isinstance(state.get("router_gate", {}), dict) else {}
+    status = router_gate.get("status")
+    resume_node = router_gate.get("resume_node")
+    if status == "approved" and resume_node:
+        return resume_node
+    return END
+
+
 # Export for LangGraph
 __all__ = [
     'route_after_architect',
@@ -224,5 +363,12 @@ __all__ = [
     'route_after_runner',
     'route_after_reviewer',
     'route_after_analysis',
-    'route_after_visualization'
+    'route_after_visualization',
+    'route_after_router_gate',
+    '_route_after_architect_core',
+    '_route_after_input_writer_core',
+    '_route_after_runner_core',
+    '_route_after_reviewer_core',
+    '_route_after_analysis_core',
+    '_route_after_visualization_core',
 ]

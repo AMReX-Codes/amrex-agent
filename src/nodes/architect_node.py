@@ -17,7 +17,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.architect import ArchitectService
-from src.utils.gate import run_preconfirm_gate
+from src.utils.gate import GateManager, run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -334,6 +334,127 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     preconfirm_action = "proceed"
     preconfirm_selection = None
     gate_entry = None
+
+    gate_manager = GateManager(
+        strategy=getattr(config, "gate_strategy", "auto") or "auto",
+        gate_points=getattr(config, "gate_points", []) or [],
+    )
+    decision_gate_entries = []
+    allowed_gate_points = set(getattr(config, "gate_points", []) or [])
+    if (not allowed_gate_points or "solver" in allowed_gate_points) and gate_manager.should_gate("solver"):
+        decision = gate_manager.present_gate(
+            gate_point="solver",
+            selected=plan_result.selected_solver,
+            confidence=plan_result.baseline_confidence or 0.0,
+            reasoning=plan_result.reasoning,
+            evidence={"selected_case": plan_result.selected_case},
+            alternatives=[],
+        )
+        if decision.user_action == "modified":
+            manual_selection = (decision.user_modification or {}).get("manual_selection")
+            if manual_selection and manual_selection != plan_result.selected_solver:
+                gate_history_entry = {
+                    "node": "preconfirm_gate",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "action": "retry",
+                    "iteration": new_iteration,
+                    "details": {
+                        "gate_node": "solver",
+                        "selection": {"value": manual_selection},
+                        "reason": "solver_override",
+                    },
+                }
+                plan_result.selected_solver = manual_selection
+                return {
+                    "mode": "retry",
+                    "iteration": new_iteration,
+                    "retry_count": new_retry_count,
+                    "selected_solver": manual_selection,
+                    "error": "Solver override at gate; replan required.",
+                    "workflow_history": state.get("workflow_history", []) + [gate_history_entry],
+                    "loop_count": new_iteration,
+                }
+        decision_gate_entries.append(
+            {
+                "node": "preconfirm_gate",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "action": decision.user_action,
+                "iteration": new_iteration,
+                "details": {
+                    "gate_node": "solver",
+                    "selection": {"value": decision.selected_option},
+                    "reason": "decision_gate",
+                },
+            }
+        )
+        if decision.user_modification:
+            decision_gate_entries[-1]["details"]["user_modification"] = decision.user_modification
+
+    if (not allowed_gate_points or "baseline" in allowed_gate_points) and gate_manager.should_gate("baseline"):
+        decision = gate_manager.present_gate(
+            gate_point="baseline",
+            selected=plan_result.selected_case,
+            confidence=plan_result.baseline_confidence or 0.0,
+            reasoning=plan_result.reasoning,
+            evidence={"candidate_count": len(plan_result.case_candidates or [])},
+            alternatives=[],
+        )
+        if decision.user_action == "modified":
+            manual_selection = (decision.user_modification or {}).get("manual_selection")
+            if manual_selection:
+                plan_result.selected_case = manual_selection
+        decision_gate_entries.append(
+            {
+                "node": "preconfirm_gate",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "action": decision.user_action,
+                "iteration": new_iteration,
+                "details": {
+                    "gate_node": "baseline",
+                    "selection": {"value": decision.selected_option},
+                    "reason": "decision_gate",
+                },
+            }
+        )
+        if decision.user_modification:
+            decision_gate_entries[-1]["details"]["user_modification"] = decision.user_modification
+
+    if (not allowed_gate_points or "modifications" in allowed_gate_points) and gate_manager.should_gate("modifications"):
+        decision = gate_manager.present_gate(
+            gate_point="modifications",
+            selected=plan_result.selected_case,
+            confidence=plan_result.baseline_confidence or 0.0,
+            reasoning=plan_result.reasoning,
+            evidence={"modifications": plan_result.modifications},
+            alternatives=[],
+            current_parameters=dict(plan_result.modifications),
+            resource_context={
+                "config": config,
+                "solver_name": plan_result.selected_solver,
+            },
+        )
+        if decision.user_action == "modified":
+            modifications = (decision.user_modification or {}).get("parameters")
+            if modifications:
+                mods_dict = dict(plan_result.modifications)
+                mods_dict.update(modifications)
+                plan_result.modifications = list(mods_dict.items())
+        decision_gate_entries.append(
+            {
+                "node": "preconfirm_gate",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "action": decision.user_action,
+                "iteration": new_iteration,
+                "details": {
+                    "gate_node": "modifications",
+                    "selection": {"value": decision.selected_option},
+                    "reason": "decision_gate",
+                },
+            }
+        )
+        if decision.user_modification:
+            decision_gate_entries[-1]["details"]["user_modification"] = decision.user_modification
+
     if getattr(config, "preconfirm_gate", False) is True:
         auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
         confidence = plan_result.baseline_confidence
@@ -376,6 +497,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
 
     # Get current history or initialize empty list
     workflow_history = state.get("workflow_history", [])
+    if decision_gate_entries:
+        workflow_history = workflow_history + decision_gate_entries
 
     # Extract key metrics from plan (now SimulationPlan object)
     current_mods = plan_result.modifications

@@ -43,6 +43,64 @@ class ResourceValidator:
         """Initialize validator with app config."""
         self.config = config
 
+    @staticmethod
+    def check_modifications(
+        modifications: dict[str, str],
+        config: AMReXAgentConfig | None = None,
+        solver_name: str | None = None,
+    ) -> list[str]:
+        """
+        Return human-readable warnings for user-edited parameters.
+        """
+        if not modifications:
+            return []
+
+        warnings: list[str] = []
+        n_cell = modifications.get("amr.n_cell")
+        est_memory_gb = ResourceValidator._estimate_memory_gb(n_cell)
+        if est_memory_gb is not None:
+            warnings.append(f"Estimated memory for amr.n_cell ~{est_memory_gb:.1f} GB.")
+
+        geom_type = str(modifications.get("eb2.geom_type", "")).lower()
+        if geom_type in {"stl", "ply"}:
+            geom_file = modifications.get("eb2.geom_file")
+            if geom_file:
+                geom_path = Path(str(geom_file))
+                if not geom_path.exists() and not (Path.cwd() / geom_path).exists():
+                    warnings.append(f"Geometry file '{geom_file}' not found.")
+
+        if config and solver_name:
+            validator = ResourceValidator(config)
+            violations: list[RuleViolation] = []
+            validator._check_chemistry_files(modifications, violations, solver_name)
+            for violation in violations:
+                warnings.append(f"{violation.severity.upper()}: {violation.message}")
+
+        return warnings
+
+    @staticmethod
+    def _estimate_memory_gb(n_cell: Any) -> float | None:
+        if not n_cell:
+            return None
+        try:
+            if isinstance(n_cell, str):
+                dims = [int(x) for x in n_cell.split()]
+            elif isinstance(n_cell, list):
+                dims = [int(x) for x in n_cell]
+            else:
+                return None
+
+            total_cells = 1
+            for d in dims:
+                total_cells *= d
+
+            n_vars = 50
+            bytes_per_cell = n_vars * 8 * 1.5
+            est_memory_gb = (total_cells * bytes_per_cell) / (1024**3)
+            return est_memory_gb
+        except (ValueError, TypeError, IndexError):
+            return None
+
     def validate(self, plan: dict[str, Any]) -> list[RuleViolation]:
         """
         Validate external resource dependencies.

@@ -15,7 +15,7 @@ from typing import Any
 
 from src.models import GraphState
 from src.services.analysis import AnalysisService
-from src.utils.gate import run_preconfirm_gate
+from src.utils.gate import GateManager, run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +91,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
 
     config = state["config"]
     iteration = state.get("iteration", 0)
+    workflow_history = state.get("workflow_history", [])
 
     run_mode = getattr(config, "run_mode", None)
     if run_mode is None or run_mode == "full":
@@ -101,7 +102,6 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
 
     if run_mode in {"dry", "stage", "submit"}:
         logger.info("[INFO] Run mode %s - skipping analysis", run_mode)
-        workflow_history = state.get("workflow_history", [])
         history_entry = {
             "node": "analysis",
             "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -124,6 +124,35 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
                 "message": "Dry-run: analysis skipped"
             }
         }
+
+    gate_manager = GateManager(
+        strategy=getattr(config, "gate_strategy", "auto") or "auto",
+        gate_points=getattr(config, "gate_points", []) or [],
+    )
+    allowed_gate_points = set(getattr(config, "gate_points", []) or [])
+    if (not allowed_gate_points or "analysis" in allowed_gate_points) and gate_manager.should_gate("analysis"):
+        decision = gate_manager.present_gate(
+            gate_point="analysis",
+            selected=state.get("run_directory") or "analysis",
+            confidence=1.0,
+            reasoning="Analyze simulation output for errors and metrics.",
+            evidence={"job_status": state.get("job_status", "unknown")},
+            alternatives=[],
+        )
+        decision_entry = {
+            "node": "preconfirm_gate",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "action": decision.user_action,
+            "iteration": iteration,
+            "details": {
+                "gate_node": "analysis",
+                "selection": {"value": decision.selected_option},
+                "reason": "decision_gate",
+            },
+        }
+        if decision.user_modification:
+            decision_entry["details"]["user_modification"] = decision.user_modification
+        workflow_history = workflow_history + [decision_entry]
 
     gate_entry = None
     run_dir = get_run_directory(state)
@@ -152,7 +181,7 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
                 "status": "skipped",
                 "message": "User canceled analysis at pre-confirm gate.",
             },
-            "workflow_history": state.get("workflow_history", []) + ([gate_entry] if gate_entry else []),
+            "workflow_history": workflow_history + ([gate_entry] if gate_entry else []),
         }
 
     # Get run_directory from canonical path (workflow_history) with fallback to state
@@ -165,7 +194,6 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
         # WORKFLOW HISTORY ENTRY (SKIPPED)
         # ========================================
 
-        workflow_history = state.get("workflow_history", [])
         history_entry = {
             "node": "analysis",
             "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -236,7 +264,6 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
     # ========================================
     # Store complete analysis results in workflow_history.details
 
-    workflow_history = state.get("workflow_history", [])
     if gate_entry:
         workflow_history = workflow_history + [gate_entry]
     status = report.get('status', 'unknown')

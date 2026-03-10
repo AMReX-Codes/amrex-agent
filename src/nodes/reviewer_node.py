@@ -14,7 +14,7 @@ from src.models.state_transitions import (
     skip_review,
 )
 from src.services.reviewer import ReviewerOrchestrator
-from src.utils.gate import run_preconfirm_gate
+from src.utils.gate import GateManager, run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +124,41 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     selected_case = plan_details.get("selected_case", "unknown")
     modifications = plan_details.get("modifications", []) or []
 
+    gate_manager = GateManager(
+        strategy=getattr(config, "gate_strategy", "auto") or "auto",
+        gate_points=getattr(config, "gate_points", []) or [],
+    )
+    allowed_gate_points = set(getattr(config, "gate_points", []) or [])
+    if (not allowed_gate_points or "modifications" in allowed_gate_points) and gate_manager.should_gate("modifications"):
+        current_parameters = dict(modifications) if isinstance(modifications, list) else dict(modifications or {})
+        decision = gate_manager.present_gate(
+            gate_point="modifications",
+            selected=selected_case,
+            confidence=plan_details.get("confidence_score", 0.0) or 0.0,
+            reasoning=plan_details.get("reasoning", ""),
+            evidence={"modifications": modifications},
+            alternatives=[],
+            current_parameters=current_parameters,
+            resource_context={
+                "config": config,
+                "solver_name": plan_details.get("selected_solver"),
+            },
+        )
+        gate_entry = {
+            "node": "preconfirm_gate",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "action": decision.user_action,
+            "iteration": iteration,
+            "details": {
+                "gate_node": "modifications",
+                "selection": {"value": decision.selected_option},
+                "reason": "decision_gate",
+            },
+        }
+        if decision.user_modification:
+            gate_entry["details"]["user_modification"] = decision.user_modification
+        workflow_history = workflow_history + [gate_entry]
+
     auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
     gate_result = run_preconfirm_gate(
         node_name="reviewer",
@@ -144,11 +179,10 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         return {
             "mode": "terminal",
             "error": "User canceled at pre-confirm gate.",
-            "workflow_history": state.get("workflow_history", []) + ([gate_entry] if gate_entry else []),
+            "workflow_history": workflow_history + ([gate_entry] if gate_entry else []),
         }
     retry_count = state.get("retry_count", 0)
     max_retries = state.get("max_retries", 3)
-    workflow_history = state.get("workflow_history", [])
     if gate_entry:
         workflow_history = workflow_history + [gate_entry]
 

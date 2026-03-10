@@ -12,7 +12,7 @@ from typing import Any
 from src.models import GraphState
 from src.services.run_superfacility import SuperfacilityRunner
 from src.services.run_superfacility_tools import stage_out_outputs
-from src.utils.gate import run_preconfirm_gate
+from src.utils.gate import GateManager, run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,35 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
     compile_gate_entry = None
     run_gate_entry = None
+    execution_gate_entry = None
     try:
+        gate_manager = GateManager(
+            strategy=getattr(config, "gate_strategy", "auto") or "auto",
+            gate_points=getattr(config, "gate_points", []) or [],
+        )
+        allowed_gate_points = set(getattr(config, "gate_points", []) or [])
+        if (not allowed_gate_points or "execution" in allowed_gate_points) and gate_manager.should_gate("execution"):
+            decision = gate_manager.present_gate(
+                gate_point="execution",
+                selected=str(run_directory),
+                confidence=0.0,
+                reasoning="Proceed with execution step.",
+                evidence={"run_directory": run_directory, "inputs_file": inputs_file_path},
+                alternatives=[],
+            )
+            execution_gate_entry = {
+                "node": "preconfirm_gate",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "action": decision.user_action,
+                "iteration": state.get("iteration", 0),
+                "details": {
+                    "gate_node": "execution",
+                    "selection": {"value": decision.selected_option},
+                    "reason": "decision_gate",
+                },
+            }
+            if decision.user_modification:
+                execution_gate_entry["details"]["user_modification"] = decision.user_modification
         run_mode = getattr(config, "run_mode", None)
         if run_mode is None or run_mode == "full":
             if getattr(config, "dry_run", False):
@@ -146,7 +174,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 "mode": "terminal",
                 "error": "User canceled at pre-confirm gate.",
                 "job_status": "skipped",
-                "workflow_history": state.get("workflow_history", []) + ([compile_gate_entry] if compile_gate_entry else []),
+                "workflow_history": state.get("workflow_history", []) + ([execution_gate_entry] if execution_gate_entry else []) + ([compile_gate_entry] if compile_gate_entry else []),
             }
 
         run_after_compile = True
@@ -206,6 +234,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 },
             }
             workflow_history = state.get("workflow_history", [])
+            if execution_gate_entry:
+                workflow_history = workflow_history + [execution_gate_entry]
             if compile_gate_entry:
                 workflow_history = workflow_history + [compile_gate_entry]
             return {
@@ -235,6 +265,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             run_gate_entry["iteration"] = state.get("iteration", 0)
         if run_gate["action"] == "cancel":
             workflow_history = state.get("workflow_history", [])
+            if execution_gate_entry:
+                workflow_history = workflow_history + [execution_gate_entry]
             if compile_gate_entry:
                 workflow_history = workflow_history + [compile_gate_entry]
             if run_gate_entry:
@@ -377,6 +409,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         exit_code = submit_result.get("exit_code", 0)
 
         workflow_history = state.get("workflow_history", [])
+        if execution_gate_entry:
+            workflow_history = workflow_history + [execution_gate_entry]
         if compile_gate_entry:
             workflow_history = workflow_history + [compile_gate_entry]
         if run_gate_entry:
@@ -410,6 +444,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         }
 
         workflow_history = state.get("workflow_history", [])
+        if execution_gate_entry:
+            workflow_history = workflow_history + [execution_gate_entry]
         if compile_gate_entry:
             workflow_history = workflow_history + [compile_gate_entry]
         if run_gate_entry:
@@ -441,6 +477,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         }
 
         workflow_history = state.get("workflow_history", [])
+        if execution_gate_entry:
+            workflow_history = workflow_history + [execution_gate_entry]
         if compile_gate_entry:
             workflow_history = workflow_history + [compile_gate_entry]
         if run_gate_entry:

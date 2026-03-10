@@ -39,6 +39,16 @@ class TestResourceValidator:
         
         assert len(violations) == 0
 
+    def test_check_modifications_reports_memory_estimate(self):
+        warnings = ResourceValidator.check_modifications({"amr.n_cell": "256 512 32"})
+        assert any("Estimated memory" in warning for warning in warnings)
+
+    def test_check_modifications_warns_missing_geometry_file(self):
+        warnings = ResourceValidator.check_modifications(
+            {"eb2.geom_type": "stl", "eb2.geom_file": "missing.stl"}
+        )
+        assert any("Geometry file" in warning for warning in warnings)
+
     def test_chemistry_file_not_found(self, validator):
         """
         GIVEN: Plan references non-existent chemistry mechanism

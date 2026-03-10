@@ -94,6 +94,11 @@ class GraphState(TypedDict, total=False):
     # Phase 2: Workflow History (rich event log for debugging/demo)
     workflow_history: List[Dict[str, Any]]  # [{iteration, node, action, timestamp, metadata}, ...]
 
+    # Router-level gate payloads (interactivity gates)
+    router_gate: Optional[Dict[str, Any]]
+    gate_proposal: Optional[Dict[str, Any]]
+    gate_resolution: Optional[Dict[str, Any]]
+
     # ========================================
     # History & Metadata
     # ========================================

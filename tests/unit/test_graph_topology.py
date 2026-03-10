@@ -36,7 +36,7 @@ class TestGraphTopology:
         """
         GIVEN: Graph created
         WHEN: Inspecting registered nodes
-        THEN: All 6 core nodes present
+        THEN: All core nodes present
         """
         # Access internal node registry
         nodes = workflow_graph.nodes.keys()
@@ -47,7 +47,8 @@ class TestGraphTopology:
             "input_writer",
             "runner",
             "analysis",
-            "visualization"
+            "visualization",
+            "router_gate",
         }
         
         assert expected_nodes.issubset(nodes), \
@@ -111,7 +112,8 @@ class TestGraphTopology:
             "input_writer",
             "runner",
             "analysis",
-            "visualization"
+            "visualization",
+            "router_gate",
         }
         
         assert expected_from_routers.issubset(nodes), \
