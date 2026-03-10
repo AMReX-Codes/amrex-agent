@@ -9,8 +9,48 @@ import re
 import sys
 from datetime import datetime
 from typing import Any, Callable
+from uuid import uuid4
+
+from src.models.gate_approval import GateApprovalRecord
 
 logger = logging.getLogger(__name__)
+
+
+def _preconfirm_action_to_decision(action: str) -> str:
+    if action == "proceed":
+        return "approved"
+    if action == "cancel":
+        return "rejected"
+    return "skipped"
+
+
+def _append_preconfirm_gate_approval(
+    state: dict[str, Any] | None,
+    *,
+    node_name: str,
+    action: str,
+    reason: str | None,
+    selection: dict[str, Any] | None,
+    details: dict[str, Any],
+) -> None:
+    if state is None:
+        return
+    approvals = state.setdefault("gate_approvals", [])
+    if not isinstance(approvals, list):
+        return
+    record = GateApprovalRecord(
+        gate_id=f"preconfirm-{uuid4().hex}",
+        gate_type="preconfirm",
+        decision=_preconfirm_action_to_decision(action),
+        interface_path="cli",
+        details={
+            "gate_node": node_name,
+            "reason": reason,
+            "selection": selection,
+            **details,
+        },
+    )
+    approvals.append(record.model_dump())
 
 
 def run_preconfirm_gate(
@@ -20,6 +60,7 @@ def run_preconfirm_gate(
     enabled: bool,
     allow_cancel: bool = True,
     auto_approve: bool = False,
+    state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Run a terminal pre-confirmation gate.
@@ -37,6 +78,19 @@ def run_preconfirm_gate(
     options_metadata = _build_options_metadata(options)
     if not sys.stdin.isatty():
         logger.info("Pre-confirm gate skipped (stdin is not a TTY).")
+        details = {
+            "options_count": len(options),
+            "allow_cancel": allow_cancel,
+            "options": options_metadata,
+        }
+        _append_preconfirm_gate_approval(
+            state,
+            node_name=node_name,
+            action="skipped",
+            reason="non_tty",
+            selection=None,
+            details=details,
+        )
         return {
             "action": "skipped",
             "selection": None,
@@ -45,16 +99,24 @@ def run_preconfirm_gate(
                 "skipped",
                 None,
                 "non_tty",
-                details={
-                    "options_count": len(options),
-                    "allow_cancel": allow_cancel,
-                    "options": options_metadata,
-                },
+                details=details,
             ),
         }
 
     if not options:
         logger.info("Pre-confirm gate skipped (no options provided).")
+        details = {
+            "options_count": 0,
+            "allow_cancel": allow_cancel,
+        }
+        _append_preconfirm_gate_approval(
+            state,
+            node_name=node_name,
+            action="skipped",
+            reason="no_options",
+            selection=None,
+            details=details,
+        )
         return {
             "action": "skipped",
             "selection": None,
@@ -63,16 +125,27 @@ def run_preconfirm_gate(
                 "skipped",
                 None,
                 "no_options",
-                details={
-                    "options_count": 0,
-                    "allow_cancel": allow_cancel,
-                },
+                details=details,
             ),
         }
 
     if auto_approve:
         selection = options[0]
         logger.info("Pre-confirm gate auto-approved for %s.", node_name)
+        details = {
+            "options_count": len(options),
+            "allow_cancel": allow_cancel,
+            "options": options_metadata,
+            "selected_index": 1,
+        }
+        _append_preconfirm_gate_approval(
+            state,
+            node_name=node_name,
+            action="proceed",
+            reason="auto_approved",
+            selection=selection,
+            details=details,
+        )
         return {
             "action": "proceed",
             "selection": selection,
@@ -81,12 +154,7 @@ def run_preconfirm_gate(
                 "proceed",
                 selection,
                 "auto_approved",
-                details={
-                    "options_count": len(options),
-                    "allow_cancel": allow_cancel,
-                    "options": options_metadata,
-                    "selected_index": 1,
-                },
+                details=details,
             ),
         }
 
@@ -112,6 +180,20 @@ def run_preconfirm_gate(
     ).strip().lower()
     if allow_cancel and choice in {"c", "q", "cancel"}:
         logger.info("Pre-confirm gate canceled for %s.", node_name)
+        details = {
+            "options_count": len(options),
+            "allow_cancel": allow_cancel,
+            "options": options_metadata,
+            "choice": choice,
+        }
+        _append_preconfirm_gate_approval(
+            state,
+            node_name=node_name,
+            action="cancel",
+            reason=None,
+            selection=None,
+            details=details,
+        )
         return {
             "action": "cancel",
             "selection": None,
@@ -120,18 +202,28 @@ def run_preconfirm_gate(
                 "cancel",
                 None,
                 None,
-                details={
-                    "options_count": len(options),
-                    "allow_cancel": allow_cancel,
-                    "options": options_metadata,
-                    "choice": choice,
-                },
+                details=details,
             ),
         }
 
     if not choice:
         selection = options[0]
         logger.info("Pre-confirm gate defaulted for %s.", node_name)
+        details = {
+            "options_count": len(options),
+            "allow_cancel": allow_cancel,
+            "options": options_metadata,
+            "selected_index": 1,
+            "choice": "",
+        }
+        _append_preconfirm_gate_approval(
+            state,
+            node_name=node_name,
+            action="proceed",
+            reason="default",
+            selection=selection,
+            details=details,
+        )
         return {
             "action": "proceed",
             "selection": selection,
@@ -140,13 +232,7 @@ def run_preconfirm_gate(
                 "proceed",
                 selection,
                 "default",
-                details={
-                    "options_count": len(options),
-                    "allow_cancel": allow_cancel,
-                    "options": options_metadata,
-                    "selected_index": 1,
-                    "choice": "",
-                },
+                details=details,
             ),
         }
 
@@ -155,6 +241,21 @@ def run_preconfirm_gate(
     except ValueError:
         selection = options[0]
         logger.info("Pre-confirm gate invalid choice for %s.", node_name)
+        details = {
+            "options_count": len(options),
+            "allow_cancel": allow_cancel,
+            "options": options_metadata,
+            "selected_index": 1,
+            "choice": choice,
+        }
+        _append_preconfirm_gate_approval(
+            state,
+            node_name=node_name,
+            action="proceed",
+            reason="invalid_choice",
+            selection=selection,
+            details=details,
+        )
         return {
             "action": "proceed",
             "selection": selection,
@@ -163,19 +264,28 @@ def run_preconfirm_gate(
                 "proceed",
                 selection,
                 "invalid_choice",
-                details={
-                    "options_count": len(options),
-                    "allow_cancel": allow_cancel,
-                    "options": options_metadata,
-                    "selected_index": 1,
-                    "choice": choice,
-                },
+                details=details,
             ),
         }
 
     if 1 <= selected_idx <= len(options):
         selection = options[selected_idx - 1]
         logger.info("Pre-confirm gate selection %s for %s.", selected_idx, node_name)
+        details = {
+            "options_count": len(options),
+            "allow_cancel": allow_cancel,
+            "options": options_metadata,
+            "selected_index": selected_idx,
+            "choice": choice,
+        }
+        _append_preconfirm_gate_approval(
+            state,
+            node_name=node_name,
+            action="proceed",
+            reason=None,
+            selection=selection,
+            details=details,
+        )
         return {
             "action": "proceed",
             "selection": selection,
@@ -184,18 +294,27 @@ def run_preconfirm_gate(
                 "proceed",
                 selection,
                 None,
-                details={
-                    "options_count": len(options),
-                    "allow_cancel": allow_cancel,
-                    "options": options_metadata,
-                    "selected_index": selected_idx,
-                    "choice": choice,
-                },
+                details=details,
             ),
         }
 
     selection = options[0]
     logger.info("Pre-confirm gate out-of-range choice for %s.", node_name)
+    details = {
+        "options_count": len(options),
+        "allow_cancel": allow_cancel,
+        "options": options_metadata,
+        "selected_index": 1,
+        "choice": choice,
+    }
+    _append_preconfirm_gate_approval(
+        state,
+        node_name=node_name,
+        action="proceed",
+        reason="out_of_range",
+        selection=selection,
+        details=details,
+    )
     return {
         "action": "proceed",
         "selection": selection,
@@ -204,13 +323,7 @@ def run_preconfirm_gate(
             "proceed",
             selection,
             "out_of_range",
-            details={
-                "options_count": len(options),
-                "allow_cancel": allow_cancel,
-                "options": options_metadata,
-                "selected_index": 1,
-                "choice": choice,
-            },
+            details=details,
         ),
     }
 
