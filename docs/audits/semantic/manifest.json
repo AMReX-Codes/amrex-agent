@@ -31,7 +31,7 @@
         "B2.9",
         "B3"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-1",
       "output_file": "docs/audits/semantic/batch_00.md"
     },
@@ -295,7 +295,7 @@
         "UNNUMBERED-135",
         "UNNUMBERED-136"
       ],
-      "status": "pending",
+      "status": "done",
       "assigned_worktree": "wt-4",
       "output_file": "docs/audits/semantic/batch_08.md"
     },
