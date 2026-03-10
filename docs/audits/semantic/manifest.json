@@ -97,9 +97,11 @@
         "F4.1",
         "F4.2"
       ],
-      "status": "pending",
+      "status": "completed",
       "assigned_worktree": "wt-3",
-      "output_file": "docs/audits/semantic/batch_02.md"
+      "output_file": "docs/audits/semantic/batch_02.md",
+      "completed_at_utc": "2026-03-10 14:58:38 UTC",
+      "completed_head": "e2603fa"
     },
     {
       "batch_id": "batch_03",
