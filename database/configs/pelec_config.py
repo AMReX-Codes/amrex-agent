@@ -181,7 +181,17 @@ class PeleCConfig(BaseAMReXConfig):
     default_exec_repo_path = "Exec/RegTests/PMF"
     default_exec_pattern = "PeleC*ex"
 
-    selection_keywords = ["flame", "combustion", "methane"]
+    selection_keywords = [
+        "flame",
+        "combustion",
+        "methane",
+        "premixed methane",
+        "pmf",
+        "premixed flame",
+        "jet flame",
+        "reacting jet",
+        "fuel injection",
+    ]
     selection_guidance = ["Combustion/flames -> PeleC or PeleLMeX"]
     level0_physics_regimes = [
         {
@@ -199,6 +209,9 @@ class PeleCConfig(BaseAMReXConfig):
         "compressible reacting flow",
         "strong shock handling",
         "detonation and flame propagation",
+        "premixed methane and PMF combustion workflows",
+        "jet flame and reacting jet configurations",
+        "fuel injection and turbulent flame interaction studies",
         "detailed chemical kinetics",
     ]
     level0_lineage = {
