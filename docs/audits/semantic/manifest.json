@@ -97,9 +97,11 @@
         "F4.1",
         "F4.2"
       ],
-      "status": "pending",
+      "status": "completed",
       "assigned_worktree": "wt-3",
-      "output_file": "docs/audits/semantic/batch_02.md"
+      "output_file": "docs/audits/semantic/batch_02.md",
+      "completed_at_utc": "2026-03-10 14:58:38 UTC",
+      "completed_head": "e2603fa"
     },
     {
       "batch_id": "batch_03",
@@ -262,9 +264,11 @@
         "UNNUMBERED-109",
         "UNNUMBERED-110"
       ],
-      "status": "pending",
+      "status": "completed",
       "assigned_worktree": "wt-3",
-      "output_file": "docs/audits/semantic/batch_07.md"
+      "output_file": "docs/audits/semantic/batch_07.md",
+      "completed_at_utc": "2026-03-10 16:49:38 UTC",
+      "completed_head": "e2603fa"
     },
     {
       "batch_id": "batch_08",
@@ -427,9 +431,11 @@
         "UNNUMBERED-237",
         "UNNUMBERED-238"
       ],
-      "status": "pending",
+      "status": "completed",
       "assigned_worktree": "wt-3",
-      "output_file": "docs/audits/semantic/batch_12.md"
+      "output_file": "docs/audits/semantic/batch_12.md",
+      "completed_at_utc": "2026-03-10 16:55:49 UTC",
+      "completed_head": "3250d5c"
     },
     {
       "batch_id": "batch_13",
