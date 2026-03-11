@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import logging
 
 logger = logging.getLogger(__name__)
+DEFAULT_BENCHMARK_ENV_LOCKFILE = Path("utils/environment-frozen.yaml")
 
 def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
     """Decide if runs need remote staging based on target vs detected environment."""
@@ -155,6 +156,18 @@ def _repo_path_from_env(env_var: str, repo_name: str) -> Path:
         env_value = os.getenv(env_var)
     default_path = str(_default_repo_root() / repo_name)
     return Path(env_value or default_path)
+
+
+def resolve_benchmark_lockfile_path(
+    lockfile_path: Path | str | None,
+    repo_root: Path | None = None,
+) -> Path:
+    """Resolve benchmark lockfile path against repository root."""
+    candidate = Path(lockfile_path) if lockfile_path else DEFAULT_BENCHMARK_ENV_LOCKFILE
+    if candidate.is_absolute():
+        return candidate
+    root = repo_root or Path(__file__).resolve().parents[1]
+    return root / candidate
 
 class AMReXAgentConfig(BaseModel):
     """Central configuration for AMReXAgent.
@@ -574,6 +587,28 @@ class AMReXAgentConfig(BaseModel):
                     "submit (submit job only), full (stage + submit)."
     )
 
+    benchmark_isolation_mode: Literal["container", "host"] = Field(
+        default="container",
+        description=(
+            "Benchmark execution isolation mode. "
+            "'container' is the reproducible default and pins dependencies via lockfile."
+        ),
+    )
+    benchmark_environment_lockfile: Path = Field(
+        default=DEFAULT_BENCHMARK_ENV_LOCKFILE,
+        description=(
+            "Dependency lockfile for reproducible benchmark runs. "
+            "Relative paths resolve from repository root."
+        ),
+    )
+    benchmark_require_lockfile: bool = Field(
+        default=True,
+        description=(
+            "Require benchmark lockfile to exist during config validation. "
+            "When true, missing lockfile fails fast for benchmark reproducibility."
+        ),
+    )
+
     # === Phase 4: Container and Analysis Configuration ===
     container_mode: bool = Field(
         default_factory=lambda: bool(os.getenv('PODMAN_HPC') or os.getenv('SHIFTER')),
@@ -776,6 +811,19 @@ class AMReXAgentConfig(BaseModel):
             detected_env = detect_environment()
         return should_stage_run(getattr(self, "environment", None), detected_env)
 
+    def get_benchmark_environment_contract(self) -> Dict[str, Any]:
+        """Return reproducibility contract metadata for benchmark runs."""
+        lockfile_path = resolve_benchmark_lockfile_path(
+            self.benchmark_environment_lockfile,
+            self.amrex_agent_root,
+        )
+        return {
+            "isolation_mode": self.benchmark_isolation_mode,
+            "lockfile_path": str(lockfile_path),
+            "lockfile_exists": lockfile_path.exists(),
+            "reproducible_by_default": self.benchmark_isolation_mode == "container",
+        }
+
     @property
     def amrex_agent_root(self) -> Path:
         """Root directory of amrex_agent (where src/ is).
@@ -826,6 +874,13 @@ class AMReXAgentConfig(BaseModel):
                 self.dry_run = False
         elif self.dry_run:
             self.run_mode = "dry"
+
+        benchmark_contract = self.get_benchmark_environment_contract()
+        if self.benchmark_require_lockfile and not benchmark_contract["lockfile_exists"]:
+            raise ValueError(
+                "benchmark_environment_lockfile_missing: "
+                f"{benchmark_contract['lockfile_path']}"
+            )
 
         self.repositories = {
             'PeleC': self.pelec_repo_path,
