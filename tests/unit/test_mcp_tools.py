@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from src import tool_registry
+
 
 @pytest.fixture
 def mcp_server_module(monkeypatch, tmp_path_factory):
@@ -528,3 +530,59 @@ def test_list_sweeps_empty_session(tmp_path, mcp_server_module, monkeypatch):
 
     assert "error" not in result
     assert result["sweep_ids"] == []
+
+
+def test_dispatch_tool_rejects_invalid_context_before_handler(monkeypatch):
+    called = False
+
+    def _handler(context):
+        nonlocal called
+        called = True
+        return {"ok": True, "context": context}
+
+    monkeypatch.setattr(tool_registry, "_tool_handlers", lambda: {"demo_tool": _handler})
+    monkeypatch.setattr(
+        tool_registry,
+        "get_tool_specs",
+        lambda: [
+            {
+                "name": "demo_tool",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"required_value": {"type": "string"}},
+                    "required": ["required_value"],
+                },
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError, match="Schema validation failed for tool 'demo_tool'"):
+        tool_registry.dispatch_tool("demo_tool", {})
+
+    assert called is False
+
+
+def test_dispatch_tool_allows_valid_context(monkeypatch):
+    def _handler(context):
+        return {"ok": True, "context": context}
+
+    monkeypatch.setattr(tool_registry, "_tool_handlers", lambda: {"demo_tool": _handler})
+    monkeypatch.setattr(
+        tool_registry,
+        "get_tool_specs",
+        lambda: [
+            {
+                "name": "demo_tool",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"required_value": {"type": "string"}},
+                    "required": ["required_value"],
+                },
+            }
+        ],
+    )
+
+    result = tool_registry.dispatch_tool("demo_tool", {"required_value": "present"})
+
+    assert result["ok"] is True
+    assert result["context"]["required_value"] == "present"
