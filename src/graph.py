@@ -761,13 +761,11 @@ def _paper_validator_enabled(state: dict[str, Any]) -> bool:
 
 
 def _route_after_complexity_evidence(state: dict) -> str:
-    if not state.get("enforce_radon_complexity_evidence", False):
-        return _route_after_phase1_traceability(state)
-
-    evidence = state.get("radon_complexity_evidence")
-    if isinstance(evidence, dict) and evidence.get("radon_available", False):
-        return _route_after_phase1_traceability(state)
-    return "complexity_evidence_handler"
+    if state.get("enforce_radon_complexity_evidence", False):
+        evidence = state.get("radon_complexity_evidence")
+        if not (isinstance(evidence, dict) and evidence.get("radon_available", False)):
+            return "complexity_evidence_handler"
+    return _route_after_phase1_traceability(state)
 
 
 def _has_phase1_feature_trace(state: dict) -> bool:
@@ -797,11 +795,9 @@ def _has_phase1_feature_trace(state: dict) -> bool:
 
 
 def _route_after_phase1_traceability(state: dict) -> str:
-    if not state.get("enforce_phase1_feature_trace", False):
-        return _route_after_required_behavior_item(state)
-    if _has_phase1_feature_trace(state):
-        return _route_after_required_behavior_item(state)
-    return "phase1_traceability_handler"
+    if state.get("enforce_phase1_feature_trace", False) and not _has_phase1_feature_trace(state):
+        return "phase1_traceability_handler"
+    return _route_after_required_behavior_item(state)
 
 
 def _has_required_behavior_item(state: dict) -> bool:
@@ -897,19 +893,15 @@ def _has_benchmark_cache_hit_rate(state: dict[str, Any]) -> bool:
 
 
 def _route_after_required_behavior_item(state: dict) -> str:
-    if not state.get("enforce_required_behavior_item", False):
-        return _route_after_benchmark_cache_hit_rate(state)
-    if _has_required_behavior_item(state):
-        return _route_after_benchmark_cache_hit_rate(state)
-    return "required_behavior_handler"
+    if state.get("enforce_required_behavior_item", False) and not _has_required_behavior_item(state):
+        return "required_behavior_handler"
+    return _route_after_benchmark_cache_hit_rate(state)
 
 
 def _route_after_benchmark_cache_hit_rate(state: dict) -> str:
-    if not state.get("enforce_benchmark_cache_hit_rate", False):
-        return _route_after_claims_results_artifacts(state)
-    if _has_benchmark_cache_hit_rate(state):
-        return _route_after_claims_results_artifacts(state)
-    return "benchmark_cache_hit_rate_handler"
+    if state.get("enforce_benchmark_cache_hit_rate", False) and not _has_benchmark_cache_hit_rate(state):
+        return "benchmark_cache_hit_rate_handler"
+    return _route_after_claims_results_artifacts(state)
 
 
 def _is_results_artifact_path(path: str) -> bool:
@@ -946,11 +938,9 @@ def _has_claims_results_artifacts(state: dict) -> bool:
 
 
 def _route_after_claims_results_artifacts(state: dict) -> str:
-    if not state.get("enforce_claims_results_artifacts", False):
-        return _route_after_cross_reference_feature_ids(state)
-    if _has_claims_results_artifacts(state):
-        return _route_after_cross_reference_feature_ids(state)
-    return "claims_results_artifacts_handler"
+    if state.get("enforce_claims_results_artifacts", False) and not _has_claims_results_artifacts(state):
+        return "claims_results_artifacts_handler"
+    return _route_after_cross_reference_feature_ids(state)
 
 
 def _has_cross_reference_feature_ids(state: dict) -> bool:
@@ -980,31 +970,25 @@ def _has_cross_reference_feature_ids(state: dict) -> bool:
 
 
 def _route_after_cross_reference_feature_ids(state: dict) -> str:
-    if not state.get("enforce_cross_reference_feature_ids", False):
-        return _route_after_postgresql_migration_evidence(state)
-    if _has_cross_reference_feature_ids(state):
-        return _route_after_postgresql_migration_evidence(state)
-    return "cross_reference_feature_ids_handler"
+    if state.get("enforce_cross_reference_feature_ids", False) and not _has_cross_reference_feature_ids(state):
+        return "cross_reference_feature_ids_handler"
+    return _route_after_postgresql_migration_evidence(state)
 
 
 def _route_after_postgresql_migration_evidence(state: dict) -> str:
-    if not state.get("enforce_postgresql_migration_evidence", False):
-        return _route_after_post_incident_risk_matrix_feedback(state)
-
-    evidence = collect_postgresql_migration_evidence(state)
-    if has_postgresql_migration_index_growth_proof(evidence):
-        return _route_after_post_incident_risk_matrix_feedback(state)
-    return "postgresql_migration_handler"
+    if state.get("enforce_postgresql_migration_evidence", False):
+        evidence = collect_postgresql_migration_evidence(state)
+        if not has_postgresql_migration_index_growth_proof(evidence):
+            return "postgresql_migration_handler"
+    return _route_after_post_incident_risk_matrix_feedback(state)
 
 
 def _route_after_post_incident_risk_matrix_feedback(state: dict) -> str:
-    if not state.get("enforce_post_incident_risk_matrix_feedback", False):
-        return _route_after_feature_test_coverage(state)
-
-    feedback = collect_post_incident_risk_matrix_feedback(state)
-    if feedback.get("feedback_complete", False):
-        return _route_after_feature_test_coverage(state)
-    return "post_incident_risk_matrix_feedback_handler"
+    if state.get("enforce_post_incident_risk_matrix_feedback", False):
+        feedback = collect_post_incident_risk_matrix_feedback(state)
+        if not feedback.get("feedback_complete", False):
+            return "post_incident_risk_matrix_feedback_handler"
+    return _route_after_feature_test_coverage(state)
 
 
 def _normalize_test_paths(test_paths: Any, required_prefix: str) -> bool:
@@ -1044,11 +1028,9 @@ def _has_unit_and_integration_feature_coverage(state: dict) -> bool:
 
 
 def _route_after_feature_test_coverage(state: dict) -> str:
-    if not state.get("enforce_feature_test_coverage", False):
-        return "end"
-    if _has_unit_and_integration_feature_coverage(state):
-        return "end"
-    return "feature_test_coverage_handler"
+    if state.get("enforce_feature_test_coverage", False) and not _has_unit_and_integration_feature_coverage(state):
+        return "feature_test_coverage_handler"
+    return "end"
 
 
 def _get_z_score(confidence_level: float) -> float:
