@@ -21,6 +21,27 @@ class RuleViolation:
     parameter: str | None = None
     suggested_fix: str | None = None
     auto_correctable: bool = False
+    tier: str = ""
+    category: str = ""
+
+    def __post_init__(self) -> None:
+        """Populate canonical tier/category fields when omitted."""
+        if not self.tier:
+            self.tier = self._infer_tier(self.severity)
+        if not self.category:
+            self.category = self.rule_name
+
+    @staticmethod
+    def _infer_tier(severity: str) -> str:
+        """Map severity to deterministic validation tier."""
+        normalized = severity.lower()
+        if normalized in {"critical", "error"}:
+            return "tier1"
+        if normalized == "warning":
+            return "tier2"
+        if normalized == "info":
+            return "tier3"
+        return "tier4"
 
 
 class ValidationRule(ABC):
