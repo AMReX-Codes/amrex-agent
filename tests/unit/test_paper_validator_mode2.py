@@ -1,4 +1,4 @@
-"""Unit tests for Session 11: B4.6 Paper Validator Mode 2."""
+"""Unit tests for Paper Validator Mode 2."""
 
 from __future__ import annotations
 

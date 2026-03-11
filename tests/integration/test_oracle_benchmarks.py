@@ -721,7 +721,7 @@ def test_squall_line_no_level0_regression(level0_searcher: Level0Searcher) -> No
 @pytest.mark.integration
 def test_level0_index_growth_accuracy_drift_control(level0_searcher: Level0Searcher) -> None:
     """
-    Enforce UNNUMBERED-162 gate:
+    Enforce index-growth drift gate:
     100+ index growth must keep routing accuracy within 2% of baseline.
     """
     baseline_prompts = _load_level0_oracle_cases()

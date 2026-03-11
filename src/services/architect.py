@@ -1097,6 +1097,7 @@ class ArchitectService:
             return self._annotate_router_reason_for_override(plan)
 
         # === NORMAL PATH (No override) ===
+        fell_back_from_hierarchical = False
         if strategy == "hierarchical":
             try:
                 # Extract hierarchical-specific kwargs
@@ -1125,6 +1126,7 @@ class ArchitectService:
                 if getattr(self.config, 'fallback_to_simple_on_error', True):
                     logger.debug("Falling back to simple indexing")
                     strategy = "simple"
+                    fell_back_from_hierarchical = True
                 else:
                     raise
 
@@ -1135,12 +1137,9 @@ class ArchitectService:
             plan.baseline,
             selected_case=plan.selected_case,
         )
-        fallback_from_hierarchical = strategy == "simple" and getattr(
-            self.config, 'indexing_strategy', 'hierarchical'
-        ) == "hierarchical"
         reason_code = (
             ROUTER_REASON_CODES["simple_fallback"]
-            if fallback_from_hierarchical
+            if fell_back_from_hierarchical
             else ROUTER_REASON_CODES["simple_primary"]
         )
         return self._annotate_router_reason(

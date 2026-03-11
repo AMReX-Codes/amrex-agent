@@ -1,4 +1,4 @@
-"""Session 111 tests for benchmark/postmortem risk feedback criterion wiring."""
+"""Tests for benchmark/postmortem risk feedback criterion wiring."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
-from tests.unit import test_unnumbered_052 as session_81_suite
+from tests.unit import test_impl_test_sync_gate as impl_sync_suite
 
 from src.graph import (
     _route_after_input_writer,
@@ -51,13 +51,13 @@ class _ResponseObj:
 
 
 def test_existing_graph_regression_suite_for_coverage_stability() -> None:
-    session_81_suite.test_unnumbered_052_report_gate_reason_and_route()
-    session_81_suite.test_latency_taxonomy_uc_and_depth_gates_still_functional()
-    session_81_suite.test_routes_handlers_and_graph_wiring_cover_all_gate_nodes()
-    session_81_suite.test_session_76_graph_regression_suite_still_passes()
-    session_81_suite.test_plan_and_graph_fallback_branches_for_coverage_guardrails()
-    session_81_suite.test_regression_uc_row_traceability_helpers_and_pass_fail_logic()
-    session_81_suite.test_regression_plan_generation_and_taxonomy_and_depth_routes()
+    impl_sync_suite.test_impl_test_sync_report_gate_reason_and_route()
+    impl_sync_suite.test_latency_taxonomy_uc_and_depth_gates_still_functional()
+    impl_sync_suite.test_routes_handlers_and_graph_wiring_cover_all_gate_nodes()
+    impl_sync_suite.test_graph_regression_suite_still_passes()
+    impl_sync_suite.test_plan_and_graph_fallback_branches_for_coverage_guardrails()
+    impl_sync_suite.test_regression_uc_row_traceability_helpers_and_pass_fail_logic()
+    impl_sync_suite.test_regression_plan_generation_and_taxonomy_and_depth_routes()
 
 
 def test_benchmark_postmortem_criterion_wiring_pass_fail_and_handler() -> None:
@@ -171,6 +171,13 @@ def test_metrics_helpers_cover_private_fallback_paths() -> None:
         "r-3",
     }
     assert _extract_update_risk_ids([{"risk_id": "R-1"}, {"risks": ["R-2", 3]}]) == {"r-1", "r-2"}
+    assert _state_list_entries(
+        {
+            "benchmark_reviews": [],
+            "benchmark_findings": [{"risk_id": "R-10"}],
+        },
+        ("benchmark_reviews", "benchmark_findings"),
+    ) == [{"risk_id": "R-10"}]
 
 
 def test_metrics_usage_extraction_model_and_pricing_branches(monkeypatch) -> None:
@@ -329,4 +336,3 @@ def test_metrics_collector_aggregation_context_and_write_jsonl(tmp_path: Path, m
     collector.reset()
     assert collector.events() == []
     assert collector.build_workflow_summary() == {}
-

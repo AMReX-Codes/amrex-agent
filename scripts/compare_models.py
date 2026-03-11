@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -62,7 +63,7 @@ def _infer_solver(record: dict[str, Any]) -> str:
     ]
     probe_text = " ".join(str(item).lower() for item in probes if isinstance(item, str))
     for canonical, aliases in SOLVER_ALIASES.items():
-        if any(alias in probe_text for alias in aliases):
+        if any(re.search(rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])", probe_text) for alias in aliases):
             return canonical
     return "unknown"
 

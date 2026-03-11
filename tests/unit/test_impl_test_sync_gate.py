@@ -1,4 +1,4 @@
-"""Session 81 tests for impl-location/test synchronization criterion wiring."""
+"""Tests for impl-location/test synchronization criterion wiring."""
 
 from __future__ import annotations
 
@@ -44,27 +44,27 @@ from src.graph import (
     uc_row_traceable_artifact_passed,
 )
 from src.services.plan import (
-    _unnumbered_024_entries_from_report,
-    _unnumbered_024_entries_from_state,
-    _unnumbered_052_entries_from_report,
+    _use_case_artifact_entries_from_report,
+    _use_case_artifact_entries_from_state,
+    _feature_test_mapping_entries_from_report,
     AMENDMENT_MODULE_LOC_ID as PLAN_AMENDMENT_MODULE_LOC_ID,
     AMENDMENT_MODULE_MAX_LOC,
     GLOBAL_FUNCTION_COMPLEXITY_DEFAULT_THRESHOLD,
     GLOBAL_FUNCTION_COMPLEXITY_ID,
-    UNNUMBERED_052_ID,
+    IMPL_TEST_SYNC_ID,
     SimulationPlan,
     SimulationPlanFactory,
     amendment_module_loc_failure_reason,
     amendment_module_loc_passed,
     build_amendment_module_loc_report,
     build_global_complexity_report,
-    build_unnumbered_052_report,
+    build_feature_test_mapping_report,
     global_function_complexity_failure_reason,
     global_function_complexity_passed,
     impl_locations_tests_synced_failure_reason,
     impl_locations_tests_synced_passed,
-    normalize_unnumbered_024,
-    normalize_unnumbered_052,
+    normalize_use_case_artifact_mappings,
+    normalize_feature_test_mappings,
 )
 
 
@@ -144,13 +144,13 @@ def test_plan_model_factories_and_normalizers_cover_expected_shapes():
     with pytest.raises(ValueError, match="missing solver"):
         SimulationPlanFactory.from_dict({"baseline": {}})
 
-    assert normalize_unnumbered_024(
+    assert normalize_use_case_artifact_mappings(
         {"entries": [{"usecase": "UC-1", "artifact": "tests/unit/test_a.py"}, {"id": "UC-2", "references": ["a", "", 1]}]}
     ) == [
         {"use_case": "UC-1", "artifacts": ["tests/unit/test_a.py"]},
         {"use_case": "UC-2", "artifacts": ["a"]},
     ]
-    assert normalize_unnumbered_024("bad") == []
+    assert normalize_use_case_artifact_mappings("bad") == []
 
 
 def test_complexity_and_amendment_reports_cover_fallback_paths():
@@ -265,11 +265,11 @@ def complex_fn(a, b, c):
     assert amendment_module_loc_passed({"amendment_module_loc_report": {"violations": []}}) is True
 
 
-def test_unnumbered_052_report_gate_reason_and_route():
-    normalized = normalize_unnumbered_052(
+def test_impl_test_sync_report_gate_reason_and_route():
+    normalized = normalize_feature_test_mappings(
         {
             "feature_blocks": [
-                {"feature": "UNNUMBERED-052", "implementation": ["src/services/plan.py"], "tests": ["tests/unit/test_unnumbered_052.py"]},
+                {"feature": "UNNUMBERED-052", "implementation": ["src/services/plan.py"], "tests": ["tests/unit/test_impl_test_sync_gate.py"]},
                 {"id": "UNNUMBERED-XXX", "impl_locations": "src/graph.py", "test_files": "tests/unit/test_graph.py"},
             ]
         }
@@ -278,7 +278,7 @@ def test_unnumbered_052_report_gate_reason_and_route():
         {
             "feature_id": "UNNUMBERED-052",
             "implementation_locations": ["src/services/plan.py"],
-            "tests": ["tests/unit/test_unnumbered_052.py"],
+            "tests": ["tests/unit/test_impl_test_sync_gate.py"],
         },
         {
             "feature_id": "UNNUMBERED-XXX",
@@ -287,13 +287,13 @@ def test_unnumbered_052_report_gate_reason_and_route():
         },
     ]
 
-    report = build_unnumbered_052_report(
+    report = build_feature_test_mapping_report(
         [
-            {"feature_id": "UNNUMBERED-052", "implementation_locations": ["src/services/plan.py"], "tests": ["tests/unit/test_unnumbered_052.py"]},
-            {"feature_id": "UNNUMBERED-100", "implementation_locations": [], "tests": ["tests/unit/test_unnumbered_100.py"]},
+            {"feature_id": "UNNUMBERED-052", "implementation_locations": ["src/services/plan.py"], "tests": ["tests/unit/test_impl_test_sync_gate.py"]},
+            {"feature_id": "UNNUMBERED-100", "implementation_locations": [], "tests": ["tests/unit/test_feature_100_gate.py"]},
         ]
     )
-    assert report["criterion"] == UNNUMBERED_052_ID
+    assert report["criterion"] == IMPL_TEST_SYNC_ID
     assert report["passes"] is False
     assert report["violations"][0]["reason_code"] == "impl_locations_missing"
 
@@ -315,7 +315,7 @@ def test_unnumbered_052_report_gate_reason_and_route():
 
     approved_state = {
         "impl_locations_tests_sync_report": {"passes": False},
-        "gate_approvals": [{"decision": "approved", "details": {"criterion": UNNUMBERED_052_ID}}],
+        "gate_approvals": [{"decision": "approved", "details": {"criterion": IMPL_TEST_SYNC_ID}}],
     }
     assert impl_locations_tests_synced_passed(approved_state) is True
     assert impl_locations_tests_synced_failure_reason(approved_state) == "impl_locations_tests_synced_satisfied"
@@ -325,7 +325,7 @@ def test_unnumbered_052_report_gate_reason_and_route():
             {
                 "feature_id": "UNNUMBERED-052",
                 "implementation_locations": ["src/services/plan.py"],
-                "tests": ["tests/unit/test_unnumbered_052.py"],
+                "tests": ["tests/unit/test_impl_test_sync_gate.py"],
             }
         ]
     }
@@ -342,7 +342,7 @@ def test_unnumbered_052_report_gate_reason_and_route():
                 {
                     "feature_id": "UNNUMBERED-052",
                     "implementation_locations": ["src/services/plan.py"],
-                    "tests": ["tests/unit/test_unnumbered_052.py"],
+                    "tests": ["tests/unit/test_impl_test_sync_gate.py"],
                 }
             ],
             "paper_validator_enabled": True,
@@ -353,7 +353,7 @@ def test_unnumbered_052_report_gate_reason_and_route():
     updates = impl_locations_tests_sync_handler_node({"gate_approvals": "invalid", "errors_active": "invalid"})
     assert updates["mode"] == "terminal"
     assert updates["reviewer_failure_category"] == "impl_test_sync_gate"
-    assert updates["gate_approvals"][-1]["details"]["criterion"] == UNNUMBERED_052_ID
+    assert updates["gate_approvals"][-1]["details"]["criterion"] == IMPL_TEST_SYNC_ID
     assert updates["errors_active"] == ["impl_tests_sync_missing"]
 
 
@@ -523,7 +523,7 @@ def test_routes_handlers_and_graph_wiring_cover_all_gate_nodes():
     assert ("input_writer_node", "stable_error_taxonomy_handler") in edges
 
 
-def test_session_76_graph_regression_suite_still_passes():
+def test_graph_regression_suite_still_passes():
     assert (
         uc_row_traceable_artifact_passed(
             {
@@ -611,20 +611,20 @@ def test_plan_and_graph_fallback_branches_for_coverage_guardrails():
         }
     ).modifications == []
 
-    assert _unnumbered_024_entries_from_report({"use_case_artifacts": {"id": "UC-3"}}) == [
+    assert _use_case_artifact_entries_from_report({"use_case_artifacts": {"id": "UC-3"}}) == [
         {"use_case": "UC-3", "artifacts": []}
     ]
-    assert _unnumbered_024_entries_from_state({"use_case_artifacts": "invalid"}) == []
+    assert _use_case_artifact_entries_from_state({"use_case_artifacts": "invalid"}) == []
 
-    assert normalize_unnumbered_052({"feature_id": "UNNUMBERED-052"}) == [
+    assert normalize_feature_test_mappings({"feature_id": "UNNUMBERED-052"}) == [
         {"feature_id": "UNNUMBERED-052", "implementation_locations": [], "tests": []}
     ]
-    assert normalize_unnumbered_052([{"feature_id": " ", "tests": ["x"]}, "bad"]) == []
-    assert _unnumbered_052_entries_from_report({"feature_mappings": {"feature_id": "UNNUMBERED-052"}}) == [
+    assert normalize_feature_test_mappings([{"feature_id": " ", "tests": ["x"]}, "bad"]) == []
+    assert _feature_test_mapping_entries_from_report({"feature_mappings": {"feature_id": "UNNUMBERED-052"}}) == [
         {"feature_id": "UNNUMBERED-052", "implementation_locations": [], "tests": []}
     ]
 
-    tests_missing_report = build_unnumbered_052_report(
+    tests_missing_report = build_feature_test_mapping_report(
         [{"feature_id": "UNNUMBERED-052", "implementation_locations": ["src/a.py"], "tests": []}]
     )
     assert tests_missing_report["violations"][0]["reason_code"] == "tests_missing"
@@ -634,7 +634,7 @@ def test_plan_and_graph_fallback_branches_for_coverage_guardrails():
                 "invalid",
                 {"details": "invalid"},
                 {"details": {"criterion": "OTHER"}},
-                {"decision": "approved", "details": {"criterion": UNNUMBERED_052_ID}},
+                {"decision": "approved", "details": {"criterion": IMPL_TEST_SYNC_ID}},
             ]
         }
     ) is True

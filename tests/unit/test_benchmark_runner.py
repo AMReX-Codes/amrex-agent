@@ -286,8 +286,8 @@ def test_gate_approvals_missing_from_state_safe(tmp_path):
     assert record["gate_approval_count"] == 0
 
 
-def test_normalize_unnumbered_094_canonicalizes_phase_shapes():
-    normalized = plan_service.normalize_unnumbered_094(
+def test_normalize_camera_ready_phase_mappings_canonicalizes_phase_shapes():
+    normalized = plan_service.normalize_camera_ready_phase_mappings(
         {
             "pipeline_phases": [
                 {
@@ -333,8 +333,8 @@ def test_normalize_unnumbered_094_canonicalizes_phase_shapes():
     ]
 
 
-def test_unnumbered_094_report_and_state_helpers_share_logic():
-    report_entries = plan_service._unnumbered_094_entries_from_report(
+def test_camera_ready_phase_report_and_state_helpers_share_logic():
+    report_entries = plan_service._camera_ready_phase_entries_from_report(
         {
             "camera_ready_pipeline": [
                 {
@@ -345,7 +345,7 @@ def test_unnumbered_094_report_and_state_helpers_share_logic():
             ]
         }
     )
-    state_entries = plan_service._unnumbered_094_entries_from_state(
+    state_entries = plan_service._camera_ready_phase_entries_from_state(
         {
             "benchmark_pipeline": [
                 {

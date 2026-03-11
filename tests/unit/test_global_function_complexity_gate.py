@@ -1,4 +1,4 @@
-"""Session 16 tests for global function complexity criterion wiring."""
+"""Tests for global function complexity criterion wiring."""
 
 from __future__ import annotations
 

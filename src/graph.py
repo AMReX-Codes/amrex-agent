@@ -17,7 +17,7 @@ from src.nodes.sweep_detection_node import sweep_detection_node
 from src.services.plan import (
     AMENDMENT_MODULE_LOC_ID,
     GLOBAL_FUNCTION_COMPLEXITY_ID,
-    UNNUMBERED_052_ID,
+    IMPL_TEST_SYNC_ID,
     amendment_module_loc_failure_reason,
     amendment_module_loc_passed,
     global_function_complexity_failure_reason,
@@ -713,12 +713,12 @@ def impl_locations_tests_sync_handler_node(state: dict) -> dict:
 
     gate_approvals.append(
         {
-            "gate_id": f"criterion-{UNNUMBERED_052_ID}",
+            "gate_id": f"criterion-{IMPL_TEST_SYNC_ID}",
             "gate_type": "criterion",
             "decision": "rejected",
             "interface_path": "auto",
             "details": {
-                "criterion": UNNUMBERED_052_ID,
+                "criterion": IMPL_TEST_SYNC_ID,
                 "reason_code": reason_code,
             },
         }

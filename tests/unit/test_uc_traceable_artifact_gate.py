@@ -1,4 +1,4 @@
-"""Session 76 tests for UC row traceable artifact criterion wiring."""
+"""Tests for UC row traceable artifact criterion wiring."""
 
 from __future__ import annotations
 

@@ -1506,6 +1506,7 @@ def monitor_job(
                     from sfapi_client.compute import Machine
                 except Exception:
                     method = "api"
+                    poll_method = "api"
                 else:
                     with Client(client_id=client_id, secret=secret) as client:
                         perlmutter = client.compute(Machine.perlmutter)

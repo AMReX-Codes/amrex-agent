@@ -261,14 +261,19 @@ class Level0Searcher:
         return total
 
     def _count_index_entries(self) -> int:
-        """Count vectors across all Level-0 sub-indices."""
-        total = 0
+        """Estimate corpus size from Level-0 sub-index populations.
+
+        We use the maximum sub-index size instead of the sum because the same
+        logical corpus is represented in multiple sub-indices with different
+        facets/metadata.
+        """
+        max_count = 0
         for index_name in self.WEIGHTS:
             self._load_index(index_name)
             index = self.indices.get(index_name)
             if index is not None and hasattr(index, "ntotal"):
-                total += int(index.ntotal)
-        return total
+                max_count = max(max_count, int(index.ntotal))
+        return max_count
 
     def evaluate_index_growth_accuracy_drift(
         self,

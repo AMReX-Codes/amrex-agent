@@ -410,7 +410,9 @@ def _state_list_entries(state: dict[str, Any], keys: tuple[str, ...]) -> list[di
     for key in keys:
         value = state.get(key)
         if isinstance(value, list):
-            return [entry for entry in value if isinstance(entry, dict)]
+            entries = [entry for entry in value if isinstance(entry, dict)]
+            if entries:
+                return entries
     return []
 
 

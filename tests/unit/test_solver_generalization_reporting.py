@@ -118,3 +118,11 @@ def test_summary_includes_generalization_metrics(generated_tables: Path) -> None
     assert summary["generalization_solver_count"] == "4"
     assert summary["generalization_unknown_runs"] == "1"
     assert float(summary["generalization_cross_solver_success_rate"]) == pytest.approx(0.75)
+
+
+def test_solver_inference_uses_token_boundaries(monkeypatch: pytest.MonkeyPatch) -> None:
+    module = _load_compare_models_module()
+    monkeypatch.setattr(module, "SOLVER_ALIASES", {"ERF": ("erf",)})
+
+    assert module._infer_solver({"prompt_excerpt": "performance tuning only"}) == "unknown"
+    assert module._infer_solver({"prompt_excerpt": "erf bubble case"}) == "ERF"

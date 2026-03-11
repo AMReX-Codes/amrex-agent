@@ -1,4 +1,4 @@
-"""Session 26 tests for level-4 depth guidance criterion wiring."""
+"""Tests for level-4 depth guidance criterion wiring."""
 
 from __future__ import annotations
 

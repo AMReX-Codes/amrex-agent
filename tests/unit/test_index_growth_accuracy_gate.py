@@ -1,4 +1,4 @@
-"""Session 106 tests for index-growth accuracy drift control."""
+"""Tests for index-growth accuracy drift control."""
 
 from pathlib import Path
 
@@ -60,6 +60,31 @@ def test_index_growth_accuracy_drift_uses_loaded_index_count(
     assert verdict["gate_active"] is True
     assert verdict["drift_within_target"] is True
     assert verdict["passed"] is True
+
+
+def test_index_growth_accuracy_drift_count_uses_max_subindex_population(
+    searcher: Level0Searcher,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _FakeIndex:
+        def __init__(self, n: int) -> None:
+            self.ntotal = n
+
+    searcher.indices = {
+        "physics_regimes": _FakeIndex(25),
+        "solver_capabilities": _FakeIndex(20),
+        "code_lineage": _FakeIndex(15),
+        "cross_cutting_guidance": _FakeIndex(10),
+    }
+    monkeypatch.setattr(searcher, "_load_index", lambda _name: None)
+
+    verdict = searcher.evaluate_index_growth_accuracy_drift(
+        baseline_accuracy=0.95,
+        current_accuracy=0.90,
+    )
+
+    assert verdict["index_count"] == 25
+    assert verdict["gate_active"] is False
 
 
 @pytest.mark.parametrize("baseline,current", [(-0.1, 0.9), (0.9, 1.1)])

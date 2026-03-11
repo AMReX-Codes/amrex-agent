@@ -1,4 +1,4 @@
-"""Unit tests for B1 Feature A dependency gate enforcement."""
+"""Unit tests for feature dependency gate enforcement."""
 
 from __future__ import annotations
 

@@ -31,9 +31,9 @@ GLOBAL_FUNCTION_COMPLEXITY_ID = "global_function_complexity"
 GLOBAL_FUNCTION_COMPLEXITY_DEFAULT_THRESHOLD = 10
 AMENDMENT_MODULE_LOC_ID = "UNNUMBERED-003-01"
 AMENDMENT_MODULE_MAX_LOC = 100
-UNNUMBERED_024_ID = "UNNUMBERED-024"
-UNNUMBERED_052_ID = "UNNUMBERED-052"
-UNNUMBERED_094_ID = "UNNUMBERED-094"
+USE_CASE_ARTIFACT_MAPPING_ID = "UNNUMBERED-024"
+IMPL_TEST_SYNC_ID = "UNNUMBERED-052"
+CAMERA_READY_PHASE_MAPPING_ID = "UNNUMBERED-094"
 
 
 class SimulationPlan(BaseModel):
@@ -528,7 +528,7 @@ def _amendment_modules_from_report(report: dict[str, Any]) -> list[dict[str, Any
     return amendment_modules
 
 
-def normalize_unnumbered_024(raw: Any) -> list[dict[str, Any]]:
+def normalize_use_case_artifact_mappings(raw: Any) -> list[dict[str, Any]]:
     """
     Normalize use-case artifact mappings into a canonical shape.
 
@@ -584,17 +584,17 @@ def normalize_unnumbered_024(raw: Any) -> list[dict[str, Any]]:
     return normalized
 
 
-def _unnumbered_024_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+def _use_case_artifact_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
     mappings = report.get("use_case_artifacts")
-    return normalize_unnumbered_024(mappings)
+    return normalize_use_case_artifact_mappings(mappings)
 
 
-def _unnumbered_024_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+def _use_case_artifact_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
     mappings = state.get("use_case_artifacts")
-    return normalize_unnumbered_024(mappings)
+    return normalize_use_case_artifact_mappings(mappings)
 
 
-def normalize_unnumbered_052(raw: Any) -> list[dict[str, Any]]:
+def normalize_feature_test_mappings(raw: Any) -> list[dict[str, Any]]:
     """Normalize implementation-location to tests mappings into a canonical shape."""
     if isinstance(raw, dict):
         for key in ("feature_mappings", "feature_blocks", "features", "entries", "items"):
@@ -655,7 +655,7 @@ def normalize_unnumbered_052(raw: Any) -> list[dict[str, Any]]:
     return normalized
 
 
-def normalize_unnumbered_094(raw: Any) -> list[dict[str, Any]]:
+def normalize_camera_ready_phase_mappings(raw: Any) -> list[dict[str, Any]]:
     """
     Normalize camera-ready benchmark pipeline phase mappings into canonical shape.
 
@@ -723,35 +723,35 @@ def normalize_unnumbered_094(raw: Any) -> list[dict[str, Any]]:
     return normalized
 
 
-def _unnumbered_094_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+def _camera_ready_phase_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
     mappings = report.get("camera_ready_pipeline")
-    return normalize_unnumbered_094(mappings)
+    return normalize_camera_ready_phase_mappings(mappings)
 
 
-def _unnumbered_094_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+def _camera_ready_phase_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
     for key in ("camera_ready_pipeline", "benchmark_pipeline", "pipeline_phases"):
-        entries = normalize_unnumbered_094(state.get(key))
+        entries = normalize_camera_ready_phase_mappings(state.get(key))
         if entries:
             return entries
     return []
 
 
-def _unnumbered_052_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+def _feature_test_mapping_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
     mappings = report.get("feature_mappings")
-    return normalize_unnumbered_052(mappings)
+    return normalize_feature_test_mappings(mappings)
 
 
-def _unnumbered_052_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+def _feature_test_mapping_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
     for key in ("feature_mappings", "feature_blocks", "implementation_test_sync"):
-        entries = normalize_unnumbered_052(state.get(key))
+        entries = normalize_feature_test_mappings(state.get(key))
         if entries:
             return entries
     return []
 
 
-def build_unnumbered_052_report(feature_mappings: Any) -> dict[str, Any]:
+def build_feature_test_mapping_report(feature_mappings: Any) -> dict[str, Any]:
     """Build synchronization report for implementation locations and tests."""
-    entries = normalize_unnumbered_052(feature_mappings)
+    entries = normalize_feature_test_mappings(feature_mappings)
     violations: list[dict[str, Any]] = []
 
     for entry in entries:
@@ -762,7 +762,7 @@ def build_unnumbered_052_report(feature_mappings: Any) -> dict[str, Any]:
             violations.append({**entry, "reason_code": "tests_missing"})
 
     return {
-        "criterion": UNNUMBERED_052_ID,
+        "criterion": IMPL_TEST_SYNC_ID,
         "feature_mappings": entries,
         "violations": violations,
         "passes": bool(entries) and not violations,
@@ -779,7 +779,7 @@ def impl_locations_tests_synced_passed(state: dict[str, Any]) -> bool:
             details = approval.get("details")
             if not isinstance(details, dict):
                 continue
-            if details.get("criterion") != UNNUMBERED_052_ID:
+            if details.get("criterion") != IMPL_TEST_SYNC_ID:
                 continue
             return approval.get("decision") == "approved"
 
@@ -790,9 +790,9 @@ def impl_locations_tests_synced_passed(state: dict[str, Any]) -> bool:
         violations = report.get("violations")
         if isinstance(violations, list):
             return len(violations) == 0
-        return bool(_unnumbered_052_entries_from_report(report))
+        return bool(_feature_test_mapping_entries_from_report(report))
 
-    entries = _unnumbered_052_entries_from_state(state)
+    entries = _feature_test_mapping_entries_from_state(state)
     if not entries:
         return False
     return all(entry["implementation_locations"] and entry["tests"] for entry in entries)
@@ -814,7 +814,7 @@ def impl_locations_tests_synced_failure_reason(state: dict[str, Any]) -> str:
                 if reason_code in {"impl_locations_missing", "tests_missing"}:
                     return reason_code
 
-    entries = _unnumbered_052_entries_from_state(state)
+    entries = _feature_test_mapping_entries_from_state(state)
     if not entries:
         return "impl_tests_sync_missing"
 

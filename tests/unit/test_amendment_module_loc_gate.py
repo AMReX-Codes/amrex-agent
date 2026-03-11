@@ -1,4 +1,4 @@
-"""Session 51 tests for amendment module LOC and helper extraction criterion wiring."""
+"""Tests for amendment module LOC and helper extraction criterion wiring."""
 
 from __future__ import annotations
 

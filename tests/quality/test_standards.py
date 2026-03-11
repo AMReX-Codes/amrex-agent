@@ -590,11 +590,11 @@ def test_docs_includes_resolve():
 
 
 @pytest.mark.quality
-def test_normalize_unnumbered_024_canonicalizes_shapes():
+def test_normalize_use_case_artifact_mappings_canonicalizes_shapes():
     """
-    Ensure UNNUMBERED-024 mappings normalize to a stable schema.
+    Ensure use-case artifact mappings normalize to a stable schema.
     """
-    normalized = plan_service.normalize_unnumbered_024(
+    normalized = plan_service.normalize_use_case_artifact_mappings(
         {
             "use_cases": [
                 {"use_case": "UC1", "artifacts": ["tests/unit/test_a.py", ""]},
@@ -613,14 +613,14 @@ def test_normalize_unnumbered_024_canonicalizes_shapes():
 
 
 @pytest.mark.quality
-def test_normalize_unnumbered_024_report_and_state_helpers_share_logic():
+def test_normalize_use_case_artifact_mappings_report_and_state_helpers_share_logic():
     """
-    Verify both call sites reuse the same UNNUMBERED-024 normalization behavior.
+    Verify both call sites reuse the same normalization behavior.
     """
-    report_entries = plan_service._unnumbered_024_entries_from_report(
+    report_entries = plan_service._use_case_artifact_entries_from_report(
         {"use_case_artifacts": [{"use_case": "UC1", "artifact": "tests/unit/test_x.py"}]}
     )
-    state_entries = plan_service._unnumbered_024_entries_from_state(
+    state_entries = plan_service._use_case_artifact_entries_from_state(
         {"use_case_artifacts": [{"use_case": "UC1", "artifact": "tests/unit/test_x.py"}]}
     )
 

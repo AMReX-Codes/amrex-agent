@@ -1,4 +1,4 @@
-"""Session 121 tests for standardized router reason codes per execute_planning branch."""
+"""Tests for standardized router reason codes per execute_planning branch."""
 
 from __future__ import annotations
 
@@ -67,6 +67,33 @@ def test_simple_primary_branch_sets_reason_code():
 
     assert plan.requirements["router_branch"] == "simple"
     assert plan.requirements["router_reason_code"] == ROUTER_REASON_CODES["simple_primary"]
+
+
+def test_explicit_simple_strategy_is_primary_even_if_config_is_hierarchical():
+    service = _service(
+        SimpleNamespace(indexing_strategy="hierarchical", fallback_to_simple_on_error=True)
+    )
+    service.create_plan = lambda **_: _plan("simple")
+
+    plan = service.execute_planning(user_prompt="test prompt", strategy="simple")
+
+    assert plan.requirements["router_branch"] == "simple"
+    assert plan.requirements["router_reason_code"] == ROUTER_REASON_CODES["simple_primary"]
+
+
+def test_hierarchical_failure_marks_simple_fallback_even_if_config_is_simple():
+    service = _service(SimpleNamespace(indexing_strategy="simple", fallback_to_simple_on_error=True))
+
+    def _raise(**_kwargs):
+        raise RuntimeError("boom")
+
+    service.create_plan_rag = _raise
+    service.create_plan = lambda **_: _plan("simple")
+
+    plan = service.execute_planning(user_prompt="test prompt", strategy="hierarchical")
+
+    assert plan.requirements["router_branch"] == "simple"
+    assert plan.requirements["router_reason_code"] == ROUTER_REASON_CODES["simple_fallback"]
 
 
 @pytest.mark.parametrize(

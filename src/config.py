@@ -528,7 +528,7 @@ class AMReXAgentConfig(BaseModel):
     )
     enable_clarification_subgraph: bool = Field(
         default=False,
-        description="Enable Session 8 clarification subgraph decision checks before input writing."
+        description="Enable clarification subgraph decision checks before input writing."
     )
 
     llm_gate_strategy: Literal[
