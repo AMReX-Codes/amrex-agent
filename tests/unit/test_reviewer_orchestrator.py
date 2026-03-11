@@ -4,10 +4,13 @@ Reviewer Service: Reviewer Orchestrator: Reviewer Orchestrator Tests
 TDD Approach: RED → GREEN → Refactor
 This file contains tests that SHOULD FAIL initially.
 """
+import importlib
 import pytest
 from unittest.mock import Mock, patch
 from src.services.reviewer import ReviewerOrchestrator
 from src.services.rules.base import RuleViolation
+
+reviewer_node_module = importlib.import_module("src.nodes.reviewer_node")
 
 
 class TestReviewerOrchestrator:
@@ -148,3 +151,110 @@ class TestReviewerOrchestrator:
 
             assert result.mode == "fail"
             assert "Unexpected crash" in result.summary
+
+
+class TestReviewerNodeFinalTaxonomy:
+
+    def test_terminal_taxonomy_after_review_max_retries(self, monkeypatch, mock_config):
+        """
+        GIVEN: Reviewer violations and retry_count already at max_retries
+        WHEN: reviewer_node() completes validation
+        THEN: terminal response includes standardized final taxonomy/category
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.baseline_switch_after_retries = 3
+        mock_config.retry_guidance_use_llm = False
+
+        class FakeOrchestrator:
+            def __init__(self, _config):
+                pass
+
+            def validate_plan(self, _plan):
+                violation = RuleViolation("SchemaExistence", "error", "Parameter 'x.bad' not found.")
+                return type(
+                    "ValidationResult",
+                    (),
+                    {
+                        "mode": "retry",
+                        "violations": [violation],
+                        "summary": "invalid",
+                        "available_schema_params": [],
+                    },
+                )
+
+        monkeypatch.setattr(reviewer_node_module, "ReviewerOrchestrator", FakeOrchestrator)
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "PeleC/Exec/RegTests/PMF",
+                        "modifications": [("amr.n_cell", "64 64 64")],
+                        "baseline": {"code_name": "PeleC", "local_path": "cases/PMF"},
+                    },
+                }
+            ],
+            "iteration": 2,
+            "retry_count": 3,
+            "max_retries": 3,
+            "errors_active": [],
+            "errors_found": [],
+            "errors_fixed": [],
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+        taxonomy = updates["final_error_taxonomy"]
+
+        assert updates["mode"] == "terminal"
+        assert updates["reviewer_failure_category"] == "review_validation_max_retries"
+        assert taxonomy["type"] == "retry_exhausted"
+        assert taxonomy["category"] == "review_validation_max_retries"
+        assert updates["workflow_history"][-1]["details"]["final_error_taxonomy"] == taxonomy
+
+    def test_terminal_taxonomy_after_parameter_resolution_max_retries(self, mock_config):
+        """
+        GIVEN: Input writer requires parameter resolution and retries are exhausted
+        WHEN: reviewer_node() runs
+        THEN: terminal response includes standardized final taxonomy/category
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "PeleC/Exec/RegTests/PMF",
+                        "modifications": [("amr.n_cell", "64 64 64")],
+                        "baseline": {"code_name": "PeleC", "local_path": "cases/PMF"},
+                    },
+                },
+                {
+                    "node": "input_writer",
+                    "details": {
+                        "requires_parameter_resolution": True,
+                        "unresolved_parameters": [("pelec.bad_param", "1")],
+                        "resolution_guidance": "Remap to a schema key.",
+                        "available_schema_params": ["pelec.cfl"],
+                        "suggested_params": {"pelec.bad_param": "pelec.cfl"},
+                    },
+                },
+            ],
+            "iteration": 3,
+            "retry_count": 3,
+            "max_retries": 3,
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+        taxonomy = updates["final_error_taxonomy"]
+
+        assert updates["mode"] == "terminal"
+        assert updates["reviewer_failure_category"] == "parameter_resolution_max_retries"
+        assert taxonomy["type"] == "retry_exhausted"
+        assert taxonomy["category"] == "parameter_resolution_max_retries"
+        assert updates["workflow_history"][-1]["details"]["final_error_taxonomy"] == taxonomy

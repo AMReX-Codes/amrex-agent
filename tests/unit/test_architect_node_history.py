@@ -1,4 +1,5 @@
 import importlib
+from types import MethodType, SimpleNamespace
 
 import pytest
 
@@ -7,6 +8,7 @@ from src.services.plan import SimulationPlan
 
 architect_node_module = importlib.import_module("src.nodes.architect_node")
 embedding_factory_module = importlib.import_module("src.services.embedding_service_factory")
+architect_service_module = importlib.import_module("src.services.architect")
 
 
 class DummyConfig:
@@ -173,3 +175,78 @@ def test_history_includes_level0_and_level2_override_trace(monkeypatch):
     assert details["level2_override_solver"] == "ERF"
     assert details["level2_override_case"] == "Exec/DryRegTests/TaylorGreenVortex"
     assert details["level2_override_confidence"] == 0.9
+
+
+def _make_router_service(
+    strategy: str = "hierarchical",
+    baseline_override: str | None = None,
+    fallback_to_simple_on_error: bool = True,
+):
+    service = object.__new__(architect_service_module.ArchitectService)
+    service.config = SimpleNamespace(
+        indexing_strategy=strategy,
+        baseline_override=baseline_override,
+        fallback_to_simple_on_error=fallback_to_simple_on_error,
+    )
+    return service
+
+
+def test_execute_planning_attaches_hierarchical_router_mapping(caplog):
+    service = _make_router_service(strategy="hierarchical")
+
+    def _fake_create_plan_rag(self, **_kwargs):
+        return _plan()
+
+    service.create_plan_rag = MethodType(_fake_create_plan_rag, service)
+
+    with caplog.at_level("INFO"):
+        plan = service.execute_planning(user_prompt="test")
+
+    mapping = plan.analysis["router_mapping"]
+    assert mapping["router_branch"] == "hierarchical"
+    assert mapping["diagram_nodes"]["router"] == "strategy_router"
+    assert mapping["diagram_nodes"]["branch"] == "hierarchical_strategy"
+    assert "strategy_router -> hierarchical_strategy" in caplog.text
+
+
+def test_execute_planning_attaches_override_router_mapping(caplog):
+    service = _make_router_service(
+        strategy="simple",
+        baseline_override="PeleC/Exec/RegTests/PMF",
+    )
+
+    def _fake_execute_planning_with_override(self, **_kwargs):
+        return _plan()
+
+    service._execute_planning_with_override = MethodType(_fake_execute_planning_with_override, service)
+
+    with caplog.at_level("INFO"):
+        plan = service.execute_planning(user_prompt="test")
+
+    mapping = plan.analysis["router_mapping"]
+    assert mapping["router_branch"] == "baseline_override"
+    assert mapping["diagram_nodes"]["router"] == "strategy_router"
+    assert mapping["diagram_nodes"]["branch"] == "static_strategy"
+    assert "baseline_override=true" in caplog.text
+
+
+def test_execute_planning_attaches_fallback_router_mapping(caplog):
+    service = _make_router_service(strategy="hierarchical", fallback_to_simple_on_error=True)
+
+    def _failing_create_plan_rag(self, **_kwargs):
+        raise RuntimeError("boom")
+
+    def _fake_create_plan(self, **_kwargs):
+        return _plan()
+
+    service.create_plan_rag = MethodType(_failing_create_plan_rag, service)
+    service.create_plan = MethodType(_fake_create_plan, service)
+
+    with caplog.at_level("INFO"):
+        plan = service.execute_planning(user_prompt="test")
+
+    mapping = plan.analysis["router_mapping"]
+    assert mapping["router_branch"] == "hierarchical_fallback_to_simple"
+    assert mapping["diagram_nodes"]["router"] == "strategy_router"
+    assert mapping["diagram_nodes"]["branch"] == "simple_strategy"
+    assert "fallback=hierarchical_error" in caplog.text
