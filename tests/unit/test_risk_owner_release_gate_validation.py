@@ -299,6 +299,17 @@ def test_route_after_paper_validator_branch_matrix() -> None:
         )
         == "end"
     )
+    assert (
+        GRAPH_MODULE._route_after_paper_validator(
+            {
+                "paper_validation_passed": True,
+                "feature_blocks_validation_required": True,
+                "feature_blocks_validation_passed": False,
+                "feature_blocks_markdown": "## [F-11] Complete\nTests/Fixtures: tests/unit/test_ok.py",
+            }
+        )
+        == "end"
+    )
 
     assert (
         GRAPH_MODULE._route_after_paper_validator(

@@ -144,6 +144,10 @@ def _route_after_architect(state: dict[str, Any]) -> str:
 def _route_after_paper_validator(state: dict[str, Any]) -> str:
     if not state.get("paper_validation_passed", False):
         return "end"
+    # Respect explicit upstream gate failure even when markdown is present.
+    if state.get("feature_blocks_validation_required", False):
+        if state.get("feature_blocks_validation_passed") is False:
+            return "end"
     feature_blocks_markdown = state.get("feature_blocks_markdown")
     if isinstance(feature_blocks_markdown, str):
         validation = validate_feature_blocks_tests_fixtures(feature_blocks_markdown)
