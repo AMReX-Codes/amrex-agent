@@ -52,6 +52,21 @@ _NEW_FILES_SECTION_RE = re.compile(r"^new\s+files\s*:\s*$", re.IGNORECASE)
 _SECTION_HEADER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 /_-]*:\s*$")
 
 
+def _to_int(value: Any) -> int | None:
+    """Convert numeric-like values to int; return None for invalid forms."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value) if value.is_integer() else None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.isdigit():
+            return int(stripped)
+    return None
+
+
 def _has_invalid_modification_entries(payload: Any) -> bool:
     """Return True when payload contains unsupported modification entry shapes."""
     if not isinstance(payload, list):
@@ -66,6 +81,60 @@ def _has_invalid_modification_entries(payload: Any) -> bool:
             continue
         return True
     return False
+
+
+def normalize_unnumbered_236(
+    *,
+    error: str | None = None,
+    offenders: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Normalize complexity-gate payloads to the stable UNNUMBERED-236 contract."""
+    normalized_offenders = offenders if isinstance(offenders, list) else []
+    return {
+        "valid": error is None,
+        "error": error,
+        "offenders": normalized_offenders,
+    }
+
+
+def evaluate_radon_cc_threshold(
+    *,
+    radon_available: bool | None,
+    flagged_functions: list[dict[str, Any]] | None,
+    max_complexity: int = 10,
+) -> dict[str, Any]:
+    """Evaluate whether candidate function complexities are within threshold."""
+    if max_complexity < 0:
+        raise ValueError("max_complexity must be non-negative")
+    if radon_available is False:
+        return normalize_unnumbered_236(error="radon is not installed")
+    if flagged_functions is None:
+        flagged_functions = []
+    if not isinstance(flagged_functions, list):
+        return normalize_unnumbered_236(error="radon_cc_functions must be a list of mappings")
+
+    offenders: list[dict[str, Any]] = []
+    for entry in flagged_functions:
+        if not isinstance(entry, dict):
+            return normalize_unnumbered_236(error="radon_cc_functions entries must be mappings")
+        complexity = _to_int(entry.get("complexity"))
+        if complexity is None:
+            continue
+        if complexity > max_complexity:
+            offenders.append(
+                {
+                    "name": str(entry.get("name", "unknown")),
+                    "complexity": complexity,
+                }
+            )
+
+    if offenders:
+        return normalize_unnumbered_236(
+            error="functions exceed complexity threshold",
+            offenders=offenders,
+        )
+
+    return normalize_unnumbered_236()
 
 
 def _normalize_modifications_for_plan(payload: list[Any]) -> list[tuple[str, Any]]:
@@ -148,6 +217,69 @@ def normalize_modifications(payload: Any) -> list[tuple[str, Any]]:
         raise ValueError("unsupported modification entry shape")
 
     return normalized
+
+
+def normalize_unnumbered_023(modifications: Any) -> list[tuple[str, Any]]:
+    """Compatibility normalization for mixed tuple/list/dict modification payloads."""
+    if modifications is None or not isinstance(modifications, list):
+        return []
+
+    normalized: list[tuple[str, Any]] = []
+    for entry in modifications:
+        if isinstance(entry, tuple) and len(entry) == 2:
+            normalized.append(entry)
+            continue
+        if isinstance(entry, list) and len(entry) == 2:
+            normalized.append((entry[0], entry[1]))
+            continue
+        if isinstance(entry, dict):
+            normalized.append((entry.get("parameter", ""), entry.get("value", "")))
+    return normalized
+
+
+def _normalize_case_reference(case_entry: Any) -> str | None:
+    """Extract a stable case reference string from mixed evidence values."""
+    if isinstance(case_entry, str):
+        stripped = case_entry.strip()
+        return stripped or None
+    if isinstance(case_entry, dict):
+        for key in ("case", "repo_path", "name"):
+            candidate = case_entry.get(key)
+            if isinstance(candidate, str) and candidate.strip():
+                return candidate.strip()
+    return None
+
+
+def build_baseline_evidence_citations(
+    baseline_case: dict[str, Any],
+    similar_cases: Any,
+) -> list[dict[str, str]]:
+    """Build citation-style provenance records for baseline and similar cases."""
+    citations: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+
+    baseline_ref = _normalize_case_reference(
+        baseline_case.get("case") or baseline_case.get("metadata", {}).get("repo_path")
+    )
+    if baseline_ref:
+        key = ("baseline", baseline_ref)
+        seen.add(key)
+        citations.append({"citation_type": "baseline", "case": baseline_ref})
+
+    if not isinstance(similar_cases, list):
+        return citations
+
+    for case_entry in similar_cases:
+        case_ref = _normalize_case_reference(case_entry)
+        if not case_ref:
+            continue
+        key = ("similar_case", case_ref)
+        if key in seen:
+            continue
+        seen.add(key)
+        citations.append({"citation_type": "similar_case", "case": case_ref})
+
+    return citations
 
 
 def _extract_checklist_entries(manifest: dict[str, Any]) -> list[Any] | None:
@@ -359,6 +491,7 @@ class SimulationPlan(BaseModel):
     # === Traceability ===
     case_candidates: list[dict[str, Any]] | None = None      # Top-k candidates
     documentation_context: list[dict[str, Any]] | None = None  # RAG docs
+    baseline_evidence_citations: list[dict[str, str]] | None = None
 
     # === Phase 4 Integrations ===
     visualization: dict[str, Any] | None = None
@@ -522,12 +655,17 @@ class SimulationPlanFactory:
 
         # Build reasoning
         reasoning = cbr_plan.get('reasoning', '')
+        similar_cases = cbr_plan.get('similar_cases', [])
         if not reasoning:
-            similar_cases = cbr_plan.get('similar_cases', [])
             case_name = baseline_case.get('case', 'baseline')
             reasoning = f"CBR plan based on {case_name}"
             if similar_cases:
                 reasoning += f" (patterns from: {', '.join(similar_cases[:3])})"
+
+        baseline_evidence_citations = build_baseline_evidence_citations(
+            baseline_case=baseline_case,
+            similar_cases=similar_cases,
+        )
 
         return SimulationPlan(
             selected_solver=solver_name,
@@ -545,6 +683,7 @@ class SimulationPlanFactory:
             prompt=user_prompt,
             case_candidates=baseline_result.get('candidates', []),
             documentation_context=docs,
+            baseline_evidence_citations=baseline_evidence_citations,
             baseline=baseline_case.get('metadata', {}),
 
             # Metadata
@@ -654,9 +793,7 @@ class SimulationPlanFactory:
 
         # Ensure modifications are tuples, not lists
         if 'modifications' in valid_fields:
-            mods = valid_fields['modifications']
-            if mods and isinstance(mods[0], list):
-                valid_fields['modifications'] = [tuple(m) for m in mods]
+            valid_fields['modifications'] = normalize_unnumbered_023(valid_fields['modifications'])
 
         return SimulationPlan(**valid_fields)
 
@@ -690,10 +827,7 @@ class SimulationPlanFactory:
                'unknown')
 
         # Extract modifications (ensure tuple format)
-        mods = old_dict.get('modifications', [])
-        if mods and isinstance(mods[0], dict):
-            # Convert from dict format to tuple
-            mods = [(m.get('parameter', ''), m.get('value', '')) for m in mods]
+        mods = normalize_unnumbered_023(old_dict.get('modifications', []))
 
         return {
             'selected_solver': solver,

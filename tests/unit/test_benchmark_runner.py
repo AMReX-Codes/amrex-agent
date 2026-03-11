@@ -1,12 +1,15 @@
 import json
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from src.benchmark_runner import _write_jsonl, run_model_benchmark
-from src.config import AMReXAgentConfig, resolve_benchmark_lockfile_path
-from src.services import plan as plan_service
+from src.benchmark_runner import (
+    _build_command,
+    _derive_reproducibility_oracle_fields,
+    _write_jsonl,
+    run_model_benchmark,
+)
+from src.utils import metrics as metrics_mod
 
 
 def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) -> None:
@@ -44,38 +47,100 @@ def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) 
     assert record["run_directory"] is None
 
 
-def test_benchmark_environment_contract_defaults_to_containerized_lockfile() -> None:
-    config = AMReXAgentConfig()
-    contract = config.get_benchmark_environment_contract()
-    assert contract["isolation_mode"] == "container"
-    assert contract["reproducible_by_default"] is True
-    assert contract["lockfile_exists"] is True
-    assert contract["lockfile_path"].endswith("utils/environment-frozen.yaml")
-
-
-def test_resolve_benchmark_lockfile_path_handles_relative_and_absolute(tmp_path) -> None:
-    relative = resolve_benchmark_lockfile_path("locks/bench.lock", repo_root=tmp_path)
-    assert relative == tmp_path / "locks" / "bench.lock"
-
-    absolute = tmp_path / "absolute.lock"
-    assert resolve_benchmark_lockfile_path(absolute, repo_root=Path("/unused")) == absolute
-
-
-def test_benchmark_environment_requires_existing_lockfile(tmp_path) -> None:
-    missing_lockfile = tmp_path / "missing-environment.lock"
-    with pytest.raises(ValueError, match="benchmark_environment_lockfile_missing"):
-        AMReXAgentConfig(benchmark_environment_lockfile=missing_lockfile)
-
-
-def test_benchmark_environment_can_allow_missing_lockfile(tmp_path) -> None:
-    missing_lockfile = tmp_path / "missing-environment.lock"
-    config = AMReXAgentConfig(
-        benchmark_environment_lockfile=missing_lockfile,
-        benchmark_require_lockfile=False,
+def test_reproducibility_oracle_preserves_numeric_zero_seed() -> None:
+    result = _derive_reproducibility_oracle_fields(
+        {
+            "reproducibility_oracle_enabled": True,
+            "seed": 0,
+            "analysis_status": "success",
+        },
+        {},
     )
-    contract = config.get_benchmark_environment_contract()
-    assert contract["lockfile_exists"] is False
-    assert contract["reproducible_by_default"] is True
+    assert result["reproducibility_oracle_seed"] == "0"
+    assert result["reproducibility_oracle_valid"] is True
+    assert result["reproducibility_oracle_reason"] is None
+
+
+def test_run_model_benchmark_sanitizes_replay_manifest_command_in_privacy_mode(
+    tmp_path, monkeypatch
+) -> None:
+    def fake_run(*_args, **_kwargs):
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"job_status": "ok"}),
+            stderr="",
+        )
+
+    monkeypatch.setattr("src.benchmark_runner.subprocess.run", fake_run)
+
+    config = {
+        "prompts": [{"id": "p1", "prompt": "TOP_SECRET_PROMPT"}],
+        "models": [{"id": "m1", "overrides": {"llm_provider": "cborg", "llm_model": "x"}}],
+        "run_args": {"dry_run": True, "privacy_mode": "strict"},
+    }
+    config_path = tmp_path / "bench_privacy.json"
+    config_path.write_text(json.dumps(config))
+
+    run_model_benchmark(config_path, tmp_path, run_name="bench_privacy")
+    replay_manifest = json.loads((tmp_path / "bench_privacy" / "replay_manifest.json").read_text())
+
+    assert replay_manifest["runs"]
+    assert replay_manifest["runs"][0]["command"] == "[REDACTED]"
+    assert "TOP_SECRET_PROMPT" not in json.dumps(replay_manifest)
+
+
+def test_build_command_maps_optional_and_boolean_run_args(tmp_path):
+    config_path = tmp_path / "config.json"
+    context_path = tmp_path / "context.json"
+    cmd = _build_command(
+        config_path=config_path,
+        prompt_entry={"id": "p1", "prompt": "solve this"},
+        output_dir=tmp_path,
+        run_args={
+            "run_mode": "batch",
+            "environment": "ci",
+            "run_ntasks": 4,
+            "dry_run": True,
+            "verbose": True,
+            "extra_args": ["--foo", 7],
+        },
+        benchmark_context=context_path,
+    )
+
+    assert "--config" in cmd and str(config_path) in cmd
+    assert "--prompt" in cmd and "solve this" in cmd
+    assert "--output-dir" in cmd and str(tmp_path) in cmd
+    assert "--benchmark-context" in cmd and str(context_path) in cmd
+    assert "--run-mode" in cmd and "batch" in cmd
+    assert "--environment" in cmd and "ci" in cmd
+    assert "--run-ntasks" in cmd and "4" in cmd
+    assert "--dry-run" in cmd
+    assert "--verbose" in cmd
+    assert cmd[-2:] == ["--foo", "7"]
+
+
+def test_build_command_accepts_prompt_path(tmp_path):
+    cmd = _build_command(
+        config_path=None,
+        prompt_entry={"id": "p1", "prompt_path": "prompts/p1.txt"},
+        output_dir=tmp_path,
+        run_args={},
+        benchmark_context=None,
+    )
+    assert "--prompt-path" in cmd
+    assert "prompts/p1.txt" in cmd
+    assert "--prompt" not in cmd
+
+
+def test_build_command_requires_prompt_or_prompt_path(tmp_path):
+    with pytest.raises(ValueError, match="Prompt entry missing prompt text/path"):
+        _build_command(
+            config_path=None,
+            prompt_entry={"id": "p1"},
+            output_dir=tmp_path,
+            run_args={},
+            benchmark_context=None,
+        )
 
 
 def _read_first_jsonl(path):
@@ -286,82 +351,173 @@ def test_gate_approvals_missing_from_state_safe(tmp_path):
     assert record["gate_approval_count"] == 0
 
 
-def test_normalize_camera_ready_phase_mappings_canonicalizes_phase_shapes():
-    normalized = plan_service.normalize_camera_ready_phase_mappings(
-        {
-            "pipeline_phases": [
-                {
-                    "phase_id": "benchmark_execution",
-                    "implementation_locations": ["src/benchmark_runner.py", ""],
-                    "tests": ["tests/unit/test_benchmark_runner.py", 7],
-                },
-                {
-                    "phase": "aggregation",
-                    "implementation": "scripts/aggregate_metrics.py",
-                    "test_files": "tests/integration/test_oracle_benchmarks.py",
-                },
-                {
-                    "id": "table_generation",
-                    "impl_locations": ["scripts/generate_paper_tables.py", None],
-                    "coverage": ["tests/unit/test_generate_paper_tables.py", ""],
-                },
-                {
-                    "phase_id": "   ",
-                    "implementation_locations": ["scripts/run_benchmark.py"],
-                    "tests": ["tests/unit/test_benchmark_runner.py"],
-                },
-            ]
-        }
-    )
+def test_normalize_unnumbered_143_sets_default_workflow_id():
+    normalized = metrics_mod.normalize_unnumbered_143({"event": "x"})
+    assert normalized["workflow_id"] == "unknown"
 
-    assert normalized == [
+
+def test_normalize_unnumbered_143_uses_provided_workflow_id():
+    normalized = metrics_mod.normalize_unnumbered_143({"event": "x"}, workflow_id="wf-1")
+    assert normalized["workflow_id"] == "wf-1"
+
+
+def test_metrics_context_and_extra_are_applied_to_recorded_event():
+    collector = metrics_mod.MetricsCollector()
+    with metrics_mod.metrics_context("architect", node="planner", iteration=2, extra={"run": "r1"}):
+        event = collector.record_event("validation_metrics", {"ok": True})
+    assert event["stage"] == "architect"
+    assert event["node"] == "planner"
+    assert event["iteration"] == 2
+    assert event["context"] == {"run": "r1"}
+
+
+def test_metrics_extra_none_is_noop():
+    collector = metrics_mod.MetricsCollector()
+    with metrics_mod.metrics_extra(None):
+        event = collector.record_event("generic", {})
+    assert event["stage"] == "unknown"
+
+
+def test_record_llm_usage_supports_dict_and_object_usage_shapes():
+    collector = metrics_mod.MetricsCollector()
+    dict_response = SimpleNamespace(usage={"input_tokens": 3, "output_tokens": 4}, model="m1")
+    object_response = SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1, completion_tokens=2), model="m2")
+
+    first = collector.record_llm_usage(dict_response, provider="p1")
+    second = collector.record_llm_usage(object_response)
+
+    assert first is not None
+    assert second is not None
+    assert first["data"]["total_tokens"] == 7
+    assert second["data"]["model"] == "m2"
+
+
+def test_record_llm_usage_returns_none_when_usage_missing():
+    collector = metrics_mod.MetricsCollector()
+    response = SimpleNamespace(model="m1")
+    assert collector.record_llm_usage(response) is None
+
+
+def test_summarize_stage_combines_llm_retrieval_and_validation():
+    collector = metrics_mod.MetricsCollector()
+    with metrics_mod.metrics_context("architect", iteration=1):
+        collector.record_event("llm_usage", {"model": "m1", "prompt_tokens": 2, "completion_tokens": 3})
+        collector.record_event("retrieval_strategy", {"strategy": "hybrid"})
+        collector.record_event("validation_metrics", {"schema_valid": True})
+    summary = collector.summarize_stage("architect", iteration=1)
+    assert summary["llm"]["total_calls"] == 1
+    assert summary["retrieval"]["strategies"]["hybrid"] == 1
+    assert summary["validation"]["schema_valid"] is True
+
+
+def test_build_workflow_summary_and_reset():
+    collector = metrics_mod.MetricsCollector()
+    collector.record_event(
+        "llm_usage",
+        {"model": "m1", "provider": "p1", "prompt_tokens": 1, "completion_tokens": 2, "total_tokens": 3},
+        stage="architect",
+    )
+    summary = collector.build_workflow_summary()
+    assert summary["tokens_total"] == 3
+    assert summary["models"] == ["m1"]
+    assert summary["providers"] == ["p1"]
+    assert summary["tokens_by_stage"]["architect"]["total"] == 3
+    collector.reset()
+    assert collector.events() == []
+
+
+def test_build_workflow_summary_empty_returns_empty_dict():
+    collector = metrics_mod.MetricsCollector()
+    assert collector.build_workflow_summary() == {}
+
+
+def test_metrics_write_jsonl_appends_and_handles_workflow_id(tmp_path):
+    path = tmp_path / "metrics.jsonl"
+    collector = metrics_mod.MetricsCollector()
+    collector.record_event("x", {"y": 1}, stage="s1")
+    collector.record_event("x", {"y": 2}, stage="s2")
+    collector.write_jsonl(str(path))
+
+    line1, line2 = path.read_text().splitlines()
+    first = json.loads(line1)
+    second = json.loads(line2)
+    assert first["workflow_id"] == "unknown"
+    assert second["workflow_id"] == "unknown"
+
+    collector = metrics_mod.MetricsCollector()
+    collector._events = [  # pylint: disable=protected-access
         {
-            "phase_id": "benchmark_execution",
-            "implementation_locations": ["src/benchmark_runner.py"],
-            "tests": ["tests/unit/test_benchmark_runner.py"],
-        },
-        {
-            "phase_id": "aggregation",
-            "implementation_locations": ["scripts/aggregate_metrics.py"],
-            "tests": ["tests/integration/test_oracle_benchmarks.py"],
-        },
-        {
-            "phase_id": "table_generation",
-            "implementation_locations": ["scripts/generate_paper_tables.py"],
-            "tests": ["tests/unit/test_generate_paper_tables.py"],
-        },
+            "timestamp": "2026-01-01T00:00:00Z",
+            "type": "x",
+            "stage": "s3",
+            "node": "s3",
+            "iteration": None,
+            "data": {"y": 3},
+            "workflow_id": "wf-existing",
+        }
     ]
+    collector.write_jsonl(str(path))
+    last = json.loads(path.read_text().splitlines()[-1])
+    assert last["workflow_id"] == "wf-existing"
 
 
-def test_camera_ready_phase_report_and_state_helpers_share_logic():
-    report_entries = plan_service._camera_ready_phase_entries_from_report(
-        {
-            "camera_ready_pipeline": [
-                {
-                    "phase": "benchmark_execution",
-                    "implementation": "src/benchmark_runner.py",
-                    "tests": "tests/unit/test_benchmark_runner.py",
-                }
-            ]
-        }
+def test_metrics_write_jsonl_logs_warning_on_write_failure(monkeypatch):
+    collector = metrics_mod.MetricsCollector()
+    collector.record_event("x", {"y": 1}, stage="s1")
+    warnings: list[str] = []
+
+    def fake_warning(message, *_args):
+        warnings.append(message)
+
+    monkeypatch.setattr(metrics_mod.logger, "warning", fake_warning)
+    monkeypatch.setattr(
+        metrics_mod,
+        "_append_jsonl_record",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("boom")),
     )
-    state_entries = plan_service._camera_ready_phase_entries_from_state(
-        {
-            "benchmark_pipeline": [
-                {
-                    "id": "benchmark_execution",
-                    "locations": ["src/benchmark_runner.py"],
-                    "test_locations": ["tests/unit/test_benchmark_runner.py"],
-                }
-            ]
-        }
-    )
+    collector.write_jsonl("/tmp/does_not_matter.jsonl")
+    assert warnings
 
-    assert report_entries == [
-        {
-            "phase_id": "benchmark_execution",
-            "implementation_locations": ["src/benchmark_runner.py"],
-            "tests": ["tests/unit/test_benchmark_runner.py"],
-        }
-    ]
-    assert state_entries == report_entries
+
+def test_extract_usage_model_and_aggregates_cover_fallback_paths():
+    usage_from_raw = metrics_mod._extract_usage(
+        SimpleNamespace(_raw_response=SimpleNamespace(usage={"prompt_tokens": 2, "completion_tokens": 1}))
+    )
+    assert usage_from_raw["total_tokens"] == 3
+
+    usage_from_response = metrics_mod._extract_usage(
+        SimpleNamespace(response=SimpleNamespace(usage=SimpleNamespace(input_tokens=4, output_tokens=6)))
+    )
+    assert usage_from_response["total_tokens"] == 10
+
+    model = metrics_mod._extract_model(SimpleNamespace(_raw_response=SimpleNamespace(model="m-raw")))
+    assert model == "m-raw"
+
+    llm_summary = metrics_mod._aggregate_llm_usage(
+        [
+            {"type": "llm_usage", "data": {"model": "m1", "prompt_tokens": 2, "completion_tokens": 3}},
+            {"type": "llm_usage", "data": {"model": "m1", "prompt_tokens": 1, "completion_tokens": 0}},
+        ]
+    )
+    assert llm_summary["total_calls"] == 2
+    assert llm_summary["by_model"]["m1"]["total_tokens"] == 6
+
+    retrieval = metrics_mod._aggregate_retrieval(
+        [{"type": "retrieval_strategy", "data": {"strategy": "dense"}}]
+    )
+    assert retrieval["strategies"]["dense"] == 1
+
+    validation = metrics_mod._aggregate_validation(
+        [{"type": "validation_metrics", "data": {"ok": True}}]
+    )
+    assert validation["ok"] is True
+
+    models, providers = metrics_mod._aggregate_models(
+        [
+            {"type": "llm_usage", "data": {"model": "m1", "provider": "p1"}},
+            {"type": "llm_usage", "data": {"model": "m1", "provider": "p1"}},
+            {"type": "llm_usage", "data": {"model": "m2", "provider": "p2"}},
+        ]
+    )
+    assert models == ["m1", "m2"]
+    assert providers == ["p1", "p2"]

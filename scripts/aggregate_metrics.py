@@ -95,6 +95,7 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
 def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
     if not records:
         return
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         for record in records:
             handle.write(json.dumps(record, default=str))
@@ -139,6 +140,7 @@ def _collect_error_reason_codes(data: dict[str, Any]) -> list[str]:
 def _write_csv(path: Path, rows: list[dict[str, Any]], headers: list[str]) -> None:
     if not rows:
         return
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=headers)
         writer.writeheader()
@@ -206,6 +208,106 @@ def _write_strategy_table_from_csvs(output_dir: Path) -> None:
         return
     table_text = _generate_strategy_table_text(summary_rows, strategy_rows)
     (output_dir / "strategy_comparison_table.md").write_text(table_text, encoding="utf-8")
+
+
+def _escape_latex(value: Any) -> str:
+    text = "" if value is None else str(value)
+    return text.replace("\\", "\\\\").replace("_", "\\_")
+
+
+def _write_latex_table(path: Path, title: str, headers: list[str], rows: list[list[Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cols = " | ".join(["l"] * len(headers))
+    lines = [
+        "\\begin{table}[ht]",
+        "\\centering",
+        f"\\caption{{{_escape_latex(title)}}}",
+        f"\\begin{{tabular}}{{{cols}}}",
+        " \\hline",
+        " & ".join(_escape_latex(h) for h in headers) + " \\\\",
+        " \\hline",
+    ]
+    for row in rows:
+        lines.append(" & ".join(_escape_latex(cell) for cell in row) + " \\\\")
+    lines.extend([" \\hline", "\\end{tabular}", "\\end{table}", ""])
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _write_unnumbered_090_tables(output_dir: Path, records: list[dict[str, Any]]) -> None:
+    table_dir = output_dir / "tables"
+
+    by_model = _group_summary(records, "model_id", "model_id")
+    _write_latex_table(
+        table_dir / "model_comparison.tex",
+        "Model Comparison",
+        ["Model", "Runs", "Success", "Avg Tokens"],
+        [
+            [row.get("model_id"), row.get("total_runs"), row.get("success_rate"), row.get("avg_tokens_total")]
+            for row in by_model
+        ],
+    )
+
+    by_strategy = _group_summary(records, "retrieval_strategy", "retrieval_strategy")
+    _write_latex_table(
+        table_dir / "strategy_performance.tex",
+        "Strategy Performance",
+        ["Strategy", "Runs", "Success", "Avg Tokens"],
+        [
+            [
+                row.get("retrieval_strategy"),
+                row.get("total_runs"),
+                row.get("success_rate"),
+                row.get("avg_tokens_total"),
+            ]
+            for row in by_strategy
+        ],
+    )
+
+    _write_latex_table(
+        table_dir / "validation_effectiveness.tex",
+        "Validation Effectiveness",
+        ["Status", "Count"],
+        [
+            ["completed", sum(1 for record in records if record.get("job_status") == "completed")],
+            ["failed", sum(1 for record in records if record.get("job_status") == "failed")],
+        ],
+    )
+
+    _write_latex_table(
+        table_dir / "cost_analysis.tex",
+        "Cost Analysis",
+        ["Model", "Avg Input Tokens", "Avg Output Tokens", "Avg Total Tokens"],
+        [
+            [
+                row.get("model_id"),
+                row.get("avg_tokens_input"),
+                row.get("avg_tokens_output"),
+                row.get("avg_tokens_total"),
+            ]
+            for row in by_model
+        ],
+    )
+
+    iteration_values = sorted(
+        {
+            int(record.get("iteration"))
+            for record in records
+            if isinstance(record.get("iteration"), int)
+        }
+    )
+    _write_latex_table(
+        table_dir / "iteration_convergence.tex",
+        "Iteration Convergence",
+        ["Iteration", "Label", "Runs"],
+        [
+            [
+                iteration,
+                f"At Iter {iteration}",
+                sum(1 for record in records if record.get("iteration") == iteration),
+            ]
+            for iteration in iteration_values
+        ],
+    )
 
 
 def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[dict[str, Any]]:
@@ -385,6 +487,7 @@ def main() -> None:
         "avg_tokens_output",
     ])
     _write_strategy_table_from_csvs(output_dir)
+    _write_unnumbered_090_tables(output_dir, records)
     print(json.dumps({"output": str(output_path), "records": len(records)}, indent=2))
 
 

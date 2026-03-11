@@ -75,6 +75,7 @@ class SolverSelection:
 
     config: Any
     confidence: float
+    alternatives: list[dict[str, Any]] | None = None
 
     def __iter__(self):
         yield self.config
@@ -658,7 +659,7 @@ class ArchitectService:
 
         # Query Level 0 index
         logger.debug(f" Level0 searching for: '{query}'")
-        results = self.level0_searcher.search(query, top_k=1)
+        results = self.level0_searcher.search(query, top_k=5)
 
         logger.debug(f" Level0 results: {[(r['code'], r['score']) for r in results]}")
 
@@ -669,6 +670,24 @@ class ArchitectService:
         best_match = results[0]
         code_name = best_match["code"]
         confidence = best_match["score"]
+        alternatives: list[dict[str, Any]] = []
+        for index, item in enumerate(results):
+            alt_code = item.get("code")
+            alt_score = float(item.get("score") or 0.0)
+            alternatives.append(
+                {
+                    "code": alt_code,
+                    "score": alt_score,
+                    "selected": index == 0,
+                    "selection_source": "level0",
+                    "selection_reason": "Highest Level0 weighted score" if index == 0 else None,
+                    "rejection_reason": (
+                        None
+                        if index == 0
+                        else f"Lower Level0 score than selected solver ({alt_score:.2f} < {confidence:.2f})"
+                    ),
+                }
+            )
 
         logger.info("Selected solver: %s (confidence: %.2f)", code_name, confidence)
 
@@ -684,6 +703,29 @@ class ArchitectService:
                     code_name = llm_code_name
                     # Set confidence to 0.8 for LLM-based selection (heuristic-based)
                     confidence = 0.8
+                    for alt in alternatives:
+                        if alt.get("code") == code_name:
+                            alt["selected"] = True
+                            alt["selection_source"] = "llm_fallback"
+                            alt["selection_reason"] = "Selected by LLM fallback for low-confidence Level0 result"
+                            alt["rejection_reason"] = None
+                        else:
+                            alt["selected"] = False
+                            alt["rejection_reason"] = (
+                                "LLM fallback selected a different solver after low-confidence Level0 result"
+                            )
+                    if not any(alt.get("code") == code_name for alt in alternatives):
+                        alternatives.insert(
+                            0,
+                            {
+                                "code": code_name,
+                                "score": confidence,
+                                "selected": True,
+                                "selection_source": "llm_fallback",
+                                "selection_reason": "Selected by LLM fallback for low-confidence Level0 result",
+                                "rejection_reason": None,
+                            },
+                        )
                 except Exception as e:
                     logger.warning(f"LLM fallback failed: {e}. Using vector search result.")
             else:
@@ -691,7 +733,7 @@ class ArchitectService:
 
         # Map to Config class
         if code_name in self.code_configs:
-            return SolverSelection(self.code_configs[code_name], confidence)
+            return SolverSelection(self.code_configs[code_name], confidence, alternatives=alternatives)
 
         raise ValueError(f"Solver {code_name} found in index but not in registry")
 
@@ -729,13 +771,28 @@ class ArchitectService:
         # Execute search (FR-3: search all 7 doc indices)
         results = searcher.search_all_docs(query, top_k=5)
 
+        normalized_results: list[dict[str, Any]] = []
+        for item in results:
+            normalized = dict(item)
+            metadata = normalized.get("metadata")
+            if isinstance(metadata, dict):
+                source_ref = metadata.get("source")
+                section = metadata.get("section")
+                if source_ref and not normalized.get("input_reference"):
+                    normalized["input_reference"] = source_ref
+                if source_ref and (not normalized.get("source") or normalized.get("source") == "chemistry_mechanisms"):
+                    normalized["source"] = source_ref
+                if section and not normalized.get("content"):
+                    normalized["content"] = str(section)
+            normalized_results.append(normalized)
+
         logger.debug(
             "Retrieved %d context documents for %s",
-            len(results),
+            len(normalized_results),
             solver_name
         )
 
-        return results
+        return normalized_results
 
     def select_baseline(
         self,

@@ -334,3 +334,64 @@ class TestCreateFromSchemaEdgeCases:
 
 # Test marker
 pytestmark = pytest.mark.input_writer_config_model_factory
+
+
+class TestSolverConfigIntegrationGuards:
+    """BDD coverage for F5.3 new solver integration guardrails."""
+
+    def test_validate_new_code_integration_skips_legacy_codes(self):
+        """
+        Given: A legacy solver config in the exemption list
+        When:  validate_new_code_integration() is called
+        Then:  Validation should pass without LOC enforcement
+        """
+        from database.configs import validate_new_code_integration, PeleCConfig
+
+        validate_new_code_integration(PeleCConfig)
+
+    def test_validate_new_code_integration_rejects_over_budget(self, monkeypatch, tmp_path):
+        """
+        Given: A newly integrated solver config with >=300 logical LOC
+        When:  validate_new_code_integration() is called
+        Then:  It should raise ValueError to enforce the PRD budget
+        """
+        import database.configs as configs_module
+        from database.configs import validate_new_code_integration
+
+        source_file = tmp_path / "new_solver_config.py"
+        source_file.write_text("\n".join("x = 1" for _ in range(300)), encoding="utf-8")
+
+        class NewSolverConfig:
+            code_name = "NewSolver"
+
+        monkeypatch.setattr(
+            configs_module.inspect,
+            "getsourcefile",
+            lambda _: str(source_file),
+        )
+
+        with pytest.raises(ValueError, match="exceeds LOC budget"):
+            validate_new_code_integration(NewSolverConfig)
+
+    def test_validate_new_code_integration_allows_under_budget(self, monkeypatch, tmp_path):
+        """
+        Given: A newly integrated solver config with fewer than 300 logical LOC
+        When:  validate_new_code_integration() is called
+        Then:  Validation should pass
+        """
+        import database.configs as configs_module
+        from database.configs import validate_new_code_integration
+
+        source_file = tmp_path / "compact_solver_config.py"
+        source_file.write_text("\n".join("x = 1" for _ in range(299)), encoding="utf-8")
+
+        class CompactSolverConfig:
+            code_name = "CompactSolver"
+
+        monkeypatch.setattr(
+            configs_module.inspect,
+            "getsourcefile",
+            lambda _: str(source_file),
+        )
+
+        validate_new_code_integration(CompactSolverConfig)

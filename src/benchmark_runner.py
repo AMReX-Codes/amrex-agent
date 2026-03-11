@@ -22,6 +22,65 @@ DEFAULT_BENCHMARK_SEED = 1729
 # ===== Shared helpers =====
 _FEATURE_BLOCK_HEADER_RE = re.compile(r"^##\s+\[([^\]]+)\]\s*(.+?)\s*$")
 _TESTS_FIXTURES_LINE_RE = re.compile(r"^tests/fixtures\s*:\s*(.+)$", re.IGNORECASE)
+_REPRODUCIBILITY_ORACLE_VOLATILE_KEYS = frozenset(
+    {
+        "timestamp",
+        "created_at",
+        "updated_at",
+        "started_at",
+        "finished_at",
+        "duration_seconds",
+        "elapsed_seconds",
+        "run_id",
+        "benchmark_run_id",
+        "benchmark_timestamp",
+        "trace_id",
+        "session_id",
+        "seed",
+        "reproducibility_seed",
+        "reproducibility_oracle_digest",
+        "reproducibility_oracle_expected_digest",
+        "reproducibility_oracle_valid",
+        "reproducibility_oracle_reason",
+    }
+)
+
+
+def _first_non_none(*values: Any) -> Any:
+    for value in values:
+        if value is not None:
+            return value
+    return None
+
+
+def _normalize_reproducibility_seed(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _oracle_canonicalize(value: Any) -> Any:
+    if isinstance(value, dict):
+        normalized: dict[str, Any] = {}
+        for key, child in sorted(value.items(), key=lambda item: str(item[0])):
+            key_text = str(key)
+            if key_text.startswith("__"):
+                continue
+            if key_text in _REPRODUCIBILITY_ORACLE_VOLATILE_KEYS:
+                continue
+            normalized[key_text] = _oracle_canonicalize(child)
+        return normalized
+    if isinstance(value, list):
+        return [_oracle_canonicalize(item) for item in value]
+    return value
+
+
+def _build_reproducibility_oracle_digest(seed: str, payload: dict[str, Any]) -> str:
+    canonical_payload = _oracle_canonicalize(payload)
+    digest_input = {"seed": seed, "payload": canonical_payload}
+    digest_body = json.dumps(digest_input, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(digest_body.encode("utf-8")).hexdigest()
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -823,6 +882,67 @@ def _derive_feature_fixture_mapping_fields(
     }
 
 
+def _derive_reproducibility_oracle_fields(
+    payload: dict[str, Any],
+    graph_state: dict[str, Any],
+) -> dict[str, Any]:
+    enabled = bool(
+        payload.get("reproducibility_oracle_enabled")
+        or graph_state.get("reproducibility_oracle_enabled")
+    )
+    seed = _normalize_reproducibility_seed(
+        _first_non_none(
+            payload.get("seed"),
+            payload.get("reproducibility_seed"),
+            graph_state.get("seed"),
+            graph_state.get("reproducibility_seed"),
+        )
+    )
+
+    if not enabled and seed is None:
+        return {
+            "reproducibility_oracle_enabled": False,
+            "reproducibility_oracle_seed": None,
+            "reproducibility_oracle_digest": None,
+            "reproducibility_oracle_valid": True,
+            "reproducibility_oracle_reason": None,
+        }
+
+    if seed is None:
+        return {
+            "reproducibility_oracle_enabled": True,
+            "reproducibility_oracle_seed": None,
+            "reproducibility_oracle_digest": None,
+            "reproducibility_oracle_valid": False,
+            "reproducibility_oracle_reason": "seed_missing",
+        }
+
+    oracle_payload = payload.get("reproducibility_oracle_payload")
+    if not isinstance(oracle_payload, dict):
+        oracle_payload = graph_state if graph_state else payload
+    digest = _build_reproducibility_oracle_digest(seed, oracle_payload)
+
+    expected_digest = payload.get("reproducibility_oracle_expected_digest")
+    if not isinstance(expected_digest, str):
+        expected_digest = graph_state.get("reproducibility_oracle_expected_digest")
+    expected_digest = expected_digest.strip() if isinstance(expected_digest, str) else None
+
+    valid = True
+    reason = None
+    if expected_digest and expected_digest != digest:
+        valid = False
+        reason = "seed_locked_oracle_mismatch"
+
+    return {
+        "reproducibility_oracle_enabled": True,
+        "reproducibility_oracle_seed": seed,
+        "reproducibility_oracle_digest": digest,
+        "reproducibility_oracle_expected_digest": expected_digest,
+        "reproducibility_oracle_valid": valid,
+        "reproducibility_oracle_reason": reason,
+    }
+
+
 def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(payload)
     graph_state = normalized.pop("__graph_state", None)
@@ -837,6 +957,7 @@ def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized.update(_derive_claim_evidence_fields(normalized, graph_state))
     normalized.update(_derive_uc_summary_traceability_fields(normalized, graph_state))
     normalized.update(_derive_feature_fixture_mapping_fields(normalized, graph_state))
+    normalized.update(_derive_reproducibility_oracle_fields(normalized, graph_state))
     return normalized
 
 
@@ -976,6 +1097,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         "enforce_replay": determinism_controls["enforce_replay"],
         "replay_fingerprint": determinism_controls["replay_fingerprint"],
         "planned_runs": [],
+        "runs": [],
     }
 
     prompt_entries = []
@@ -1051,11 +1173,20 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             benchmark_context.write_text(json.dumps(context_payload, indent=2, default=str))
 
             cmd = _build_command(model_config_path, prompt, prompt_dir, run_args, benchmark_context)
+            replay_command = cmd if privacy_config is None else "[REDACTED]"
             replay_manifest["planned_runs"].append(
                 {
                     "model_id": model_id,
                     "prompt_id": prompt_id,
-                    "command": cmd,
+                    "command": replay_command,
+                    "output_dir": str(prompt_dir),
+                }
+            )
+            replay_manifest["runs"].append(
+                {
+                    "model_id": model_id,
+                    "prompt_id": prompt_id,
+                    "command": replay_command,
                     "output_dir": str(prompt_dir),
                 }
             )

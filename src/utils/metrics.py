@@ -94,6 +94,15 @@ def normalize_metrics_event_record(
     return normalized
 
 
+def normalize_unnumbered_143(
+    event: dict[str, Any],
+    *,
+    workflow_id: str | None = None,
+) -> dict[str, Any]:
+    """Back-compat alias for workflow-id normalization."""
+    return normalize_metrics_event_record(event, workflow_id=workflow_id)
+
+
 def _clean_text(value: Any) -> str | None:
     if not isinstance(value, str):
         return None
@@ -644,6 +653,64 @@ def normalize_average_token_fields(row: dict[str, Any]) -> dict[str, float | Non
 
 
 metrics_collector = MetricsCollector()
+
+
+RISK_LINK_VALIDATION_ARTIFACT = "risk_link_traceability_checker_v1"
+
+
+def validate_risk_links(
+    risk_links: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    """
+    Validate that each risk has mitigation and validation artifact linkage.
+
+    A missing payload is treated as valid for backwards compatibility.
+    """
+    if risk_links is None:
+        return {
+            "risk_links_valid": True,
+            "risk_links_missing": [],
+            "risk_links_error": None,
+            "risk_links_validation_artifact": RISK_LINK_VALIDATION_ARTIFACT,
+        }
+
+    if not isinstance(risk_links, list):
+        return {
+            "risk_links_valid": False,
+            "risk_links_missing": [],
+            "risk_links_error": "risk_links must be a list[dict]",
+            "risk_links_validation_artifact": RISK_LINK_VALIDATION_ARTIFACT,
+        }
+
+    missing_links: list[dict[str, Any]] = []
+    for index, item in enumerate(risk_links):
+        if not isinstance(item, dict):
+            missing_links.append(
+                {"index": index, "missing": ["risk_id", "mitigation", "validation_artifact"]}
+            )
+            continue
+
+        missing_fields: list[str] = []
+        risk_id = item.get("risk_id")
+        mitigation = item.get("mitigation")
+        validation_artifact = item.get("validation_artifact")
+
+        if not isinstance(risk_id, str) or not risk_id.strip():
+            missing_fields.append("risk_id")
+        if not isinstance(mitigation, str) or not mitigation.strip():
+            missing_fields.append("mitigation")
+        if not isinstance(validation_artifact, str) or not validation_artifact.strip():
+            missing_fields.append("validation_artifact")
+
+        if missing_fields:
+            missing_links.append({"index": index, "missing": missing_fields})
+
+    return {
+        "risk_links_valid": not missing_links,
+        "risk_links_missing": missing_links,
+        "risk_links_error": None if not missing_links else "risk link traceability check failed",
+        "risk_links_validation_artifact": RISK_LINK_VALIDATION_ARTIFACT,
+    }
 
 
 def validate_risk_owner_status_updates(

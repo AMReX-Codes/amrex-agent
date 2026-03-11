@@ -10,6 +10,7 @@ from src.models.sweep_schemas import (
     SweepType,
     validate_transition,
 )
+from src.services.knowledge import normalize_unnumbered_152
 from src.services.sweep_orchestrator import (
     orchestrate_sweep,
     poll_child_status,
@@ -335,3 +336,42 @@ class TestFeatureFlag:
 
         assert parent is None
         assert submit_fn.call_count == 1
+
+
+class TestKnowledgeNormalization:
+    def test_normalize_prefers_answer_and_preserves_sources(self):
+        normalized = normalize_unnumbered_152(
+            {"answer": "ready", "sources": [{"id": 1}], "confidence": 0.91},
+            method="llm",
+        )
+
+        assert normalized["answer"] == "ready"
+        assert normalized["sources"] == [{"id": 1}]
+        assert normalized["confidence"] == 0.91
+        assert normalized["method"] == "llm"
+
+    def test_normalize_falls_back_to_output_and_default_confidence(self):
+        normalized = normalize_unnumbered_152(
+            {"output": "from output", "sources": "single", "confidence": "bad"},
+            default_confidence=0.25,
+            error="missing_knowledge_tools",
+        )
+
+        assert normalized["answer"] == "from output"
+        assert normalized["sources"] == ["single"]
+        assert normalized["confidence"] == 0.25
+        assert normalized["error"] == "missing_knowledge_tools"
+
+    def test_normalize_handles_non_dict_payload(self):
+        normalized = normalize_unnumbered_152("raw answer", default_confidence=0.8)
+
+        assert normalized == {"answer": "raw answer", "sources": [], "confidence": 0.8}
+
+    def test_normalize_uses_fallback_answer_for_none(self):
+        normalized = normalize_unnumbered_152(
+            None,
+            fallback_answer="Knowledge base not loaded",
+            default_confidence=0.0,
+        )
+
+        assert normalized == {"answer": "Knowledge base not loaded", "sources": [], "confidence": 0.0}

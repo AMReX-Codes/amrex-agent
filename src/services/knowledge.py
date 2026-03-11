@@ -17,6 +17,53 @@ logger.debug(f"[DEBUG] AMREX_AGENT_ROOT: {AMREX_AGENT_ROOT.resolve()}")
 logger.debug(f"[DEBUG] sys.path[0]: {sys.path[0]}")
 
 
+def normalize_unnumbered_152(
+    payload: Any,
+    *,
+    method: str | None = None,
+    error: str | None = None,
+    default_confidence: float = 0.0,
+    fallback_answer: str = "",
+) -> dict[str, Any]:
+    """
+    Normalize knowledge responses to a stable answer/sources/confidence contract.
+    """
+    if not isinstance(payload, dict):
+        answer = fallback_answer if payload is None else str(payload)
+        return {"answer": answer, "sources": [], "confidence": default_confidence}
+
+    answer = payload.get("answer")
+    if not isinstance(answer, str) or not answer:
+        output = payload.get("output")
+        answer = output if isinstance(output, str) and output else fallback_answer
+
+    sources = payload.get("sources", [])
+    if isinstance(sources, list):
+        normalized_sources = sources
+    elif sources is None:
+        normalized_sources = []
+    else:
+        normalized_sources = [sources]
+
+    confidence_value = payload.get("confidence")
+    confidence = (
+        confidence_value
+        if isinstance(confidence_value, (int, float)) and not isinstance(confidence_value, bool)
+        else default_confidence
+    )
+
+    normalized = {
+        "answer": answer,
+        "sources": normalized_sources,
+        "confidence": confidence,
+    }
+    if method:
+        normalized["method"] = method
+    if error:
+        normalized["error"] = error
+    return normalized
+
+
 class PeleKnowledgeService:
     """Knowledge base service.
 
@@ -96,6 +143,10 @@ class PeleKnowledgeService:
         dict
             Answer payload with sources and confidence.
         """
+        # Track router/index strategy choice so retrieval metrics contain both
+        # retrieval mode and upstream strategy decision.
+        strategy_choice = self._resolve_strategy_choice(context)
+
         # Try FAISS first if available
         faiss_result = None
         if self.embeddings and self.embeddings.indices_available() and self.config.faiss_fallback_to_llm:
@@ -108,6 +159,7 @@ class PeleKnowledgeService:
                     strategy="faiss",
                     confidence=faiss_result.get("confidence", 0.0),
                     source=faiss_result.get("source"),
+                    strategy_choice=strategy_choice,
                 )
                 return faiss_result
 
@@ -119,6 +171,7 @@ class PeleKnowledgeService:
                     strategy="faiss",
                     confidence=faiss_result.get("confidence", 0.0),
                     source=faiss_result.get("source"),
+                    strategy_choice=strategy_choice,
                 )
                 return faiss_result
             return {
@@ -136,6 +189,7 @@ class PeleKnowledgeService:
                     strategy="faiss",
                     confidence=faiss_result.get("confidence", 0.0),
                     source=faiss_result.get("source"),
+                    strategy_choice=strategy_choice,
                 )
                 return faiss_result
             return {
@@ -176,6 +230,7 @@ class PeleKnowledgeService:
                     confidence=llm_result.get("confidence", 0.0),
                     source=llm_result.get("method"),
                     faiss_confidence=faiss_result.get("confidence", 0.0),
+                    strategy_choice=strategy_choice,
                 )
                 return self._combine_results(faiss_result, llm_result)
 
@@ -183,6 +238,7 @@ class PeleKnowledgeService:
                 strategy="llm",
                 confidence=llm_result.get("confidence", 0.0),
                 source=llm_result.get("method"),
+                strategy_choice=strategy_choice,
             )
             return llm_result
 
@@ -196,6 +252,7 @@ class PeleKnowledgeService:
                     strategy="faiss_fallback",
                     confidence=faiss_result.get("confidence", 0.0),
                     source=faiss_result.get("source"),
+                    strategy_choice=strategy_choice,
                 )
                 return faiss_result
 
@@ -531,6 +588,17 @@ LLM analysis:
         solver_config = self._resolve_solver_config(solver_name)
         return self._get_knowledge_tools(solver_config), solver_config
 
+    def _resolve_strategy_choice(self, context: dict | None) -> str:
+        if isinstance(context, dict):
+            for key in ("indexing_strategy", "strategy", "retrieval_strategy", "router_strategy"):
+                value = context.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+        config_strategy = getattr(self.config, "indexing_strategy", None)
+        if isinstance(config_strategy, str) and config_strategy.strip():
+            return config_strategy.strip()
+        return "unknown"
+
     @staticmethod
     def _invoke_tool(tool, payload: dict[str, Any]):
         if hasattr(tool, "invoke"):
@@ -572,14 +640,18 @@ def _record_retrieval_metrics(
     confidence: float | None = None,
     source: str | None = None,
     faiss_confidence: float | None = None,
+    strategy_choice: str | None = None,
 ) -> None:
     try:
         from src.utils.metrics import metrics_collector
 
+        normalized_choice = strategy_choice if isinstance(strategy_choice, str) and strategy_choice.strip() else "unknown"
         metrics_collector.record_event(
             "retrieval_strategy",
             {
                 "strategy": strategy,
+                "strategy_choice": normalized_choice,
+                "indexing_strategy": normalized_choice,
                 "confidence": confidence,
                 "faiss_confidence": faiss_confidence,
                 "source": source,
