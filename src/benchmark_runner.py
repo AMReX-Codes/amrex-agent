@@ -508,6 +508,13 @@ def _normalize_reproducibility_seed(seed: Any) -> str | None:
     return None
 
 
+def _first_non_none(*values: Any) -> Any:
+    for value in values:
+        if value is not None:
+            return value
+    return None
+
+
 def _oracle_canonicalize(value: Any) -> Any:
     if isinstance(value, dict):
         normalized: dict[str, Any] = {}
@@ -577,10 +584,12 @@ def _derive_reproducibility_oracle_fields(
         or graph_state.get("reproducibility_oracle_enabled")
     )
     seed = _normalize_reproducibility_seed(
-        payload.get("seed")
-        or payload.get("reproducibility_seed")
-        or graph_state.get("seed")
-        or graph_state.get("reproducibility_seed")
+        _first_non_none(
+            payload.get("seed"),
+            payload.get("reproducibility_seed"),
+            graph_state.get("seed"),
+            graph_state.get("reproducibility_seed"),
+        )
     )
 
     if not enabled and seed is None:
@@ -681,7 +690,10 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
     env_common = bench_config.get("env") or {}
     privacy_config = _privacy_config(run_args)
     benchmark_seed = _normalize_reproducibility_seed(
-        run_args.get("seed") or run_args.get("reproducibility_seed")
+        _first_non_none(
+            run_args.get("seed"),
+            run_args.get("reproducibility_seed"),
+        )
     )
     if benchmark_seed is not None:
         run_args["seed"] = benchmark_seed
@@ -926,6 +938,11 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         from src.utils.privacy import sanitize_payload
 
         manifest = sanitize_payload(manifest, config=privacy_config)
+        replay_manifest = sanitize_payload(replay_manifest, config=privacy_config)
+        for run_entry in replay_manifest.get("runs", []):
+            if isinstance(run_entry, dict) and "command" in run_entry:
+                # Commands can embed raw prompt text; keep digest metadata only.
+                run_entry["command"] = "[REDACTED]"
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
     (run_dir / "replay_manifest.json").write_text(json.dumps(replay_manifest, indent=2))
     return {"run_dir": str(run_dir), "metrics": str(raw_metrics_path)}

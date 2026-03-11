@@ -3,7 +3,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.benchmark_runner import _build_command, _write_jsonl, run_model_benchmark
+from src.benchmark_runner import (
+    _build_command,
+    _derive_reproducibility_oracle_fields,
+    _write_jsonl,
+    run_model_benchmark,
+)
 from src.utils import metrics as metrics_mod
 
 
@@ -40,6 +45,48 @@ def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) 
     assert record["model_id"] == "m1"
     assert record["prompt_id"] == "p1"
     assert record["run_directory"] is None
+
+
+def test_reproducibility_oracle_preserves_numeric_zero_seed() -> None:
+    result = _derive_reproducibility_oracle_fields(
+        {
+            "reproducibility_oracle_enabled": True,
+            "seed": 0,
+            "analysis_status": "success",
+        },
+        {},
+    )
+    assert result["reproducibility_oracle_seed"] == "0"
+    assert result["reproducibility_oracle_valid"] is True
+    assert result["reproducibility_oracle_reason"] is None
+
+
+def test_run_model_benchmark_sanitizes_replay_manifest_command_in_privacy_mode(
+    tmp_path, monkeypatch
+) -> None:
+    def fake_run(*_args, **_kwargs):
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"job_status": "ok"}),
+            stderr="",
+        )
+
+    monkeypatch.setattr("src.benchmark_runner.subprocess.run", fake_run)
+
+    config = {
+        "prompts": [{"id": "p1", "prompt": "TOP_SECRET_PROMPT"}],
+        "models": [{"id": "m1", "overrides": {"llm_provider": "cborg", "llm_model": "x"}}],
+        "run_args": {"dry_run": True, "privacy_mode": "strict"},
+    }
+    config_path = tmp_path / "bench_privacy.json"
+    config_path.write_text(json.dumps(config))
+
+    run_model_benchmark(config_path, tmp_path, run_name="bench_privacy")
+    replay_manifest = json.loads((tmp_path / "bench_privacy" / "replay_manifest.json").read_text())
+
+    assert replay_manifest["runs"]
+    assert replay_manifest["runs"][0]["command"] == "[REDACTED]"
+    assert "TOP_SECRET_PROMPT" not in json.dumps(replay_manifest)
 
 
 def test_build_command_maps_optional_and_boolean_run_args(tmp_path):
