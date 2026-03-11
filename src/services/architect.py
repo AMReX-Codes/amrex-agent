@@ -81,6 +81,32 @@ class SolverSelection:
         yield self.config
         yield self.confidence
 
+    def __getattr__(self, name: str) -> Any:
+        # Backward compatibility: legacy call sites may treat select_solver(...)
+        # return as a config object when not tuple-unpacked.
+        if self.config is not None:
+            return getattr(self.config, name)
+        raise AttributeError(name)
+
+
+def _normalize_solver_selection(selection: Any) -> SolverSelection:
+    """Normalize legacy/new solver selection return shapes."""
+    if isinstance(selection, SolverSelection):
+        return selection
+
+    if isinstance(selection, tuple):
+        if len(selection) >= 2:
+            config = selection[0]
+            confidence = selection[1]
+            citations: list[dict[str, Any]] = []
+            if len(selection) >= 3 and isinstance(selection[2], list):
+                citations = [item for item in selection[2] if isinstance(item, dict)]
+            return SolverSelection(config, float(confidence or 0.0), citations=citations)
+        if len(selection) == 1:
+            return SolverSelection(selection[0], 0.0, citations=[])
+
+    return SolverSelection(selection, 0.0, citations=[])
+
     @property
     def code_name(self) -> str | None:
         """
@@ -609,7 +635,12 @@ class ArchitectService:
                 logger.debug("Level0 citation search failed for %s: %s", index_name, exc)
                 continue
 
-            matching_hits = [hit for hit in hits if hit.get("code") == selected_code]
+            if not isinstance(hits, list):
+                continue
+
+            matching_hits = [
+                hit for hit in hits if isinstance(hit, dict) and hit.get("code") == selected_code
+            ]
             if not matching_hits:
                 continue
             matching_hits.sort(key=lambda item: float(item.get("score", 0.0)), reverse=True)
@@ -2167,7 +2198,7 @@ class ArchitectService:
             Plan with solver, baseline, modifications, and reasoning.
         """
         # 1. Select Solver (Architect Service: Solver Selection)
-        solver_selection = self.select_solver(user_prompt)
+        solver_selection = _normalize_solver_selection(self.select_solver(user_prompt))
         solver_config = solver_selection.config
         solver_confidence = solver_selection.confidence
         solver_citations = solver_selection.citations
