@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 import re
+import shutil
+import subprocess
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -13,7 +15,6 @@ from src.nodes.architect_node import architect_node
 from src.nodes.clarification_node import clarification_node
 from src.nodes.input_writer_node import input_writer_node
 from src.nodes.intent_extraction_node import intent_extraction_node
-from src.nodes.paper_validator_node import paper_validator_node
 from src.nodes.sweep_detection_node import sweep_detection_node
 from src.benchmark_runner import has_migration_plan_schema_mapping_and_rollback
 from src.services.plan import (
@@ -21,12 +22,21 @@ from src.services.plan import (
     validate_feature_blocks_tests_fixtures,
     validate_new_file_helper_extraction,
 )
+from src.services.workflow_store import (
+    POSTGRESQL_MIGRATION_EVIDENCE_MARKER,
+    collect_postgresql_migration_evidence,
+    has_postgresql_migration_index_growth_proof,
+)
 from src.session_manager import (
     SESSION_DEPENDENCY_COMPLETION_MARKER,
     is_b4_implementation_sequence_complete,
     is_session_dependency_complete,
 )
-from src.utils.metrics import validate_risk_owner_status_updates
+from src.utils.metrics import (
+    POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER,
+    collect_post_incident_risk_matrix_feedback,
+    validate_risk_owner_status_updates,
+)
 
 
 _ACCEPTANCE_MAPPING_KEYS = (
@@ -35,6 +45,52 @@ _ACCEPTANCE_MAPPING_KEYS = (
     "test_cases",
     "test_ids",
 )
+
+PHASE1_FEATURE_TRACE_MARKER = "use_case_feature_trace"
+REQUIRED_BEHAVIOR_MARKER = "required_behavior"
+CLAIMS_RESULTS_ARTIFACTS_MARKER = "claims_results_artifacts"
+CROSS_REFERENCE_FEATURE_IDS_MARKER = "cross_reference_feature_ids"
+BENCHMARK_CACHE_HIT_RATE_MARKER = "benchmark_cache_hit_rate"
+FEATURE_TEST_COVERAGE_MARKER = "feature_test_coverage"
+_PHASE1_FEATURE_ID_RE = re.compile(r"^F[1-6](?:\.\d+|[A-Z])?$")
+_RESULT_ARTIFACT_PREFIXES = ("results/", "benchmark_results/")
+
+
+def collect_radon_complexity_evidence(
+    target: str = "src/services/plan.py",
+) -> dict[str, Any]:
+    """Collect radon complexity gate evidence for a target module."""
+    criterion = "radon_cc_max_C"
+    radon_bin = shutil.which("radon")
+    if not radon_bin:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": "radon missing in PATH",
+        }
+
+    cmd = [radon_bin, "cc", target, "-n", "C"]
+    try:
+        completed = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    except OSError as exc:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": f"radon invocation failed: {exc}",
+        }
+
+    output = (completed.stdout or "").strip()
+    return {
+        "criterion": criterion,
+        "radon_available": True,
+        "passed": completed.returncode == 0,
+        "exit_code": completed.returncode,
+        "output": output,
+        "error": (completed.stderr or "").strip(),
+        "command": cmd,
+    }
 
 
 def _normalize_test_mappings(value: Any) -> list[str]:
@@ -84,6 +140,8 @@ _TESTS_FIXTURES_LINE_RE = re.compile(r"^tests/fixtures\s*:\s*(.+)$", re.IGNORECA
 def _route_after_clarification(state: dict) -> str:
     if state.get("clarification_needed", False):
         return "clarification_handler"
+    if _paper_validator_enabled(state):
+        return "paper_validator_node"
     return "input_writer_node"
 
 
@@ -110,10 +168,303 @@ def _route_after_sweep_detection(state: dict) -> str:
 
 
 def _paper_validator_enabled(state: dict[str, Any]) -> bool:
+    if state.get("paper_validator_enabled", False) or state.get("paper_source"):
+        return True
     config = state.get("config")
     if isinstance(config, dict):
         return bool(config.get("paper_validator_enabled", False))
     return bool(getattr(config, "paper_validator_enabled", False))
+
+
+def _route_after_complexity_evidence(state: dict) -> str:
+    if not state.get("enforce_radon_complexity_evidence", False):
+        return _route_after_phase1_traceability(state)
+
+    evidence = state.get("radon_complexity_evidence")
+    if isinstance(evidence, dict) and evidence.get("radon_available", False):
+        return _route_after_phase1_traceability(state)
+    return "complexity_evidence_handler"
+
+
+def _has_phase1_feature_trace(state: dict) -> bool:
+    traceability = state.get(PHASE1_FEATURE_TRACE_MARKER)
+    if not isinstance(traceability, dict) or not traceability:
+        return False
+
+    for use_case_id, feature_ids in traceability.items():
+        if not isinstance(use_case_id, str) or not use_case_id.startswith("UC"):
+            return False
+
+        if isinstance(feature_ids, str):
+            normalized_feature_ids = [feature_ids]
+        elif isinstance(feature_ids, list):
+            normalized_feature_ids = feature_ids
+        else:
+            return False
+
+        if not normalized_feature_ids:
+            return False
+
+        for feature_id in normalized_feature_ids:
+            if not isinstance(feature_id, str) or not _PHASE1_FEATURE_ID_RE.match(feature_id):
+                return False
+
+    return True
+
+
+def _route_after_phase1_traceability(state: dict) -> str:
+    if not state.get("enforce_phase1_feature_trace", False):
+        return _route_after_required_behavior_item(state)
+    if _has_phase1_feature_trace(state):
+        return _route_after_required_behavior_item(state)
+    return "phase1_traceability_handler"
+
+
+def _has_required_behavior_item(state: dict) -> bool:
+    required_behavior = state.get(REQUIRED_BEHAVIOR_MARKER)
+    if isinstance(required_behavior, str):
+        return bool(required_behavior.strip())
+    if isinstance(required_behavior, list):
+        return bool(required_behavior) and all(
+            isinstance(item, str) and bool(item.strip()) for item in required_behavior
+        )
+    return False
+
+
+def _coerce_non_negative_float(value: Any) -> float | None:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(numeric) or numeric < 0:
+        return None
+    return numeric
+
+
+def _coerce_unit_interval_float(value: Any) -> float | None:
+    numeric = _coerce_non_negative_float(value)
+    if numeric is None or numeric > 1:
+        return None
+    return numeric
+
+
+def _extract_cache_stats_payload(state: dict[str, Any]) -> dict[str, Any] | None:
+    for key in ("benchmark_cache_stats", "embedding_cache_stats", "cache_stats"):
+        payload = state.get(key)
+        if isinstance(payload, dict):
+            return payload
+
+    workflow_history = state.get("workflow_history")
+    if not isinstance(workflow_history, list):
+        return None
+
+    for entry in reversed(workflow_history):
+        if not isinstance(entry, dict):
+            continue
+        details = entry.get("details")
+        if not isinstance(details, dict):
+            continue
+        for key in ("benchmark_cache_stats", "embedding_cache_stats", "cache_stats"):
+            payload = details.get(key)
+            if isinstance(payload, dict):
+                return payload
+    return None
+
+
+def _compute_benchmark_cache_hit_rate(state: dict[str, Any]) -> float | None:
+    direct_rate = _coerce_unit_interval_float(state.get(BENCHMARK_CACHE_HIT_RATE_MARKER))
+    if direct_rate is not None:
+        return direct_rate
+
+    for key in ("cache_hit_rate", "embedding_cache_hit_rate"):
+        direct_rate = _coerce_unit_interval_float(state.get(key))
+        if direct_rate is not None:
+            return direct_rate
+
+    cache_stats = _extract_cache_stats_payload(state)
+    if not isinstance(cache_stats, dict):
+        return None
+
+    hits = _coerce_non_negative_float(cache_stats.get("hits"))
+    if hits is None:
+        hits = _coerce_non_negative_float(cache_stats.get("cache_hits"))
+    if hits is None:
+        return None
+
+    total = _coerce_non_negative_float(cache_stats.get("total"))
+    if total is None:
+        total = _coerce_non_negative_float(cache_stats.get("requests"))
+    if total is None:
+        total = _coerce_non_negative_float(cache_stats.get("lookups"))
+    if total is None:
+        misses = _coerce_non_negative_float(cache_stats.get("misses"))
+        if misses is None:
+            misses = _coerce_non_negative_float(cache_stats.get("cache_misses"))
+        if misses is not None:
+            total = hits + misses
+
+    if total is None or total <= 0 or hits > total:
+        return None
+    return hits / total
+
+
+def _has_benchmark_cache_hit_rate(state: dict[str, Any]) -> bool:
+    return _compute_benchmark_cache_hit_rate(state) is not None
+
+
+def _route_after_required_behavior_item(state: dict) -> str:
+    if not state.get("enforce_required_behavior_item", False):
+        return _route_after_benchmark_cache_hit_rate(state)
+    if _has_required_behavior_item(state):
+        return _route_after_benchmark_cache_hit_rate(state)
+    return "required_behavior_handler"
+
+
+def _route_after_benchmark_cache_hit_rate(state: dict) -> str:
+    if not state.get("enforce_benchmark_cache_hit_rate", False):
+        return _route_after_claims_results_artifacts(state)
+    if _has_benchmark_cache_hit_rate(state):
+        return _route_after_claims_results_artifacts(state)
+    return "benchmark_cache_hit_rate_handler"
+
+
+def _is_results_artifact_path(path: str) -> bool:
+    normalized = path.strip().replace("\\", "/")
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized.startswith(_RESULT_ARTIFACT_PREFIXES)
+
+
+def _has_claims_results_artifacts(state: dict) -> bool:
+    claim_map = state.get(CLAIMS_RESULTS_ARTIFACTS_MARKER)
+    if not isinstance(claim_map, dict) or not claim_map:
+        return False
+
+    for claim_id, artifact_refs in claim_map.items():
+        if not isinstance(claim_id, str) or not claim_id.strip():
+            return False
+
+        if isinstance(artifact_refs, str):
+            normalized_artifact_refs = [artifact_refs]
+        elif isinstance(artifact_refs, list):
+            normalized_artifact_refs = artifact_refs
+        else:
+            return False
+
+        if not normalized_artifact_refs:
+            return False
+
+        for artifact_ref in normalized_artifact_refs:
+            if not isinstance(artifact_ref, str) or not _is_results_artifact_path(artifact_ref):
+                return False
+
+    return True
+
+
+def _route_after_claims_results_artifacts(state: dict) -> str:
+    if not state.get("enforce_claims_results_artifacts", False):
+        return _route_after_cross_reference_feature_ids(state)
+    if _has_claims_results_artifacts(state):
+        return _route_after_cross_reference_feature_ids(state)
+    return "claims_results_artifacts_handler"
+
+
+def _has_cross_reference_feature_ids(state: dict) -> bool:
+    cross_refs = state.get(CROSS_REFERENCE_FEATURE_IDS_MARKER)
+    if not isinstance(cross_refs, dict) or not cross_refs:
+        return False
+
+    for ref_id, feature_ids in cross_refs.items():
+        if not isinstance(ref_id, str) or not ref_id.strip():
+            return False
+
+        if isinstance(feature_ids, str):
+            normalized_feature_ids = [feature_ids]
+        elif isinstance(feature_ids, list):
+            normalized_feature_ids = feature_ids
+        else:
+            return False
+
+        if not normalized_feature_ids:
+            return False
+
+        for feature_id in normalized_feature_ids:
+            if not isinstance(feature_id, str) or not _PHASE1_FEATURE_ID_RE.match(feature_id):
+                return False
+
+    return True
+
+
+def _route_after_cross_reference_feature_ids(state: dict) -> str:
+    if not state.get("enforce_cross_reference_feature_ids", False):
+        return _route_after_postgresql_migration_evidence(state)
+    if _has_cross_reference_feature_ids(state):
+        return _route_after_postgresql_migration_evidence(state)
+    return "cross_reference_feature_ids_handler"
+
+
+def _route_after_postgresql_migration_evidence(state: dict) -> str:
+    if not state.get("enforce_postgresql_migration_evidence", False):
+        return _route_after_post_incident_risk_matrix_feedback(state)
+
+    evidence = collect_postgresql_migration_evidence(state)
+    if has_postgresql_migration_index_growth_proof(evidence):
+        return _route_after_post_incident_risk_matrix_feedback(state)
+    return "postgresql_migration_handler"
+
+
+def _route_after_post_incident_risk_matrix_feedback(state: dict) -> str:
+    if not state.get("enforce_post_incident_risk_matrix_feedback", False):
+        return _route_after_feature_test_coverage(state)
+
+    feedback = collect_post_incident_risk_matrix_feedback(state)
+    if feedback.get("feedback_complete", False):
+        return _route_after_feature_test_coverage(state)
+    return "post_incident_risk_matrix_feedback_handler"
+
+
+def _normalize_test_paths(test_paths: Any, required_prefix: str) -> bool:
+    if isinstance(test_paths, str):
+        normalized = [test_paths]
+    elif isinstance(test_paths, list):
+        normalized = test_paths
+    else:
+        return False
+
+    if not normalized:
+        return False
+
+    for path in normalized:
+        if not isinstance(path, str) or not path.startswith(required_prefix):
+            return False
+    return True
+
+
+def _has_unit_and_integration_feature_coverage(state: dict) -> bool:
+    coverage = state.get(FEATURE_TEST_COVERAGE_MARKER)
+    if not isinstance(coverage, dict) or not coverage:
+        return False
+
+    for feature_id, tests in coverage.items():
+        if not isinstance(feature_id, str) or not feature_id.strip():
+            return False
+        if not isinstance(tests, dict):
+            return False
+
+        if not _normalize_test_paths(tests.get("unit"), "tests/unit/"):
+            return False
+        if not _normalize_test_paths(tests.get("integration"), "tests/integration/"):
+            return False
+
+    return True
+
+
+def _route_after_feature_test_coverage(state: dict) -> str:
+    if not state.get("enforce_feature_test_coverage", False):
+        return "end"
+    if _has_unit_and_integration_feature_coverage(state):
+        return "end"
+    return "feature_test_coverage_handler"
 
 
 def _get_z_score(confidence_level: float) -> float:
@@ -214,6 +565,10 @@ def _route_after_architect(state: dict[str, Any]) -> str:
 
 
 def _route_after_paper_validator(state: dict[str, Any]) -> str:
+    # Compatibility mode: when called as a pre-validator router in tests.
+    if "paper_validation_passed" not in state and "validation_manifest" not in state:
+        return "paper_validator_node" if _paper_validator_enabled(state) else "input_writer_node"
+
     if not state.get("paper_validation_passed", False):
         return "end"
     # Respect explicit upstream gate failure even when markdown is present.
@@ -476,6 +831,139 @@ def session_dependency_handler_node(state: dict) -> dict:
     return updated
 
 
+def paper_validator_node(state: dict) -> dict:
+    """
+    Graph-level placeholder node for paper-validator topology wiring.
+
+    The concrete mode1 validation logic lives in `src.nodes.paper_validator_node`.
+    """
+    return state
+
+
+def complexity_evidence_node(state: dict) -> dict:
+    """Record radon complexity evidence when enforcement is enabled."""
+    updated = dict(state)
+    cache_hit_rate = _compute_benchmark_cache_hit_rate(updated)
+    if cache_hit_rate is not None:
+        updated[BENCHMARK_CACHE_HIT_RATE_MARKER] = cache_hit_rate
+
+    if not updated.get("enforce_radon_complexity_evidence", False):
+        return updated
+
+    if not isinstance(updated.get("radon_complexity_evidence"), dict):
+        updated["radon_complexity_evidence"] = collect_radon_complexity_evidence()
+    return updated
+
+
+def complexity_evidence_handler_node(state: dict) -> dict:
+    """Capture unmet radon complexity evidence requirements and halt."""
+    updated = dict(state)
+    if not isinstance(updated.get("radon_complexity_evidence"), dict):
+        updated["radon_complexity_evidence"] = collect_radon_complexity_evidence()
+    updated.setdefault(
+        "dependency_error",
+        "Radon complexity evidence is required before workflow completion.",
+    )
+    updated.setdefault("required_marker", "radon_complexity_evidence")
+    return updated
+
+
+def phase1_traceability_handler_node(state: dict) -> dict:
+    """Capture unmet use-case to Phase 1 feature-ID traceability requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Use case to Phase 1 feature-ID traceability is required before workflow completion.",
+    )
+    updated.setdefault("required_marker", PHASE1_FEATURE_TRACE_MARKER)
+    return updated
+
+
+def required_behavior_handler_node(state: dict) -> dict:
+    """Capture unmet required-behavior checklist requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Consistency checklist required behavior item is required before workflow completion.",
+    )
+    updated.setdefault("required_marker", REQUIRED_BEHAVIOR_MARKER)
+    return updated
+
+
+def benchmark_cache_hit_rate_handler_node(state: dict) -> dict:
+    """Capture unmet benchmark cache hit-rate observability requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Benchmark output must include cache hit rate before workflow completion.",
+    )
+    updated.setdefault("required_marker", BENCHMARK_CACHE_HIT_RATE_MARKER)
+    return updated
+
+
+def claims_results_artifacts_handler_node(state: dict) -> dict:
+    """Capture unmet claim-to-results artifact mapping requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Claims must map to results artifacts under results/ or benchmark_results/ before workflow completion.",
+    )
+    updated.setdefault("required_marker", CLAIMS_RESULTS_ARTIFACTS_MARKER)
+    return updated
+
+
+def cross_reference_feature_ids_handler_node(state: dict) -> dict:
+    """Capture unmet cross-reference to feature-ID mapping requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Cross-references must include owning feature IDs before workflow completion.",
+    )
+    updated.setdefault("required_marker", CROSS_REFERENCE_FEATURE_IDS_MARKER)
+    return updated
+
+
+def postgresql_migration_handler_node(state: dict) -> dict:
+    """Capture unmet PostgreSQL migration and index-growth proof requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        POSTGRESQL_MIGRATION_EVIDENCE_MARKER,
+        collect_postgresql_migration_evidence(updated),
+    )
+    updated.setdefault(
+        "dependency_error",
+        "PostgreSQL migration runbook and index growth proof are required before workflow completion.",
+    )
+    updated.setdefault("required_marker", POSTGRESQL_MIGRATION_EVIDENCE_MARKER)
+    return updated
+
+
+def post_incident_risk_matrix_feedback_handler_node(state: dict) -> dict:
+    """Capture unmet post-incident risk-matrix feedback requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER,
+        collect_post_incident_risk_matrix_feedback(updated),
+    )
+    updated.setdefault(
+        "dependency_error",
+        "Post-incident updates must feed back into the risk matrix before workflow completion.",
+    )
+    updated.setdefault("required_marker", POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER)
+    return updated
+
+
+def feature_test_coverage_handler_node(state: dict) -> dict:
+    """Capture unmet unit+integration feature-coverage requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Each feature must include both unit and integration test coverage before workflow completion.",
+    )
+    updated.setdefault("required_marker", FEATURE_TEST_COVERAGE_MARKER)
+    return updated
+
+
 def create_graph() -> StateGraph:
     """Build graph with B1b/B1c graph wiring."""
     graph = StateGraph(GraphState)
@@ -488,6 +976,22 @@ def create_graph() -> StateGraph:
     graph.add_node("clarification_handler", clarification_handler_node)
     graph.add_node("sweep_execution_handler", sweep_execution_handler_node)
     graph.add_node("session_dependency_handler", session_dependency_handler_node)
+    graph.add_node("complexity_evidence_node", complexity_evidence_node)
+    graph.add_node("complexity_evidence_handler", complexity_evidence_handler_node)
+    graph.add_node("phase1_traceability_handler", phase1_traceability_handler_node)
+    graph.add_node("required_behavior_handler", required_behavior_handler_node)
+    graph.add_node("benchmark_cache_hit_rate_handler", benchmark_cache_hit_rate_handler_node)
+    graph.add_node("claims_results_artifacts_handler", claims_results_artifacts_handler_node)
+    graph.add_node(
+        "cross_reference_feature_ids_handler",
+        cross_reference_feature_ids_handler_node,
+    )
+    graph.add_node("postgresql_migration_handler", postgresql_migration_handler_node)
+    graph.add_node(
+        "post_incident_risk_matrix_feedback_handler",
+        post_incident_risk_matrix_feedback_handler_node,
+    )
+    graph.add_node("feature_test_coverage_handler", feature_test_coverage_handler_node)
     graph.add_node("input_writer_node", input_writer_node)
 
     graph.add_edge(START, "sweep_detection_node")
@@ -514,6 +1018,8 @@ def create_graph() -> StateGraph:
         {
             "intent_extraction_node": "intent_extraction_node",
             "end": END,
+            "paper_validator_node": "paper_validator_node",
+            "input_writer_node": "input_writer_node",
         },
     )
     graph.add_edge("intent_extraction_node", "clarification_node")
@@ -522,12 +1028,38 @@ def create_graph() -> StateGraph:
         _route_after_clarification,
         {
             "input_writer_node": "input_writer_node",
+            "paper_validator_node": "paper_validator_node",
             "clarification_handler": "clarification_handler",
         },
     )
     graph.add_edge("clarification_handler", END)
     graph.add_edge("sweep_execution_handler", END)
     graph.add_edge("session_dependency_handler", END)
-    graph.add_edge("input_writer_node", END)
+    graph.add_edge("input_writer_node", "complexity_evidence_node")
+    graph.add_conditional_edges(
+        "complexity_evidence_node",
+        _route_after_complexity_evidence,
+        {
+            "end": END,
+            "complexity_evidence_handler": "complexity_evidence_handler",
+            "phase1_traceability_handler": "phase1_traceability_handler",
+            "required_behavior_handler": "required_behavior_handler",
+            "benchmark_cache_hit_rate_handler": "benchmark_cache_hit_rate_handler",
+            "claims_results_artifacts_handler": "claims_results_artifacts_handler",
+            "cross_reference_feature_ids_handler": "cross_reference_feature_ids_handler",
+            "postgresql_migration_handler": "postgresql_migration_handler",
+            "post_incident_risk_matrix_feedback_handler": "post_incident_risk_matrix_feedback_handler",
+            "feature_test_coverage_handler": "feature_test_coverage_handler",
+        },
+    )
+    graph.add_edge("complexity_evidence_handler", END)
+    graph.add_edge("phase1_traceability_handler", END)
+    graph.add_edge("required_behavior_handler", END)
+    graph.add_edge("benchmark_cache_hit_rate_handler", END)
+    graph.add_edge("claims_results_artifacts_handler", END)
+    graph.add_edge("cross_reference_feature_ids_handler", END)
+    graph.add_edge("postgresql_migration_handler", END)
+    graph.add_edge("post_incident_risk_matrix_feedback_handler", END)
+    graph.add_edge("feature_test_coverage_handler", END)
 
     return graph

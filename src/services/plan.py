@@ -21,6 +21,8 @@ Usage:
 
 import logging
 import re
+import shutil
+import subprocess
 from typing import Any
 
 from pydantic import BaseModel
@@ -111,6 +113,42 @@ _HELPER_EXTRACTION_LINE_RE = re.compile(r"^helper\s+extraction\s*:\s*(.+)$", re.
 _LARGE_LOC_RE = re.compile(r"\b([1-9]\d{2,})\s*loc\b", re.IGNORECASE)
 _NEW_FILES_SECTION_RE = re.compile(r"^new\s+files\s*:\s*$", re.IGNORECASE)
 _SECTION_HEADER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 /_-]*:\s*$")
+
+
+def collect_radon_complexity_evidence(
+    target: str = "src/services/plan.py",
+) -> dict[str, Any]:
+    """Collect radon complexity gate evidence for a target module."""
+    criterion = "radon_cc_max_C"
+    radon_bin = shutil.which("radon")
+    if not radon_bin:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": "radon missing in PATH",
+        }
+
+    cmd = [radon_bin, "cc", target, "-n", "C"]
+    try:
+        completed = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    except OSError as exc:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": f"radon invocation failed: {exc}",
+        }
+
+    return {
+        "criterion": criterion,
+        "radon_available": True,
+        "passed": completed.returncode == 0,
+        "exit_code": completed.returncode,
+        "output": (completed.stdout or "").strip(),
+        "error": (completed.stderr or "").strip(),
+        "command": cmd,
+    }
 
 
 def normalize_modifications(payload: Any) -> list[tuple[str, Any]]:
