@@ -18,6 +18,8 @@ import pytest
 from pathlib import Path
 from typing import List, Tuple, Set
 
+from src.services import plan as plan_service
+
 
 # Configuration
 SRC_DIRS = [Path("src"), Path("database")]
@@ -585,6 +587,45 @@ def test_docs_includes_resolve():
             missing.append(rel_path)
 
     assert not missing, f"Missing include targets in {docs_page}: {missing}"
+
+
+@pytest.mark.quality
+def test_normalize_unnumbered_024_canonicalizes_shapes():
+    """
+    Ensure UNNUMBERED-024 mappings normalize to a stable schema.
+    """
+    normalized = plan_service.normalize_unnumbered_024(
+        {
+            "use_cases": [
+                {"use_case": "UC1", "artifacts": ["tests/unit/test_a.py", ""]},
+                {"usecase": "UC2", "artifact": "tests/integration/test_b.py"},
+                {"id": "UC3", "references": ["tests/e2e/test_c.py", 5]},
+                {"id": "   ", "artifacts": ["tests/unit/test_d.py"]},
+            ]
+        }
+    )
+
+    assert normalized == [
+        {"use_case": "UC1", "artifacts": ["tests/unit/test_a.py"]},
+        {"use_case": "UC2", "artifacts": ["tests/integration/test_b.py"]},
+        {"use_case": "UC3", "artifacts": ["tests/e2e/test_c.py"]},
+    ]
+
+
+@pytest.mark.quality
+def test_normalize_unnumbered_024_report_and_state_helpers_share_logic():
+    """
+    Verify both call sites reuse the same UNNUMBERED-024 normalization behavior.
+    """
+    report_entries = plan_service._unnumbered_024_entries_from_report(
+        {"use_case_artifacts": [{"use_case": "UC1", "artifact": "tests/unit/test_x.py"}]}
+    )
+    state_entries = plan_service._unnumbered_024_entries_from_state(
+        {"use_case_artifacts": [{"use_case": "UC1", "artifact": "tests/unit/test_x.py"}]}
+    )
+
+    assert report_entries == [{"use_case": "UC1", "artifacts": ["tests/unit/test_x.py"]}]
+    assert state_entries == report_entries
 
 
 @pytest.mark.quality

@@ -21,6 +21,48 @@ class RuleViolation:
     parameter: str | None = None
     suggested_fix: str | None = None
     auto_correctable: bool = False
+    tier: str | None = None
+    category: str | None = None
+
+    def __post_init__(self) -> None:
+        """Normalize and backfill taxonomy fields for consistent error payloads."""
+        normalized_severity = (self.severity or "error").strip().lower()
+        self.severity = normalized_severity if normalized_severity else "error"
+
+        if not self.tier:
+            self.tier = self._infer_tier(self.severity)
+
+        if not self.category:
+            self.category = self._infer_category(self.parameter)
+
+    @staticmethod
+    def _infer_tier(severity: str) -> str:
+        """Map severity levels to processing tiers."""
+        return {
+            "critical": "tier1",
+            "error": "tier1",
+            "warning": "tier2",
+            "info": "tier3",
+        }.get((severity or "").lower(), "tier2")
+
+    @staticmethod
+    def _infer_category(parameter: str | None) -> str:
+        """Derive a coarse category from parameter namespace."""
+        if not parameter:
+            return "System & Resources"
+
+        param_lower = parameter.lower()
+
+        if any(x in param_lower for x in ("plot", "check", "derived", "plot_int", "io.")):
+            return "I/O"
+        if any(x in param_lower for x in ("particles.", "eb2.", "eb_", "spray.")):
+            return "Particles & EB"
+        if any(x in param_lower for x in ("cfl", "stop_time", "dt", "solver", "physics")):
+            return "Physics & Solver"
+        if any(x in param_lower for x in ("amr.", "geometry.", "prob_lo", "prob_hi", "n_cell", "coord_sys")):
+            return "Grid & Geometry"
+
+        return "General"
 
 
 class ValidationRule(ABC):
