@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
+_SUCCESS_STATUSES = {"completed", "success", "succeeded", "ok"}
+
+
 def _iter_metric_files(path: Path) -> Iterable[Path]:
     if path.is_file():
         return [path]
@@ -33,6 +36,7 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
     model_id = context.get("model_id") or (models[0] if models else "unknown")
     provider = context.get("provider") or (providers[0] if providers else None)
     strategy = context.get("strategy") or data.get("strategy") or _extract_strategy(data)
+    job_status = data.get("job_status")
 
     return {
         "model_id": model_id,
@@ -44,7 +48,10 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
         "difficulty_tier": context.get("difficulty_tier") or data.get("difficulty_tier"),
         "novelty_tier": context.get("novelty_tier") or data.get("novelty_tier"),
         "retrieval_strategy": strategy,
-        "job_status": data.get("job_status"),
+        "job_status": job_status,
+        "accuracy": _extract_accuracy(data),
+        "latency_seconds": _extract_latency_seconds(event, data),
+        "cost_usd": _extract_cost_usd(data),
         "iteration": data.get("iteration"),
         "run_directory": data.get("run_directory"),
         "selected_case": context.get("selected_case"),
@@ -55,6 +62,51 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
         "stages": data.get("stages"),
         "source": str(source),
     }
+
+
+def _extract_accuracy(data: dict[str, Any]) -> float | None:
+    direct = _as_score(data.get("accuracy"))
+    if direct is not None:
+        return direct
+
+    for key in ("accuracy_score", "success_rate"):
+        value = _as_score(data.get(key))
+        if value is not None:
+            return value
+
+    for key in ("is_correct", "correct", "success", "converged"):
+        value = data.get(key)
+        if isinstance(value, bool):
+            return 1.0 if value else 0.0
+
+    return None
+
+
+def _extract_latency_seconds(event: dict[str, Any], data: dict[str, Any]) -> float | None:
+    for key in ("wall_time_seconds", "duration_seconds", "latency_seconds"):
+        value = _as_float(data.get(key))
+        if value is not None:
+            return value
+
+    for key in ("stage_latency_ms", "node_latency_ms"):
+        value = _as_float(event.get(key))
+        if value is not None:
+            return round(value / 1000.0, 3)
+    return None
+
+
+def _extract_cost_usd(data: dict[str, Any]) -> float | None:
+    for key in ("cost_usd", "total_cost_usd"):
+        value = _as_float(data.get(key))
+        if value is not None:
+            return value
+
+    cost_breakdown = data.get("cost_breakdown")
+    if isinstance(cost_breakdown, dict):
+        value = _as_float(cost_breakdown.get("total_usd"))
+        if value is not None:
+            return value
+    return None
 
 
 def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
@@ -103,15 +155,30 @@ def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[
 
 def _summarize_items(items: list[dict[str, Any]], label: str, value: str) -> dict[str, Any]:
     total = len(items)
-    success = sum(1 for item in items if item.get("job_status") == "completed")
+    success = sum(1 for item in items if str(item.get("job_status") or "").lower() in _SUCCESS_STATUSES)
     tokens_total = _avg([item.get("tokens_total") for item in items])
     tokens_input = _avg([item.get("tokens_total_input") for item in items])
     tokens_output = _avg([item.get("tokens_total_output") for item in items])
+    accuracy_values = _number_values(items, "accuracy")
+    latency_values = _number_values(items, "latency_seconds")
+    cost_values = _number_values(items, "cost_usd")
+    if accuracy_values:
+        avg_accuracy = round(sum(accuracy_values) / len(accuracy_values), 4)
+        accuracy_sample_count = len(accuracy_values)
+    else:
+        avg_accuracy = round(success / total, 4) if total else 0.0
+        accuracy_sample_count = total
     return {
         label: value,
         "total_runs": total,
         "success_runs": success,
         "success_rate": round(success / total, 4) if total else 0.0,
+        "avg_accuracy": avg_accuracy,
+        "accuracy_sample_count": accuracy_sample_count,
+        "avg_latency_seconds": _avg(latency_values),
+        "latency_sample_count": len(latency_values),
+        "avg_cost_usd": _avg(cost_values),
+        "cost_sample_count": len(cost_values),
         "avg_tokens_total": tokens_total,
         "avg_tokens_input": tokens_input,
         "avg_tokens_output": tokens_output,
@@ -123,6 +190,42 @@ def _avg(values: list[Any]) -> float:
     if not filtered:
         return 0.0
     return round(sum(filtered) / len(filtered), 2)
+
+
+def _number_values(items: list[dict[str, Any]], key: str) -> list[float]:
+    values: list[float] = []
+    for item in items:
+        value = _as_float(item.get(key))
+        if value is not None:
+            values.append(value)
+    return values
+
+
+def _as_float(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            return float(text)
+        except ValueError:
+            return None
+    return None
+
+
+def _as_score(value: Any) -> float | None:
+    score = _as_float(value)
+    if score is None:
+        return None
+    if score < 0.0:
+        return 0.0
+    if score > 1.0:
+        return 1.0
+    return score
 
 
 def parse_args() -> argparse.Namespace:
@@ -157,6 +260,12 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
+        "avg_accuracy",
+        "accuracy_sample_count",
+        "avg_latency_seconds",
+        "latency_sample_count",
+        "avg_cost_usd",
+        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -170,6 +279,12 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
+        "avg_accuracy",
+        "accuracy_sample_count",
+        "avg_latency_seconds",
+        "latency_sample_count",
+        "avg_cost_usd",
+        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -181,6 +296,12 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
+        "avg_accuracy",
+        "accuracy_sample_count",
+        "avg_latency_seconds",
+        "latency_sample_count",
+        "avg_cost_usd",
+        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -192,6 +313,12 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
+        "avg_accuracy",
+        "accuracy_sample_count",
+        "avg_latency_seconds",
+        "latency_sample_count",
+        "avg_cost_usd",
+        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -203,6 +330,12 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
+        "avg_accuracy",
+        "accuracy_sample_count",
+        "avg_latency_seconds",
+        "latency_sample_count",
+        "avg_cost_usd",
+        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -214,6 +347,12 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
+        "avg_accuracy",
+        "accuracy_sample_count",
+        "avg_latency_seconds",
+        "latency_sample_count",
+        "avg_cost_usd",
+        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
