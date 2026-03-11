@@ -25,7 +25,9 @@ Solvers referenced for generalization: PeleC, PeleLMeX, ERF, WarpX, incflo.
 import argparse
 import json
 import logging
+import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
@@ -39,6 +41,153 @@ from database.indexing.level1_builder import Level1Builder
 from database.indexing.level2_builder import Level2Builder
 
 logger = logging.getLogger(__name__)
+
+
+def _project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _iso_utc_now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def _safe_git_rev_parse_head(source_dir: Path | None) -> str | None:
+    if source_dir is None:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=source_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return None
+    commit = result.stdout.strip()
+    return commit or None
+
+
+def _load_dependencies_commit(solver: str | None, dependencies_path: Path | None = None) -> str | None:
+    if not solver:
+        return None
+    dep_path = dependencies_path or (_project_root() / ".dependencies.json")
+    try:
+        payload = json.loads(dep_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return None
+    repos = payload.get("repos")
+    if not isinstance(repos, dict):
+        return None
+    entry = repos.get(solver) or repos.get(solver.lower())
+    if not isinstance(entry, dict):
+        return None
+    commit = entry.get("commit")
+    return commit if isinstance(commit, str) and commit.strip() else None
+
+
+def _extract_embedding_metadata(embedder: Any) -> tuple[str | None, str | None, int | None]:
+    config = None
+    if hasattr(embedder, "service"):
+        config = getattr(embedder.service, "config", None)
+
+    provider: str | None = None
+    model_name: str | None = None
+    dimension: int | None = None
+    if config is not None:
+        provider = getattr(config, "embedding_provider", None) or provider
+        model_name = getattr(config, "faiss_embedding_model", None) or model_name
+        raw_dim = (
+            getattr(config, "embedding_dimension", None)
+            or getattr(config, "faiss_embedding_dimension", None)
+        )
+        if isinstance(raw_dim, int):
+            dimension = raw_dim
+
+    return provider, model_name, dimension
+
+
+def _write_provenance_file(
+    *,
+    output_dir: Path,
+    filename: str,
+    embedder: Any,
+    solver: str | None,
+    level: str,
+    source_dir: Path | None,
+) -> tuple[Path, dict[str, Any]]:
+    provider, model_name, dimension = _extract_embedding_metadata(embedder)
+    payload = {
+        "version": "1",
+        "generated_at": _iso_utc_now(),
+        "embedding_model": model_name,
+        "embedding_provider": provider,
+        "embedding_dimension": dimension,
+        "solver": solver,
+        "level": level,
+        "repo_commit": _safe_git_rev_parse_head(source_dir),
+        "build_script": "build_all_indices.py",
+        "dependencies_commit": _load_dependencies_commit(solver),
+    }
+    output_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = output_dir / filename
+    manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return manifest_path, payload
+
+
+def _session_key(level: str | None, solver: str | None) -> str:
+    return f"{level or ''}::{solver or '__global__'}"
+
+
+def _load_session_entries(session_manifest_path: Path) -> list[dict[str, Any]]:
+    try:
+        payload = json.loads(session_manifest_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return []
+    entries = payload.get("entries")
+    if not isinstance(entries, list):
+        return []
+    normalized: list[dict[str, Any]] = []
+    for entry in entries:
+        if isinstance(entry, dict):
+            normalized.append(entry)
+    return normalized
+
+
+def _write_build_session_manifest(
+    *,
+    root_output_dir: Path,
+    new_entries: list[dict[str, Any]],
+) -> Path:
+    manifest_path = root_output_dir / "build_session_manifest.json"
+    existing_entries = _load_session_entries(manifest_path)
+
+    merged: dict[str, dict[str, Any]] = {}
+    for entry in existing_entries:
+        key = _session_key(entry.get("level"), entry.get("solver"))
+        merged[key] = entry
+    for entry in new_entries:
+        key = _session_key(entry.get("level"), entry.get("solver"))
+        merged[key] = entry
+
+    final_entries = sorted(
+        merged.values(),
+        key=lambda item: (
+            str(item.get("level") or ""),
+            str(item.get("solver") or ""),
+            str(item.get("manifest_path") or ""),
+        ),
+    )
+
+    payload = {
+        "version": "1",
+        "generated_at": _iso_utc_now(),
+        "build_script": "build_all_indices.py",
+        "entries": final_entries,
+    }
+    root_output_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return manifest_path
 
 def _resolve_config_class(repo_path: Path | None = None, code_name: str | None = None):
     configs = list(discover_code_configs())
@@ -395,15 +544,81 @@ Configuration:
 
     # Build requested levels
     total_indices = 0
+    session_entries: list[dict[str, Any]] = []
 
     if args.level in ['0', 'all']:
-        total_indices += build_level0(args.output / 'level0', embedder)
+        level0_dir = args.output / 'level0'
+        built = build_level0(level0_dir, embedder)
+        total_indices += built
+        if built > 0:
+            manifest_path, payload = _write_provenance_file(
+                output_dir=level0_dir,
+                filename="faiss_provenance.json",
+                embedder=embedder,
+                solver=None,
+                level="0",
+                source_dir=None,
+            )
+            logger.debug(f"Provenance manifest written to: {manifest_path}")
+            session_entries.append(
+                {
+                    "manifest_path": manifest_path.relative_to(args.output).as_posix(),
+                    **payload,
+                }
+            )
 
     if args.level in ['1', 'all']:
-        total_indices += build_level1(repo_root, args.output / 'level1', embedder, config_class)
+        level1_dir = args.output / 'level1'
+        built = build_level1(repo_root, level1_dir, embedder, config_class)
+        total_indices += built
+        if built > 0:
+            solver_slug = str(solver_name).lower()
+            filename = f"{solver_slug}_faiss_provenance.json"
+            manifest_path, payload = _write_provenance_file(
+                output_dir=level1_dir,
+                filename=filename,
+                embedder=embedder,
+                solver=solver_slug,
+                level="1",
+                source_dir=repo_root,
+            )
+            logger.debug(f"Provenance manifest written to: {manifest_path}")
+            session_entries.append(
+                {
+                    "manifest_path": manifest_path.relative_to(args.output).as_posix(),
+                    **payload,
+                }
+            )
 
     if args.level in ['2', 'all']:
-        total_indices += build_level2(repo_root, args.output / 'level2', embedder, config_class)
+        level2_dir = args.output / 'level2'
+        built = build_level2(repo_root, level2_dir, embedder, config_class)
+        total_indices += built
+        if built > 0:
+            solver_slug = str(solver_name).lower()
+            filename = f"{solver_slug}_faiss_provenance.json"
+            manifest_path, payload = _write_provenance_file(
+                output_dir=level2_dir,
+                filename=filename,
+                embedder=embedder,
+                solver=solver_slug,
+                level="2",
+                source_dir=repo_root,
+            )
+            logger.debug(f"Provenance manifest written to: {manifest_path}")
+            session_entries.append(
+                {
+                    "manifest_path": manifest_path.relative_to(args.output).as_posix(),
+                    **payload,
+                }
+            )
+
+    if session_entries:
+        session_manifest = _write_build_session_manifest(
+            root_output_dir=args.output,
+            new_entries=session_entries,
+        )
+        logger.debug(f"Build session manifest written to: {session_manifest}")
 
     logger.debug(f"""
 ╔══════════════════════════════════════════════════════════════════════╗
