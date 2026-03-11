@@ -1,20 +1,23 @@
-"""Session 52: DRY refactor coverage for UNNUMBERED-003."""
+"""Plan modification normalization tests."""
 
-from src.services.plan import SimulationPlanFactory, normalize_unnumbered_003
+from src.services.plan import (
+    SimulationPlanFactory,
+    normalize_modifications,
+)
 
 
-def test_normalize_unnumbered_003_converts_dict_modifications() -> None:
+def test_normalize_modifications_converts_dict_payload() -> None:
     payload = [{"parameter": "amr.n_cell", "value": "64 64 64"}]
 
-    normalized = normalize_unnumbered_003(payload)
+    normalized = normalize_modifications(payload)
 
     assert normalized == [("amr.n_cell", "64 64 64")]
 
 
-def test_normalize_unnumbered_003_converts_list_modifications() -> None:
+def test_normalize_modifications_converts_list_payload() -> None:
     payload = [["max_step", 100], ["stop_time", 1.0]]
 
-    normalized = normalize_unnumbered_003(payload)
+    normalized = normalize_modifications(payload)
 
     assert normalized == [("max_step", 100), ("stop_time", 1.0)]
 

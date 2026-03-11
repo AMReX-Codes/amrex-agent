@@ -399,6 +399,59 @@ def baseline_override_help() -> str:
     return "Force specific baseline case (e.g., <Solver>/Exec/RegTests/<Case>)"
 
 
+def _infer_paper_input_type(paper_source: str | None) -> str | None:
+    """Infer paper input type from source string when possible."""
+    if not paper_source:
+        return None
+    source = paper_source.strip()
+    if not source:
+        return None
+    if source.startswith("arxiv:"):
+        return "arxiv"
+    import re
+
+    arxiv_patterns = (
+        r"^\d{4}\.\d{4,5}(v\d+)?$",
+        r"^[a-z\-]+(\.[A-Z]{2})?/\d{7}(v\d+)?$",
+    )
+    if any(re.match(pattern, source, flags=re.IGNORECASE) for pattern in arxiv_patterns):
+        return "arxiv"
+
+    source_path = Path(source)
+    if source_path.suffix.lower() == ".pdf":
+        return "pdf"
+    if source_path.is_dir():
+        return "pdf+tex"
+    return None
+
+
+def _validate_paper_input_arguments(
+    parser: argparse.ArgumentParser,
+    parsed: argparse.Namespace,
+) -> argparse.Namespace:
+    """Enforce paper input argument constraints."""
+    has_prompt = bool(parsed.prompt or parsed.prompt_path)
+    has_paper_source = bool(parsed.paper_source)
+
+    if not has_prompt and not has_paper_source:
+        parser.error("one of --prompt/--prompt-path or --paper-source is required")
+
+    if parsed.paper_input_type and not has_paper_source:
+        parser.error("--paper-input-type requires --paper-source")
+
+    if has_paper_source and not parsed.paper_input_type:
+        inferred = _infer_paper_input_type(parsed.paper_source)
+        if inferred is None:
+            parser.error(
+                "--paper-input-type is required when --paper-source cannot be inferred "
+                "(choose from: arxiv, pdf, pdf+tex)"
+            )
+        parsed.paper_input_type = inferred
+
+    parsed.paper_validator_enabled = has_paper_source
+    return parsed
+
+
 def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
     """
     Parse command line arguments for the CLI.
@@ -421,7 +474,7 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
     )
 
     # Input Source (Mutually exclusive)
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument(
         '--prompt',
         type=str,
@@ -575,8 +628,23 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
         dest='benchmark_context',
         help='Optional JSON/YAML file with benchmark metadata to attach to metrics'
     )
+    parser.add_argument(
+        '--paper-source',
+        type=str,
+        default=None,
+        dest='paper_source',
+        help='Paper source: arXiv ID, PDF path, or TeX directory path'
+    )
+    parser.add_argument(
+        '--paper-input-type',
+        choices=['arxiv', 'pdf', 'pdf+tex'],
+        default=None,
+        dest='paper_input_type',
+        help='Paper source type; inferred from --paper-source when possible'
+    )
 
-    return parser.parse_args(args)
+    parsed = parser.parse_args(args)
+    return _validate_paper_input_arguments(parser, parsed)
 
 
 def load_prompt_content(args: argparse.Namespace) -> str:
@@ -598,8 +666,11 @@ def load_prompt_content(args: argparse.Namespace) -> str:
     if args.prompt:
         return args.prompt
 
-    if args.prompt_path == "-":
+    if getattr(args, "prompt_path", None) == "-":
         return sys.stdin.read().strip()
+
+    if not getattr(args, "prompt_path", None):
+        return ""
 
     path = Path(args.prompt_path)
     if not path.exists():
@@ -749,7 +820,7 @@ def main(args: list[str] | None = None) -> None:
 
         # Load Prompt
         user_requirement = load_prompt_content(parsed_args)
-        if not user_requirement:
+        if not user_requirement and not getattr(parsed_args, "paper_source", None):
             raise ValueError("Prompt cannot be empty")
 
         # Run Agent
@@ -758,7 +829,13 @@ def main(args: list[str] | None = None) -> None:
         from src.utils.metrics import metrics_extra
 
         with metrics_extra(benchmark_context):
-            result = run_agent(user_requirement, config)
+            result = run_agent(
+                user_requirement,
+                config,
+                paper_source=getattr(parsed_args, "paper_source", None),
+                paper_input_type=getattr(parsed_args, "paper_input_type", None),
+                paper_validator_enabled=getattr(parsed_args, "paper_validator_enabled", False),
+            )
 
         # Save metrics JSONL (if enabled)
         try:
@@ -953,7 +1030,13 @@ def main(args: list[str] | None = None) -> None:
 
 logger = logging.getLogger(__name__)
 
-def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]:
+def initialize_state(
+    user_requirement: str,
+    config: AMReXAgentConfig,
+    paper_source: str | None = None,
+    paper_input_type: str | None = None,
+    paper_validator_enabled: bool = False,
+) -> dict[str, Any]:
     """
     Initialize the workflow state for the agent graph.
 
@@ -977,7 +1060,7 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
         prompt_content = user_requirement.strip()
 
     # 2. Validate prompt
-    if not prompt_content:
+    if not prompt_content and not paper_validator_enabled:
         raise ValueError("User requirement prompt cannot be empty")
 
     requested_plot_vars, visualization_config = extract_viz_params_from_prompt(prompt_content)
@@ -989,6 +1072,9 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
         "config": config,
         "requested_plot_vars": requested_plot_vars,
         "visualization_config": visualization_config,
+        "paper_source": paper_source,
+        "paper_input_type": paper_input_type,
+        "paper_validator_enabled": paper_validator_enabled,
 
         # Flow control
         "mode": "initial",
@@ -1090,7 +1176,13 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
 
 
 
-def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]:
+def run_agent(
+    user_requirement: str,
+    config: AMReXAgentConfig,
+    paper_source: str | None = None,
+    paper_input_type: str | None = None,
+    paper_validator_enabled: bool = False,
+) -> dict[str, Any]:
     """
     Execute the AMReXAgent workflow.
 
@@ -1110,7 +1202,13 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
     """
     # 1. Initialize State
     try:
-        initial_state = initialize_state(user_requirement, config)
+        initial_state = initialize_state(
+            user_requirement,
+            config,
+            paper_source=paper_source,
+            paper_input_type=paper_input_type,
+            paper_validator_enabled=paper_validator_enabled,
+        )
         logger.info("=" * 80)
         logger.info("Starting AMReXAgent workflow")
         logger.info("=" * 80)

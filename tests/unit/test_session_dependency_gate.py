@@ -6,9 +6,9 @@ from src.graph import (
     session_dependency_handler_node,
 )
 from src.session_manager import (
-    B1_SESSION_COMPLETION_MARKER as SESSION_DEPENDENCY_MARKER,
+    SESSION_DEPENDENCY_COMPLETION_MARKER,
     append_policy_audit,
-    is_amendment_b1_session_complete as is_session_dependency_complete,
+    is_session_dependency_complete,
     merge_session_context,
     persist_session_result,
 )
@@ -142,12 +142,12 @@ def test_persist_session_result_persists_context_for_non_dict_result(monkeypatch
 
 
 def test_dependency_completion_marker_check_supports_all_documented_shapes():
-    assert is_session_dependency_complete({SESSION_DEPENDENCY_MARKER: True})
+    assert is_session_dependency_complete({SESSION_DEPENDENCY_COMPLETION_MARKER: True})
     assert is_session_dependency_complete(
-        {"session_markers": {SESSION_DEPENDENCY_MARKER: True}}
+        {"session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True}}
     )
-    assert is_session_dependency_complete({"completed_sessions": ["amendment_b1"]})
-    assert not is_session_dependency_complete({SESSION_DEPENDENCY_MARKER: False})
+    assert is_session_dependency_complete({"completed_sessions": ["session_dependency_complete"]})
+    assert not is_session_dependency_complete({SESSION_DEPENDENCY_COMPLETION_MARKER: False})
 
 
 def test_route_after_sweep_detection_without_sweep_routes_architect():
@@ -163,7 +163,7 @@ def test_route_after_sweep_detection_allows_when_dependency_complete():
     route = _route_after_sweep_detection(
         {
             "sweep_id": "sweep-01",
-            "session_markers": {SESSION_DEPENDENCY_MARKER: True},
+            "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True},
         }
     )
     assert route == "sweep_execution_handler"
@@ -172,7 +172,7 @@ def test_route_after_sweep_detection_allows_when_dependency_complete():
 def test_dependency_handler_records_error_and_required_marker():
     result = session_dependency_handler_node({})
     assert "session must complete" in result["dependency_error"]
-    assert result["required_marker"] == SESSION_DEPENDENCY_MARKER
+    assert result["required_marker"] == SESSION_DEPENDENCY_COMPLETION_MARKER
 
 
 def test_graph_contains_dependency_handler_route_and_compiles():

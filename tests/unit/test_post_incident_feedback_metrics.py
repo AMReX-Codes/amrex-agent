@@ -1,4 +1,4 @@
-"""Session 112: UNNUMBERED-189 post-incident risk matrix feedback tests."""
+"""Post-incident risk-matrix feedback tests."""
 
 from __future__ import annotations
 
@@ -44,24 +44,24 @@ from src.graph import (
     sweep_execution_handler_node,
 )
 from src.services.workflow_store import POSTGRESQL_MIGRATION_EVIDENCE_MARKER
-from src.session_manager import B1_SESSION_COMPLETION_MARKER
+from src.session_manager import SESSION_DEPENDENCY_COMPLETION_MARKER
 from src.utils.metrics import (
     POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER,
     collect_post_incident_risk_matrix_feedback,
     has_post_incident_risk_matrix_feedback,
     metrics_extra,
     metrics_context,
-    normalize_unnumbered_143,
-    normalize_unnumbered_189,
+    normalize_metrics_event_record,
+    normalize_post_incident_feedback_records,
 )
 
 
-def test_unnumbered_189_metrics_feedback_pipeline() -> None:
-    assert normalize_unnumbered_189(None) == []
-    assert normalize_unnumbered_189("bad") == []
-    assert normalize_unnumbered_189([1, "x"]) == []
+def test_metrics_feedback_pipeline() -> None:
+    assert normalize_post_incident_feedback_records(None) == []
+    assert normalize_post_incident_feedback_records("bad") == []
+    assert normalize_post_incident_feedback_records([1, "x"]) == []
 
-    single = normalize_unnumbered_189(
+    single = normalize_post_incident_feedback_records(
         {
             "incident_id": " INC-1 ",
             "risk_id": " R-7 ",
@@ -109,11 +109,11 @@ def test_unnumbered_189_metrics_feedback_pipeline() -> None:
     empty = collect_post_incident_risk_matrix_feedback({})
     assert empty == {"feedback_records": [], "feedback_complete": False}
 
-    assert normalize_unnumbered_143({"type": "evt"}, workflow_id="wf-1")["workflow_id"] == "wf-1"
-    assert normalize_unnumbered_143({"workflow_id": "wf-existing"})["workflow_id"] == "wf-existing"
+    assert normalize_metrics_event_record({"type": "evt"}, workflow_id="wf-1")["workflow_id"] == "wf-1"
+    assert normalize_metrics_event_record({"workflow_id": "wf-existing"})["workflow_id"] == "wf-existing"
 
 
-def test_unnumbered_189_metrics_collector_paths(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+def test_metrics_collector_paths(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     collector = metrics_mod.MetricsCollector()
     response = SimpleNamespace(model="m1", usage={"input_tokens": 4, "output_tokens": 5})
 
@@ -198,7 +198,9 @@ def test_unnumbered_189_metrics_collector_paths(monkeypatch: pytest.MonkeyPatch,
     assert collector.events() == []
 
 
-def test_unnumbered_189_graph_gate_and_routes(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_graph_gate_and_routes_for_post_incident_feedback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         "src.graph.collect_radon_complexity_evidence",
         lambda: {"radon_available": False, "passed": False},
@@ -232,7 +234,7 @@ def test_unnumbered_189_graph_gate_and_routes(monkeypatch: pytest.MonkeyPatch) -
     assert _route_after_sweep_detection({}) == "architect_node"
     assert _route_after_sweep_detection({"sweep_id": "sweep"}) == "session_dependency_handler"
     assert _route_after_sweep_detection(
-        {"sweep_id": "sweep", "session_markers": {B1_SESSION_COMPLETION_MARKER: True}}
+        {"sweep_id": "sweep", "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True}}
     ) == "sweep_execution_handler"
 
     assert _has_phase1_feature_trace({PHASE1_FEATURE_TRACE_MARKER: {"UC1": "F1.1"}}) is True
@@ -348,7 +350,7 @@ def test_unnumbered_189_graph_gate_and_routes(monkeypatch: pytest.MonkeyPatch) -
         == "post_incident_risk_matrix_feedback_handler"
     )
 
-    assert session_dependency_handler_node({})["required_marker"] == B1_SESSION_COMPLETION_MARKER
+    assert session_dependency_handler_node({})["required_marker"] == SESSION_DEPENDENCY_COMPLETION_MARKER
     assert complexity_evidence_node({"enforce_radon_complexity_evidence": False}) == {
         "enforce_radon_complexity_evidence": False
     }

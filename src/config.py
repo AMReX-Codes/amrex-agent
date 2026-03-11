@@ -11,6 +11,37 @@ from pydantic import BaseModel, Field, ConfigDict
 import logging
 
 logger = logging.getLogger(__name__)
+TRANSIENT_API_RECOVERY_TARGET = 0.95
+
+
+def compute_transient_api_recovery_rate(outcomes: list[bool]) -> float | None:
+    """Return recovery rate for transient retry events."""
+    if not outcomes:
+        return None
+    recovered = sum(1 for outcome in outcomes if outcome)
+    return recovered / len(outcomes)
+
+
+def evaluate_transient_api_recovery_target(
+    outcomes: list[bool],
+    target: float = TRANSIENT_API_RECOVERY_TARGET,
+) -> dict[str, Any]:
+    """Evaluate whether transient API retries meet the configured recovery target."""
+    try:
+        target_value = float(target)
+    except (TypeError, ValueError):
+        target_value = TRANSIENT_API_RECOVERY_TARGET
+    if not (0.0 < target_value <= 1.0):
+        target_value = TRANSIENT_API_RECOVERY_TARGET
+
+    recovery_rate = compute_transient_api_recovery_rate(outcomes)
+    return {
+        "transient_recovery_target": target_value,
+        "transient_recovery_observations": len(outcomes),
+        "transient_recovery_successes": sum(1 for outcome in outcomes if outcome),
+        "transient_recovery_rate": recovery_rate,
+        "transient_recovery_target_met": recovery_rate is not None and recovery_rate >= target_value,
+    }
 
 def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
     """Decide if runs need remote staging based on target vs detected environment."""
@@ -515,7 +546,7 @@ class AMReXAgentConfig(BaseModel):
     )
     enable_clarification_subgraph: bool = Field(
         default=False,
-        description="Enable Session 8 clarification subgraph decision checks before input writing."
+        description="Enable clarification subgraph decision checks before input writing."
     )
 
     llm_gate_strategy: Literal[
@@ -1199,17 +1230,33 @@ class _LLMRetryCompletions:
         self._completions = completions_resource
         self._max_attempts = max_attempts
         self._retryable_statuses = {429, 500, 502, 503}
+        self._transient_recovery_outcomes: list[bool] = []
+
+    def get_transient_recovery_target_status(
+        self,
+        target: float = TRANSIENT_API_RECOVERY_TARGET,
+    ) -> dict[str, Any]:
+        """Return benchmark-style recovery metrics for transient retries."""
+        return evaluate_transient_api_recovery_target(self._transient_recovery_outcomes, target=target)
 
     def create(self, *args: Any, **kwargs: Any) -> Any:
         attempt = 0
+        saw_transient_failure = False
         while True:
             attempt += 1
             try:
-                return self._completions.create(*args, **kwargs)
+                response = self._completions.create(*args, **kwargs)
+                if saw_transient_failure:
+                    self._transient_recovery_outcomes.append(True)
+                return response
             except Exception as exc:
                 status_code = _get_http_status(exc)
                 retryable = status_code in self._retryable_statuses
-                if not retryable or attempt >= self._max_attempts:
+                if not retryable:
+                    raise
+                saw_transient_failure = True
+                if attempt >= self._max_attempts:
+                    self._transient_recovery_outcomes.append(False)
                     raise
                 base_delay = 1.0
                 max_delay = 20.0

@@ -1,14 +1,12 @@
-"""Session 77: UNNUMBERED-040 cross-reference feature-ID gate tests."""
+"""Claims-to-results-artifacts gate tests."""
 
 from __future__ import annotations
 
 from src.graph import (
     CLAIMS_RESULTS_ARTIFACTS_MARKER,
-    CROSS_REFERENCE_FEATURE_IDS_MARKER,
     PHASE1_FEATURE_TRACE_MARKER,
     REQUIRED_BEHAVIOR_MARKER,
     _has_claims_results_artifacts,
-    _has_cross_reference_feature_ids,
     _has_phase1_feature_trace,
     _has_required_behavior_item,
     _is_results_artifact_path,
@@ -16,7 +14,6 @@ from src.graph import (
     _route_after_claims_results_artifacts,
     _route_after_clarification,
     _route_after_complexity_evidence,
-    _route_after_cross_reference_feature_ids,
     _route_after_paper_validator,
     _route_after_phase1_traceability,
     _route_after_postgresql_migration_evidence,
@@ -27,7 +24,6 @@ from src.graph import (
     complexity_evidence_handler_node,
     complexity_evidence_node,
     create_graph,
-    cross_reference_feature_ids_handler_node,
     paper_validator_node,
     phase1_traceability_handler_node,
     postgresql_migration_handler_node,
@@ -36,10 +32,10 @@ from src.graph import (
     sweep_execution_handler_node,
 )
 from src.services.workflow_store import POSTGRESQL_MIGRATION_EVIDENCE_MARKER
-from src.session_manager import B1_SESSION_COMPLETION_MARKER
+from src.session_manager import SESSION_DEPENDENCY_COMPLETION_MARKER
 
 
-def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
+def test_claims_results_artifacts_gate_and_graph_routes(monkeypatch):
     monkeypatch.setattr(
         "src.graph.collect_radon_complexity_evidence",
         lambda: {"radon_available": False, "passed": False},
@@ -77,34 +73,6 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
         is True
     )
 
-    assert _has_cross_reference_feature_ids({}) is False
-    assert _has_cross_reference_feature_ids({CROSS_REFERENCE_FEATURE_IDS_MARKER: []}) is False
-    assert _has_cross_reference_feature_ids({CROSS_REFERENCE_FEATURE_IDS_MARKER: {}}) is False
-    assert (
-        _has_cross_reference_feature_ids(
-            {CROSS_REFERENCE_FEATURE_IDS_MARKER: {"": "F1.1"}}
-        )
-        is False
-    )
-    assert (
-        _has_cross_reference_feature_ids(
-            {CROSS_REFERENCE_FEATURE_IDS_MARKER: {"XREF-1": []}}
-        )
-        is False
-    )
-    assert (
-        _has_cross_reference_feature_ids(
-            {CROSS_REFERENCE_FEATURE_IDS_MARKER: {"XREF-1": ["BAD"]}}
-        )
-        is False
-    )
-    assert (
-        _has_cross_reference_feature_ids(
-            {CROSS_REFERENCE_FEATURE_IDS_MARKER: {"XREF-1": ["F1.1", "F2B"]}}
-        )
-        is True
-    )
-
     assert _paper_validator_enabled({"paper_validator_enabled": True}) is True
     assert _paper_validator_enabled({"paper_source": "2401.12345"}) is True
     assert _paper_validator_enabled({}) is False
@@ -119,7 +87,7 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
     assert _route_after_sweep_detection({}) == "architect_node"
     assert _route_after_sweep_detection({"sweep_id": "sweep"}) == "session_dependency_handler"
     assert _route_after_sweep_detection(
-        {"sweep_id": "sweep", "session_markers": {B1_SESSION_COMPLETION_MARKER: True}}
+        {"sweep_id": "sweep", "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True}}
     ) == "sweep_execution_handler"
 
     assert _has_phase1_feature_trace({}) is False
@@ -158,24 +126,6 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
         == "end"
     )
 
-    assert _route_after_cross_reference_feature_ids({}) == "end"
-    assert (
-        _route_after_cross_reference_feature_ids(
-            {"enforce_cross_reference_feature_ids": True}
-        )
-        == "cross_reference_feature_ids_handler"
-    )
-    assert (
-        _route_after_cross_reference_feature_ids(
-            {
-                "enforce_cross_reference_feature_ids": True,
-                CROSS_REFERENCE_FEATURE_IDS_MARKER: {"Section 1": ["F1.1", "F2B"]},
-                "enforce_postgresql_migration_evidence": True,
-            }
-        )
-        == "postgresql_migration_handler"
-    )
-
     assert _route_after_claims_results_artifacts({}) == "end"
     assert (
         _route_after_claims_results_artifacts({"enforce_claims_results_artifacts": True})
@@ -188,20 +138,6 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
                 CLAIMS_RESULTS_ARTIFACTS_MARKER: {
                     "claim_1": ["results/run_001/summary.json"],
                 },
-                "enforce_cross_reference_feature_ids": True,
-            }
-        )
-        == "cross_reference_feature_ids_handler"
-    )
-    assert (
-        _route_after_claims_results_artifacts(
-            {
-                "enforce_claims_results_artifacts": True,
-                CLAIMS_RESULTS_ARTIFACTS_MARKER: {
-                    "claim_1": ["results/run_001/summary.json"],
-                },
-                "enforce_cross_reference_feature_ids": True,
-                CROSS_REFERENCE_FEATURE_IDS_MARKER: {"Section 1": "F1.1"},
                 "enforce_postgresql_migration_evidence": True,
             }
         )
@@ -265,10 +201,6 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
         == "claims_results_artifacts_handler"
     )
     assert (
-        _route_after_complexity_evidence({"enforce_cross_reference_feature_ids": True})
-        == "cross_reference_feature_ids_handler"
-    )
-    assert (
         _route_after_complexity_evidence({"enforce_radon_complexity_evidence": True})
         == "complexity_evidence_handler"
     )
@@ -281,14 +213,12 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
                 CLAIMS_RESULTS_ARTIFACTS_MARKER: {
                     "claim_1": ["results/run_001/summary.json"]
                 },
-                "enforce_cross_reference_feature_ids": True,
-                CROSS_REFERENCE_FEATURE_IDS_MARKER: {"Section 1": "F1.1"},
             }
         )
         == "end"
     )
 
-    assert session_dependency_handler_node({})["required_marker"] == B1_SESSION_COMPLETION_MARKER
+    assert session_dependency_handler_node({})["required_marker"] == SESSION_DEPENDENCY_COMPLETION_MARKER
 
     enforced = complexity_evidence_node({"enforce_radon_complexity_evidence": True})
     assert enforced["radon_complexity_evidence"]["radon_available"] is False
@@ -320,14 +250,31 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
     assert claims_handler["required_marker"] == CLAIMS_RESULTS_ARTIFACTS_MARKER
     assert "Claims must map to results artifacts" in claims_handler["dependency_error"]
 
-    cross_ref_handler = cross_reference_feature_ids_handler_node({})
-    assert cross_ref_handler["required_marker"] == CROSS_REFERENCE_FEATURE_IDS_MARKER
-    assert "Cross-references must include owning feature IDs" in cross_ref_handler["dependency_error"]
+    claims_existing = claims_results_artifacts_handler_node(
+        {"required_marker": "existing_marker", "dependency_error": "existing"}
+    )
+    assert claims_existing["required_marker"] == "existing_marker"
+    assert claims_existing["dependency_error"] == "existing"
 
     postgres_handler = postgresql_migration_handler_node({})
     assert postgres_handler["required_marker"] == POSTGRESQL_MIGRATION_EVIDENCE_MARKER
     assert "PostgreSQL migration runbook and index growth proof" in postgres_handler["dependency_error"]
     assert postgres_handler[POSTGRESQL_MIGRATION_EVIDENCE_MARKER]["proof_complete"] is False
+
+    existing_postgres = postgresql_migration_handler_node(
+        {
+            "dependency_error": "existing",
+            "required_marker": "existing_marker",
+            POSTGRESQL_MIGRATION_EVIDENCE_MARKER: {
+                "migration_runbook_ref": "docs/migration.md",
+                "index_growth_proof_ref": "artifacts/proof.json",
+                "proof_complete": True,
+            },
+        }
+    )
+    assert existing_postgres["dependency_error"] == "existing"
+    assert existing_postgres["required_marker"] == "existing_marker"
+    assert existing_postgres[POSTGRESQL_MIGRATION_EVIDENCE_MARKER]["proof_complete"] is True
 
     assert clarification_handler_node({"clarification_questions": ["q1"]}) == {
         "clarification_questions": ["q1"]
@@ -342,7 +289,5 @@ def test_cross_reference_feature_id_gate_and_graph_routes(monkeypatch):
 
     assert ("complexity_evidence_node", "claims_results_artifacts_handler") in edges
     assert ("claims_results_artifacts_handler", "__end__") in edges
-    assert ("complexity_evidence_node", "cross_reference_feature_ids_handler") in edges
-    assert ("cross_reference_feature_ids_handler", "__end__") in edges
     assert ("complexity_evidence_node", "postgresql_migration_handler") in edges
     assert ("postgresql_migration_handler", "__end__") in edges

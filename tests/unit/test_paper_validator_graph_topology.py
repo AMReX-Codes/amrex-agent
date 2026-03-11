@@ -1,4 +1,4 @@
-"""Session 7: B4.2 graph topology addition tests."""
+"""Paper validator graph topology tests."""
 
 from __future__ import annotations
 
@@ -49,12 +49,12 @@ def test_no_sweep_routes_to_architect() -> None:
 
 
 def test_sweep_routes_to_dependency_handler_when_incomplete(monkeypatch) -> None:
-    monkeypatch.setattr("src.graph.is_amendment_b1_session_complete", lambda state: False)
+    monkeypatch.setattr("src.graph.is_session_dependency_complete", lambda state: False)
     assert _route_after_sweep_detection({"sweep_id": "sweep_001"}) == "session_dependency_handler"
 
 
 def test_sweep_routes_to_execution_handler_when_complete(monkeypatch) -> None:
-    monkeypatch.setattr("src.graph.is_amendment_b1_session_complete", lambda state: True)
+    monkeypatch.setattr("src.graph.is_session_dependency_complete", lambda state: True)
     assert _route_after_sweep_detection({"sweep_id": "sweep_001"}) == "sweep_execution_handler"
 
 

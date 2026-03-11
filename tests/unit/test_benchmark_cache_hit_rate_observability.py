@@ -1,4 +1,4 @@
-"""Session 117: UNNUMBERED-213 cache hit-rate benchmark observability tests."""
+"""Benchmark cache hit-rate observability tests."""
 
 from __future__ import annotations
 
@@ -43,11 +43,11 @@ from src.graph import (
     sweep_execution_handler_node,
 )
 from src.services.workflow_store import POSTGRESQL_MIGRATION_EVIDENCE_MARKER
-from src.session_manager import B1_SESSION_COMPLETION_MARKER
+from src.session_manager import SESSION_DEPENDENCY_COMPLETION_MARKER
 from src.utils.metrics import POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER
 
 
-def test_unnumbered_213_cache_hit_rate_helpers_and_routes(monkeypatch):
+def test_cache_hit_rate_helpers_and_routes(monkeypatch):
     monkeypatch.setattr(
         "src.graph.collect_radon_complexity_evidence",
         lambda: {"radon_available": False, "passed": False},
@@ -144,7 +144,7 @@ def test_unnumbered_213_cache_hit_rate_helpers_and_routes(monkeypatch):
     assert "cache hit rate" in handler["dependency_error"]
 
 
-def test_unnumbered_213_graph_gate_and_routes(monkeypatch):
+def test_graph_gate_and_routes_for_cache_hit_rate(monkeypatch):
     monkeypatch.setattr(
         "src.graph.collect_radon_complexity_evidence",
         lambda: {"radon_available": False, "passed": False},
@@ -178,7 +178,7 @@ def test_unnumbered_213_graph_gate_and_routes(monkeypatch):
     assert _route_after_sweep_detection({}) == "architect_node"
     assert _route_after_sweep_detection({"sweep_id": "sweep"}) == "session_dependency_handler"
     assert _route_after_sweep_detection(
-        {"sweep_id": "sweep", "session_markers": {B1_SESSION_COMPLETION_MARKER: True}}
+        {"sweep_id": "sweep", "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True}}
     ) == "sweep_execution_handler"
 
     assert _has_phase1_feature_trace({PHASE1_FEATURE_TRACE_MARKER: {"UC1": "F1.1"}}) is True
@@ -272,7 +272,7 @@ def test_unnumbered_213_graph_gate_and_routes(monkeypatch):
         == "complexity_evidence_handler"
     )
 
-    assert session_dependency_handler_node({})["required_marker"] == B1_SESSION_COMPLETION_MARKER
+    assert session_dependency_handler_node({})["required_marker"] == SESSION_DEPENDENCY_COMPLETION_MARKER
 
     complexity_handler = complexity_evidence_handler_node({})
     assert complexity_handler["required_marker"] == "radon_complexity_evidence"

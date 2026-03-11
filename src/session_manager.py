@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from typing import Any
 
 
+SESSION_DEPENDENCY_COMPLETION_MARKER = "session_dependency_complete"
+
+
 @dataclass(frozen=True)
 class SessionEnvelope:
     """Session metadata provided by calling surfaces."""
@@ -182,3 +185,23 @@ def persist_session_result(
     if isinstance(result, dict):
         result.setdefault("session_id", session_id)
     return result
+
+
+def is_session_dependency_complete(state: dict[str, Any]) -> bool:
+    """Return True when the required session dependency marker is present."""
+    if state.get(SESSION_DEPENDENCY_COMPLETION_MARKER) is True:
+        return True
+
+    session_markers = state.get("session_markers")
+    if isinstance(session_markers, dict):
+        if session_markers.get(SESSION_DEPENDENCY_COMPLETION_MARKER) is True:
+            return True
+
+    completed_sessions = state.get("completed_sessions")
+    if isinstance(completed_sessions, list):
+        return (
+            SESSION_DEPENDENCY_COMPLETION_MARKER in completed_sessions
+            or "session_dependency_complete" in completed_sessions
+        )
+
+    return False

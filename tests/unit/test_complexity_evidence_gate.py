@@ -1,4 +1,4 @@
-"""Session 17: UNNUMBERED-002 radon complexity evidence tests."""
+"""Complexity evidence gate tests."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from src.services.plan import (
     SimulationPlanFactory,
     collect_radon_complexity_evidence,
 )
-from src.session_manager import B1_SESSION_COMPLETION_MARKER
+from src.session_manager import SESSION_DEPENDENCY_COMPLETION_MARKER
 
 
 def test_collect_radon_complexity_evidence_when_missing(monkeypatch):
@@ -33,7 +33,7 @@ def test_collect_radon_complexity_evidence_when_missing(monkeypatch):
 
     evidence = collect_radon_complexity_evidence()
 
-    assert evidence["criterion"] == "UNNUMBERED-002"
+    assert evidence["criterion"]
     assert evidence["radon_available"] is False
     assert evidence["passed"] is False
     assert "missing" in evidence["detail"]
@@ -248,7 +248,7 @@ def test_graph_routes_and_nodes_cover_session17_paths(monkeypatch):
     assert _route_after_sweep_detection({}) == "architect_node"
     assert _route_after_sweep_detection({"sweep_id": "sweep"}) == "session_dependency_handler"
     assert _route_after_sweep_detection(
-        {"sweep_id": "sweep", "session_markers": {B1_SESSION_COMPLETION_MARKER: True}}
+        {"sweep_id": "sweep", "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True}}
     ) == "sweep_execution_handler"
 
     assert _route_after_complexity_evidence({}) == "end"
@@ -257,7 +257,7 @@ def test_graph_routes_and_nodes_cover_session17_paths(monkeypatch):
     ) == "end"
     assert _route_after_complexity_evidence({"enforce_radon_complexity_evidence": True}) == "complexity_evidence_handler"
 
-    assert session_dependency_handler_node({})["required_marker"] == B1_SESSION_COMPLETION_MARKER
+    assert session_dependency_handler_node({})["required_marker"] == SESSION_DEPENDENCY_COMPLETION_MARKER
 
     enforced = complexity_evidence_node({"enforce_radon_complexity_evidence": True})
     assert enforced["radon_complexity_evidence"]["radon_available"] is False

@@ -1,4 +1,4 @@
-"""Session 27: UNNUMBERED-056 required behavior checklist tests."""
+"""Required behavior gate tests."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from src.graph import (
     session_dependency_handler_node,
     sweep_execution_handler_node,
 )
-from src.session_manager import B1_SESSION_COMPLETION_MARKER
+from src.session_manager import SESSION_DEPENDENCY_COMPLETION_MARKER
 
 
 def test_required_behavior_item_gate_and_graph_routes(monkeypatch):
@@ -47,7 +47,7 @@ def test_required_behavior_item_gate_and_graph_routes(monkeypatch):
     assert _route_after_sweep_detection({}) == "architect_node"
     assert _route_after_sweep_detection({"sweep_id": "sweep"}) == "session_dependency_handler"
     assert _route_after_sweep_detection(
-        {"sweep_id": "sweep", "session_markers": {B1_SESSION_COMPLETION_MARKER: True}}
+        {"sweep_id": "sweep", "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True}}
     ) == "sweep_execution_handler"
 
     assert _has_phase1_feature_trace({}) is False
@@ -132,7 +132,7 @@ def test_required_behavior_item_gate_and_graph_routes(monkeypatch):
         == "end"
     )
 
-    assert session_dependency_handler_node({})["required_marker"] == B1_SESSION_COMPLETION_MARKER
+    assert session_dependency_handler_node({})["required_marker"] == SESSION_DEPENDENCY_COMPLETION_MARKER
 
     enforced = complexity_evidence_node({"enforce_radon_complexity_evidence": True})
     assert enforced["radon_complexity_evidence"]["radon_available"] is False
