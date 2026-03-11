@@ -11,6 +11,7 @@ Architecture:
 """
 import pytest
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock, MagicMock, patch
 
 
@@ -391,16 +392,16 @@ class TestLevel0SchemaConsistency:
 
 
 class TestLevel0PerformanceRequirements:
-    """Bonus: Validate NFR-2 (Query latency <1 sec)."""
+    """Validate performance/concurrency requirements from PRD Section 13."""
     
     @pytest.mark.performance
     def test_level0_query_latency(self):
         """
         Given: Level 0 index with all 4 sub-indices
         When:  Executing search query
-        Then:  Should complete in <1 second
-        
-        PRD: NFR-2 Query latency <1 sec
+        Then:  Should complete in <500ms
+
+        PRD: Section 13 FAISS retrieval latency <500ms
         """
         import time
         from database.indexing.level0_searcher import Level0Searcher
@@ -416,9 +417,65 @@ class TestLevel0PerformanceRequirements:
         start = time.time()
         results = searcher.search("supersonic combustion", top_k=3)
         elapsed = time.time() - start
-        
-        # Assert: <1 second
-        assert elapsed < 1.0, \
-            f"Query took {elapsed:.2f}s (requirement: <1s)"
-        
+
+        # Assert: <500ms
+        assert elapsed < 0.5, \
+            f"Query took {elapsed:.3f}s (requirement: <0.5s)"
+
         print(f"\n⚡ Query latency: {elapsed*1000:.1f}ms")
+
+    def test_plan_generation_p95_target_three_minutes(self):
+        """
+        Given: Historical plan-generation latencies from architect stages
+        When:  Evaluating the p95 gate
+        Then:  Should pass at <=180s and fail above 180s
+
+        PRD: Section 13 E2E plan generation <3 minutes (excluding simulation)
+        """
+        from src.graph import (
+            PLAN_GENERATION_P95_MAX_SECONDS,
+            plan_generation_p95_failure_reason,
+            plan_generation_p95_passed,
+        )
+
+        assert PLAN_GENERATION_P95_MAX_SECONDS == 180.0
+
+        passing_state = {"plan_generation_latencies_seconds": [30.0, 45.0, 120.0, 179.9]}
+        assert plan_generation_p95_passed(passing_state) is True
+        assert plan_generation_p95_failure_reason(passing_state) == "plan_generation_p95_satisfied"
+
+        failing_state = {"plan_generation_latencies_seconds": [30.0, 45.0, 120.0, 180.1]}
+        assert plan_generation_p95_passed(failing_state) is False
+        assert plan_generation_p95_failure_reason(failing_state) == "plan_generation_p95_exceeded"
+
+    def test_mcp_supports_five_concurrent_sessions_without_collision(self, tmp_path):
+        """
+        Given: Five concurrent MCP session writes
+        When:  Persisting workflow state in the session store
+        Then:  Each session remains isolated with no state collisions
+
+        PRD: Section 13 MCP server supports 5 concurrent users/sessions
+        """
+        from src.services.workflow_store import WorkflowStore
+
+        store = WorkflowStore(tmp_path / "workflow_store.db")
+        expected_states = {f"session-{idx}": {"owner": f"user-{idx}", "value": idx} for idx in range(5)}
+
+        def _write_and_read(session_id: str, state: dict):
+            store.upsert_session(session_id, state)
+            loaded = store.get_session(session_id)
+            assert loaded is not None
+            return loaded.session_id, loaded.state
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            results = list(
+                executor.map(
+                    lambda item: _write_and_read(item[0], item[1]),
+                    expected_states.items(),
+                )
+            )
+
+        observed = dict(results)
+        assert set(observed.keys()) == set(expected_states.keys())
+        for session_id, expected_state in expected_states.items():
+            assert observed[session_id] == expected_state
