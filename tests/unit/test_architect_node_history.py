@@ -28,6 +28,18 @@ def _plan(selected_case="PeleC/Exec/RegTests/PMF", selected_solver="PeleC"):
         selected_case=selected_case,
         modifications=[("amr.n_cell", "64 64 64"), ("pelec.cfl", "0.5")],
         reasoning="Reasoning text",
+        requirements={
+            "solver_source": "level0_faiss",
+            "solver_confidence": 0.92,
+            "solver_citations": [
+                {
+                    "index": "physics_regimes",
+                    "code": selected_solver,
+                    "score": 0.92,
+                    "source": "config",
+                }
+            ],
+        },
         baseline_confidence=0.92,
         indexing_strategy="simple",
         case_candidates=[],
@@ -150,6 +162,18 @@ def test_history_includes_level0_and_level2_override_trace(monkeypatch):
                 selected_case="Exec/DryRegTests/TaylorGreenVortex",
                 modifications=[("amr.n_cell", "128 128 128")],
                 reasoning="Override based on case-name match",
+                requirements={
+                    "solver_source": "level0_faiss",
+                    "solver_confidence": 0.1,
+                    "solver_citations": [
+                        {
+                            "index": "physics_regimes",
+                            "code": "PeleC",
+                            "score": 0.1,
+                            "source": "config",
+                        }
+                    ],
+                },
                 baseline_confidence=0.91,
                 indexing_strategy="hierarchical",
                 case_candidates=[],
@@ -173,3 +197,5 @@ def test_history_includes_level0_and_level2_override_trace(monkeypatch):
     assert details["level2_override_solver"] == "ERF"
     assert details["level2_override_case"] == "Exec/DryRegTests/TaylorGreenVortex"
     assert details["level2_override_confidence"] == 0.9
+    assert updates["plan"]["requirements"]["solver_confidence"] == 0.1
+    assert updates["plan"]["requirements"]["solver_citations"][0]["index"] == "physics_regimes"

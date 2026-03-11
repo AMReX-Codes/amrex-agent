@@ -13,7 +13,7 @@ import json
 import logging
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -50,6 +50,15 @@ class ModificationExtraction(BaseModel):
 
 logger = logging.getLogger(__name__)
 
+ROUTER_REASON_CODES = {
+    "hierarchical_primary": "router_hierarchical_primary",
+    "simple_primary": "router_simple_primary",
+    "simple_fallback": "router_simple_fallback_from_hierarchical_error",
+    "override_static": "router_override_static_baseline",
+    "override_hierarchical": "router_override_hierarchical_baseline",
+    "override_simple": "router_override_simple_baseline",
+}
+
 
 
 @dataclass
@@ -66,6 +75,7 @@ class SolverSelection:
 
     config: Any
     confidence: float
+    citations: list[dict[str, Any]] = field(default_factory=list)
 
     def __iter__(self):
         yield self.config
@@ -559,6 +569,77 @@ class ArchitectService:
         plan.level2_override_confidence = trace.get("level2_override_confidence")
         return plan
 
+    @staticmethod
+    def _extract_level0_citations_from_result(search_result: dict[str, Any]) -> list[dict[str, Any]]:
+        citations = search_result.get("citations")
+        if isinstance(citations, list):
+            return [item for item in citations if isinstance(item, dict)]
+
+        details = search_result.get("details")
+        if isinstance(details, dict):
+            detail_citations = details.get("citations")
+            if isinstance(detail_citations, list):
+                return [item for item in detail_citations if isinstance(item, dict)]
+
+        return []
+
+    def _collect_level0_citations(
+        self,
+        query: str,
+        selected_code: str | None,
+        top_k: int = 5,
+    ) -> list[dict[str, Any]]:
+        if not selected_code or not self.level0_searcher:
+            return []
+        if not hasattr(self.level0_searcher, "_search_index"):
+            return []
+
+        index_names = (
+            "physics_regimes",
+            "solver_capabilities",
+            "code_lineage",
+            "cross_cutting_guidance",
+        )
+        citations: list[dict[str, Any]] = []
+
+        for index_name in index_names:
+            try:
+                hits = self.level0_searcher._search_index(index_name, query, top_k=top_k)
+            except Exception as exc:
+                logger.debug("Level0 citation search failed for %s: %s", index_name, exc)
+                continue
+
+            matching_hits = [hit for hit in hits if hit.get("code") == selected_code]
+            if not matching_hits:
+                continue
+            matching_hits.sort(key=lambda item: float(item.get("score", 0.0)), reverse=True)
+            top_hit = matching_hits[0]
+            metadata = top_hit.get("metadata", {})
+
+            citations.append(
+                {
+                    "index": index_name,
+                    "code": selected_code,
+                    "score": float(top_hit.get("score", 0.0)),
+                    "rank": int(top_hit.get("rank", 0) or 0),
+                    "source": metadata.get("source"),
+                    "section": metadata.get("section"),
+                    "metadata": {
+                        key: value
+                        for key, value in {
+                            "physics_family": metadata.get("physics_family"),
+                            "capability": metadata.get("capability"),
+                            "capability_type": metadata.get("capability_type"),
+                            "guidance_type": metadata.get("guidance_type"),
+                            "description": metadata.get("description"),
+                        }.items()
+                        if value is not None
+                    },
+                }
+            )
+
+        return citations
+
     def select_solver(self, query: str, confidence_threshold: float = 0.15) -> tuple:
         """
         Identify the correct solver using Level 0 RAG with LLM fallback.
@@ -579,7 +660,7 @@ class ArchitectService:
         """
         if not self.level0_searcher:
             logger.warning("Level0Searcher not initialized")
-            return SolverSelection(None, 0.0)
+            return SolverSelection(None, 0.0, citations=[])
 
         # Query Level 0 index
         logger.debug(f" Level0 searching for: '{query}'")
@@ -589,11 +670,14 @@ class ArchitectService:
 
         if not results:
             logger.error("No solver found for query: %s", query)
-            return SolverSelection(None, 0.0)
+            return SolverSelection(None, 0.0, citations=[])
 
         best_match = results[0]
         code_name = best_match["code"]
         confidence = best_match["score"]
+        citations = self._extract_level0_citations_from_result(best_match)
+        if not citations:
+            citations = self._collect_level0_citations(query, code_name)
 
         logger.info("Selected solver: %s (confidence: %.2f)", code_name, confidence)
 
@@ -609,6 +693,7 @@ class ArchitectService:
                     code_name = llm_code_name
                     # Set confidence to 0.8 for LLM-based selection (heuristic-based)
                     confidence = 0.8
+                    citations = self._collect_level0_citations(query, code_name)
                 except Exception as e:
                     logger.warning(f"LLM fallback failed: {e}. Using vector search result.")
             else:
@@ -616,7 +701,7 @@ class ArchitectService:
 
         # Map to Config class
         if code_name in self.code_configs:
-            return SolverSelection(self.code_configs[code_name], confidence)
+            return SolverSelection(self.code_configs[code_name], confidence, citations=citations)
 
         raise ValueError(f"Solver {code_name} found in index but not in registry")
 
@@ -1003,12 +1088,13 @@ class ArchitectService:
         # === BASELINE OVERRIDE PATH ===
         if baseline_override:
             logger.info(f"Baseline override detected: {baseline_override}")
-            return self._execute_planning_with_override(
+            plan = self._execute_planning_with_override(
                 user_prompt=user_prompt,
                 baseline_override=baseline_override,
                 strategy=strategy,
                 **kwargs
             )
+            return self._annotate_router_reason_for_override(plan)
 
         # === NORMAL PATH (No override) ===
         if strategy == "hierarchical":
@@ -1029,7 +1115,11 @@ class ArchitectService:
                     plan.baseline,
                     selected_case=plan.selected_case,
                 )
-                return plan
+                return self._annotate_router_reason(
+                    plan=plan,
+                    branch="hierarchical",
+                    reason_code=ROUTER_REASON_CODES["hierarchical_primary"],
+                )
             except Exception as e:
                 logger.exception("Hierarchical indexing failed: %s", e)
                 if getattr(self.config, 'fallback_to_simple_on_error', True):
@@ -1045,7 +1135,48 @@ class ArchitectService:
             plan.baseline,
             selected_case=plan.selected_case,
         )
+        fallback_from_hierarchical = strategy == "simple" and getattr(
+            self.config, 'indexing_strategy', 'hierarchical'
+        ) == "hierarchical"
+        reason_code = (
+            ROUTER_REASON_CODES["simple_fallback"]
+            if fallback_from_hierarchical
+            else ROUTER_REASON_CODES["simple_primary"]
+        )
+        return self._annotate_router_reason(
+            plan=plan,
+            branch="simple",
+            reason_code=reason_code,
+        )
+
+    def _annotate_router_reason(
+        self,
+        plan: SimulationPlan,
+        branch: str,
+        reason_code: str,
+    ) -> SimulationPlan:
+        requirements = plan.requirements if isinstance(plan.requirements, dict) else {}
+        plan.requirements = {
+            **requirements,
+            "router_branch": branch,
+            "router_reason_code": reason_code,
+        }
         return plan
+
+    def _annotate_router_reason_for_override(self, plan: SimulationPlan) -> SimulationPlan:
+        strategy = getattr(plan, "indexing_strategy", "simple")
+        reason_code = ROUTER_REASON_CODES["override_simple"]
+        if strategy == "override_static":
+            reason_code = ROUTER_REASON_CODES["override_static"]
+        elif strategy == "hierarchical":
+            reason_code = ROUTER_REASON_CODES["override_hierarchical"]
+        elif strategy == "simple":
+            reason_code = ROUTER_REASON_CODES["override_simple"]
+        return self._annotate_router_reason(
+            plan=plan,
+            branch=str(strategy),
+            reason_code=reason_code,
+        )
 
 
     def _execute_planning_with_override(
@@ -2037,7 +2168,10 @@ class ArchitectService:
             Plan with solver, baseline, modifications, and reasoning.
         """
         # 1. Select Solver (Architect Service: Solver Selection)
-        solver_config, solver_confidence = self.select_solver(user_prompt)
+        solver_selection = self.select_solver(user_prompt)
+        solver_config = solver_selection.config
+        solver_confidence = solver_selection.confidence
+        solver_citations = solver_selection.citations
         if not solver_config:
             raise ValueError("No suitable solver found")
 
@@ -2090,7 +2224,14 @@ class ArchitectService:
                         solver_confidence=solver_confidence,
                         used_llm=True,
                     )
-                    return self._apply_solver_selection_trace(plan, solver_selection_trace)
+                    plan = self._apply_solver_selection_trace(plan, solver_selection_trace)
+                    plan.requirements = {
+                        **(plan.requirements or {}),
+                        "solver_source": "level0_faiss",
+                        "solver_confidence": solver_confidence,
+                        "solver_citations": solver_citations,
+                    }
+                    return plan
                 else:
                     raise ValueError("No baseline found and LLM not available")
             else:
@@ -2151,7 +2292,14 @@ class ArchitectService:
                 solver_confidence=solver_confidence,
                 used_llm=True,
             )
-            return self._apply_solver_selection_trace(plan, solver_selection_trace)
+            plan = self._apply_solver_selection_trace(plan, solver_selection_trace)
+            plan.requirements = {
+                **(plan.requirements or {}),
+                "solver_source": "level0_faiss",
+                "solver_confidence": solver_confidence,
+                "solver_citations": solver_citations,
+            }
+            return plan
 
         plan = SimulationPlanFactory.create_from_rag(
             solver_name=solver_name,
@@ -2162,7 +2310,14 @@ class ArchitectService:
             solver_confidence=solver_confidence,
             used_llm=False
         )
-        return self._apply_solver_selection_trace(plan, solver_selection_trace)
+        plan = self._apply_solver_selection_trace(plan, solver_selection_trace)
+        plan.requirements = {
+            **(plan.requirements or {}),
+            "solver_source": "level0_faiss",
+            "solver_confidence": solver_confidence,
+            "solver_citations": solver_citations,
+        }
+        return plan
 
     def create_plan(
         self,
@@ -3193,6 +3348,7 @@ CRITICAL: Use exact names only."""
                         requirements['solver'] = selection.code_name
                         requirements['solver_source'] = 'level0_faiss'
                         requirements['solver_confidence'] = selection.confidence
+                        requirements['solver_citations'] = selection.citations
                         logger.debug(f"      Detected solver from level0: {selection.code_name}")
                 except Exception as exc:
                     logger.debug("      Level0 solver selection failed: %s", exc)
