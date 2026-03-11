@@ -92,6 +92,8 @@ if not HAS_MCP:
     sys.exit(1)
 
 app = Server("pele-agent")
+MAX_CONCURRENT_TOOL_CALLS = 5
+_TOOL_CALL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_TOOL_CALLS)
 
 print("[MCP] AMReXAgent starting...", file=sys.stderr)
 print(f"[MCP] Environment: {config.environment}", file=sys.stderr)
@@ -117,14 +119,16 @@ async def call_tool(name: str, arguments: dict) -> Any:
         if "session_id" in context:
             session_id = str(context.get("session_id") or uuid.uuid4())
             context.pop("session_id", None)
-        return invoke_tool(
-            name,
-            context,
-            session_id=session_id,
-            surface="mcp",
-            # Do not accept caller_action from untrusted MCP payloads.
-            caller_action=None,
-        )
+        async with _TOOL_CALL_SEMAPHORE:
+            return await asyncio.to_thread(
+                invoke_tool,
+                name,
+                context,
+                session_id=session_id,
+                surface="mcp",
+                # Do not accept caller_action from untrusted MCP payloads.
+                caller_action=None,
+            )
 
     except Exception as exc:
         import traceback
