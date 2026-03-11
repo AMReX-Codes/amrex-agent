@@ -170,6 +170,45 @@ class TestFeedbackGenerator:
         assert "- " in feedback  # Bullet point
         assert "**" in feedback  # Bold text
 
+    def test_error_fields_include_tier_category_and_normalized_severity(self, generator):
+        """
+        GIVEN: Violation with uppercase severity and no explicit taxonomy metadata
+        WHEN: RuleViolation is created
+        THEN: Severity is normalized and tier/category fields are auto-populated
+        """
+        violation = RuleViolation(
+            "Rule",
+            "ERROR",
+            "Bad setting",
+            "amr.n_cell",
+        )
+
+        assert violation.severity == "error"
+        assert violation.tier == "tier1"
+        assert violation.category == "Grid & Geometry"
+
+        feedback = generator.generate_feedback([violation])
+        assert "Bad setting" in feedback
+
+    def test_error_fields_preserve_explicit_tier_and_category(self):
+        """
+        GIVEN: Violation with explicit taxonomy metadata
+        WHEN: RuleViolation is created
+        THEN: Explicit tier/category values are preserved
+        """
+        violation = RuleViolation(
+            "Rule",
+            "warning",
+            "Needs review",
+            "custom.param",
+            tier="tier9",
+            category="Custom Group",
+        )
+
+        assert violation.severity == "warning"
+        assert violation.tier == "tier9"
+        assert violation.category == "Custom Group"
+
     def test_multiple_categories_priority_order(self, generator):
         """
         GIVEN: Violations across all categories

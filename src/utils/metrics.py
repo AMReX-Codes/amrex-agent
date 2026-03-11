@@ -9,6 +9,7 @@ import time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Iterator
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,21 @@ _node_start_var: ContextVar[float | None] = ContextVar("metrics_node_start", def
 DEFAULT_P95_LATENCY_TARGET_MS = 500.0
 DEFAULT_MAX_CONCURRENCY = 8
 POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER = "post_incident_risk_matrix_feedback"
+_PRICING_PATH = Path(__file__).resolve().parents[2] / "database" / "pricing.yaml"
+_DEFAULT_PRICING_TABLE: dict[str, dict[str, Any]] = {
+    "gpt-4-turbo": {
+        "provider": "openai",
+        "input_cost_per_1k": 0.01,
+        "output_cost_per_1k": 0.03,
+        "currency": "USD",
+    },
+    "claude-3-5-sonnet-20250514": {
+        "provider": "anthropic",
+        "input_cost_per_1k": 0.003,
+        "output_cost_per_1k": 0.015,
+        "currency": "USD",
+    },
+}
 
 
 @contextmanager
@@ -243,6 +259,7 @@ class MetricsCollector:
 
         stage_summaries: dict[str, Any] = {}
         tokens_by_stage: dict[str, dict[str, int]] = {}
+        cost_by_stage_usd: dict[str, float] = {}
         for stage in stages:
             summary = self.summarize_stage(stage)
             if summary:
@@ -254,6 +271,9 @@ class MetricsCollector:
                     "output": llm.get("completion_tokens", 0),
                     "total": llm.get("total_tokens", 0),
                 }
+                cost = llm.get("cost_usd")
+                if isinstance(cost, (int, float)):
+                    cost_by_stage_usd[stage] = round(float(cost), 3)
 
         llm_all = _aggregate_llm_usage(events)
         tokens_total_input = llm_all.get("prompt_tokens", 0)
@@ -270,6 +290,9 @@ class MetricsCollector:
             "models": models,
             "providers": providers,
         }
+        if cost_by_stage_usd:
+            summary["cost_by_stage_usd"] = cost_by_stage_usd
+            summary["cost_total_usd"] = round(sum(cost_by_stage_usd.values()), 3)
         if stage_summaries:
             summary["stages"] = stage_summaries
         return summary
@@ -345,6 +368,7 @@ def _aggregate_llm_usage(events: list[dict[str, Any]]) -> dict[str, Any]:
         "completion_tokens": 0,
         "total_tokens": 0,
         "by_model": {},
+        "cost_usd": 0.0,
     }
     for event in llm_events:
         data = event.get("data", {})
@@ -359,13 +383,97 @@ def _aggregate_llm_usage(events: list[dict[str, Any]]) -> dict[str, Any]:
         summary["total_tokens"] += total
         per_model = summary["by_model"].setdefault(
             model,
-            {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "cost_usd": 0.0},
         )
         per_model["calls"] += 1
         per_model["prompt_tokens"] += prompt
         per_model["completion_tokens"] += completion
         per_model["total_tokens"] += total
+        cost_usd, _ = _calculate_cost_usd(data)
+        if isinstance(cost_usd, (int, float)):
+            summary["cost_usd"] += float(cost_usd)
+            per_model["cost_usd"] += float(cost_usd)
+    for per_model in summary["by_model"].values():
+        per_model["cost_usd"] = round(float(per_model["cost_usd"]), 3)
+    summary["cost_usd"] = round(summary["cost_usd"], 3)
     return summary
+
+
+def _load_pricing_table() -> dict[str, dict[str, Any]]:
+    if not _PRICING_PATH.exists():
+        return dict(_DEFAULT_PRICING_TABLE)
+
+    try:
+        import yaml  # type: ignore
+    except Exception:
+        return dict(_DEFAULT_PRICING_TABLE)
+
+    try:
+        loaded = yaml.safe_load(_PRICING_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("Failed to parse pricing table %s: %s", _PRICING_PATH, exc)
+        return dict(_DEFAULT_PRICING_TABLE)
+
+    if isinstance(loaded, dict):
+        models = loaded.get("models")
+        if isinstance(models, dict):
+            merged = dict(_DEFAULT_PRICING_TABLE)
+            for model_name, details in models.items():
+                if isinstance(model_name, str) and isinstance(details, dict):
+                    merged[model_name] = dict(details)
+            return merged
+
+    return dict(_DEFAULT_PRICING_TABLE)
+
+
+def _find_pricing_model(
+    model: str | None,
+    provider: str | None,
+    pricing_table: dict[str, dict[str, Any]],
+) -> str | None:
+    if model and model in pricing_table:
+        return model
+
+    if provider:
+        for candidate, details in pricing_table.items():
+            if isinstance(details, dict) and details.get("provider") == provider:
+                return candidate
+
+    return None
+
+
+def _calculate_cost_usd(
+    usage: dict[str, Any],
+    *,
+    pricing_table: dict[str, dict[str, Any]] | None = None,
+) -> tuple[float | None, str | None]:
+    table = pricing_table if pricing_table is not None else _load_pricing_table()
+    model = usage.get("model")
+    provider = usage.get("provider")
+    pricing_model = _find_pricing_model(model, provider, table)
+    if pricing_model is None:
+        return None, None
+
+    rates = table.get(pricing_model, {})
+    if rates.get("currency") != "USD":
+        return None, pricing_model
+
+    input_rate = rates.get("input_cost_per_1k")
+    output_rate = rates.get("output_cost_per_1k")
+    if not isinstance(input_rate, (int, float)) or not isinstance(output_rate, (int, float)):
+        return None, pricing_model
+
+    prompt_tokens = usage.get("prompt_tokens") or 0
+    completion_tokens = usage.get("completion_tokens") or 0
+    if not isinstance(prompt_tokens, (int, float)):
+        prompt_tokens = 0
+    if not isinstance(completion_tokens, (int, float)):
+        completion_tokens = 0
+
+    cost = ((float(prompt_tokens) / 1000.0) * float(input_rate)) + (
+        (float(completion_tokens) / 1000.0) * float(output_rate)
+    )
+    return round(cost, 6), pricing_model
 
 
 def _aggregate_retrieval(events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -589,3 +697,117 @@ def validate_risk_owner_status_updates(
         "failed_risks": failed_risks,
         "reason": "ok" if not failed_risks else "risk_owner_status_updates_not_met",
     }
+
+
+UNNUMBERED_185_ID = "UNNUMBERED-185"
+_BENCHMARK_REVIEW_KEYS = ("benchmark_reviews", "benchmark_findings", "benchmark_postmortems")
+_POSTMORTEM_REVIEW_KEYS = ("postmortem_reviews", "incident_postmortems", "retrospective_reviews")
+_RISK_UPDATE_KEYS = ("risk_register_updates", "new_risks", "risk_feedback_updates")
+
+
+def _state_list_entries(state: dict[str, Any], keys: tuple[str, ...]) -> list[dict[str, Any]]:
+    for key in keys:
+        value = state.get(key)
+        if isinstance(value, list):
+            entries = [entry for entry in value if isinstance(entry, dict)]
+            if entries:
+                return entries
+    return []
+
+
+def _normalized_risk_id(value: Any) -> str:
+    if not isinstance(value, str):
+        return ""
+    return value.strip().lower()
+
+
+def _extract_review_risk_ids(entries: list[dict[str, Any]]) -> set[str]:
+    risk_ids: set[str] = set()
+    for entry in entries:
+        for key in ("risk_id", "risk", "id"):
+            normalized = _normalized_risk_id(entry.get(key))
+            if normalized:
+                risk_ids.add(normalized)
+                break
+    return risk_ids
+
+
+def _extract_update_risk_ids(entries: list[dict[str, Any]]) -> set[str]:
+    risk_ids: set[str] = set()
+    for entry in entries:
+        normalized = _normalized_risk_id(entry.get("risk_id"))
+        if normalized:
+            risk_ids.add(normalized)
+            continue
+
+        risks = entry.get("risks")
+        if isinstance(risks, list):
+            for item in risks:
+                normalized = _normalized_risk_id(item)
+                if normalized:
+                    risk_ids.add(normalized)
+    return risk_ids
+
+
+def benchmark_postmortem_risk_feedback_passed(state: dict[str, Any]) -> bool:
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            if approval.get("decision") != "approved":
+                continue
+            details = approval.get("details", {})
+            if isinstance(details, dict) and details.get("criterion") == UNNUMBERED_185_ID:
+                return True
+
+    benchmark_reviews = _state_list_entries(state, _BENCHMARK_REVIEW_KEYS)
+    if not benchmark_reviews:
+        return False
+
+    postmortem_reviews = _state_list_entries(state, _POSTMORTEM_REVIEW_KEYS)
+    if not postmortem_reviews:
+        return False
+
+    review_risk_ids = _extract_review_risk_ids(benchmark_reviews)
+    review_risk_ids.update(_extract_review_risk_ids(postmortem_reviews))
+    if not review_risk_ids:
+        return False
+
+    risk_updates = _state_list_entries(state, _RISK_UPDATE_KEYS)
+    if not risk_updates:
+        return False
+
+    updated_risk_ids = _extract_update_risk_ids(risk_updates)
+    if not updated_risk_ids:
+        return False
+
+    return review_risk_ids.issubset(updated_risk_ids)
+
+
+def benchmark_postmortem_risk_feedback_failure_reason(state: dict[str, Any]) -> str:
+    if benchmark_postmortem_risk_feedback_passed(state):
+        return "benchmark_postmortem_risk_feedback_satisfied"
+
+    benchmark_reviews = _state_list_entries(state, _BENCHMARK_REVIEW_KEYS)
+    if not benchmark_reviews:
+        return "benchmark_reviews_missing"
+
+    postmortem_reviews = _state_list_entries(state, _POSTMORTEM_REVIEW_KEYS)
+    if not postmortem_reviews:
+        return "postmortem_reviews_missing"
+
+    review_risk_ids = _extract_review_risk_ids(benchmark_reviews)
+    review_risk_ids.update(_extract_review_risk_ids(postmortem_reviews))
+    if not review_risk_ids:
+        return "review_risks_missing"
+
+    risk_updates = _state_list_entries(state, _RISK_UPDATE_KEYS)
+    if not risk_updates:
+        return "risk_updates_missing"
+
+    updated_risk_ids = _extract_update_risk_ids(risk_updates)
+    if not updated_risk_ids:
+        return "risk_updates_missing"
+
+    return "risk_updates_incomplete"

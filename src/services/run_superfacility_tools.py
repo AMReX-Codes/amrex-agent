@@ -1495,7 +1495,10 @@ def monitor_job(
         if nersc_session and not (client_id and secret):
             logger.debug("Monitoring via REST API (token/OAuth)")
 
-    for _ in range(max_polls):
+    for poll_index in range(1, max_polls + 1):
+        poll_start = time.perf_counter()
+        poll_outcome = "POLL_ERROR"
+        poll_method = method
         try:
             if method == "sfapi_client" and client_id and secret:
                 try:
@@ -1503,6 +1506,7 @@ def monitor_job(
                     from sfapi_client.compute import Machine
                 except Exception:
                     method = "api"
+                    poll_method = "api"
                 else:
                     with Client(client_id=client_id, secret=secret) as client:
                         perlmutter = client.compute(Machine.perlmutter)
@@ -1525,7 +1529,17 @@ def monitor_job(
                             state = state.value
                         if state:
                             state_str = str(state).upper()
+                            poll_outcome = state_str
                             if state_str not in ["RUNNING", "PENDING"]:
+                                logger.info(
+                                    "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
+                                    poll_index,
+                                    max_polls,
+                                    poll_method,
+                                    job_id,
+                                    poll_outcome,
+                                    (time.perf_counter() - poll_start) * 1000.0,
+                                )
                                 return str(state)
 
             if method == "api" and nersc_session:
@@ -1542,10 +1556,21 @@ def monitor_job(
 
                 if response.status_code == 200:
                     state = response.json().get("status", "UNKNOWN")
+                    poll_outcome = str(state).upper()
                     if state not in ["RUNNING", "PENDING"]:
+                        logger.info(
+                            "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
+                            poll_index,
+                            max_polls,
+                            poll_method,
+                            job_id,
+                            poll_outcome,
+                            (time.perf_counter() - poll_start) * 1000.0,
+                        )
                         return state
 
             else:
+                poll_method = "sbatch"
                 result = subprocess.run(
                     ["squeue", "-j", str(job_id), "-h", "-o", "%T"],
                     capture_output=True,
@@ -1554,12 +1579,42 @@ def monitor_job(
                 state = result.stdout.strip()
 
                 if not state:
+                    poll_outcome = "COMPLETED"
+                    logger.info(
+                        "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
+                        poll_index,
+                        max_polls,
+                        poll_method,
+                        job_id,
+                        poll_outcome,
+                        (time.perf_counter() - poll_start) * 1000.0,
+                    )
                     return "COMPLETED"
+                poll_outcome = str(state).upper()
                 if state not in ["RUNNING", "PENDING"]:
+                    logger.info(
+                        "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
+                        poll_index,
+                        max_polls,
+                        poll_method,
+                        job_id,
+                        poll_outcome,
+                        (time.perf_counter() - poll_start) * 1000.0,
+                    )
                     return state
 
-        except Exception:
-            pass
+        except Exception as exc:
+            poll_outcome = f"ERROR:{type(exc).__name__}"
+
+        logger.info(
+            "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
+            poll_index,
+            max_polls,
+            poll_method,
+            job_id,
+            poll_outcome,
+            (time.perf_counter() - poll_start) * 1000.0,
+        )
 
         time.sleep(poll_interval)
 

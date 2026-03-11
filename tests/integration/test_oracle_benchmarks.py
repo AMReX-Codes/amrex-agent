@@ -65,6 +65,18 @@ def _build_level0_searcher(tmp_path: Path) -> Level0Searcher:
     return Level0Searcher(index_dir=index_dir, embedder=embedder)
 
 
+def _oracle_solver_accuracy(searcher: Level0Searcher, prompts: list[dict]) -> float:
+    if not prompts:
+        return 0.0
+
+    hits = 0
+    for item in prompts:
+        result = searcher.search(item["prompt"], top_k=1)
+        if result and result[0]["code"] == item["expected_solver"]:
+            hits += 1
+    return hits / len(prompts)
+
+
 def _load_benchmark_case_catalog() -> dict[str, list[dict[str, object]]]:
     """
     Load canonical benchmark case metadata from benchmark/cases/*.yaml.
@@ -566,6 +578,7 @@ def test_oracle_gate_benchmark_alignment_contract() -> None:
 
     benchmark_backed = _benchmark_backed_gate_cases(ORACLE_GATE_CASES)
     assert len(benchmark_backed) >= 13
+    assert len({case.expected_solver for case in benchmark_backed}) >= 4
 
 
 @pytest.mark.integration
@@ -703,3 +716,26 @@ def test_squall_line_no_level0_regression(level0_searcher: Level0Searcher) -> No
             misses.append((item["id"], expected, got))
 
     assert not misses, f"Level-0 oracle regressions detected: {misses}"
+
+
+@pytest.mark.integration
+def test_level0_index_growth_accuracy_drift_control(level0_searcher: Level0Searcher) -> None:
+    """
+    Enforce index-growth drift gate:
+    100+ index growth must keep routing accuracy within 2% of baseline.
+    """
+    baseline_prompts = _load_level0_oracle_cases()
+    baseline_accuracy = _oracle_solver_accuracy(level0_searcher, baseline_prompts)
+
+    growth_prompts = (baseline_prompts * ((100 // len(baseline_prompts)) + 1))[:100]
+    growth_accuracy = _oracle_solver_accuracy(level0_searcher, growth_prompts)
+
+    verdict = level0_searcher.evaluate_index_growth_accuracy_drift(
+        baseline_accuracy=baseline_accuracy,
+        current_accuracy=growth_accuracy,
+        index_count=len(growth_prompts),
+    )
+
+    assert verdict["gate_active"] is True
+    assert verdict["accuracy_drop"] <= 0.02
+    assert verdict["passed"] is True

@@ -155,7 +155,9 @@ def test_route_after_sweep_detection_without_sweep_routes_architect():
 
 
 def test_route_after_sweep_detection_blocks_when_dependency_not_complete():
-    route = _route_after_sweep_detection({"sweep_id": "sweep-01"})
+    route = _route_after_sweep_detection(
+        {"sweep_id": "sweep-01", "enforce_session_dependency_gate": True}
+    )
     assert route == "session_dependency_handler"
 
 

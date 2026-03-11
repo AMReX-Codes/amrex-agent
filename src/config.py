@@ -187,6 +187,21 @@ def _repo_path_from_env(env_var: str, repo_name: str) -> Path:
     default_path = str(_default_repo_root() / repo_name)
     return Path(env_value or default_path)
 
+
+def resolve_benchmark_lockfile_path(
+    lockfile: str | Path | None,
+    *,
+    repo_root: Path | None = None,
+) -> Path:
+    """Resolve benchmark lockfile path with repo-root fallback for relative inputs."""
+    if lockfile is None:
+        lockfile = Path("utils/environment-frozen.yaml")
+    lockfile_path = Path(lockfile)
+    if lockfile_path.is_absolute():
+        return lockfile_path
+    base = repo_root if repo_root is not None else Path(__file__).resolve().parents[1]
+    return base / lockfile_path
+
 class AMReXAgentConfig(BaseModel):
     """Central configuration for AMReXAgent.
 
@@ -771,6 +786,14 @@ class AMReXAgentConfig(BaseModel):
         default=True,
         description="Enable metrics collection and JSONL output"
     )
+    benchmark_environment_lockfile: Path = Field(
+        default=Path("utils/environment-frozen.yaml"),
+        description="Benchmark environment lockfile path (relative to repo root or absolute).",
+    )
+    benchmark_require_lockfile: bool = Field(
+        default=True,
+        description="Require benchmark environment lockfile to exist.",
+    )
 
     # === Validator Configuration ===
     disabled_validators: List[str] = Field(
@@ -858,6 +881,15 @@ class AMReXAgentConfig(BaseModel):
         elif self.dry_run:
             self.run_mode = "dry"
 
+        repo_root = Path(__file__).resolve().parents[1]
+        resolved_lockfile = resolve_benchmark_lockfile_path(
+            self.benchmark_environment_lockfile,
+            repo_root=repo_root,
+        )
+        self.benchmark_environment_lockfile = resolved_lockfile
+        if self.benchmark_require_lockfile and not resolved_lockfile.exists():
+            raise ValueError(f"benchmark_environment_lockfile_missing: {resolved_lockfile}")
+
         self.repositories = {
             'PeleC': self.pelec_repo_path,
             'PeleLMeX': self.pelelmex_repo_path,
@@ -870,6 +902,18 @@ class AMReXAgentConfig(BaseModel):
         }
         # Remove None values
         self.repositories = {k: v for k, v in self.repositories.items() if v}
+
+    def get_benchmark_environment_contract(self) -> dict[str, Any]:
+        """Return benchmark reproducibility contract metadata."""
+        lockfile_path = resolve_benchmark_lockfile_path(self.benchmark_environment_lockfile)
+        lockfile_exists = lockfile_path.exists()
+        return {
+            "isolation_mode": "container",
+            "reproducible_by_default": True,
+            "lockfile_path": str(lockfile_path),
+            "lockfile_exists": lockfile_exists,
+            "lockfile_required": bool(self.benchmark_require_lockfile),
+        }
 
     def test_connection(self) -> None:
         """DEPRECATED: Use ConfigService.initialize() instead.
@@ -1084,7 +1128,17 @@ def get_llm_client(config: AMReXAgentConfig) -> Any:
         if reason:
             error = NotImplementedError(reason) if provider == "anthropic" else ValueError(reason)
             if provider == configured_provider:
-                primary_error = error
+                # Compatibility policy:
+                # - Anthropic without explicit Anthropic credentials may fallback.
+                # - CBORG missing key may fallback to other configured providers.
+                # - Explicit LiteLLM misconfiguration should fail fast.
+                if provider == "anthropic" and not bool(getattr(config, "anthropic_api_key", None)):
+                    primary_error = error
+                    continue
+                if provider == "cborg" and "CBORG_API_KEY not set" in reason:
+                    primary_error = error
+                    continue
+                raise error
             continue
 
         try:
@@ -1099,7 +1153,7 @@ def get_llm_client(config: AMReXAgentConfig) -> Any:
             return _wrap_llm_client_if_needed(client, config)
         except Exception as error:
             if provider == configured_provider:
-                primary_error = error
+                raise error
             logger.warning(
                 "[Config] LLM provider %s initialization failed: %s",
                 provider,

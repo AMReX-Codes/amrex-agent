@@ -232,7 +232,12 @@ def test_graph_gate_and_routes_for_post_incident_feedback(
     assert _route_after_clarification({}) == "input_writer_node"
 
     assert _route_after_sweep_detection({}) == "architect_node"
-    assert _route_after_sweep_detection({"sweep_id": "sweep"}) == "session_dependency_handler"
+    assert (
+        _route_after_sweep_detection(
+            {"sweep_id": "sweep", "enforce_session_dependency_gate": True}
+        )
+        == "session_dependency_handler"
+    )
     assert _route_after_sweep_detection(
         {"sweep_id": "sweep", "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True}}
     ) == "sweep_execution_handler"

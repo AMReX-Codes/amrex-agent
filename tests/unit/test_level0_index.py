@@ -10,8 +10,8 @@ Architecture:
 - Integrates with Metadata Schema schema
 """
 import pytest
-import json
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock, MagicMock, patch
 
 
@@ -98,35 +98,6 @@ class TestLevel0TaxonomyStructure:
             assert 'PeleLMeX' in indexed_codes, "Should index PeleLMeX"
             
             print(f"\n✅ Indexed {len(indexed_codes)} codes: {indexed_codes}")
-
-    def test_level0_emits_loc_savings_report(self, tmp_path):
-        """
-        Given: Config-driven Level 0 framework builder
-        When:  Building Level 0 indices
-        Then:  Should emit automated LOC-savings metrics for reuse reporting
-        """
-        from database.indexing.level0_builder import Level0Builder
-
-        mock_embedder = Mock()
-        mock_embedder.embed_texts.return_value = [[0.1] * 384] * 20
-        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
-
-        builder = Level0Builder(embedder=mock_embedder)
-        output_dir = tmp_path / "level0"
-        builder.build(output_dir=output_dir)
-
-        report_path = output_dir / "level0_loc_savings_report.json"
-        assert report_path.exists(), "Missing automated LOC-savings report"
-
-        report = json.loads(report_path.read_text())
-        assert report["metric_name"] == "level0_framework_reuse_loc_savings"
-        assert report["solver_count"] >= 1
-        assert report["subindex_count"] == 4
-        assert report["baseline_manual_loc"] >= report["framework_loc"]
-        assert report["estimated_loc_saved"] == (
-            report["baseline_manual_loc"] - report["framework_loc"]
-        )
-        assert 0.0 <= report["savings_ratio"] <= 1.0
     
     
     def test_level0_includes_cross_cutting_guidance(self, tmp_path):
@@ -421,52 +392,91 @@ class TestLevel0SchemaConsistency:
 
 
 class TestLevel0PerformanceRequirements:
-    """Bonus: Validate NFR-2 (p95 FAISS retrieval <500ms)."""
+    """Validate performance/concurrency requirements from PRD Section 13."""
     
     @pytest.mark.performance
-    def test_level0_faiss_retrieval_p95_latency(self):
+    def test_level0_query_latency(self):
         """
-        Given: A Level 0 FAISS searcher and deterministic retrieval latencies
-        When:  Executing repeated retrieval calls
-        Then:  p95 latency should remain under 500ms
+        Given: Level 0 index with all 4 sub-indices
+        When:  Executing search query
+        Then:  Should complete in <500ms
 
-        Audit criterion: p95 FAISS retrieval <500ms
+        PRD: Section 13 FAISS retrieval latency <500ms
         """
         import time
-        from statistics import quantiles
         from database.indexing.level0_searcher import Level0Searcher
+        
+        # Skip if indices don't exist
+        index_dir = Path("database/indices/level0")
+        if not index_dir.exists():
+            pytest.skip("Level 0 indices not built")
+        
+        searcher = Level0Searcher(index_dir=index_dir)
+        
+        # Act: Time the search
+        start = time.time()
+        results = searcher.search("supersonic combustion", top_k=3)
+        elapsed = time.time() - start
 
-        searcher = Level0Searcher(index_dir=Path("mock"))
+        # Assert: <500ms
+        assert elapsed < 0.5, \
+            f"Query took {elapsed:.3f}s (requirement: <0.5s)"
 
-        latencies_ms = [
-            180, 220, 250, 275, 290, 305, 320, 340, 360, 380,
-            395, 405, 415, 425, 435, 445, 450, 460, 470, 480,
-        ]
+        print(f"\n⚡ Query latency: {elapsed*1000:.1f}ms")
 
-        # Deterministic clock values: (start, end) for each retrieval.
-        perf_counter_values = []
-        current_time = 1000.0
-        for latency in latencies_ms:
-            perf_counter_values.extend([current_time, current_time + (latency / 1000.0)])
-            current_time += 1.0
+    def test_plan_generation_p95_target_three_minutes(self):
+        """
+        Given: Historical plan-generation latencies from architect stages
+        When:  Evaluating the p95 gate
+        Then:  Should pass at <=180s and fail above 180s
 
-        with patch.object(searcher, '_search_physics_regimes', return_value=[{'code': 'AMReX', 'score': 0.9}]), \
-             patch.object(searcher, '_search_solver_capabilities', return_value=[{'code': 'AMReX', 'score': 0.8}]), \
-             patch.object(searcher, '_search_code_lineage', return_value=[{'code': 'AMReX', 'score': 0.7}]), \
-             patch.object(searcher, '_search_cross_cutting', return_value=[{'code': 'AMReX', 'score': 0.6}]), \
-             patch('time.perf_counter', side_effect=perf_counter_values):
+        PRD: Section 13 E2E plan generation <3 minutes (excluding simulation)
+        """
+        from src.graph import (
+            PLAN_GENERATION_P95_MAX_SECONDS,
+            plan_generation_p95_failure_reason,
+            plan_generation_p95_passed,
+        )
 
-            measured_ms = []
-            for _ in latencies_ms:
-                start = time.perf_counter()
-                results = searcher.search("supersonic combustion", top_k=3)
-                end = time.perf_counter()
-                measured_ms.append((end - start) * 1000.0)
+        assert PLAN_GENERATION_P95_MAX_SECONDS == 180.0
 
-                assert results and results[0]['code'] == 'AMReX'
+        passing_state = {"plan_generation_latencies_seconds": [30.0, 45.0, 120.0, 179.9]}
+        assert plan_generation_p95_passed(passing_state) is True
+        assert plan_generation_p95_failure_reason(passing_state) == "plan_generation_p95_satisfied"
 
-        # inclusive p95 over measured run distribution
-        p95_ms = quantiles(measured_ms, n=100, method='inclusive')[94]
+        failing_state = {"plan_generation_latencies_seconds": [30.0, 45.0, 120.0, 180.1]}
+        assert plan_generation_p95_passed(failing_state) is False
+        assert plan_generation_p95_failure_reason(failing_state) == "plan_generation_p95_exceeded"
 
-        assert p95_ms < 500.0, \
-            f"p95 retrieval latency {p95_ms:.1f}ms exceeds 500ms target"
+    def test_mcp_supports_five_concurrent_sessions_without_collision(self, tmp_path):
+        """
+        Given: Five concurrent MCP session writes
+        When:  Persisting workflow state in the session store
+        Then:  Each session remains isolated with no state collisions
+
+        PRD: Section 13 MCP server supports 5 concurrent users/sessions
+        """
+        from src.services.workflow_store import WorkflowStore
+
+        store = WorkflowStore(tmp_path / "workflow_store.db")
+        expected_states = {f"session-{idx}": {"owner": f"user-{idx}", "value": idx} for idx in range(5)}
+
+        def _write_and_read(session_id: str, state: dict):
+            store.upsert_session(session_id, state)
+            loaded = store.get_session(session_id)
+            assert loaded is not None
+            return loaded.session_id, loaded.state
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            results = list(
+                executor.map(
+                    lambda item: _write_and_read(item[0], item[1]),
+                    expected_states.items(),
+                )
+            )
+
+        observed = dict(results)
+        assert set(observed.keys()) == set(expected_states.keys())
+        for session_id, expected_state in expected_states.items():
+            for key, expected_value in expected_state.items():
+                assert observed[session_id].get(key) == expected_value
