@@ -17,6 +17,53 @@ logger.debug(f"[DEBUG] AMREX_AGENT_ROOT: {AMREX_AGENT_ROOT.resolve()}")
 logger.debug(f"[DEBUG] sys.path[0]: {sys.path[0]}")
 
 
+def normalize_unnumbered_152(
+    payload: Any,
+    *,
+    method: str | None = None,
+    error: str | None = None,
+    default_confidence: float = 0.0,
+    fallback_answer: str = "",
+) -> dict[str, Any]:
+    """
+    Normalize knowledge responses to a stable answer/sources/confidence contract.
+    """
+    if not isinstance(payload, dict):
+        answer = fallback_answer if payload is None else str(payload)
+        return {"answer": answer, "sources": [], "confidence": default_confidence}
+
+    answer = payload.get("answer")
+    if not isinstance(answer, str) or not answer:
+        output = payload.get("output")
+        answer = output if isinstance(output, str) and output else fallback_answer
+
+    sources = payload.get("sources", [])
+    if isinstance(sources, list):
+        normalized_sources = sources
+    elif sources is None:
+        normalized_sources = []
+    else:
+        normalized_sources = [sources]
+
+    confidence_value = payload.get("confidence")
+    confidence = (
+        confidence_value
+        if isinstance(confidence_value, (int, float)) and not isinstance(confidence_value, bool)
+        else default_confidence
+    )
+
+    normalized = {
+        "answer": answer,
+        "sources": normalized_sources,
+        "confidence": confidence,
+    }
+    if method:
+        normalized["method"] = method
+    if error:
+        normalized["error"] = error
+    return normalized
+
+
 class PeleKnowledgeService:
     """Knowledge base service.
 

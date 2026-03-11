@@ -50,6 +50,15 @@ class ModificationExtraction(BaseModel):
 
 logger = logging.getLogger(__name__)
 
+ROUTER_REASON_CODES = {
+    "hierarchical_primary": "hierarchical_primary",
+    "simple_fallback": "simple_fallback",
+    "simple_primary": "simple_primary",
+    "override_static": "override_static",
+    "override_hierarchical": "override_hierarchical",
+    "override_simple": "override_simple",
+}
+
 
 
 @dataclass
@@ -1155,11 +1164,26 @@ class ArchitectService:
         # === BASELINE OVERRIDE PATH ===
         if baseline_override:
             logger.info(f"Baseline override detected: {baseline_override}")
-            return self._execute_planning_with_override(
+            plan = self._execute_planning_with_override(
                 user_prompt=user_prompt,
                 baseline_override=baseline_override,
                 strategy=strategy,
                 **kwargs
+            )
+            if strategy == "override_static":
+                return self._attach_router_metadata(
+                    plan, branch="override_static", reason_code=ROUTER_REASON_CODES["override_static"]
+                )
+            if strategy == "hierarchical":
+                return self._attach_router_metadata(
+                    plan, branch="hierarchical", reason_code=ROUTER_REASON_CODES["override_hierarchical"]
+                )
+            if strategy == "simple":
+                return self._attach_router_metadata(
+                    plan, branch="simple", reason_code=ROUTER_REASON_CODES["override_simple"]
+                )
+            return self._attach_router_metadata(
+                plan, branch=str(strategy), reason_code=ROUTER_REASON_CODES["override_static"]
             )
 
         # === NORMAL PATH (No override) ===
@@ -1181,7 +1205,11 @@ class ArchitectService:
                     plan.baseline,
                     selected_case=plan.selected_case,
                 )
-                return plan
+                return self._attach_router_metadata(
+                    plan,
+                    branch="hierarchical",
+                    reason_code=ROUTER_REASON_CODES["hierarchical_primary"],
+                )
             except Exception as e:
                 logger.exception("Hierarchical indexing failed: %s", e)
                 if getattr(self.config, 'fallback_to_simple_on_error', True):
@@ -1197,6 +1225,28 @@ class ArchitectService:
             plan.baseline,
             selected_case=plan.selected_case,
         )
+        reason = (
+            ROUTER_REASON_CODES["simple_fallback"]
+            if strategy == "simple" and getattr(self.config, 'indexing_strategy', 'hierarchical') == "hierarchical"
+            else ROUTER_REASON_CODES["simple_primary"]
+        )
+        return self._attach_router_metadata(
+            plan,
+            branch="simple",
+            reason_code=reason,
+        )
+
+    @staticmethod
+    def _attach_router_metadata(
+        plan: SimulationPlan,
+        *,
+        branch: str,
+        reason_code: str,
+    ) -> SimulationPlan:
+        requirements = dict(plan.requirements or {})
+        requirements["router_branch"] = branch
+        requirements["router_reason_code"] = reason_code
+        plan.requirements = requirements
         return plan
 
 
