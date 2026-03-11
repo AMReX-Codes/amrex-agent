@@ -27,6 +27,230 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 
+def _to_int(value: Any) -> int | None:
+    """Convert numeric-ish values to int; return None when conversion is invalid."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if value.is_integer():
+            return int(value)
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.isdigit():
+            return int(stripped)
+    return None
+
+
+def evaluate_radon_cc_threshold(
+    *,
+    radon_available: bool | None,
+    flagged_functions: list[dict[str, Any]] | None,
+    max_complexity: int = 10,
+) -> dict[str, Any]:
+    """
+    Evaluate whether all candidate function complexities are within threshold.
+
+    Parameters
+    ----------
+    radon_available : bool | None
+        Whether radon command execution was available in the runtime environment.
+    flagged_functions : list[dict[str, Any]] | None
+        Function records with optional keys: ``name`` and ``complexity``.
+    max_complexity : int
+        Hard threshold for allowable cyclomatic complexity.
+    """
+    if max_complexity < 0:
+        raise ValueError("max_complexity must be non-negative")
+    if radon_available is False:
+        return normalize_unnumbered_236(error="radon is not installed")
+    if flagged_functions is None:
+        flagged_functions = []
+    if not isinstance(flagged_functions, list):
+        return normalize_unnumbered_236(error="radon_cc_functions must be a list of mappings")
+
+    offenders: list[dict[str, Any]] = []
+    for entry in flagged_functions:
+        if not isinstance(entry, dict):
+            return normalize_unnumbered_236(error="radon_cc_functions entries must be mappings")
+        complexity = _to_int(entry.get("complexity"))
+        if complexity is None:
+            continue
+        if complexity > max_complexity:
+            offenders.append(
+                {
+                    "name": str(entry.get("name", "unknown")),
+                    "complexity": complexity,
+                }
+            )
+
+    if offenders:
+        return normalize_unnumbered_236(
+            error="functions exceed complexity threshold",
+            offenders=offenders,
+        )
+
+    return normalize_unnumbered_236()
+
+
+def normalize_unnumbered_236(
+    *,
+    error: str | None = None,
+    offenders: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """
+    Normalize error payloads to a stable taxonomy shape for UNNUMBERED-236.
+
+    Returns a consistent dict contract with ``valid``, ``error``, and ``offenders``.
+    """
+    normalized_offenders = offenders if isinstance(offenders, list) else []
+    return {
+        "valid": error is None,
+        "error": error,
+        "offenders": normalized_offenders,
+    }
+
+
+def normalize_unnumbered_023(modifications: Any) -> list[tuple[str, Any]]:
+    """
+    Normalize mixed modification payloads into ``(parameter, value)`` tuples.
+
+    This consolidates tuple/list/dict normalization used by multiple plan
+    creation and migration paths.
+    """
+    if modifications is None:
+        return []
+    if not isinstance(modifications, list):
+        return []
+
+    normalized: list[tuple[str, Any]] = []
+    for entry in modifications:
+        if isinstance(entry, tuple) and len(entry) == 2:
+            normalized.append(entry)
+            continue
+        if isinstance(entry, list) and len(entry) == 2:
+            normalized.append((entry[0], entry[1]))
+            continue
+        if isinstance(entry, dict):
+            normalized.append((entry.get("parameter", ""), entry.get("value", "")))
+    return normalized
+
+
+def _first_non_empty_text(payload: dict[str, Any], keys: tuple[str, ...]) -> str:
+    """Return first non-empty string found for candidate keys."""
+    for key in keys:
+        candidate = payload.get(key)
+        if isinstance(candidate, str):
+            stripped = candidate.strip()
+            if stripped:
+                return stripped
+    return ""
+
+
+def normalize_unnumbered_284(criteria_rows: Any) -> list[dict[str, str]]:
+    """
+    Normalize criterion/evidence/test rows into a stable list contract.
+
+    Accepted row shapes:
+    - dict with criterion/evidence/tests-like keys
+    - tuple/list with three values (criterion, artifact, test)
+    """
+    if criteria_rows is None or not isinstance(criteria_rows, list):
+        return []
+
+    normalized: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    for row in criteria_rows:
+        criterion = ""
+        artifact = ""
+        test = ""
+
+        if isinstance(row, dict):
+            criterion = _first_non_empty_text(
+                row, ("criterion", "success_criterion", "standard", "gap")
+            )
+            artifact = _first_non_empty_text(
+                row, ("artifact", "evidence", "evidence/artifact", "location")
+            )
+            test = _first_non_empty_text(
+                row, ("tests", "test", "verification", "verification_test")
+            )
+        elif isinstance(row, (tuple, list)) and len(row) == 3:
+            criterion, artifact, test = (
+                str(row[0]).strip(),
+                str(row[1]).strip(),
+                str(row[2]).strip(),
+            )
+
+        if not criterion or not artifact or not test:
+            continue
+
+        fingerprint = (criterion, artifact, test)
+        if fingerprint in seen:
+            continue
+
+        seen.add(fingerprint)
+        normalized.append(
+            {
+                "criterion": criterion,
+                "artifact": artifact,
+                "test": test,
+            }
+        )
+
+    return normalized
+
+
+def _normalize_case_reference(case_entry: Any) -> str | None:
+    """Extract a stable case reference string from evidence-like values."""
+    if isinstance(case_entry, str):
+        stripped = case_entry.strip()
+        return stripped or None
+    if isinstance(case_entry, dict):
+        for key in ("case", "repo_path", "name"):
+            candidate = case_entry.get(key)
+            if isinstance(candidate, str) and candidate.strip():
+                return candidate.strip()
+    return None
+
+
+def build_baseline_evidence_citations(
+    baseline_case: dict[str, Any],
+    similar_cases: Any,
+) -> list[dict[str, str]]:
+    """
+    Build explicit citation-style evidence for baseline and similar-case provenance.
+    """
+    citations: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+
+    baseline_ref = _normalize_case_reference(
+        baseline_case.get("case") or baseline_case.get("metadata", {}).get("repo_path")
+    )
+    if baseline_ref:
+        key = ("baseline", baseline_ref)
+        seen.add(key)
+        citations.append({"citation_type": "baseline", "case": baseline_ref})
+
+    if not isinstance(similar_cases, list):
+        return citations
+
+    for case_entry in similar_cases:
+        case_ref = _normalize_case_reference(case_entry)
+        if not case_ref:
+            continue
+        key = ("similar_case", case_ref)
+        if key in seen:
+            continue
+        seen.add(key)
+        citations.append({"citation_type": "similar_case", "case": case_ref})
+
+    return citations
+
+
 class SimulationPlan(BaseModel):
     """
     Typed simulation configuration plan.
@@ -58,6 +282,7 @@ class SimulationPlan(BaseModel):
     # === Traceability ===
     case_candidates: list[dict[str, Any]] | None = None      # Top-k candidates
     documentation_context: list[dict[str, Any]] | None = None  # RAG docs
+    baseline_evidence_citations: list[dict[str, str]] | None = None  # Evidence-style case citations
 
     # === Phase 4 Integrations ===
     visualization: dict[str, Any] | None = None
@@ -206,26 +431,25 @@ class SimulationPlanFactory:
 
         # Extract modifications
         modifications = cbr_plan.get('modifications', [])
-
-        # Validate modification format
         if not all(isinstance(m, tuple) and len(m) == 2 for m in modifications):
             logger.warning("Modifications not in (param, value) tuple format, attempting conversion")
-            # Try to convert if they're dicts
-            if modifications and isinstance(modifications[0], dict):
-                modifications = [(m.get('parameter', ''), m.get('value', ''))
-                               for m in modifications]
+        modifications = normalize_unnumbered_023(modifications)
 
         # Extract CBR confidence
         cbr_conf = cbr_plan.get('confidence', 0.0)
 
         # Build reasoning
         reasoning = cbr_plan.get('reasoning', '')
+        similar_cases = cbr_plan.get('similar_cases', [])
         if not reasoning:
-            similar_cases = cbr_plan.get('similar_cases', [])
             case_name = baseline_case.get('case', 'baseline')
             reasoning = f"CBR plan based on {case_name}"
             if similar_cases:
                 reasoning += f" (patterns from: {', '.join(similar_cases[:3])})"
+        evidence_citations = build_baseline_evidence_citations(
+            baseline_case=baseline_case,
+            similar_cases=similar_cases,
+        )
 
         return SimulationPlan(
             selected_solver=solver_name,
@@ -244,6 +468,7 @@ class SimulationPlanFactory:
             case_candidates=baseline_result.get('candidates', []),
             documentation_context=docs,
             baseline=baseline_case.get('metadata', {}),
+            baseline_evidence_citations=evidence_citations,
 
             # Metadata
             used_llm=used_llm,
@@ -348,16 +573,10 @@ class SimulationPlanFactory:
             data = SimulationPlanFactory._migrate_legacy_dict(data)
 
         # Filter to known fields to avoid TypeErrors
-        valid_fields = {
-            k: v for k, v in data.items()
-            if k in SimulationPlan.__dataclass_fields__
-        }
+        valid_fields = {k: v for k, v in data.items() if k in SimulationPlan.model_fields}
 
-        # Ensure modifications are tuples, not lists
-        if 'modifications' in valid_fields:
-            mods = valid_fields['modifications']
-            if mods and isinstance(mods[0], list):
-                valid_fields['modifications'] = [tuple(m) for m in mods]
+        if "modifications" in valid_fields:
+            valid_fields["modifications"] = normalize_unnumbered_023(valid_fields["modifications"])
 
         return SimulationPlan(**valid_fields)
 
@@ -391,10 +610,7 @@ class SimulationPlanFactory:
                'unknown')
 
         # Extract modifications (ensure tuple format)
-        mods = old_dict.get('modifications', [])
-        if mods and isinstance(mods[0], dict):
-            # Convert from dict format to tuple
-            mods = [(m.get('parameter', ''), m.get('value', '')) for m in mods]
+        mods = normalize_unnumbered_023(old_dict.get('modifications', []))
 
         return {
             'selected_solver': solver,

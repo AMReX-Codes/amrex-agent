@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Iterable, Set, get_type_hints
 
 from src.models import GraphState
+from src.services.plan import normalize_unnumbered_284
 
 
 _SIMPLE_FIELD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -75,3 +76,41 @@ def test_contracts_reference_graphstate_fields() -> None:
         "Contract fields missing from GraphState: "
         f"{missing_by_contract}"
     )
+
+
+def test_normalize_unnumbered_284_enforces_stable_rows() -> None:
+    rows = [
+        {
+            "criterion": "Verification coverage",
+            "artifact": "tests/quality/test_contract_schema_alignment.py",
+            "tests": "tests/quality/test_contract_schema_alignment.py",
+        },
+        {
+            "standard": "Reproducibility",
+            "evidence": "docs/BUILD_FAISS_INDICES.md",
+            "test": "tests/unit/test_faiss_artifacts.py",
+        },
+        ("Traceability", "docs/coverage_map.md", "tests/unit/test_architect_node_history.py"),
+        ("Traceability", "docs/coverage_map.md", "tests/unit/test_architect_node_history.py"),
+        {"criterion": "missing-test", "artifact": "docs/coverage_map.md"},
+        ["", "docs/coverage_map.md", "tests/unit/test_architect_node_history.py"],
+        "ignore-me",
+    ]
+
+    assert normalize_unnumbered_284(rows) == [
+        {
+            "criterion": "Verification coverage",
+            "artifact": "tests/quality/test_contract_schema_alignment.py",
+            "test": "tests/quality/test_contract_schema_alignment.py",
+        },
+        {
+            "criterion": "Reproducibility",
+            "artifact": "docs/BUILD_FAISS_INDICES.md",
+            "test": "tests/unit/test_faiss_artifacts.py",
+        },
+        {
+            "criterion": "Traceability",
+            "artifact": "docs/coverage_map.md",
+            "test": "tests/unit/test_architect_node_history.py",
+        },
+    ]
