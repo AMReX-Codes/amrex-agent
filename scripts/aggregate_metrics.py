@@ -9,6 +9,21 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
+STABLE_ERROR_TAXONOMY_VERSION = "v1"
+STABLE_ERROR_REASON_CODES = frozenset(
+    {
+        "feature_a_dependency_unverified",
+        "global_function_complexity_threshold_exceeded",
+        "level4_depth_guidance_missing",
+        "level4_depth_guidance_out_of_range",
+        "plan_generation_latency_missing",
+        "plan_generation_p95_exceeded",
+        "error_taxonomy_version_mismatch",
+        "error_taxonomy_reason_code_unknown",
+        "error_taxonomy_contract_invalid",
+    }
+)
+
 
 def _iter_metric_files(path: Path) -> Iterable[Path]:
     if path.is_file():
@@ -33,6 +48,12 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
     model_id = context.get("model_id") or (models[0] if models else "unknown")
     provider = context.get("provider") or (providers[0] if providers else None)
     strategy = context.get("strategy") or data.get("strategy") or _extract_strategy(data)
+    taxonomy_version = data.get("error_taxonomy_version")
+    if not isinstance(taxonomy_version, str) or not taxonomy_version:
+        taxonomy_version = STABLE_ERROR_TAXONOMY_VERSION
+
+    reason_codes = _collect_error_reason_codes(data)
+    unknown_reason_codes = [code for code in reason_codes if code not in STABLE_ERROR_REASON_CODES]
 
     return {
         "model_id": model_id,
@@ -53,6 +74,13 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
         "tokens_total": data.get("tokens_total"),
         "tokens_by_stage": data.get("tokens_by_stage"),
         "stages": data.get("stages"),
+        "error_taxonomy_version": taxonomy_version,
+        "error_reason_codes": reason_codes,
+        "error_reason_code_count": len(reason_codes),
+        "error_reason_codes_unknown": unknown_reason_codes,
+        "error_taxonomy_stable": (
+            taxonomy_version == STABLE_ERROR_TAXONOMY_VERSION and not unknown_reason_codes
+        ),
         "source": str(source),
     }
 
@@ -79,6 +107,28 @@ def _extract_strategy(data: dict[str, Any]) -> str | None:
     return None
 
 
+def _collect_error_reason_codes(data: dict[str, Any]) -> list[str]:
+    reason_codes: set[str] = set()
+
+    errors_active = data.get("errors_active")
+    if isinstance(errors_active, list):
+        reason_codes.update(code for code in errors_active if isinstance(code, str) and code)
+
+    gate_approvals = data.get("gate_approvals")
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            reason_code = details.get("reason_code")
+            if isinstance(reason_code, str) and reason_code:
+                reason_codes.add(reason_code)
+
+    return sorted(reason_codes)
+
+
 def _write_csv(path: Path, rows: list[dict[str, Any]], headers: list[str]) -> None:
     if not rows:
         return
@@ -87,6 +137,68 @@ def _write_csv(path: Path, rows: list[dict[str, Any]], headers: list[str]) -> No
         writer.writeheader()
         for row in rows:
             writer.writerow({key: row.get(key) for key in headers})
+
+
+def _read_csv_rows(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def _format_percent(value: str | float | int | None) -> str:
+    if isinstance(value, str):
+        try:
+            numeric = float(value)
+        except ValueError:
+            return "N/A"
+    elif isinstance(value, (int, float)):
+        numeric = float(value)
+    else:
+        return "N/A"
+    return f"{numeric * 100:.2f}%"
+
+
+def _generate_strategy_table_text(summary_rows: list[dict[str, str]], strategy_rows: list[dict[str, str]]) -> str:
+    overall = summary_rows[0] if summary_rows else {}
+    lines = [
+        "# Strategy Comparison",
+        "",
+        f"Overall runs: {overall.get('total_runs', '0')}",
+        f"Overall success rate: {_format_percent(overall.get('success_rate'))}",
+        "",
+        "| Strategy | Success Rate | Success/Total | Avg Tokens (In/Out/Total) |",
+        "| --- | --- | --- | --- |",
+    ]
+
+    for row in strategy_rows:
+        strategy = row.get("retrieval_strategy", "unknown")
+        success_rate = _format_percent(row.get("success_rate"))
+        success_total = f"{row.get('success_runs', '0')}/{row.get('total_runs', '0')}"
+        avg_tokens = (
+            f"{row.get('avg_tokens_input', '0')}/"
+            f"{row.get('avg_tokens_output', '0')}/"
+            f"{row.get('avg_tokens_total', '0')}"
+        )
+        lines.append(f"| {strategy} | {success_rate} | {success_total} | {avg_tokens} |")
+
+    lines.extend(
+        [
+            "",
+            "Generated from `summary.csv` and `by_strategy.csv`.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _write_strategy_table_from_csvs(output_dir: Path) -> None:
+    summary_rows = _read_csv_rows(output_dir / "summary.csv")
+    strategy_rows = _read_csv_rows(output_dir / "by_strategy.csv")
+    if not summary_rows or not strategy_rows:
+        return
+    table_text = _generate_strategy_table_text(summary_rows, strategy_rows)
+    (output_dir / "strategy_comparison_table.md").write_text(table_text, encoding="utf-8")
 
 
 def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[dict[str, Any]]:
@@ -218,6 +330,7 @@ def main() -> None:
         "avg_tokens_input",
         "avg_tokens_output",
     ])
+    _write_strategy_table_from_csvs(output_dir)
     print(json.dumps({"output": str(output_path), "records": len(records)}, indent=2))
 
 

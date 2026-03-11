@@ -10,6 +10,18 @@ from pathlib import Path
 from typing import Any
 
 
+SOLVER_ALIASES: dict[str, tuple[str, ...]] = {
+    "AMReX": ("amrex",),
+    "PeleC": ("pelec",),
+    "PeleLMeX": ("pelelmex",),
+    "ERF": ("erf",),
+    "incflo": ("incflo",),
+    "IAMR": ("iamr",),
+    "REMORA": ("remora",),
+    "WarpX": ("warpx",),
+}
+
+
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for line in path.read_text().splitlines():
@@ -23,6 +35,68 @@ def _mean(values: list[float]) -> float | None:
     if not values:
         return None
     return sum(values) / len(values)
+
+
+def _normalize_solver_name(value: str) -> str | None:
+    normalized = value.strip().lower()
+    if not normalized:
+        return None
+    for canonical, aliases in SOLVER_ALIASES.items():
+        if normalized == canonical.lower() or normalized in aliases:
+            return canonical
+    return None
+
+
+def _infer_solver(record: dict[str, Any]) -> str:
+    direct_solver = record.get("solver")
+    if isinstance(direct_solver, str):
+        normalized_direct = _normalize_solver_name(direct_solver)
+        if normalized_direct:
+            return normalized_direct
+
+    probes = [
+        record.get("selected_case"),
+        record.get("prompt_id"),
+        record.get("case_id"),
+        record.get("prompt_excerpt"),
+    ]
+    probe_text = " ".join(str(item).lower() for item in probes if isinstance(item, str))
+    for canonical, aliases in SOLVER_ALIASES.items():
+        if any(alias in probe_text for alias in aliases):
+            return canonical
+    return "unknown"
+
+
+def _build_generalization_rows(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_solver: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        by_solver.setdefault(_infer_solver(record), []).append(record)
+
+    rows: list[dict[str, Any]] = []
+    for solver, items in sorted(by_solver.items()):
+        completed = sum(1 for item in items if item.get("job_status") == "completed")
+        durations = [item["duration_seconds"] for item in items if isinstance(item.get("duration_seconds"), (int, float))]
+        selected_cases = {
+            str(item.get("selected_case")).strip()
+            for item in items
+            if isinstance(item.get("selected_case"), str) and str(item.get("selected_case")).strip()
+        }
+        model_ids = {
+            str(item.get("model_id")).strip()
+            for item in items
+            if isinstance(item.get("model_id"), str) and str(item.get("model_id")).strip()
+        }
+        rows.append({
+            "solver": solver,
+            "total_runs": len(items),
+            "completed_runs": completed,
+            "success_rate": (completed / len(items)) if items else 0.0,
+            "unique_models": len(model_ids),
+            "unique_selected_cases": len(selected_cases),
+            "avg_duration_seconds": _mean(durations),
+        })
+
+    return rows
 
 
 def parse_args() -> argparse.Namespace:
@@ -101,6 +175,19 @@ def main() -> None:
         "failed_runs": sum(1 for r in records if r.get("job_status") == "failed"),
         "skipped_runs": sum(1 for r in records if r.get("job_status") == "skipped"),
     }
+    generalization_rows = _build_generalization_rows(records)
+    known_solver_rows = [row for row in generalization_rows if row["solver"] != "unknown"]
+    known_total_runs = sum(int(row["total_runs"]) for row in known_solver_rows)
+    known_completed_runs = sum(int(row["completed_runs"]) for row in known_solver_rows)
+    summary_row.update(
+        {
+            "generalization_solver_count": len(known_solver_rows),
+            "generalization_unknown_runs": sum(int(row["total_runs"]) for row in generalization_rows if row["solver"] == "unknown"),
+            "generalization_cross_solver_success_rate": (
+                (known_completed_runs / known_total_runs) if known_total_runs else 0.0
+            ),
+        }
+    )
 
     def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         if not rows:
@@ -112,6 +199,7 @@ def main() -> None:
 
     write_csv(output_dir / "by_model.csv", by_model_rows)
     write_csv(output_dir / "by_prompt.csv", by_prompt_rows)
+    write_csv(output_dir / "generalization_by_solver.csv", generalization_rows)
     write_csv(output_dir / "summary.csv", [summary_row])
 
     print(json.dumps({
