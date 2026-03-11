@@ -410,3 +410,62 @@ COMP = gnu
         assert 'Chemistry_Model' in content, "Should have chemistry info"
         
         print("\n✅ GNUmakefile tracked and accessible for build analysis")
+
+
+class TestLevel0ReuseMeasurabilityAndCost:
+    """Session 90: Reuse measurability plus per-code cost accounting."""
+
+    def test_level0_reports_per_code_cost_accounting(self):
+        """
+        Given: A Level 0 builder with multiple codes
+        When:  Computing reuse savings metrics
+        Then:  Metrics should include per-code cost accounting entries
+        """
+        from database.indexing.level0_builder import Level0Builder
+
+        builder = Level0Builder(embedder=Mock())
+        builder.configs = [
+            type("Cfg", (), {"code_name": "PeleC"})(),
+            type("Cfg", (), {"code_name": "WarpX"})(),
+        ]
+        builder._count_module_loc = Mock(return_value=40)
+
+        report = builder._compute_loc_savings_metrics()
+
+        assert report["solver_count"] == 2
+        assert report["baseline_manual_loc"] == 200
+        assert report["framework_loc"] == 40
+        assert report["estimated_loc_saved"] == 160
+
+        per_code = report.get("per_code_cost_accounting", [])
+        assert len(per_code) == 2
+        assert {entry["code_name"] for entry in per_code} == {"PeleC", "WarpX"}
+        for entry in per_code:
+            assert entry["baseline_manual_loc"] == 100
+            assert entry["allocated_framework_loc"] == 20.0
+            assert entry["estimated_loc_saved"] == 80.0
+            assert 0.0 <= entry["savings_ratio"] <= 1.0
+
+    def test_level0_per_code_accounting_sums_to_global_estimate(self):
+        """
+        Given: Deterministic framework LOC and solver count
+        When:  Per-code cost accounting is generated
+        Then:  Sum of per-code saved LOC should align with global saved LOC
+        """
+        from database.indexing.level0_builder import Level0Builder
+
+        builder = Level0Builder(embedder=Mock())
+        builder.configs = [
+            type("Cfg", (), {"code_name": "A"})(),
+            type("Cfg", (), {"code_name": "B"})(),
+            type("Cfg", (), {"code_name": "C"})(),
+        ]
+        builder._count_module_loc = Mock(return_value=75)
+
+        report = builder._compute_loc_savings_metrics()
+        per_code = report["per_code_cost_accounting"]
+        summed_saved = sum(entry["estimated_loc_saved"] for entry in per_code)
+
+        assert report["baseline_manual_loc"] == 300
+        assert report["estimated_loc_saved"] == 225
+        assert summed_saved == pytest.approx(report["estimated_loc_saved"], abs=0.02)

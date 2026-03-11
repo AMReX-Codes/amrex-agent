@@ -12,6 +12,8 @@ from src.session_manager import (
     persist_session_result,
 )
 
+from src import tool_registry
+
 
 @pytest.fixture
 def mcp_server_module(monkeypatch, tmp_path_factory):
@@ -772,3 +774,59 @@ def test_append_policy_audit_and_persist_session_result(monkeypatch):
         result={"status": "noop"},
     )
     assert passthrough == {"status": "noop"}
+
+
+def test_dispatch_tool_rejects_invalid_context_before_handler(monkeypatch):
+    called = False
+
+    def _handler(context):
+        nonlocal called
+        called = True
+        return {"ok": True, "context": context}
+
+    monkeypatch.setattr(tool_registry, "_tool_handlers", lambda: {"demo_tool": _handler})
+    monkeypatch.setattr(
+        tool_registry,
+        "get_tool_specs",
+        lambda: [
+            {
+                "name": "demo_tool",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"required_value": {"type": "string"}},
+                    "required": ["required_value"],
+                },
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError, match="Schema validation failed for tool 'demo_tool'"):
+        tool_registry.dispatch_tool("demo_tool", {})
+
+    assert called is False
+
+
+def test_dispatch_tool_allows_valid_context(monkeypatch):
+    def _handler(context):
+        return {"ok": True, "context": context}
+
+    monkeypatch.setattr(tool_registry, "_tool_handlers", lambda: {"demo_tool": _handler})
+    monkeypatch.setattr(
+        tool_registry,
+        "get_tool_specs",
+        lambda: [
+            {
+                "name": "demo_tool",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"required_value": {"type": "string"}},
+                    "required": ["required_value"],
+                },
+            }
+        ],
+    )
+
+    result = tool_registry.dispatch_tool("demo_tool", {"required_value": "present"})
+
+    assert result["ok"] is True
+    assert result["context"]["required_value"] == "present"

@@ -1,4 +1,6 @@
+import csv
 import json
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +10,7 @@ from src.benchmark_runner import (
     has_migration_plan_schema_mapping_and_rollback,
     run_model_benchmark,
 )
+from scripts import aggregate_metrics
 
 
 def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) -> None:
@@ -353,3 +356,94 @@ def test_jsonl_records_migration_plan_fields_when_artifact_missing(tmp_path) -> 
     assert record["migration_plan_schema_mapping_present"] is False
     assert record["migration_plan_rollback_present"] is False
     assert record["migration_plan_ready"] is False
+
+
+def _read_csv_rows(path):
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def test_aggregate_metrics_emits_accuracy_latency_cost_strategy_vectors(tmp_path, monkeypatch):
+    metrics_path = tmp_path / "metrics_sample.jsonl"
+    events = [
+        {
+            "type": "workflow_summary",
+            "stage_latency_ms": 3300,
+            "context": {"strategy": "simple", "model_id": "m1"},
+            "data": {
+                "job_status": "completed",
+                "accuracy": 0.75,
+                "cost_usd": 0.60,
+                "tokens_total": 120,
+            },
+        },
+        {
+            "type": "workflow_summary",
+            "context": {"strategy": "simple", "model_id": "m1"},
+            "data": {
+                "job_status": "failed",
+                "duration_seconds": 9.0,
+                "total_cost_usd": 0.20,
+                "tokens_total": 80,
+            },
+        },
+        {
+            "type": "workflow_summary",
+            "node_latency_ms": 1800,
+            "context": {"strategy": "hierarchical", "model_id": "m2"},
+            "data": {
+                "job_status": "completed",
+                "accuracy_score": 0.9,
+                "cost_breakdown": {"total_usd": 1.40},
+                "tokens_total": 300,
+            },
+        },
+    ]
+    metrics_path.write_text("\n".join(json.dumps(item) for item in events) + "\n", encoding="utf-8")
+
+    monkeypatch.setattr(sys, "argv", ["aggregate_metrics.py", "--input", str(metrics_path)])
+    aggregate_metrics.main()
+
+    by_strategy = _read_csv_rows(tmp_path / "by_strategy.csv")
+    by_key = {row["retrieval_strategy"]: row for row in by_strategy}
+
+    assert "simple" in by_key
+    simple = by_key["simple"]
+    assert simple["avg_accuracy"] == "0.75"
+    assert simple["accuracy_sample_count"] == "1"
+    assert simple["avg_latency_seconds"] == "6.15"
+    assert simple["latency_sample_count"] == "2"
+    assert simple["avg_cost_usd"] == "0.4"
+    assert simple["cost_sample_count"] == "2"
+
+    assert "hierarchical" in by_key
+    hierarchical = by_key["hierarchical"]
+    assert hierarchical["avg_accuracy"] == "0.9"
+    assert hierarchical["avg_latency_seconds"] == "1.8"
+    assert hierarchical["avg_cost_usd"] == "1.4"
+
+
+def test_aggregate_metrics_falls_back_to_success_rate_when_accuracy_missing(tmp_path, monkeypatch):
+    metrics_path = tmp_path / "metrics_sample.jsonl"
+    events = [
+        {
+            "type": "workflow_summary",
+            "context": {"strategy": "fallback"},
+            "data": {"job_status": "completed"},
+        },
+        {
+            "type": "workflow_summary",
+            "context": {"strategy": "fallback"},
+            "data": {"job_status": "failed"},
+        },
+    ]
+    metrics_path.write_text("\n".join(json.dumps(item) for item in events) + "\n", encoding="utf-8")
+
+    monkeypatch.setattr(sys, "argv", ["aggregate_metrics.py", "--input", str(metrics_path)])
+    aggregate_metrics.main()
+
+    row = _read_csv_rows(tmp_path / "by_strategy.csv")[0]
+    assert row["retrieval_strategy"] == "fallback"
+    assert row["success_rate"] == "0.5"
+    assert row["avg_accuracy"] == "0.5"
+    assert row["accuracy_sample_count"] == "2"

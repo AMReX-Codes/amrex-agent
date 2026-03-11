@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
@@ -15,6 +16,8 @@ _stage_var: ContextVar[str | None] = ContextVar("metrics_stage", default=None)
 _node_var: ContextVar[str | None] = ContextVar("metrics_node", default=None)
 _iteration_var: ContextVar[int | None] = ContextVar("metrics_iteration", default=None)
 _extra_var: ContextVar[dict[str, Any] | None] = ContextVar("metrics_extra", default=None)
+_stage_start_var: ContextVar[float | None] = ContextVar("metrics_stage_start", default=None)
+_node_start_var: ContextVar[float | None] = ContextVar("metrics_node_start", default=None)
 
 
 @contextmanager
@@ -26,8 +29,11 @@ def metrics_context(
     extra: dict[str, Any] | None = None,
 ) -> Iterator[None]:
     """Set metrics context for downstream instrumentation."""
+    start_time = time.perf_counter()
     tokens = []
     tokens.append(_stage_var.set(stage))
+    tokens.append(_stage_start_var.set(start_time))
+    tokens.append(_node_start_var.set(start_time))
     if node is not None:
         tokens.append(_node_var.set(node))
     if iteration is not None:
@@ -69,6 +75,9 @@ class MetricsCollector:
         node: str | None = None,
         iteration: int | None = None,
     ) -> dict[str, Any]:
+        now = time.perf_counter()
+        node_latency_ms = _latency_ms(_node_start_var.get(), now)
+        stage_latency_ms = _latency_ms(_stage_start_var.get(), now)
         event = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "type": event_type,
@@ -77,6 +86,10 @@ class MetricsCollector:
             "iteration": iteration if iteration is not None else _iteration_var.get(),
             "data": data,
         }
+        if node_latency_ms is not None:
+            event["node_latency_ms"] = node_latency_ms
+        if stage_latency_ms is not None:
+            event["stage_latency_ms"] = stage_latency_ms
         extra = _extra_var.get()
         if extra:
             event["context"] = dict(extra)
@@ -215,6 +228,13 @@ def _extract_usage(response: Any) -> dict[str, Any]:
     }
 
 
+def _latency_ms(start_time: float | None, end_time: float | None = None) -> float | None:
+    if start_time is None:
+        return None
+    resolved_end = end_time if end_time is not None else time.perf_counter()
+    return round(max(0.0, (resolved_end - start_time) * 1000.0), 3)
+
+
 def _extract_model(response: Any) -> str | None:
     model = getattr(response, "model", None)
     if model:
@@ -307,3 +327,56 @@ def normalize_average_token_fields(row: dict[str, Any]) -> dict[str, float | Non
 
 
 metrics_collector = MetricsCollector()
+
+
+def validate_risk_owner_status_updates(
+    risk_entries: Any,
+    release_gate_milestones: Any,
+) -> dict[str, Any]:
+    """Validate risk owner/status updates are present for each release gate milestone."""
+    gates = [
+        str(gate).strip()
+        for gate in (release_gate_milestones if isinstance(release_gate_milestones, list) else [])
+        if str(gate).strip()
+    ]
+    if not gates:
+        return {
+            "passed": False,
+            "failed_risks": [],
+            "reason": "missing_release_gate_milestones",
+        }
+
+    if not isinstance(risk_entries, list) or not risk_entries:
+        return {
+            "passed": False,
+            "failed_risks": [],
+            "reason": "missing_risk_entries",
+        }
+
+    failed_risks: list[str] = []
+    for index, entry in enumerate(risk_entries):
+        if not isinstance(entry, dict):
+            failed_risks.append(f"risk_{index + 1:03d}")
+            continue
+
+        risk_id = str(entry.get("risk_id") or entry.get("id") or f"risk_{index + 1:03d}")
+        owner = str(entry.get("owner", "")).strip()
+        updates = entry.get("status_updates")
+        if not owner or not isinstance(updates, dict):
+            failed_risks.append(risk_id)
+            continue
+
+        missing_gate_update = False
+        for gate in gates:
+            status = updates.get(gate)
+            if not str(status or "").strip():
+                missing_gate_update = True
+                break
+        if missing_gate_update:
+            failed_risks.append(risk_id)
+
+    return {
+        "passed": not failed_risks,
+        "failed_risks": failed_risks,
+        "reason": "ok" if not failed_risks else "risk_owner_status_updates_not_met",
+    }

@@ -105,3 +105,34 @@ def test_level0_cross_cutting_neutral_fallback(tmp_path):
     assert all(m.get("guidance_type") == "neutral_synthesized" for m in meta)
     assert all(m.get("source") == "config" for m in meta)
     assert len(meta) == 2
+
+
+def test_level0_build_outputs(tmp_path):
+    """Level-0 build should emit explicit solver-commit linkage metadata."""
+    embedder = DeterministicEmbedder()
+    out = tmp_path / "level0"
+    Level0Builder(embedder=embedder).build(output_dir=out)
+
+    manifest_path = out / "level0_version_manifest.json"
+    assert manifest_path.exists(), "Missing level0_version_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest.get("index_levels") == ["l0", "l1", "l2"]
+
+    solvers = manifest.get("solvers", [])
+    assert solvers, "Expected per-solver version linkage data"
+    assert any(s.get("solver_commit") != "unknown" for s in solvers)
+    for solver in solvers:
+        versions = solver.get("level_versions", {})
+        commit = solver.get("solver_commit")
+        assert set(versions.keys()) == {"l0", "l1", "l2"}
+        assert all(str(commit) in str(tag) for tag in versions.values())
+
+    metadata = json.loads((out / "solver_capabilities_metadata.json").read_text())
+    solver_entries = [entry for entry in metadata if entry.get("code_name")]
+    assert solver_entries, "Expected solver capability metadata entries"
+    for entry in solver_entries:
+        versions = entry.get("level_versions")
+        assert isinstance(versions, dict)
+        assert set(versions.keys()) == {"l0", "l1", "l2"}
+        assert "solver_commit" in entry
+        assert "solver_schema_file" in entry

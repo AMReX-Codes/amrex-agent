@@ -16,9 +16,24 @@ Markers:
 
 import ast
 import json
+import math
+import sys
 import pytest
 from pathlib import Path
 from typing import Set, Dict, Any
+
+from src.services.plan import (
+    SimulationPlan,
+    SimulationPlanFactory,
+    find_feature_blocks_missing_helper_extraction,
+    find_feature_blocks_missing_tests_fixtures,
+    normalize_unnumbered_003,
+    validate_feature_blocks_tests_fixtures,
+    validate_new_file_helper_extraction,
+)
+
+# Coverage compatibility for session command targets using file-like module names.
+sys.modules["src/services/plan.py"] = sys.modules["src.services.plan"]
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -349,3 +364,215 @@ def test_deprecated_keys_aliased(tmp_path):
             f"Got: case={metadata['case']}, repo_path={metadata['repo_path']}"
         )
     # Phase 2: Will remove this key entirely (test will need updating)
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Category 4: UNNUMBERED-003 DRY Normalization Coverage
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+def test_plan_model_serialization_summary_and_confidence():
+    plan = SimulationPlan(
+        selected_solver="PeleC",
+        selected_case="Exec/Case",
+        modifications=[("amr.n_cell", "64 64 64")],
+        reasoning="x" * 240,
+        solver_confidence=0.8,
+        baseline_confidence=0.6,
+        cbr_confidence=0.5,
+        used_llm=True,
+        indexing_strategy="hierarchical",
+    )
+
+    as_dict = plan.to_dict()
+    assert as_dict["selected_solver"] == "PeleC"
+
+    as_json = plan.to_json(indent=2)
+    assert '"selected_solver": "PeleC"' in as_json
+
+    assert math.isclose(plan.get_overall_confidence(), 0.61, rel_tol=1e-9)
+    summary = plan.get_summary()
+    assert "Simulation Plan Summary" in summary
+    assert "Reasoning:" in summary
+    assert "..." in summary
+
+
+def test_simulation_plan_factory_creation_and_migration_paths():
+    with pytest.raises(ValueError, match="baseline_result is required"):
+        SimulationPlanFactory.create_from_rag(
+            solver_name="PeleC",
+            baseline_result={},
+            cbr_plan={},
+            docs=[],
+            user_prompt="run",
+        )
+
+    rag_plan = SimulationPlanFactory.create_from_rag(
+        solver_name="PeleC",
+        baseline_result={
+            "selected_case": {"case": "Exec/Flame", "metadata": {"repo_path": "Exec/Fallback"}},
+            "confidence": 0.77,
+            "candidates": [{"case": "Exec/Flame"}],
+        },
+        cbr_plan={
+            "modifications": [
+                {"parameter": "amr.n_cell", "value": "128 128 128"},
+                {"parameter": "max_step", "value": 50},
+            ],
+            "confidence": 0.9,
+            "similar_cases": ["case-a", "case-b"],
+        },
+        docs=[{"title": "doc1"}],
+        user_prompt="simulate flame",
+        solver_confidence=0.95,
+        used_llm=True,
+    )
+    assert rag_plan.selected_case == "Exec/Flame"
+    assert rag_plan.modifications == [("amr.n_cell", "128 128 128"), ("max_step", 50)]
+    assert "patterns from: case-a, case-b" in rag_plan.reasoning
+
+    rag_fallback = SimulationPlanFactory.create_from_rag(
+        solver_name="PeleC",
+        baseline_result={"selected_case": {"metadata": {"repo_path": "Exec/Fallback"}}},
+        cbr_plan={"modifications": [["amr.plot_int", 10]], "reasoning": "provided"},
+        docs=[],
+        user_prompt="run",
+    )
+    assert rag_fallback.selected_case == "Exec/Fallback"
+    assert rag_fallback.modifications == [("amr.plot_int", 10)]
+
+    with pytest.raises(ValueError, match="missing solver"):
+        SimulationPlanFactory.create_from_simple(
+            requirements={},
+            baseline={},
+            modifications=[],
+            visualization={},
+            analysis={},
+            user_prompt="run",
+        )
+
+    simple_plan = SimulationPlanFactory.create_from_simple(
+        requirements={"solver": "WarpX"},
+        baseline={
+            "name": "BaseCase",
+            "path": "Exec/Base",
+            "match_score": 0.88,
+            "match_rationale": "nearest known setup",
+        },
+        modifications=[("max_step", 100)],
+        visualization={"kind": "slice"},
+        analysis={"check": "ok"},
+        user_prompt="test",
+    )
+    assert simple_plan.selected_solver == "WarpX"
+    assert simple_plan.cbr_confidence == 1.0
+
+    simple_no_mods = SimulationPlanFactory.create_from_simple(
+        requirements={"solver": "PeleC"},
+        baseline={"code_name": "PeleC", "case_dir": "Exec/Alt", "total_score": 0.7},
+        modifications=[],
+        visualization={},
+        analysis={},
+        user_prompt="test",
+    )
+    assert simple_no_mods.cbr_confidence == 0.0
+    assert simple_no_mods.baseline_confidence == 0.7
+
+    plan_from_dict = SimulationPlanFactory.from_dict(
+        {
+            "selected_solver": "PeleC",
+            "selected_case": "Exec/Case",
+            "modifications": [["max_step", 20]],
+            "reasoning": "ok",
+            "unused_field": "ignored",
+        }
+    )
+    assert plan_from_dict.modifications == [("max_step", 20)]
+
+    migrated = SimulationPlanFactory._migrate_legacy_dict(
+        {
+            "solver": "PeleC",
+            "baseline": {"path": "Exec/Legacy"},
+            "modifications": [{"parameter": "amr.n_cell", "value": "32 32 32"}],
+        }
+    )
+    assert migrated["selected_case"] == "Exec/Legacy"
+    assert migrated["modifications"] == [("amr.n_cell", "32 32 32")]
+
+    migrated_unknown_case = SimulationPlanFactory._migrate_legacy_dict(
+        {"selected_solver": "WarpX", "modifications": []}
+    )
+    assert migrated_unknown_case["selected_case"] == "unknown"
+
+    with pytest.raises(ValueError, match="missing solver/selected_solver"):
+        SimulationPlanFactory._migrate_legacy_dict({"baseline": {}, "modifications": []})
+
+
+def test_unnumbered_003_normalized_validation_payloads():
+    pass_payload = normalize_unnumbered_003(
+        missing_items=[],
+        result_key_prefix="feature_blocks_validation",
+        missing_key="feature_blocks_missing_tests_fixtures",
+        missing_reason="missing_tests_fixtures_mapping",
+    )
+    assert pass_payload == {
+        "feature_blocks_validation_passed": True,
+        "feature_blocks_validation_reason": "ok",
+        "feature_blocks_missing_tests_fixtures": [],
+    }
+
+    fail_payload = normalize_unnumbered_003(
+        missing_items=["## [F-100] Missing"],
+        result_key_prefix="new_file_helper_extraction_validation",
+        missing_key="new_file_helper_extraction_missing",
+        missing_reason="missing_helper_extraction_for_large_new_file",
+    )
+    assert fail_payload == {
+        "new_file_helper_extraction_validation_passed": False,
+        "new_file_helper_extraction_validation_reason": "missing_helper_extraction_for_large_new_file",
+        "new_file_helper_extraction_missing": ["## [F-100] Missing"],
+    }
+
+
+def test_feature_block_validators_share_normalized_behavior():
+    markdown_ok = """
+## [F-001] First Feature
+Tests/Fixtures: tests/unit/test_one.py
+New files:
+  - parser.py (120 LOC)
+Helper extraction: split parser normalization into parse_helpers.py
+""".strip()
+    fixtures_ok = validate_feature_blocks_tests_fixtures(markdown_ok)
+    assert fixtures_ok["feature_blocks_validation_passed"] is True
+    assert fixtures_ok["feature_blocks_validation_reason"] == "ok"
+    assert fixtures_ok["feature_blocks_missing_tests_fixtures"] == []
+
+    helper_ok = validate_new_file_helper_extraction(markdown_ok)
+    assert helper_ok["new_file_helper_extraction_validation_passed"] is True
+    assert helper_ok["new_file_helper_extraction_validation_reason"] == "ok"
+    assert helper_ok["new_file_helper_extraction_missing"] == []
+
+    markdown_bad = """
+## [F-003] Missing Mapping
+Scope: docs only
+
+## [F-004] Empty Mapping
+Tests/Fixtures:
+New files:
+  - planner.py (250 LOC)
+""".strip()
+    fixtures_bad = validate_feature_blocks_tests_fixtures(markdown_bad)
+    assert fixtures_bad["feature_blocks_validation_passed"] is False
+    assert fixtures_bad["feature_blocks_validation_reason"] == "missing_tests_fixtures_mapping"
+    assert fixtures_bad["feature_blocks_missing_tests_fixtures"] == [
+        "## [F-003] Missing Mapping",
+        "## [F-004] Empty Mapping",
+    ]
+
+    helper_bad = validate_new_file_helper_extraction(markdown_bad)
+    assert helper_bad["new_file_helper_extraction_validation_passed"] is False
+    assert helper_bad["new_file_helper_extraction_validation_reason"] == "missing_helper_extraction_for_large_new_file"
+    assert helper_bad["new_file_helper_extraction_missing"] == ["## [F-004] Empty Mapping"]
+
+    assert find_feature_blocks_missing_tests_fixtures("No feature blocks here.") == []
+    assert find_feature_blocks_missing_helper_extraction("No feature blocks here.") == []
