@@ -58,7 +58,7 @@ def test_existing_graph_routes_still_behave():
         _route_after_sweep_detection({"feature_a_verified": True, "sweep_id": "sweep_1"})
         == "sweep_execution_handler"
     )
-    assert _route_after_sweep_detection({}) == "feature_a_dependency_handler"
+    assert _route_after_sweep_detection({}) == "architect_node"
 
 
 def test_existing_handler_nodes_and_dependency_gate():

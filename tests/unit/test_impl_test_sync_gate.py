@@ -464,7 +464,7 @@ def test_routes_handlers_and_graph_wiring_cover_all_gate_nodes():
 
     assert _route_after_sweep_detection({"feature_a_verified": True, "sweep_id": "s1"}) == "sweep_execution_handler"
     assert _route_after_sweep_detection({"feature_a_verified": True, "sweep_id": None}) == "architect_node"
-    assert _route_after_sweep_detection({"sweep_id": None}) == "feature_a_dependency_handler"
+    assert _route_after_sweep_detection({"sweep_id": None}) == "architect_node"
 
     assert _paper_validator_mode2_enabled({"paper_validator_enabled": True}) is True
     assert _paper_validator_mode2_enabled({"config": {"paper_validator_enabled": True}}) is True

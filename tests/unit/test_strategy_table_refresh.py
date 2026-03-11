@@ -62,3 +62,37 @@ def test_table_updated_from_summary_and_by_strategy(tmp_path, monkeypatch) -> No
     assert "| hierarchical | 100.00% | 1/1 | 40.0/60.0/100.0 |" in table_text
     assert "| simple | 0.00% | 0/1 | 30.0/50.0/80.0 |" in table_text
     assert "Generated from `summary.csv` and `by_strategy.csv`." in table_text
+
+
+def test_error_taxonomy_accepts_valid_gate_reason_codes(tmp_path, monkeypatch) -> None:
+    metrics_path = tmp_path / "metrics.jsonl"
+    events = [
+        {
+            "type": "workflow_summary",
+            "context": {"model_id": "m1", "strategy": "hierarchical"},
+            "data": {
+                "job_status": "failed",
+                "error_taxonomy_version": "v1",
+                "errors_active": ["impl_locations_missing", "uc_traceability_rows_missing"],
+            },
+        }
+    ]
+    metrics_path.write_text("\n".join(json.dumps(event) for event in events), encoding="utf-8")
+
+    output_path = tmp_path / "raw_metrics.jsonl"
+    module = _load_aggregate_metrics_module()
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "aggregate_metrics.py",
+            "--input",
+            str(metrics_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+    module.main()
+
+    record = json.loads(output_path.read_text(encoding="utf-8").splitlines()[0])
+    assert record["error_taxonomy_stable"] is True
+    assert record["error_reason_codes_unknown"] == []

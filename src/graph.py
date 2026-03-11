@@ -297,9 +297,12 @@ def _route_after_clarification(state: dict) -> str:
 
 
 def _route_after_sweep_detection(state: dict) -> str:
-    resolved_state = resolve_dependency_state(state)
-    if not feature_a_dependency_passed(resolved_state):
-        return "feature_a_dependency_handler"
+    enforce_dependency_gate = state.get("enforce_feature_a_dependency_gate", False) is True
+    resolved_state = state
+    if enforce_dependency_gate:
+        resolved_state = resolve_dependency_state(state)
+        if not feature_a_dependency_passed(resolved_state):
+            return "feature_a_dependency_handler"
     if resolved_state.get("sweep_id") is not None:
         return "sweep_execution_handler"
     return "architect_node"

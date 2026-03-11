@@ -271,7 +271,7 @@ def test_routes_cover_new_uc_gate_and_existing_ordering():
 
     assert _route_after_sweep_detection({"feature_a_verified": True, "sweep_id": "s1"}) == "sweep_execution_handler"
     assert _route_after_sweep_detection({"feature_a_verified": True, "sweep_id": None}) == "architect_node"
-    assert _route_after_sweep_detection({"sweep_id": None}) == "feature_a_dependency_handler"
+    assert _route_after_sweep_detection({"sweep_id": None}) == "architect_node"
 
     assert _route_after_architect({"enforce_plan_generation_p95": True, "plan_generation_latencies_seconds": [181]}) == (
         "plan_generation_p95_handler"

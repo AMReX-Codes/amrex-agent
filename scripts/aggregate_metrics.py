@@ -13,6 +13,7 @@ STABLE_ERROR_TAXONOMY_VERSION = "v1"
 STABLE_ERROR_REASON_CODES = frozenset(
     {
         "feature_a_dependency_unverified",
+        "amendment_module_helper_extraction_missing",
         "global_function_complexity_threshold_exceeded",
         "level4_depth_guidance_missing",
         "level4_depth_guidance_out_of_range",
@@ -21,6 +22,12 @@ STABLE_ERROR_REASON_CODES = frozenset(
         "error_taxonomy_version_mismatch",
         "error_taxonomy_reason_code_unknown",
         "error_taxonomy_contract_invalid",
+        "uc_traceability_rows_missing",
+        "uc_traceable_artifact_missing",
+        "uc_traceable_artifact_stale",
+        "impl_tests_sync_missing",
+        "impl_locations_missing",
+        "tests_missing",
     }
 )
 

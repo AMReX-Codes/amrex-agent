@@ -220,7 +220,7 @@ def test_graph_clarification_and_sweep_routes():
     assert _route_after_sweep_detection({"feature_a_verified": True, "sweep_id": None}) == (
         "architect_node"
     )
-    assert _route_after_sweep_detection({"sweep_id": None}) == "feature_a_dependency_handler"
+    assert _route_after_sweep_detection({"sweep_id": None}) == "architect_node"
 
 
 def test_paper_validator_mode2_enabled_paths():

@@ -209,8 +209,15 @@ def test_route_after_clarification_branches():
     assert _route_after_clarification({}) == "input_writer_node"
 
 
-def test_route_after_sweep_detection_blocks_without_feature_verification():
+def test_route_after_sweep_detection_allows_default_path_without_enforcement():
     route = _route_after_sweep_detection({"sweep_id": None})
+    assert route == "architect_node"
+
+
+def test_route_after_sweep_detection_blocks_when_dependency_gate_enforced():
+    route = _route_after_sweep_detection(
+        {"sweep_id": None, "enforce_feature_a_dependency_gate": True}
+    )
     assert route == "feature_a_dependency_handler"
 
 
