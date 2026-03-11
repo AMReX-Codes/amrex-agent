@@ -6,9 +6,9 @@ from src.graph import (
     session_dependency_handler_node,
 )
 from src.session_manager import (
-    B1_SESSION_COMPLETION_MARKER,
+    B1_SESSION_COMPLETION_MARKER as SESSION_DEPENDENCY_MARKER,
     append_policy_audit,
-    is_amendment_b1_session_complete,
+    is_amendment_b1_session_complete as is_session_dependency_complete,
     merge_session_context,
     persist_session_result,
 )
@@ -141,29 +141,29 @@ def test_persist_session_result_persists_context_for_non_dict_result(monkeypatch
     assert persisted["sess-4"] == {"request": "x"}
 
 
-def test_b1_completion_marker_check_supports_all_documented_shapes():
-    assert is_amendment_b1_session_complete({B1_SESSION_COMPLETION_MARKER: True})
-    assert is_amendment_b1_session_complete(
-        {"session_markers": {B1_SESSION_COMPLETION_MARKER: True}}
+def test_dependency_completion_marker_check_supports_all_documented_shapes():
+    assert is_session_dependency_complete({SESSION_DEPENDENCY_MARKER: True})
+    assert is_session_dependency_complete(
+        {"session_markers": {SESSION_DEPENDENCY_MARKER: True}}
     )
-    assert is_amendment_b1_session_complete({"completed_sessions": ["amendment_b1"]})
-    assert not is_amendment_b1_session_complete({B1_SESSION_COMPLETION_MARKER: False})
+    assert is_session_dependency_complete({"completed_sessions": ["amendment_b1"]})
+    assert not is_session_dependency_complete({SESSION_DEPENDENCY_MARKER: False})
 
 
 def test_route_after_sweep_detection_without_sweep_routes_architect():
     assert _route_after_sweep_detection({}) == "architect_node"
 
 
-def test_route_after_sweep_detection_blocks_when_b1_not_complete():
+def test_route_after_sweep_detection_blocks_when_dependency_not_complete():
     route = _route_after_sweep_detection({"sweep_id": "sweep-01"})
     assert route == "session_dependency_handler"
 
 
-def test_route_after_sweep_detection_allows_when_b1_complete():
+def test_route_after_sweep_detection_allows_when_dependency_complete():
     route = _route_after_sweep_detection(
         {
             "sweep_id": "sweep-01",
-            "session_markers": {B1_SESSION_COMPLETION_MARKER: True},
+            "session_markers": {SESSION_DEPENDENCY_MARKER: True},
         }
     )
     assert route == "sweep_execution_handler"
@@ -171,8 +171,8 @@ def test_route_after_sweep_detection_allows_when_b1_complete():
 
 def test_dependency_handler_records_error_and_required_marker():
     result = session_dependency_handler_node({})
-    assert "Amendment B1 session must complete" in result["dependency_error"]
-    assert result["required_marker"] == B1_SESSION_COMPLETION_MARKER
+    assert "session must complete" in result["dependency_error"]
+    assert result["required_marker"] == SESSION_DEPENDENCY_MARKER
 
 
 def test_graph_contains_dependency_handler_route_and_compiles():
