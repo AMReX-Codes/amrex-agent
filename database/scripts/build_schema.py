@@ -756,7 +756,49 @@ class SchemaBuilder:
         else:
             print("  ⚠️  No solver_config or manual_schema_params")
 
+        self._log_non_blocking_tier34_issues()
         return self.schema
+
+    def _log_non_blocking_tier34_issues(self) -> None:
+        """
+        Log Tier 3/4 schema findings without blocking schema generation.
+
+        Tier 3/4 are optional and informational. Their presence (or malformed
+        priority tags) should be surfaced via logs only.
+        """
+        tier3_params: list[str] = []
+        tier4_params: list[str] = []
+
+        for param_name, param_data in self.schema.items():
+            priority = str(param_data.get("priority", "tier4")).strip().lower()
+
+            if priority == "tier3":
+                tier3_params.append(param_name)
+                continue
+            if priority == "tier4":
+                tier4_params.append(param_name)
+                continue
+            if priority in {"tier1", "tier2"}:
+                continue
+
+            # Unknown priority tags are informational only and treated as tier4.
+            tier4_params.append(param_name)
+            logger.warning(
+                "Unknown priority '%s' for parameter '%s'; treating as tier4 non-blocking.",
+                priority,
+                param_name,
+            )
+
+        if tier3_params:
+            logger.info(
+                "Tier 3 non-blocking logging: %d optional parameter(s) detected.",
+                len(tier3_params),
+            )
+        if tier4_params:
+            logger.info(
+                "Tier 4 non-blocking logging: %d informational parameter(s) detected.",
+                len(tier4_params),
+            )
 
     def _is_valid_param_name(self, name: str) -> bool:
         """
