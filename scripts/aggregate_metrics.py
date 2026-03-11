@@ -101,6 +101,178 @@ def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[
     return rows
 
 
+def _latex_escape(value: Any) -> str:
+    text = str(value)
+    replacements = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text
+
+
+def _render_latex_table(
+    caption: str,
+    label: str,
+    headers: list[str],
+    rows: list[list[Any]],
+) -> str:
+    columns = "l" + ("r" * (len(headers) - 1))
+    lines = [
+        r"\begin{table}[t]",
+        r"\centering",
+        rf"\caption{{{_latex_escape(caption)}}}",
+        rf"\label{{{_latex_escape(label)}}}",
+        rf"\begin{{tabular}}{{{columns}}}",
+        r"\toprule",
+        " & ".join(rf"\textbf{{{_latex_escape(header)}}}" for header in headers) + r" \\",
+        r"\midrule",
+    ]
+    for row in rows:
+        lines.append(" & ".join(_latex_escape(value) for value in row) + r" \\")
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
+    return "\n".join(lines) + "\n"
+
+
+def _safe_ratio(numerator: int, denominator: int) -> float:
+    if denominator <= 0:
+        return 0.0
+    return round(numerator / denominator, 4)
+
+
+def _average_numeric(values: list[Any]) -> float:
+    filtered = [value for value in values if isinstance(value, (int, float))]
+    if not filtered:
+        return 0.0
+    return round(sum(filtered) / len(filtered), 2)
+
+
+def _group_records(records: list[dict[str, Any]], key: str) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        group_key = str(record.get(key) or "unknown")
+        grouped.setdefault(group_key, []).append(record)
+    return dict(sorted(grouped.items()))
+
+
+def _iter_threshold_success(items: list[dict[str, Any]], threshold: int) -> int:
+    count = 0
+    for item in items:
+        iteration = item.get("iteration")
+        if not isinstance(iteration, int):
+            continue
+        if item.get("job_status") != "completed":
+            continue
+        if iteration <= threshold:
+            count += 1
+    return count
+
+
+def _write_paper_tables(output_dir: Path, records: list[dict[str, Any]]) -> None:
+    table_dir = output_dir / "tables"
+    table_dir.mkdir(parents=True, exist_ok=True)
+    by_model = _group_records(records, "model_id")
+    by_solver = _group_records(records, "solver")
+    by_strategy = _group_records(records, "retrieval_strategy")
+
+    model_rows = []
+    for model, items in by_model.items():
+        total = len(items)
+        success = sum(1 for item in items if item.get("job_status") == "completed")
+        model_rows.append([
+            model,
+            total,
+            success,
+            f"{_safe_ratio(success, total):.2%}",
+            _average_numeric([item.get("tokens_total") for item in items]),
+        ])
+    (table_dir / "model_comparison.tex").write_text(
+        _render_latex_table(
+            "Table 1: Model Comparison",
+            "tab:model_comparison",
+            ["Model", "Total", "Success", "Success Rate", "Avg Tokens"],
+            model_rows,
+        ),
+        encoding="utf-8",
+    )
+
+    strategy_rows = []
+    for strategy, items in by_strategy.items():
+        total = len(items)
+        success = sum(1 for item in items if item.get("job_status") == "completed")
+        strategy_rows.append([
+            strategy,
+            total,
+            f"{_safe_ratio(success, total):.2%}",
+            _average_numeric([item.get("tokens_total") for item in items]),
+        ])
+    (table_dir / "strategy_performance.tex").write_text(
+        _render_latex_table(
+            "Table 2: Strategy Performance",
+            "tab:strategy_performance",
+            ["Strategy", "Total", "Success Rate", "Avg Tokens"],
+            strategy_rows,
+        ),
+        encoding="utf-8",
+    )
+
+    validation_rows = []
+    for solver, items in by_solver.items():
+        total = len(items)
+        success = sum(1 for item in items if item.get("job_status") == "completed")
+        validation_rows.append([solver, total, success, f"{_safe_ratio(success, total):.2%}"])
+    (table_dir / "validation_effectiveness.tex").write_text(
+        _render_latex_table(
+            "Table 3: Validation Effectiveness",
+            "tab:validation_effectiveness",
+            ["Solver", "Total", "Passed", "Pass Rate"],
+            validation_rows,
+        ),
+        encoding="utf-8",
+    )
+
+    cost_rows = []
+    for model, items in by_model.items():
+        input_avg = _average_numeric([item.get("tokens_total_input") for item in items])
+        output_avg = _average_numeric([item.get("tokens_total_output") for item in items])
+        cost_rows.append([model, input_avg, output_avg, round(input_avg + output_avg, 2)])
+    (table_dir / "cost_analysis.tex").write_text(
+        _render_latex_table(
+            "Table 4: Cost Analysis",
+            "tab:cost_analysis",
+            ["Model", "Avg Input Tokens", "Avg Output Tokens", "Avg Total Tokens"],
+            cost_rows,
+        ),
+        encoding="utf-8",
+    )
+
+    iteration_rows = []
+    for model, items in by_model.items():
+        total = len(items)
+        iteration_rows.append([
+            model,
+            total,
+            f"{_safe_ratio(_iter_threshold_success(items, 0), total):.2%}",
+            f"{_safe_ratio(_iter_threshold_success(items, 1), total):.2%}",
+            f"{_safe_ratio(_iter_threshold_success(items, 2), total):.2%}",
+        ])
+    (table_dir / "iteration_convergence.tex").write_text(
+        _render_latex_table(
+            "Table 5: Iteration Convergence",
+            "tab:iteration_convergence",
+            ["Model", "Total", "At Iter 0", "At Iter 1", "At Iter 2"],
+            iteration_rows,
+        ),
+        encoding="utf-8",
+    )
+
 def _summarize_items(items: list[dict[str, Any]], label: str, value: str) -> dict[str, Any]:
     total = len(items)
     success = sum(1 for item in items if item.get("job_status") == "completed")
@@ -142,6 +314,7 @@ def main() -> None:
     output_path = Path(args.output) if args.output else (input_path / "raw_metrics.jsonl")
     if input_path.is_file():
         output_path = Path(args.output) if args.output else input_path.parent / "raw_metrics.jsonl"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     records: list[dict[str, Any]] = []
     for path in _iter_metric_files(input_path):
@@ -218,6 +391,7 @@ def main() -> None:
         "avg_tokens_input",
         "avg_tokens_output",
     ])
+    _write_paper_tables(output_dir, records)
     print(json.dumps({"output": str(output_path), "records": len(records)}, indent=2))
 
 
