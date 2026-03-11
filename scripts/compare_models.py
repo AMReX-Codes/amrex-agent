@@ -25,6 +25,24 @@ def _mean(values: list[float]) -> float | None:
     return sum(values) / len(values)
 
 
+def _infer_solver(record: dict[str, Any]) -> str:
+    solver = record.get("solver")
+    if isinstance(solver, str) and solver.strip():
+        return solver
+    selected_case = str(record.get("selected_case") or "").lower()
+    if "warpx" in selected_case:
+        return "WarpX"
+    if "amrex" in selected_case or "amrcore" in selected_case:
+        return "AMReX"
+    if "pelec" in selected_case:
+        return "PeleC"
+    if "pelelmex" in selected_case:
+        return "PeleLMeX"
+    if "erf" in selected_case:
+        return "ERF"
+    return "unknown"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate model comparison tables.")
     parser.add_argument("--run-dir", help="Benchmark run directory (contains benchmark_runs.jsonl).")
@@ -102,6 +120,31 @@ def main() -> None:
         "skipped_runs": sum(1 for r in records if r.get("job_status") == "skipped"),
     }
 
+    by_solver: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        solver = _infer_solver(record)
+        by_solver.setdefault(solver, []).append(record)
+
+    generalization_rows = []
+    for solver, items in sorted(by_solver.items(), key=lambda item: item[0]):
+        total = len(items)
+        completed = sum(1 for item in items if item.get("job_status") == "completed")
+        generalization_rows.append(
+            {
+                "solver": solver,
+                "total_runs": total,
+                "completed_runs": completed,
+            }
+        )
+
+    non_unknown = [item for item in records if _infer_solver(item) != "unknown"]
+    non_unknown_completed = sum(1 for item in non_unknown if item.get("job_status") == "completed")
+    summary_row["generalization_solver_count"] = sum(1 for solver in by_solver if solver != "unknown")
+    summary_row["generalization_unknown_runs"] = len(by_solver.get("unknown", []))
+    summary_row["generalization_cross_solver_success_rate"] = (
+        (non_unknown_completed / len(non_unknown)) if non_unknown else 0.0
+    )
+
     def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         if not rows:
             return
@@ -112,6 +155,7 @@ def main() -> None:
 
     write_csv(output_dir / "by_model.csv", by_model_rows)
     write_csv(output_dir / "by_prompt.csv", by_prompt_rows)
+    write_csv(output_dir / "generalization_by_solver.csv", generalization_rows)
     write_csv(output_dir / "summary.csv", [summary_row])
 
     print(json.dumps({

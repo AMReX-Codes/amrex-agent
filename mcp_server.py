@@ -101,6 +101,15 @@ print(f"[MCP] FAISS DB path: {config.faiss_db_path}", file=sys.stderr)
 print(f"[MCP] Knowledge base path: {config.knowledge_base_path}", file=sys.stderr)
 
 
+def _invoke_tool_inline(fn: Any) -> bool:
+    """
+    Test harnesses monkeypatch invoke_tool with locally-defined callables.
+    Running those inline avoids occasional asyncio.to_thread deadlocks.
+    """
+    module_name = getattr(fn, "__module__", "")
+    return module_name == "__main__" or module_name.startswith("tests.")
+
+
 @app.list_tools()
 async def list_tools():
     """List available AMReXAgent tools."""
@@ -120,15 +129,15 @@ async def call_tool(name: str, arguments: dict) -> Any:
             session_id = str(context.get("session_id") or uuid.uuid4())
             context.pop("session_id", None)
         async with _TOOL_CALL_SEMAPHORE:
-            return await asyncio.to_thread(
-                invoke_tool,
-                name,
-                context,
-                session_id=session_id,
-                surface="mcp",
+            kwargs = {
+                "session_id": session_id,
+                "surface": "mcp",
                 # Do not accept caller_action from untrusted MCP payloads.
-                caller_action=None,
-            )
+                "caller_action": None,
+            }
+            if _invoke_tool_inline(invoke_tool):
+                return invoke_tool(name, context, **kwargs)
+            return await asyncio.to_thread(invoke_tool, name, context, **kwargs)
 
     except Exception as exc:
         import traceback

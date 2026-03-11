@@ -273,6 +273,33 @@ def _write_paper_tables(output_dir: Path, records: list[dict[str, Any]]) -> None
         encoding="utf-8",
     )
 
+
+def _write_strategy_comparison_table(output_dir: Path, summary: dict[str, Any], by_strategy: list[dict[str, Any]]) -> None:
+    total_runs = int(summary.get("total_runs", 0))
+    success_rate = float(summary.get("success_rate", 0.0))
+    lines = [
+        "# Strategy Comparison Table",
+        "",
+        f"Overall runs: {total_runs}",
+        f"Overall success rate: {success_rate * 100:.2f}%",
+        "",
+        "| strategy | success_rate | success_runs/total_runs | avg_in/out/total_tokens |",
+        "|---|---:|---:|---:|",
+    ]
+    for row in by_strategy:
+        strategy = row.get("retrieval_strategy") or "unknown"
+        rate = float(row.get("success_rate", 0.0))
+        success_runs = int(row.get("success_runs", 0))
+        total = int(row.get("total_runs", 0))
+        avg_in = float(row.get("avg_tokens_input", 0.0))
+        avg_out = float(row.get("avg_tokens_output", 0.0))
+        avg_total = float(row.get("avg_tokens_total", 0.0))
+        lines.append(
+            f"| {strategy} | {rate * 100:.2f}% | {success_runs}/{total} | {avg_in:.1f}/{avg_out:.1f}/{avg_total:.1f} |"
+        )
+    lines.extend(["", "Generated from `summary.csv` and `by_strategy.csv`."])
+    (output_dir / "strategy_comparison_table.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
 def _summarize_items(items: list[dict[str, Any]], label: str, value: str) -> dict[str, Any]:
     total = len(items)
     success = sum(1 for item in items if item.get("job_status") == "completed")
@@ -392,6 +419,8 @@ def main() -> None:
         "avg_tokens_output",
     ])
     _write_paper_tables(output_dir, records)
+    if summary_row:
+        _write_strategy_comparison_table(output_dir, summary_row[0], by_strategy)
     print(json.dumps({"output": str(output_path), "records": len(records)}, indent=2))
 
 

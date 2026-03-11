@@ -1496,6 +1496,8 @@ def monitor_job(
             logger.debug("Monitoring via REST API (token/OAuth)")
 
     for _ in range(max_polls):
+        poll_start = time.perf_counter()
+        outcome = "RUNNING"
         try:
             if method == "sfapi_client" and client_id and secret:
                 try:
@@ -1526,7 +1528,14 @@ def monitor_job(
                         if state:
                             state_str = str(state).upper()
                             if state_str not in ["RUNNING", "PENDING"]:
-                                return str(state)
+                                outcome = str(state)
+                                logger.info(
+                                    "Job poll method=sfapi_client job_id=%s outcome=%s latency_ms=%.3f",
+                                    job_id,
+                                    outcome,
+                                    (time.perf_counter() - poll_start) * 1000.0,
+                                )
+                                return outcome
 
             if method == "api" and nersc_session:
                 logger.debug("Polling via REST API for job %s", job_id)
@@ -1542,6 +1551,13 @@ def monitor_job(
 
                 if response.status_code == 200:
                     state = response.json().get("status", "UNKNOWN")
+                    outcome = state
+                    logger.info(
+                        "Job poll method=api job_id=%s outcome=%s latency_ms=%.3f",
+                        job_id,
+                        outcome,
+                        (time.perf_counter() - poll_start) * 1000.0,
+                    )
                     if state not in ["RUNNING", "PENDING"]:
                         return state
 
@@ -1554,7 +1570,21 @@ def monitor_job(
                 state = result.stdout.strip()
 
                 if not state:
-                    return "COMPLETED"
+                    outcome = "COMPLETED"
+                    logger.info(
+                        "Job poll method=sbatch job_id=%s outcome=%s latency_ms=%.3f",
+                        job_id,
+                        outcome,
+                        (time.perf_counter() - poll_start) * 1000.0,
+                    )
+                    return outcome
+                outcome = state
+                logger.info(
+                    "Job poll method=sbatch job_id=%s outcome=%s latency_ms=%.3f",
+                    job_id,
+                    outcome,
+                    (time.perf_counter() - poll_start) * 1000.0,
+                )
                 if state not in ["RUNNING", "PENDING"]:
                     return state
 

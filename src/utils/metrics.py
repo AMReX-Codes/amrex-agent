@@ -169,15 +169,17 @@ class MetricsCollector:
         if not self._events:
             return
         try:
-            with open(path, "w", encoding="utf-8") as handle:
-                for event in self._events:
-                    payload = event
-                    if config is not None:
-                        from src.utils.privacy import sanitize_payload
+            for event in self._events:
+                payload = event
+                if config is not None:
+                    from src.utils.privacy import sanitize_payload
 
-                        payload = sanitize_payload(event, config=config)
-                    handle.write(json.dumps(payload, default=str))
-                    handle.write("\n")
+                    payload = sanitize_payload(event, config=config)
+                normalized = normalize_unnumbered_143(
+                    payload,
+                    workflow_id=payload.get("workflow_id"),
+                )
+                _append_jsonl_record(path, normalized)
         except Exception as exc:
             logger.warning("Failed to write metrics JSONL to %s: %s", path, exc)
 
@@ -296,6 +298,25 @@ metrics_collector = MetricsCollector()
 
 
 RISK_LINK_VALIDATION_ARTIFACT = "risk_link_traceability_checker_v1"
+
+
+def normalize_unnumbered_143(
+    event: dict[str, Any],
+    *,
+    workflow_id: str | None = None,
+) -> dict[str, Any]:
+    """
+    Ensure benchmark/metrics events always carry a workflow identifier.
+    """
+    normalized = dict(event)
+    normalized["workflow_id"] = workflow_id or "unknown"
+    return normalized
+
+
+def _append_jsonl_record(path: str, payload: dict[str, Any]) -> None:
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, default=str))
+        handle.write("\n")
 
 
 def validate_risk_links(

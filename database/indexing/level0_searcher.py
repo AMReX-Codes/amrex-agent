@@ -257,3 +257,48 @@ class Level0Searcher:
             total += score * weight
         
         return total
+
+    def _count_index_entries(self) -> int:
+        """Count indexed vectors across all Level-0 sub-indices."""
+        total = 0
+        for index_name in self.WEIGHTS:
+            self._load_index(index_name)
+            index = self.indices.get(index_name)
+            if index is not None and hasattr(index, "ntotal"):
+                total += int(index.ntotal)
+        return total
+
+    def evaluate_index_growth_accuracy_drift(
+        self,
+        *,
+        baseline_accuracy: float,
+        current_accuracy: float,
+        index_count: Optional[int] = None,
+    ) -> Dict[str, float | int | bool]:
+        """
+        Enforce UNNUMBERED-162 contract for index growth vs. accuracy drift.
+        """
+        if not (0.0 <= baseline_accuracy <= 1.0):
+            raise ValueError("baseline_accuracy must be within [0, 1]")
+        if not (0.0 <= current_accuracy <= 1.0):
+            raise ValueError("current_accuracy must be within [0, 1]")
+
+        resolved_index_count = int(index_count) if index_count is not None else self._count_index_entries()
+        threshold = 100
+        max_drop = 0.02
+        gate_active = resolved_index_count >= threshold
+        accuracy_drop = max(0.0, baseline_accuracy - current_accuracy)
+        drift_within_target = accuracy_drop <= max_drop
+        passed = drift_within_target if gate_active else True
+
+        return {
+            "index_count": resolved_index_count,
+            "min_index_growth_threshold": threshold,
+            "gate_active": gate_active,
+            "baseline_accuracy": baseline_accuracy,
+            "current_accuracy": current_accuracy,
+            "accuracy_drop": accuracy_drop,
+            "max_allowed_accuracy_drop": max_drop,
+            "drift_within_target": drift_within_target,
+            "passed": passed,
+        }
