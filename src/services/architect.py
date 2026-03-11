@@ -66,6 +66,7 @@ class SolverSelection:
 
     config: Any
     confidence: float
+    alternatives: list[dict[str, Any]] | None = None
 
     def __iter__(self):
         yield self.config
@@ -559,6 +560,73 @@ class ArchitectService:
         plan.level2_override_confidence = trace.get("level2_override_confidence")
         return plan
 
+    def _build_solver_disambiguation_alternatives(
+        self,
+        *,
+        results: list[dict[str, Any]],
+        selected_code: str,
+        selected_confidence: float,
+        confidence_threshold: float,
+        llm_fallback_used: bool,
+    ) -> list[dict[str, Any]]:
+        """Build a structured alternatives list with explicit rejection rationale."""
+        alternatives: list[dict[str, Any]] = []
+        selected_norm = self._normalize_solver_key(selected_code)
+
+        for rank, candidate in enumerate(results, start=1):
+            code = str(candidate.get("code", "") or "")
+            score = float(candidate.get("score", 0.0) or 0.0)
+            is_selected = self._normalize_solver_key(code) == selected_norm
+
+            entry: dict[str, Any] = {
+                "code": code,
+                "score": score,
+                "rank": rank,
+                "selected": is_selected,
+                "selection_source": "level0",
+            }
+
+            if is_selected:
+                if llm_fallback_used:
+                    entry["selection_source"] = "llm_fallback"
+                    entry["selection_reason"] = (
+                        f"Selected by LLM fallback because top Level0 confidence "
+                        f"was below threshold ({confidence_threshold:.2f})."
+                    )
+                else:
+                    entry["selection_reason"] = "Selected as top-ranked Level0 candidate."
+            else:
+                if llm_fallback_used:
+                    entry["rejection_reason"] = (
+                        f"Rejected during low-confidence disambiguation; LLM fallback "
+                        f"selected '{selected_code}'."
+                    )
+                else:
+                    entry["rejection_reason"] = (
+                        "Rejected because a higher-ranked Level0 candidate was selected."
+                    )
+
+            alternatives.append(entry)
+
+        if selected_norm and not any(item["selected"] for item in alternatives):
+            alternatives.insert(
+                0,
+                {
+                    "code": selected_code,
+                    "score": float(selected_confidence),
+                    "rank": 0,
+                    "selected": True,
+                    "selection_source": "llm_fallback" if llm_fallback_used else "level0",
+                    "selection_reason": (
+                        "Selected by LLM fallback due low Level0 confidence."
+                        if llm_fallback_used
+                        else "Selected as top-ranked Level0 candidate."
+                    ),
+                },
+            )
+
+        return alternatives
+
     def select_solver(self, query: str, confidence_threshold: float = 0.15) -> tuple:
         """
         Identify the correct solver using Level 0 RAG with LLM fallback.
@@ -583,7 +651,7 @@ class ArchitectService:
 
         # Query Level 0 index
         logger.debug(f" Level0 searching for: '{query}'")
-        results = self.level0_searcher.search(query, top_k=1)
+        results = self.level0_searcher.search(query, top_k=5)
 
         logger.debug(f" Level0 results: {[(r['code'], r['score']) for r in results]}")
 
@@ -594,6 +662,7 @@ class ArchitectService:
         best_match = results[0]
         code_name = best_match["code"]
         confidence = best_match["score"]
+        llm_fallback_used = False
 
         logger.info("Selected solver: %s (confidence: %.2f)", code_name, confidence)
 
@@ -609,14 +678,23 @@ class ArchitectService:
                     code_name = llm_code_name
                     # Set confidence to 0.8 for LLM-based selection (heuristic-based)
                     confidence = 0.8
+                    llm_fallback_used = True
                 except Exception as e:
                     logger.warning(f"LLM fallback failed: {e}. Using vector search result.")
             else:
                 logger.warning("No LLM client available for fallback. Using low-confidence result.")
 
+        alternatives = self._build_solver_disambiguation_alternatives(
+            results=results,
+            selected_code=code_name,
+            selected_confidence=confidence,
+            confidence_threshold=confidence_threshold,
+            llm_fallback_used=llm_fallback_used,
+        )
+
         # Map to Config class
         if code_name in self.code_configs:
-            return SolverSelection(self.code_configs[code_name], confidence)
+            return SolverSelection(self.code_configs[code_name], confidence, alternatives)
 
         raise ValueError(f"Solver {code_name} found in index but not in registry")
 
@@ -653,14 +731,88 @@ class ArchitectService:
 
         # Execute search (FR-3: search all 7 doc indices)
         results = searcher.search_all_docs(query, top_k=5)
+        normalized_results = [
+            self._normalize_context_document(result)
+            for result in results
+            if isinstance(result, dict)
+        ]
 
         logger.debug(
             "Retrieved %d context documents for %s",
-            len(results),
+            len(normalized_results),
             solver_name
         )
 
-        return results
+        return normalized_results
+
+    @staticmethod
+    def _resolve_input_reference(metadata: dict[str, Any]) -> str | None:
+        """Resolve an inputs reference from metadata if one is present."""
+        direct_keys = (
+            "input_reference",
+            "inputs_reference",
+            "input_ref",
+            "inputs_file",
+            "source_path",
+            "repo_path",
+            "source",
+        )
+        for key in direct_keys:
+            value = metadata.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+        multi_refs = metadata.get("input_references")
+        if isinstance(multi_refs, list):
+            for value in multi_refs:
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+
+        return None
+
+    def _normalize_context_document(self, result: dict[str, Any]) -> dict[str, Any]:
+        """
+        Normalize Level 1 search results for planning context.
+
+        Chemistry-index results are linked to concrete input references when
+        metadata includes a resolvable inputs path.
+        """
+        normalized = dict(result)
+        metadata = normalized.get("metadata")
+        if not isinstance(metadata, dict):
+            metadata = {}
+            normalized["metadata"] = metadata
+
+        doc_type = normalized.get("doc_type")
+        if not isinstance(doc_type, str) or not doc_type.strip():
+            doc_type = metadata.get("index_type") or "unknown"
+        normalized["doc_type"] = doc_type
+
+        source = normalized.get("source")
+        metadata_source = metadata.get("source")
+        if isinstance(metadata_source, str) and metadata_source.strip():
+            source = metadata_source.strip()
+        elif not isinstance(source, str) or not source.strip():
+            source = "unknown"
+        normalized["source"] = source
+
+        content = normalized.get("content")
+        if not isinstance(content, str) or not content.strip():
+            for key in ("text", "snippet", "excerpt", "section", "category"):
+                value = metadata.get(key)
+                if isinstance(value, str) and value.strip():
+                    content = value.strip()
+                    break
+        normalized["content"] = content if isinstance(content, str) else ""
+
+        if "chem" in doc_type.lower():
+            input_reference = self._resolve_input_reference(metadata)
+            if input_reference:
+                normalized["input_reference"] = input_reference
+                if source in {"unknown", doc_type}:
+                    normalized["source"] = input_reference
+
+        return normalized
 
     def select_baseline(
         self,

@@ -214,6 +214,53 @@ class TestLevel1ContextStructure:
                 assert len(result['source']) > 0, "Source must be populated"
 
 
+class TestChemistryIndexResolution:
+    """Test chemistry-index-to-input-reference linkage."""
+
+    def test_chemistry_index_resolves_input_reference(self, tmp_path):
+        """
+        Given: Chemistry-focused search result with metadata source reference
+        When:  Architect normalizes retrieve_context() output
+        Then:  Chemistry result should expose concrete input_reference linkage
+        """
+        query = "switch chemistry mechanism to drm19"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+
+        solver_config = Mock()
+        solver_config.code_name = 'AMReX'
+
+        chemistry_result = [
+            {
+                'score': 0.91,
+                'doc_type': 'chemistry_mechanisms',
+                'source': 'chemistry_mechanisms',
+                'metadata': {
+                    'index_type': 'chemistry_mechanisms',
+                    'source': 'Exec/RegTests/PMF/inputs.3d',
+                    'section': 'chemistry',
+                }
+            }
+        ]
+
+        with patch('database.indexing.level1_searcher.Level1Searcher') as MockLevel1:
+            mock_searcher = Mock()
+            mock_searcher.search_all_docs = Mock(return_value=chemistry_result)
+            MockLevel1.return_value = mock_searcher
+
+            results = architect.retrieve_context(query, solver_config)
+
+            assert len(results) == 1
+            assert results[0]['doc_type'] == 'chemistry_mechanisms'
+            assert results[0]['input_reference'] == 'Exec/RegTests/PMF/inputs.3d'
+            assert results[0]['source'] == 'Exec/RegTests/PMF/inputs.3d'
+            assert results[0]['content'] == 'chemistry'
+
+
 class TestLevel1LatencyRequirement:
     """Test NFR-2: Latency < 2 seconds."""
     
