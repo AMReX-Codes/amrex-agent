@@ -19,12 +19,21 @@ Usage:
     confidence = plan.get_overall_confidence()
 """
 
+import ast
 import logging
 from typing import Any
 
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
+
+GLOBAL_FUNCTION_COMPLEXITY_ID = "global_function_complexity"
+GLOBAL_FUNCTION_COMPLEXITY_DEFAULT_THRESHOLD = 10
+AMENDMENT_MODULE_LOC_ID = "UNNUMBERED-003-01"
+AMENDMENT_MODULE_MAX_LOC = 100
+UNNUMBERED_024_ID = "UNNUMBERED-024"
+UNNUMBERED_052_ID = "UNNUMBERED-052"
+UNNUMBERED_094_ID = "UNNUMBERED-094"
 
 
 class SimulationPlan(BaseModel):
@@ -348,10 +357,7 @@ class SimulationPlanFactory:
             data = SimulationPlanFactory._migrate_legacy_dict(data)
 
         # Filter to known fields to avoid TypeErrors
-        valid_fields = {
-            k: v for k, v in data.items()
-            if k in SimulationPlan.__dataclass_fields__
-        }
+        valid_fields = {k: v for k, v in data.items() if k in SimulationPlan.model_fields}
 
         # Ensure modifications are tuples, not lists
         if 'modifications' in valid_fields:
@@ -412,3 +418,482 @@ class SimulationPlanFactory:
             'used_llm': old_dict.get('used_llm', False),
             'indexing_strategy': old_dict.get('indexing_strategy', 'simple')
         }
+
+
+_CYCLOMATIC_NODES = (
+    ast.If,
+    ast.For,
+    ast.AsyncFor,
+    ast.While,
+    ast.With,
+    ast.AsyncWith,
+    ast.Try,
+    ast.ExceptHandler,
+    ast.IfExp,
+    ast.BoolOp,
+    ast.Match,
+)
+
+
+def _cyclomatic_complexity(node: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
+    complexity = 1
+    for child in ast.walk(node):
+        if isinstance(child, ast.BoolOp):
+            complexity += max(0, len(child.values) - 1)
+            continue
+        if isinstance(child, _CYCLOMATIC_NODES):
+            complexity += 1
+    return complexity
+
+
+def build_global_complexity_report(
+    module_source: str,
+    threshold: int = GLOBAL_FUNCTION_COMPLEXITY_DEFAULT_THRESHOLD,
+) -> dict[str, Any]:
+    """
+    Build a per-function complexity report from Python source text.
+
+    Returns a dict that can be persisted on graph state under
+    ``global_complexity_report``.
+    """
+    tree = ast.parse(module_source)
+    functions: list[dict[str, Any]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            score = _cyclomatic_complexity(node)
+            functions.append(
+                {
+                    "name": node.name,
+                    "lineno": node.lineno,
+                    "complexity": score,
+                    "threshold": threshold,
+                    "passes": score <= threshold,
+                }
+            )
+
+    violations = [
+        function for function in functions if function["complexity"] > function["threshold"]
+    ]
+    return {
+        "criterion": GLOBAL_FUNCTION_COMPLEXITY_ID,
+        "threshold": threshold,
+        "functions": functions,
+        "violations": violations,
+        "passes": not violations,
+    }
+
+
+def global_function_complexity_passed(state: dict[str, Any]) -> bool:
+    """Return whether global complexity criterion is satisfied."""
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            if details.get("criterion") != GLOBAL_FUNCTION_COMPLEXITY_ID:
+                continue
+            return approval.get("decision") == "approved"
+
+    report = state.get("global_complexity_report")
+    if isinstance(report, dict):
+        if isinstance(report.get("passes"), bool):
+            return report["passes"]
+        violations = report.get("violations", [])
+        if isinstance(violations, list):
+            return len(violations) == 0
+    return False
+
+
+def global_function_complexity_failure_reason(state: dict[str, Any]) -> str:
+    """Return reason code for global complexity gate decision."""
+    if global_function_complexity_passed(state):
+        return "global_function_complexity_satisfied"
+    return "global_function_complexity_threshold_exceeded"
+
+
+def _amendment_modules_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    modules = report.get("modules", [])
+    if not isinstance(modules, list):
+        return []
+
+    amendment_modules: list[dict[str, Any]] = []
+    for module in modules:
+        if not isinstance(module, dict):
+            continue
+        if module.get("is_amendment_module") is True:
+            amendment_modules.append(module)
+    return amendment_modules
+
+
+def normalize_unnumbered_024(raw: Any) -> list[dict[str, Any]]:
+    """
+    Normalize use-case artifact mappings into a canonical shape.
+
+    Canonical entry:
+    - use_case: str
+    - artifacts: list[str]
+    """
+    if isinstance(raw, dict):
+        for key in ("use_cases", "mappings", "entries", "items"):
+            candidate = raw.get(key)
+            if isinstance(candidate, list):
+                raw = candidate
+                break
+        else:
+            raw = [raw]
+
+    if not isinstance(raw, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+
+        use_case = entry.get("use_case") or entry.get("usecase") or entry.get("id")
+        if not isinstance(use_case, str) or not use_case.strip():
+            continue
+
+        artifacts_raw = (
+            entry.get("artifacts")
+            or entry.get("artifact")
+            or entry.get("references")
+            or entry.get("evidence")
+        )
+
+        if isinstance(artifacts_raw, str):
+            artifacts = [artifacts_raw.strip()] if artifacts_raw.strip() else []
+        elif isinstance(artifacts_raw, list):
+            artifacts = [
+                item.strip()
+                for item in artifacts_raw
+                if isinstance(item, str) and item.strip()
+            ]
+        else:
+            artifacts = []
+
+        normalized.append(
+            {
+                "use_case": use_case.strip(),
+                "artifacts": artifacts,
+            }
+        )
+    return normalized
+
+
+def _unnumbered_024_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = report.get("use_case_artifacts")
+    return normalize_unnumbered_024(mappings)
+
+
+def _unnumbered_024_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = state.get("use_case_artifacts")
+    return normalize_unnumbered_024(mappings)
+
+
+def normalize_unnumbered_052(raw: Any) -> list[dict[str, Any]]:
+    """Normalize implementation-location to tests mappings into a canonical shape."""
+    if isinstance(raw, dict):
+        for key in ("feature_mappings", "feature_blocks", "features", "entries", "items"):
+            candidate = raw.get(key)
+            if isinstance(candidate, list):
+                raw = candidate
+                break
+        else:
+            raw = [raw]
+
+    if not isinstance(raw, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+
+        feature_id = entry.get("feature_id") or entry.get("feature") or entry.get("id")
+        if not isinstance(feature_id, str) or not feature_id.strip():
+            continue
+
+        impl_raw = (
+            entry.get("implementation_locations")
+            or entry.get("impl_locations")
+            or entry.get("implementation")
+            or entry.get("locations")
+        )
+        if isinstance(impl_raw, str):
+            implementation_locations = [impl_raw.strip()] if impl_raw.strip() else []
+        elif isinstance(impl_raw, list):
+            implementation_locations = [
+                item.strip() for item in impl_raw if isinstance(item, str) and item.strip()
+            ]
+        else:
+            implementation_locations = []
+
+        tests_raw = (
+            entry.get("tests")
+            or entry.get("test_locations")
+            or entry.get("test_files")
+            or entry.get("fixtures")
+        )
+        if isinstance(tests_raw, str):
+            tests = [tests_raw.strip()] if tests_raw.strip() else []
+        elif isinstance(tests_raw, list):
+            tests = [item.strip() for item in tests_raw if isinstance(item, str) and item.strip()]
+        else:
+            tests = []
+
+        normalized.append(
+            {
+                "feature_id": feature_id.strip(),
+                "implementation_locations": implementation_locations,
+                "tests": tests,
+            }
+        )
+    return normalized
+
+
+def normalize_unnumbered_094(raw: Any) -> list[dict[str, Any]]:
+    """
+    Normalize camera-ready benchmark pipeline phase mappings into canonical shape.
+
+    Canonical entry:
+    - phase_id: str
+    - implementation_locations: list[str]
+    - tests: list[str]
+    """
+    if isinstance(raw, dict):
+        for key in ("pipeline_phases", "phases", "entries", "items"):
+            candidate = raw.get(key)
+            if isinstance(candidate, list):
+                raw = candidate
+                break
+        else:
+            raw = [raw]
+
+    if not isinstance(raw, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+
+        phase_id = entry.get("phase_id") or entry.get("phase") or entry.get("id")
+        if not isinstance(phase_id, str) or not phase_id.strip():
+            continue
+
+        impl_raw = (
+            entry.get("implementation_locations")
+            or entry.get("implementation")
+            or entry.get("impl_locations")
+            or entry.get("locations")
+        )
+        if isinstance(impl_raw, str):
+            implementation_locations = [impl_raw.strip()] if impl_raw.strip() else []
+        elif isinstance(impl_raw, list):
+            implementation_locations = [
+                item.strip() for item in impl_raw if isinstance(item, str) and item.strip()
+            ]
+        else:
+            implementation_locations = []
+
+        tests_raw = (
+            entry.get("tests")
+            or entry.get("test_locations")
+            or entry.get("test_files")
+            or entry.get("coverage")
+        )
+        if isinstance(tests_raw, str):
+            tests = [tests_raw.strip()] if tests_raw.strip() else []
+        elif isinstance(tests_raw, list):
+            tests = [item.strip() for item in tests_raw if isinstance(item, str) and item.strip()]
+        else:
+            tests = []
+
+        normalized.append(
+            {
+                "phase_id": phase_id.strip(),
+                "implementation_locations": implementation_locations,
+                "tests": tests,
+            }
+        )
+    return normalized
+
+
+def _unnumbered_094_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = report.get("camera_ready_pipeline")
+    return normalize_unnumbered_094(mappings)
+
+
+def _unnumbered_094_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+    for key in ("camera_ready_pipeline", "benchmark_pipeline", "pipeline_phases"):
+        entries = normalize_unnumbered_094(state.get(key))
+        if entries:
+            return entries
+    return []
+
+
+def _unnumbered_052_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = report.get("feature_mappings")
+    return normalize_unnumbered_052(mappings)
+
+
+def _unnumbered_052_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+    for key in ("feature_mappings", "feature_blocks", "implementation_test_sync"):
+        entries = normalize_unnumbered_052(state.get(key))
+        if entries:
+            return entries
+    return []
+
+
+def build_unnumbered_052_report(feature_mappings: Any) -> dict[str, Any]:
+    """Build synchronization report for implementation locations and tests."""
+    entries = normalize_unnumbered_052(feature_mappings)
+    violations: list[dict[str, Any]] = []
+
+    for entry in entries:
+        if not entry["implementation_locations"]:
+            violations.append({**entry, "reason_code": "impl_locations_missing"})
+            continue
+        if not entry["tests"]:
+            violations.append({**entry, "reason_code": "tests_missing"})
+
+    return {
+        "criterion": UNNUMBERED_052_ID,
+        "feature_mappings": entries,
+        "violations": violations,
+        "passes": bool(entries) and not violations,
+    }
+
+
+def impl_locations_tests_synced_passed(state: dict[str, Any]) -> bool:
+    """Return whether implementation locations and tests are in sync."""
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            if details.get("criterion") != UNNUMBERED_052_ID:
+                continue
+            return approval.get("decision") == "approved"
+
+    report = state.get("impl_locations_tests_sync_report")
+    if isinstance(report, dict):
+        if isinstance(report.get("passes"), bool):
+            return report["passes"]
+        violations = report.get("violations")
+        if isinstance(violations, list):
+            return len(violations) == 0
+        return bool(_unnumbered_052_entries_from_report(report))
+
+    entries = _unnumbered_052_entries_from_state(state)
+    if not entries:
+        return False
+    return all(entry["implementation_locations"] and entry["tests"] for entry in entries)
+
+
+def impl_locations_tests_synced_failure_reason(state: dict[str, Any]) -> str:
+    """Return reason code for implementation-location/test synchronization gate."""
+    if impl_locations_tests_synced_passed(state):
+        return "impl_locations_tests_synced_satisfied"
+
+    report = state.get("impl_locations_tests_sync_report")
+    if isinstance(report, dict):
+        violations = report.get("violations")
+        if isinstance(violations, list):
+            for violation in violations:
+                if not isinstance(violation, dict):
+                    continue
+                reason_code = violation.get("reason_code")
+                if reason_code in {"impl_locations_missing", "tests_missing"}:
+                    return reason_code
+
+    entries = _unnumbered_052_entries_from_state(state)
+    if not entries:
+        return "impl_tests_sync_missing"
+
+    for entry in entries:
+        if not entry["implementation_locations"]:
+            return "impl_locations_missing"
+        if not entry["tests"]:
+            return "tests_missing"
+
+    return "impl_tests_sync_missing"
+
+
+def build_amendment_module_loc_report(
+    modules: list[dict[str, Any]],
+    max_loc: int = AMENDMENT_MODULE_MAX_LOC,
+) -> dict[str, Any]:
+    """
+    Build a report for amendment modules requiring helper extraction above a LOC cap.
+
+    ``modules`` entries should include:
+    - name (str)
+    - loc (int)
+    - is_amendment_module (bool)
+    - helper_extraction_documented (bool)
+    """
+    normalized_modules = [module for module in modules if isinstance(module, dict)]
+    violating_modules: list[dict[str, Any]] = []
+
+    for module in normalized_modules:
+        if module.get("is_amendment_module") is not True:
+            continue
+
+        loc = module.get("loc")
+        if not isinstance(loc, int):
+            violating_modules.append(module)
+            continue
+
+        if loc <= max_loc:
+            continue
+
+        if module.get("helper_extraction_documented") is not True:
+            violating_modules.append(module)
+
+    return {
+        "criterion": AMENDMENT_MODULE_LOC_ID,
+        "max_loc": max_loc,
+        "modules": normalized_modules,
+        "violations": violating_modules,
+        "passes": not violating_modules,
+    }
+
+
+def amendment_module_loc_passed(state: dict[str, Any]) -> bool:
+    """Return whether amendment module LOC/helper extraction criterion is satisfied."""
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            if details.get("criterion") != AMENDMENT_MODULE_LOC_ID:
+                continue
+            return approval.get("decision") == "approved"
+
+    report = state.get("amendment_module_loc_report")
+    if isinstance(report, dict):
+        if isinstance(report.get("passes"), bool):
+            return report["passes"]
+        violations = report.get("violations")
+        if isinstance(violations, list):
+            return len(violations) == 0
+        return len(_amendment_modules_from_report(report)) == 0
+    return False
+
+
+def amendment_module_loc_failure_reason(state: dict[str, Any]) -> str:
+    """Return reason code for amendment module LOC/helper extraction gate decision."""
+    if amendment_module_loc_passed(state):
+        return "amendment_module_loc_satisfied"
+    return "amendment_module_helper_extraction_missing"
