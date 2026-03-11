@@ -113,6 +113,27 @@ _NEW_FILES_SECTION_RE = re.compile(r"^new\s+files\s*:\s*$", re.IGNORECASE)
 _SECTION_HEADER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 /_-]*:\s*$")
 
 
+def normalize_modifications(payload: Any) -> list[tuple[str, Any]]:
+    """Normalize mixed modification payloads into (parameter, value) tuples."""
+    if not isinstance(payload, list):
+        return []
+
+    normalized: list[tuple[str, Any]] = []
+    for entry in payload:
+        if isinstance(entry, tuple) and len(entry) == 2:
+            normalized.append((str(entry[0]), entry[1]))
+            continue
+        if isinstance(entry, list) and len(entry) == 2:
+            normalized.append((str(entry[0]), entry[1]))
+            continue
+        if isinstance(entry, dict):
+            parameter = entry.get("parameter")
+            if parameter is None:
+                continue
+            normalized.append((str(parameter), entry.get("value")))
+    return normalized
+
+
 class SimulationPlan(BaseModel):
     """
     Typed simulation configuration plan.
@@ -332,15 +353,7 @@ class SimulationPlanFactory:
         baseline_conf = baseline_result.get('confidence', 0.0)
 
         # Extract modifications
-        modifications = cbr_plan.get('modifications', [])
-
-        # Validate modification format
-        if not all(isinstance(m, tuple) and len(m) == 2 for m in modifications):
-            logger.warning("Modifications not in (param, value) tuple format, attempting conversion")
-            # Try to convert if they're dicts
-            if modifications and isinstance(modifications[0], dict):
-                modifications = [(m.get('parameter', ''), m.get('value', ''))
-                               for m in modifications]
+        modifications = normalize_modifications(cbr_plan.get('modifications', []))
 
         # Extract CBR confidence
         cbr_conf = cbr_plan.get('confidence', 0.0)
@@ -358,7 +371,7 @@ class SimulationPlanFactory:
             selected_solver=solver_name,
             selected_case=baseline_case.get('case',
                                            baseline_case.get('metadata', {}).get('repo_path', 'unknown')),
-            modifications=modifications,
+            modifications=normalize_modifications(modifications),
             reasoning=reasoning,
 
             # Confidence metrics
@@ -490,11 +503,9 @@ class SimulationPlanFactory:
             if k in SimulationPlan.model_fields
         }
 
-        # Ensure modifications are tuples, not lists
+        # Ensure modifications are normalized tuples.
         if 'modifications' in valid_fields:
-            mods = valid_fields['modifications']
-            if mods and isinstance(mods[0], list):
-                valid_fields['modifications'] = [tuple(m) for m in mods]
+            valid_fields['modifications'] = normalize_modifications(valid_fields['modifications'])
 
         return SimulationPlan(**valid_fields)
 
@@ -527,11 +538,8 @@ class SimulationPlanFactory:
                old_dict.get('baseline', {}).get('case_dir') or
                'unknown')
 
-        # Extract modifications (ensure tuple format)
-        mods = old_dict.get('modifications', [])
-        if mods and isinstance(mods[0], dict):
-            # Convert from dict format to tuple
-            mods = [(m.get('parameter', ''), m.get('value', '')) for m in mods]
+        # Extract modifications (ensure tuple format).
+        mods = normalize_modifications(old_dict.get('modifications', []))
 
         return {
             'selected_solver': solver,

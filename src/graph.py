@@ -21,7 +21,11 @@ from src.services.plan import (
     validate_feature_blocks_tests_fixtures,
     validate_new_file_helper_extraction,
 )
-from src.session_manager import is_b4_implementation_sequence_complete
+from src.session_manager import (
+    SESSION_DEPENDENCY_COMPLETION_MARKER,
+    is_b4_implementation_sequence_complete,
+    is_session_dependency_complete,
+)
 from src.utils.metrics import validate_risk_owner_status_updates
 
 
@@ -86,6 +90,9 @@ def _route_after_clarification(state: dict) -> str:
 def _route_after_sweep_detection(state: dict) -> str:
     if state.get("sweep_id") is None:
         return "architect_node"
+
+    if not is_session_dependency_complete(state):
+        return "session_dependency_handler"
 
     # Preserve existing sweep behavior unless a validation_manifest is present.
     # When manifest context exists, enforce additional quality gates.
@@ -458,6 +465,17 @@ def sweep_execution_handler_node(state: dict) -> dict:
     return state
 
 
+def session_dependency_handler_node(state: dict) -> dict:
+    """Record unmet session dependency marker before terminating workflow."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Required dependency session must complete before sweep execution.",
+    )
+    updated.setdefault("required_marker", SESSION_DEPENDENCY_COMPLETION_MARKER)
+    return updated
+
+
 def create_graph() -> StateGraph:
     """Build graph with B1b/B1c graph wiring."""
     graph = StateGraph(GraphState)
@@ -469,6 +487,7 @@ def create_graph() -> StateGraph:
     graph.add_node("clarification_node", clarification_node)
     graph.add_node("clarification_handler", clarification_handler_node)
     graph.add_node("sweep_execution_handler", sweep_execution_handler_node)
+    graph.add_node("session_dependency_handler", session_dependency_handler_node)
     graph.add_node("input_writer_node", input_writer_node)
 
     graph.add_edge(START, "sweep_detection_node")
@@ -478,6 +497,7 @@ def create_graph() -> StateGraph:
         {
             "architect_node": "architect_node",
             "sweep_execution_handler": "sweep_execution_handler",
+            "session_dependency_handler": "session_dependency_handler",
         },
     )
     graph.add_conditional_edges(
@@ -507,6 +527,7 @@ def create_graph() -> StateGraph:
     )
     graph.add_edge("clarification_handler", END)
     graph.add_edge("sweep_execution_handler", END)
+    graph.add_edge("session_dependency_handler", END)
     graph.add_edge("input_writer_node", END)
 
     return graph

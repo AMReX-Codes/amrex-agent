@@ -21,8 +21,8 @@ def test_paper_validator_wiring() -> None:
     app = create_graph().compile()
     graph_def = app.get_graph()
     edges = {(edge.source, edge.target) for edge in graph_def.edges}
-    assert ("clarification_node", "paper_validator_node") in edges
-    assert ("paper_validator_node", "input_writer_node") in edges
+    assert ("architect_node", "paper_validator_node") in edges
+    assert ("paper_validator_node", "intent_extraction_node") in edges
 
 
 def test_clarification_routes_to_writer_when_validator_disabled() -> None:
@@ -36,7 +36,7 @@ def test_clarification_routes_to_writer_when_validator_disabled() -> None:
 def test_clarification_routes_to_paper_validator_when_enabled() -> None:
     assert _route_after_clarification(
         {"clarification_needed": False, "paper_validator_enabled": True}
-    ) == "paper_validator_node"
+    ) == "input_writer_node"
 
 
 def test_clarification_needed_routes_to_handler() -> None:
@@ -73,4 +73,6 @@ def test_session_dependency_handler_node_preserves_existing_values() -> None:
 
 def test_paper_validator_node_passthrough() -> None:
     state = {"paper_validator_enabled": True}
-    assert paper_validator_node(state) == state
+    result = paper_validator_node(state)
+    assert result["paper_validator_mode1_complete"] is False
+    assert result["paper_validation_passed"] is False
