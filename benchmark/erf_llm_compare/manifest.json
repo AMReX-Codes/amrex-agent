@@ -1,0 +1,11 @@
+{
+  "created_at": "2026-03-12T15:42:57.546521+00:00",
+  "erf_root": "../ERF",
+  "row_count": 522,
+  "unique_inputs": 174,
+  "waves": [
+    "wave0",
+    "wave1",
+    "wave2"
+  ]
+}

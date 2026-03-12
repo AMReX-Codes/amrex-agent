@@ -1,0 +1,16 @@
+# Hierarchical weights-only candidate (no path-weight heuristics)
+indexing_strategy: hierarchical
+inputs_file_strategy: newest
+
+hierarchical_apply_path_adjustment: false
+hierarchical_candidate_pool_size: 100
+hierarchical_candidate_log_top_n: 30
+
+# Path-dominant but still nuanced
+hierarchical_weight_path_hierarchy: 0.85
+hierarchical_weight_physics_parameters: 0.10
+hierarchical_weight_domain_models: 0.05
+hierarchical_weight_grid_specifications: 0.00
+hierarchical_weight_configuration_complexity: 0.00
+hierarchical_weight_development_activity: 0.00
+hierarchical_weight_resource_requirements: 0.00

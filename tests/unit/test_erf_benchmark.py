@@ -8,6 +8,10 @@ from scripts.erf_benchmark.compare_runs import (
     evaluate_candidate_vs_baseline,
     select_better_candidate,
 )
+from scripts.erf_benchmark.lib.explainability_scoring import (
+    build_call_records,
+    summarize_explainability,
+)
 from scripts.erf_benchmark.generate_prompt_matrix import build_prompt_matrix_rows
 from scripts.erf_benchmark.make_splits import build_splits
 from scripts.erf_benchmark.run_llm_compare_benchmark import (
@@ -74,6 +78,25 @@ def test_score_rows_normalizes_absolute_paths() -> None:
     assert scored["weighted_score"] == 1.0
 
 
+def test_score_rows_supports_prefix_expectations() -> None:
+    rows = [
+        {
+            "row_id": "a",
+            "expected_case_prefix": "Exec/CanonicalFlows/SquallLine_2D",
+            "expected_inputs_prefix": "Exec/CanonicalFlows/SquallLine_2D/inputs",
+        }
+    ]
+    predictions = {
+        "a": {
+            "selected_case": "Exec/CanonicalFlows/SquallLine_2D",
+            "selected_inputs": "Exec/CanonicalFlows/SquallLine_2D/inputs_moisture_SAM",
+        }
+    }
+    scored = score_rows(rows, predictions)
+    assert scored["case_accuracy"] == 1.0
+    assert scored["inputs_accuracy"] == 1.0
+
+
 def test_detect_llm_unavailable_from_metrics_and_summary() -> None:
     metrics = [
         {"type": "retrieval_strategy", "data": {"fallback_reason": "llm_unavailable"}},
@@ -125,6 +148,8 @@ def test_compare_runs_acceptance_logic() -> None:
         "paraphrase_weighted_score": 0.90,
         "category_min_weighted_score": 0.80,
         "non_erf_sanity_weighted_score": 0.88,
+        "explainability_pass": True,
+        "explainability_mean_score": 0.95,
     }
     candidate = dict(baseline)
     candidate["holdout_weighted_score"] = 0.92
@@ -137,6 +162,12 @@ def test_compare_runs_acceptance_logic() -> None:
     verdict_bad = evaluate_candidate_vs_baseline(baseline, candidate_bad)
     assert verdict_bad["accepted"] is False
     assert verdict_bad["checks"]["category_guardrail"] is False
+
+    candidate_explain_bad = dict(candidate)
+    candidate_explain_bad["explainability_pass"] = False
+    verdict_explain_bad = evaluate_candidate_vs_baseline(baseline, candidate_explain_bad)
+    assert verdict_explain_bad["accepted"] is False
+    assert verdict_explain_bad["checks"]["explainability_gate"] is False
 
 
 def test_compare_runs_tiebreak_prefers_lower_variance_then_misses() -> None:
@@ -161,3 +192,33 @@ def test_compare_runs_tiebreak_prefers_lower_variance_then_misses() -> None:
         [],
     )
     assert select_better_candidate(baseline_metrics, candidate_metrics) == "candidate"
+
+
+def test_explainability_records_and_summary() -> None:
+    row = {
+        "row_id": "r1",
+        "prompt_text": "Run a 2D squall line simulation",
+        "expected_solver": "ERF",
+        "expected_case_prefix": "Exec/CanonicalFlows/SquallLine_2D",
+        "expected_inputs_prefix": "Exec/CanonicalFlows/SquallLine_2D/inputs",
+    }
+    payload = {"plan": {"selected_solver": "ERF"}}
+    llm_usage_events = [
+        {"type": "llm_usage", "stage": "architect", "data": {"model": "m1", "provider": "p1"}},
+        {"type": "llm_usage", "stage": "input_writer", "data": {"model": "m1", "provider": "p1"}},
+    ]
+    records = build_call_records(
+        row=row,
+        strategy="simple",
+        payload=payload,
+        llm_usage_events=llm_usage_events,
+        selected_case="Exec/CanonicalFlows/SquallLine_2D",
+        selected_inputs="Exec/CanonicalFlows/SquallLine_2D/inputs_moisture_SAM",
+        row_events=[],
+        unavailable=False,
+    )
+    assert len(records) == 2
+    assert records[0]["correctness_score"] == 1.0
+    summary = summarize_explainability(records, threshold=0.9)
+    assert summary["explainability_pass"] is True
+    assert summary["explainability_fail_count"] == 0

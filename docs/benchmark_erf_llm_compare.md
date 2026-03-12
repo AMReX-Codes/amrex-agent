@@ -191,6 +191,7 @@ Select best accepted candidate by:
 New scripts:
 - `scripts/erf_benchmark/generate_prompt_matrix.py`
 - `scripts/erf_benchmark/make_splits.py`
+- `scripts/erf_benchmark/make_sanity_prompt_set.py`
 - `scripts/erf_benchmark/run_llm_compare_benchmark.py`
 - `scripts/erf_benchmark/compare_runs.py`
 
@@ -200,6 +201,8 @@ Run outputs:
 - `benchmark/erf_llm_compare/runs/{run_id}/summary_baseline.json` (baseline step only)
 - `benchmark/erf_llm_compare/runs/{run_id}/category_report.csv`
 - `benchmark/erf_llm_compare/runs/{run_id}/failures.csv`
+- `benchmark/erf_llm_compare/runs/{run_id}/explainability_calls.jsonl`
+- `benchmark/erf_llm_compare/runs/{run_id}/explainability_failures.csv`
 
 ## Validation and Tests
 Unit tests should cover:

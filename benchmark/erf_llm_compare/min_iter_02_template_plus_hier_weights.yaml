@@ -1,0 +1,19 @@
+# Candidate 02: ERF case-selection template hard rule + hierarchical path-hierarchy emphasis.
+indexing_strategy: simple
+inputs_file_strategy: newest
+
+# Keep simple weights from iter01 (already known behavior).
+simple_weight_kb_relevance: 0.25
+simple_weight_metrics: 0.05
+simple_weight_path_heuristics: 0.03
+simple_weight_domain_specific: 0.67
+simple_weight_faiss_semantic: 0.15
+
+# New hierarchical weighting: push case-path signal for explicit squall-line routing.
+hierarchical_weight_physics_parameters: 0.15
+hierarchical_weight_grid_specifications: 0.05
+hierarchical_weight_development_activity: 0.03
+hierarchical_weight_configuration_complexity: 0.03
+hierarchical_weight_path_hierarchy: 0.50
+hierarchical_weight_domain_models: 0.20
+hierarchical_weight_resource_requirements: 0.04
