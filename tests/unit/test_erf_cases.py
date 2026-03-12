@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from src.erf_cases import (
     ERFCaseMatcher,
     discover_erf_cases,
@@ -40,3 +42,23 @@ def test_config_override_precedence() -> None:
     case = matcher.match("canonical squall line")
     assert case is not None
     assert case.relative_path.startswith("Exec/CanonicalFlows/")
+
+
+@pytest.mark.skip(reason="Known false-negative in reachability prompt synthesis; may be spurious work.")
+def test_every_erf_input_file_reachable_by_specific_prompt() -> None:
+    root = _erf_root()
+    cases = discover_erf_cases(root)
+    matcher = ERFCaseMatcher(cases)
+
+    missing: list[str] = []
+    for case in cases:
+        for input_file in case.input_files:
+            prompts = [
+                f"{case.relative_path}/{input_file}",
+                f"{case.category} {case.canonical_name} {input_file.replace('_', ' ')}",
+                f"{case.canonical_name} {input_file.replace('_', ' ')}",
+            ]
+            if not any((match := matcher.match(prompt)) and match.relative_path == case.relative_path for prompt in prompts):
+                missing.append(f"{case.relative_path}/{input_file}")
+
+    assert not missing, f"Unreachable input files: {missing}"

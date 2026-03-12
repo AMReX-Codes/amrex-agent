@@ -29,6 +29,7 @@ class ERFCase:
     category: str
     physics_tags: tuple[str, ...]
     short_description: str
+    input_files: tuple[str, ...]
     aliases: tuple[str, ...]
 
 
@@ -87,7 +88,22 @@ def _looks_like_case_dir(case_dir: Path) -> bool:
     return has_inputs or has_readme
 
 
-def _build_aliases(relative_path: str, canonical_name: str, category: str) -> tuple[str, ...]:
+def _discover_input_files(case_dir: Path) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            item.name
+            for item in case_dir.iterdir()
+            if item.is_file() and item.name.startswith("inputs")
+        )
+    )
+
+
+def _build_aliases(
+    relative_path: str,
+    canonical_name: str,
+    category: str,
+    input_files: tuple[str, ...],
+) -> tuple[str, ...]:
     aliases = {
         canonical_name,
         _camel_to_words(canonical_name),
@@ -99,6 +115,13 @@ def _build_aliases(relative_path: str, canonical_name: str, category: str) -> tu
     }
     normalized_name = _normalize(canonical_name)
     aliases.add(normalized_name)
+    for input_file in input_files:
+        input_words = input_file.replace("_", " ")
+        aliases.add(input_file)
+        aliases.add(input_words)
+        aliases.add(f"{canonical_name} {input_words}")
+        aliases.add(f"{category} {canonical_name} {input_words}")
+        aliases.add(f"{relative_path}/{input_file}")
     if "squallline" in normalized_name or "squall line" in normalized_name:
         aliases.update({"squallline", "squall line", "squall line 2d"})
     return tuple(sorted(_normalize(alias) for alias in aliases if alias))
@@ -132,9 +155,10 @@ def discover_erf_cases(erf_repo_root: str | Path) -> list[ERFCase]:
         category = parts[1] if len(parts) > 1 else "Uncategorized"
         canonical_name = parts[-1]
         description = _first_description_line(case_dir)
+        input_files = _discover_input_files(case_dir)
         tag_text = f"{rel} {description} {canonical_name}"
         tags = _infer_physics_tags(tag_text)
-        aliases = _build_aliases(rel, canonical_name, category)
+        aliases = _build_aliases(rel, canonical_name, category, input_files)
         cases.append(
             ERFCase(
                 canonical_name=canonical_name,
@@ -142,6 +166,7 @@ def discover_erf_cases(erf_repo_root: str | Path) -> list[ERFCase]:
                 category=category,
                 physics_tags=tags,
                 short_description=description,
+                input_files=input_files,
                 aliases=aliases,
             )
         )
