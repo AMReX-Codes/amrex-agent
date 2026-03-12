@@ -527,5 +527,80 @@ class TestRejectedAlternatives:
             assert entry["score_gap"] > 0
 
 
+class TestHierarchicalWeightsFromConfig:
+    """Validate config-driven hierarchical weighting in baseline selection."""
+
+    def test_select_baseline_passes_config_weights_to_searcher(self, tmp_path):
+        query = "premixed methane combustion"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_config.hierarchical_weight_physics_parameters = 0.6
+        mock_config.hierarchical_weight_grid_specifications = 0.2
+        mock_config.hierarchical_weight_development_activity = 0.1
+        mock_config.hierarchical_weight_configuration_complexity = 0.1
+        mock_config.hierarchical_weight_path_hierarchy = 0.0
+        mock_config.hierarchical_weight_domain_models = 0.0
+        mock_config.hierarchical_weight_resource_requirements = 0.0
+
+        architect = ArchitectService(mock_config, Mock())
+        solver_config = Mock()
+        solver_config.code_name = "PeleC"
+
+        mock_candidates = [
+            {"case": "Exec/RegTests/PMF", "score": 0.9, "metadata": {"repo_path": "Exec/RegTests/PMF"}},
+        ]
+
+        with patch("database.indexing.level2_searcher.Level2Searcher") as MockLevel2:
+            mock_searcher = Mock()
+            mock_searcher.search_all_cases = Mock(return_value=mock_candidates)
+            MockLevel2.return_value = mock_searcher
+
+            result = architect.select_baseline(query, solver_config)
+
+        assert result["weight_source"] == "config"
+        assert abs(sum(result["weights_used"].values()) - 1.0) < 1e-9
+        assert result["weights_used"]["physics_parameters"] == pytest.approx(0.6)
+        assert result["weights_used"]["grid_specifications"] == pytest.approx(0.2)
+        assert result["weights_used"]["path_hierarchy"] == pytest.approx(0.0)
+
+        called_kwargs = mock_searcher.search_all_cases.call_args.kwargs
+        assert called_kwargs["top_k"] == 5
+        assert called_kwargs["weights"]["physics_parameters"] == pytest.approx(0.6)
+
+    def test_select_baseline_uses_defaults_when_config_weights_invalid(self, tmp_path):
+        query = "premixed methane combustion"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_config.hierarchical_weight_physics_parameters = 0.0
+        mock_config.hierarchical_weight_grid_specifications = 0.0
+        mock_config.hierarchical_weight_development_activity = 0.0
+        mock_config.hierarchical_weight_configuration_complexity = 0.0
+        mock_config.hierarchical_weight_path_hierarchy = 0.0
+        mock_config.hierarchical_weight_domain_models = 0.0
+        mock_config.hierarchical_weight_resource_requirements = 0.0
+
+        architect = ArchitectService(mock_config, Mock())
+        solver_config = Mock()
+        solver_config.code_name = "PeleC"
+
+        mock_candidates = [
+            {"case": "Exec/RegTests/PMF", "score": 0.9, "metadata": {"repo_path": "Exec/RegTests/PMF"}},
+        ]
+
+        with patch("database.indexing.level2_searcher.Level2Searcher") as MockLevel2:
+            mock_searcher = Mock()
+            mock_searcher.search_all_cases = Mock(return_value=mock_candidates)
+            MockLevel2.return_value = mock_searcher
+
+            result = architect.select_baseline(query, solver_config)
+
+        assert result["weight_source"] == "default"
+        assert result["weights_used"]["physics_parameters"] == pytest.approx(0.30)
+        assert result["weights_used"]["grid_specifications"] == pytest.approx(0.20)
+        assert result["weights_used"]["resource_requirements"] == pytest.approx(0.05)
+
+
 # Architect Service: Baseline Selection Marker
 pytestmark = pytest.mark.architect_baseline_selection

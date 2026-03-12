@@ -349,6 +349,64 @@ class ArchitectService:
                 return default
         return default
 
+    @staticmethod
+    def _normalize_weights(weights: dict[str, float]) -> dict[str, float]:
+        cleaned: dict[str, float] = {}
+        for key, value in weights.items():
+            try:
+                cleaned[key] = max(0.0, float(value))
+            except (TypeError, ValueError):
+                cleaned[key] = 0.0
+        total = sum(cleaned.values())
+        if total <= 0.0:
+            return {}
+        return {key: value / total for key, value in cleaned.items()}
+
+    def _hierarchical_weights_from_config(self) -> tuple[dict[str, float], str]:
+        defaults = {
+            "physics_parameters": 0.30,
+            "grid_specifications": 0.20,
+            "development_activity": 0.10,
+            "configuration_complexity": 0.10,
+            "path_hierarchy": 0.15,
+            "domain_models": 0.10,
+            "resource_requirements": 0.05,
+        }
+        raw = {
+            "physics_parameters": self._config_float(
+                "hierarchical_weight_physics_parameters",
+                defaults["physics_parameters"],
+            ),
+            "grid_specifications": self._config_float(
+                "hierarchical_weight_grid_specifications",
+                defaults["grid_specifications"],
+            ),
+            "development_activity": self._config_float(
+                "hierarchical_weight_development_activity",
+                defaults["development_activity"],
+            ),
+            "configuration_complexity": self._config_float(
+                "hierarchical_weight_configuration_complexity",
+                defaults["configuration_complexity"],
+            ),
+            "path_hierarchy": self._config_float(
+                "hierarchical_weight_path_hierarchy",
+                defaults["path_hierarchy"],
+            ),
+            "domain_models": self._config_float(
+                "hierarchical_weight_domain_models",
+                defaults["domain_models"],
+            ),
+            "resource_requirements": self._config_float(
+                "hierarchical_weight_resource_requirements",
+                defaults["resource_requirements"],
+            ),
+        }
+        normalized = self._normalize_weights(raw)
+        if not normalized:
+            return defaults, "default"
+        return normalized, "config"
+
     def _solver_family_labels(self, solver_config) -> set[str]:
         if not solver_config:
             return set()
@@ -835,11 +893,13 @@ class ArchitectService:
             embedder=self.embedder
         )
 
+        weights_used, weight_source = self._hierarchical_weights_from_config()
+
         # Execute weighted search
         # Weights from Indexing Engine: Physics-Agnostic Keywords & Scoring:
         #   Physics(30%), Grid(20%), Path(15%), Dev(10%),
         #   Complex(10%), Domain(10%), Resource(5%)
-        candidates = searcher.search_all_cases(query, top_k=5)
+        candidates = searcher.search_all_cases(query, top_k=5, weights=weights_used)
         candidates = sorted(
             candidates,
             key=lambda c: c.get("score", 0.0),
@@ -880,6 +940,8 @@ class ArchitectService:
             "candidates": candidates,
             "confidence": selected["score"],
             "rejected_alternatives": self._build_rejected_alternatives(candidates),
+            "weights_used": weights_used,
+            "weight_source": weight_source,
         }
 
     @staticmethod

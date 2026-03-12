@@ -589,6 +589,69 @@ class AMReXAgentConfig(BaseModel):
                     "Was 0.20 (hybrid), now 0.5 (FAISS-first architecture)."
     )
 
+    # === Baseline Selection Weights (Benchmark Tuning) ===
+    simple_weight_kb_relevance: float = Field(
+        default=0.40,
+        ge=0.0,
+        description="Simple strategy baseline weight: knowledge-base relevance bucket."
+    )
+    simple_weight_metrics: float = Field(
+        default=0.25,
+        ge=0.0,
+        description="Simple strategy baseline weight: case metrics bucket."
+    )
+    simple_weight_path_heuristics: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Simple strategy baseline weight: path heuristics bucket."
+    )
+    simple_weight_domain_specific: float = Field(
+        default=0.25,
+        ge=0.0,
+        description="Simple strategy baseline weight: domain-specific bucket."
+    )
+    simple_weight_faiss_semantic: float = Field(
+        default=0.50,
+        ge=0.0,
+        description="Simple strategy baseline weight: FAISS semantic bucket."
+    )
+
+    hierarchical_weight_physics_parameters: float = Field(
+        default=0.30,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: physics_parameters index."
+    )
+    hierarchical_weight_grid_specifications: float = Field(
+        default=0.20,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: grid_specifications index."
+    )
+    hierarchical_weight_development_activity: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: development_activity index."
+    )
+    hierarchical_weight_configuration_complexity: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: configuration_complexity index."
+    )
+    hierarchical_weight_path_hierarchy: float = Field(
+        default=0.15,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: path_hierarchy index."
+    )
+    hierarchical_weight_domain_models: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: domain_models index."
+    )
+    hierarchical_weight_resource_requirements: float = Field(
+        default=0.05,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: resource_requirements index."
+    )
+
     # === Indexing Strategy Configuration ===
     indexing_strategy: Literal["simple", "hierarchical", "override_static"] = Field(
         default="simple",
