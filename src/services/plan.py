@@ -698,13 +698,27 @@ class SimulationPlanFactory:
         cbr_conf = cbr_plan.get('confidence', 0.0)
 
         # Build reasoning
-        reasoning = cbr_plan.get('reasoning', '')
+        raw_reasoning = cbr_plan.get('reasoning', '')
+        if isinstance(raw_reasoning, list):
+            reasoning = " ".join(str(item).strip() for item in raw_reasoning if str(item).strip())
+        elif raw_reasoning is None:
+            reasoning = ""
+        else:
+            reasoning = str(raw_reasoning)
         similar_cases = cbr_plan.get('similar_cases', [])
         if not reasoning:
             case_name = baseline_case.get('case', 'baseline')
             reasoning = f"CBR plan based on {case_name}"
             if similar_cases:
                 reasoning += f" (patterns from: {', '.join(similar_cases[:3])})"
+
+        weights_used = baseline_result.get("weights_used")
+        if isinstance(weights_used, dict) and weights_used:
+            weights_text = ", ".join(
+                f"{key}={float(value):.3f}"
+                for key, value in sorted(weights_used.items())
+            )
+            reasoning = f"{reasoning} Baseline weights: {weights_text}."
 
         baseline_evidence_citations = build_baseline_evidence_citations(
             baseline_case=baseline_case,
