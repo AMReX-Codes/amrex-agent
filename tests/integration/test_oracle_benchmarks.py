@@ -446,6 +446,10 @@ _ORACLE_GATE_CASES_RAW: list[OracleRouteCase] = [
 ]
 
 ORACLE_GATE_CASES: list[OracleRouteCase] = _synchronize_oracle_cases_with_benchmark(_ORACLE_GATE_CASES_RAW)
+ORACLE_USE_CASE_ARTIFACT_MAP: dict[str, str] = {
+    case.id: f"tests/integration/test_oracle_benchmarks.py::test_oracle_gate_routing[{case.id}]"
+    for case in ORACLE_GATE_CASES
+}
 
 
 ORACLE_EXTENDED_XFAIL_CASES: list[OracleRouteCase] = [
@@ -579,6 +583,19 @@ def test_oracle_gate_benchmark_alignment_contract() -> None:
     benchmark_backed = _benchmark_backed_gate_cases(ORACLE_GATE_CASES)
     assert len(benchmark_backed) >= 13
     assert len({case.expected_solver for case in benchmark_backed}) >= 4
+
+
+@pytest.mark.integration
+def test_oracle_use_case_artifact_mapping_is_strict_one_to_one() -> None:
+    """Each in-scope oracle use case must map to one unique validation artifact."""
+    oracle_ids = {case.id for case in ORACLE_GATE_CASES}
+    mapped_ids = set(ORACLE_USE_CASE_ARTIFACT_MAP.keys())
+    artifact_refs = list(ORACLE_USE_CASE_ARTIFACT_MAP.values())
+
+    assert mapped_ids == oracle_ids
+    assert len(artifact_refs) == len(set(artifact_refs))
+    for case_id, artifact_ref in ORACLE_USE_CASE_ARTIFACT_MAP.items():
+        assert artifact_ref.endswith(f"[{case_id}]")
 
 
 @pytest.mark.integration

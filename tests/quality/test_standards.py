@@ -18,6 +18,7 @@ import pytest
 from pathlib import Path
 from typing import List, Tuple, Set
 
+import src.graph as graph_service
 from src.services import plan as plan_service
 
 
@@ -590,6 +591,23 @@ def test_docs_includes_resolve():
 
 
 @pytest.mark.quality
+def test_deployment_readiness_documents_use_case_artifact_contract():
+    """
+    Enforce UNNUMBERED-024 documentation for use-case artifact traceability.
+    """
+    readiness_doc = Path("docs/deployment_readiness.md")
+    assert readiness_doc.exists(), "docs/deployment_readiness.md must exist"
+
+    content = readiness_doc.read_text(encoding="utf-8")
+    assert "UNNUMBERED-024" in content
+    assert "Use-case Artifact Contract" in content
+    assert "use_case_artifacts" in content
+    assert "`use_case`" in content
+    assert "`artifacts`" in content
+    assert "tests/quality/test_standards.py" in content
+
+
+@pytest.mark.quality
 def test_normalize_use_case_artifact_mappings_canonicalizes_shapes():
     """
     Ensure use-case artifact mappings normalize to a stable schema.
@@ -626,6 +644,90 @@ def test_normalize_use_case_artifact_mappings_report_and_state_helpers_share_log
 
     assert report_entries == [{"use_case": "UC1", "artifacts": ["tests/unit/test_x.py"]}]
     assert state_entries == report_entries
+
+
+@pytest.mark.quality
+def test_normalize_criterion_benchmark_test_matrix_stabilizes_rows():
+    rows = [
+        {
+            "criterion": "Benchmark schema consistency",
+            "benchmark_output": "benchmark_results/squall_line/metrics.jsonl",
+            "tests": ["tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract"],
+        },
+        {
+            "id": "Docs include integrity",
+            "artifact": "docs/demos.md",
+            "test": "tests/quality/test_standards.py::test_docs_includes_resolve",
+        },
+        ("Benchmark schema consistency", "benchmark_results/squall_line/metrics.jsonl", "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract"),
+        {"criterion": "missing-test", "benchmark": "results/run.json"},
+    ]
+
+    assert graph_service.normalize_criterion_benchmark_test_matrix(rows) == [
+        {
+            "criterion": "Benchmark schema consistency",
+            "benchmark": "benchmark_results/squall_line/metrics.jsonl",
+            "test": "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract",
+        },
+        {
+            "criterion": "Docs include integrity",
+            "benchmark": "docs/demos.md",
+            "test": "tests/quality/test_standards.py::test_docs_includes_resolve",
+        },
+    ]
+
+
+@pytest.mark.quality
+def test_criterion_benchmark_test_linkage_valid_tracks_missing_criteria():
+    state = {
+        "criterion_benchmark_test_linkage_required": True,
+        "success_criteria": [
+            {"criterion": "Benchmark schema consistency"},
+            {"criterion": "Docs include integrity"},
+        ],
+        "criterion_benchmark_test_matrix": [
+            {
+                "criterion": "Benchmark schema consistency",
+                "benchmark": "benchmark_results/squall_line/metrics.jsonl",
+                "test": "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract",
+            }
+        ],
+    }
+
+    assert graph_service.criterion_benchmark_test_linkage_valid(state) is False
+    validation = state["criterion_benchmark_test_linkage_validation"]
+    assert validation["criterion"] == graph_service.CRITERION_BENCHMARK_TEST_LINKAGE_ID
+    assert validation["reason"] == "criteria_without_benchmark_or_test_mapping"
+    assert validation["missing_criteria"] == ["Docs include integrity"]
+    assert state["criterion_benchmark_test_linkage_complete"] is False
+
+
+@pytest.mark.quality
+def test_criterion_benchmark_test_linkage_valid_passes_with_complete_matrix():
+    state = {
+        "criterion_benchmark_test_linkage_required": True,
+        "success_criteria": ["Benchmark schema consistency", "Docs include integrity"],
+        "criterion_benchmark_test_matrix": [
+            {
+                "criterion": "Benchmark schema consistency",
+                "benchmark": "benchmark_results/squall_line/metrics.jsonl",
+                "test": "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract",
+            },
+            {
+                "criterion": "Docs include integrity",
+                "benchmark": "docs/demos.md",
+                "test": "tests/quality/test_standards.py::test_docs_includes_resolve",
+            },
+        ],
+    }
+
+    assert graph_service.criterion_benchmark_test_linkage_valid(state) is True
+    validation = state["criterion_benchmark_test_linkage_validation"]
+    assert validation["criterion"] == graph_service.CRITERION_BENCHMARK_TEST_LINKAGE_ID
+    assert validation["reason"] == "ok"
+    assert validation["missing_criteria"] == []
+    assert len(validation["rows"]) == 2
+    assert state["criterion_benchmark_test_linkage_complete"] is True
 
 
 @pytest.mark.quality

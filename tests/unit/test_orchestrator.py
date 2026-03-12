@@ -11,6 +11,7 @@ from src.models.sweep_schemas import (
     validate_transition,
 )
 from src.services.knowledge import normalize_unnumbered_152
+import src.services.sweep_orchestrator as sweep_orchestrator_module
 from src.services.sweep_orchestrator import (
     orchestrate_sweep,
     poll_child_status,
@@ -86,6 +87,24 @@ class TestFanOut:
 
 
 class TestExecutionSweep:
+    def test_resolution_sweep_skips_architect_and_uses_empty_plan(self):
+        spec = _spec([2, 4], sweep_type=SweepType.resolution)
+        architect_fn = Mock(return_value={"plan": "ignored"})
+        submit_fn = Mock(return_value={"status": "submitted"})
+
+        orchestrate_sweep(
+            spec,
+            state={},
+            config=_config(True),
+            architect_fn=architect_fn,
+            reviewer_fn=Mock(),
+            submit_fn=submit_fn,
+            poll_fn=Mock(return_value="completed"),
+        )
+
+        assert architect_fn.call_count == 0
+        assert all(call.args[1] == {} for call in submit_fn.call_args_list)
+
     def test_execution_sweep_architect_runs_once(self):
         spec = _spec([2, 4, 8], sweep_type=SweepType.execution)
         architect_fn = Mock(return_value={"plan": "shared"})
@@ -160,6 +179,70 @@ class TestPhysicsSweep:
 
 
 class TestPolling:
+    def test_terminal_child_does_not_poll_again(self):
+        child = ParentSweepState(
+            sweep_id="sweep-001",
+            sweep_spec=_spec([1, 2]),
+            total_count=1,
+            children=[
+                {
+                    "sweep_id": "sweep-001",
+                    "sweep_child_id": "child-1",
+                    "parameter_name": "amr.max_level",
+                    "parameter_value": 1,
+                    "status": ChildJobStatus.failed,
+                    "failure_reason": "already failed",
+                }
+            ],
+        ).children[0]
+        poll_fn = Mock(return_value={"status": "completed"})
+
+        polled = poll_child_status(child, poll_fn)
+
+        assert polled.status == ChildJobStatus.failed
+        assert poll_fn.call_count == 0
+
+    def test_poll_dict_status_uses_error_alias_as_failure_reason(self):
+        child = ParentSweepState(
+            sweep_id="sweep-001",
+            sweep_spec=_spec([1, 2]),
+            total_count=1,
+            children=[
+                {
+                    "sweep_id": "sweep-001",
+                    "sweep_child_id": "child-1",
+                    "parameter_name": "amr.max_level",
+                    "parameter_value": 1,
+                    "status": ChildJobStatus.running,
+                }
+            ],
+        ).children[0]
+
+        poll_child_status(child, Mock(return_value={"status": "failed", "error": "remote a2a error"}))
+
+        assert child.status == ChildJobStatus.failed
+        assert child.failure_reason == "remote a2a error"
+
+    def test_poll_invalid_status_payload_is_ignored(self):
+        child = ParentSweepState(
+            sweep_id="sweep-001",
+            sweep_spec=_spec([1, 2]),
+            total_count=1,
+            children=[
+                {
+                    "sweep_id": "sweep-001",
+                    "sweep_child_id": "child-1",
+                    "parameter_name": "amr.max_level",
+                    "parameter_value": 1,
+                    "status": ChildJobStatus.submitted,
+                }
+            ],
+        ).children[0]
+
+        poll_child_status(child, Mock(return_value={"status": "not-a-status"}))
+
+        assert child.status == ChildJobStatus.submitted
+
     def test_polling_unchanged_status_does_not_fail_early(self):
         spec = _spec([1, 2])
         state_by_child = {
@@ -279,6 +362,28 @@ class TestPolling:
         assert allowed is False
         assert parent.children[0].status == ChildJobStatus.completed
 
+    def test_update_parent_state_unknown_child_is_noop(self):
+        spec = _spec([1, 2])
+        parent = ParentSweepState(
+            sweep_id=spec.sweep_id,
+            sweep_spec=spec,
+            total_count=1,
+            children=[
+                {
+                    "sweep_id": spec.sweep_id,
+                    "sweep_child_id": "child-1",
+                    "parameter_name": spec.parameter_name,
+                    "parameter_value": 1,
+                    "status": ChildJobStatus.submitted,
+                }
+            ],
+        )
+
+        update_parent_state(parent, "missing-child", ChildJobStatus.failed, failure_reason="ignored")
+
+        assert parent.children[0].status == ChildJobStatus.submitted
+        assert parent.failed_count == 0
+
 
 class TestFeatureFlag:
     def test_submit_failed_status_is_applied_from_pending(self):
@@ -300,6 +405,11 @@ class TestFeatureFlag:
         assert parent.completed_count == 0
         assert all(child.status == ChildJobStatus.failed for child in parent.children)
         assert all(child.failure_reason == "submit error" for child in parent.children)
+        guidance = parent.sweep_spec.metadata["retry_guidance"]
+        assert guidance["retry_recommended"] is True
+        assert guidance["failure_count"] == 2
+        assert guidance["failed_children"][0]["failure_reason"] == "submit error"
+        assert parent.sweep_spec.metadata["a2a_error"]["type"] == "child_workflow_failure"
         assert poll_fn.call_count == 0
 
     def test_submit_running_status_is_applied_from_pending(self):
@@ -319,6 +429,53 @@ class TestFeatureFlag:
 
         assert parent.completed_count == 2
         assert parent.failed_count == 0
+
+    def test_poll_failures_propagate_into_retry_guidance_contract(self):
+        spec = _spec([1, 2])
+
+        def poll_fn(child):
+            if child.sweep_child_id.endswith("-0"):
+                return {"status": "failed", "failure_reason": "Input file parse error: unknown key"}
+            return {"status": "completed"}
+
+        parent = orchestrate_sweep(
+            spec,
+            state={},
+            config=_config(True),
+            architect_fn=Mock(return_value={"plan": "P"}),
+            reviewer_fn=Mock(),
+            submit_fn=Mock(return_value={"status": "submitted"}),
+            poll_fn=Mock(side_effect=poll_fn),
+        )
+
+        guidance = parent.sweep_spec.metadata["retry_guidance"]
+        assert parent.failed_count == 1
+        assert guidance["inputs_base_action"] == "switch"
+        assert guidance["inputs_reason"] == "sweep_child_input_error"
+        assert guidance["baseline_base_action"] == "keep"
+        assert guidance["failed_children"][0]["sweep_child_id"].endswith("-0")
+
+    def test_poll_timeout_generates_retry_guidance(self, monkeypatch):
+        spec = _spec([1, 2])
+        monotonic_values = iter([0.0, 0.0, 3700.0, 3700.0])
+        monkeypatch.setattr(sweep_orchestrator_module.time, "monotonic", lambda: next(monotonic_values))
+        monkeypatch.setattr(sweep_orchestrator_module.time, "sleep", lambda *_: None)
+
+        parent = orchestrate_sweep(
+            spec,
+            state={},
+            config=_config(True),
+            architect_fn=Mock(return_value={"plan": "P"}),
+            reviewer_fn=Mock(),
+            submit_fn=Mock(return_value={"status": "submitted"}),
+            poll_fn=Mock(return_value={"status": "running"}),
+        )
+
+        guidance = parent.sweep_spec.metadata["retry_guidance"]
+        assert parent.failed_count == 2
+        assert all(child.failure_reason == "poll timeout" for child in parent.children)
+        assert guidance["inputs_reason"] == "transient_child_failure_retry"
+        assert guidance["baseline_reason"] == "transient_child_failure_retry"
 
     def test_flag_false_single_run(self):
         spec = _spec([1, 2, 4])

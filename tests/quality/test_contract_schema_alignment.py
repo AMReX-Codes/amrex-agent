@@ -13,6 +13,10 @@ from typing import Any, Iterable, Set, get_type_hints
 
 from src.models import GraphState
 from src.services.plan import normalize_traceability_evidence_rows
+from src.graph import (
+    criterion_benchmark_test_linkage_valid,
+    normalize_unnumbered_284,
+)
 
 
 _SIMPLE_FIELD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -114,3 +118,26 @@ def test_normalize_traceability_evidence_rows_enforces_stable_rows() -> None:
             "test": "tests/unit/test_architect_node_history.py",
         },
     ]
+
+
+def test_criterion_linkage_requires_artifact_and_test_mapping() -> None:
+    state = {
+        "criterion_benchmark_test_linkage_required": True,
+        "success_criteria": ["Verification coverage", {"criterion": "Reproducibility"}],
+        "criterion_benchmark_test_matrix": [
+            {
+                "criterion": "Verification coverage",
+                "artifact": "tests/quality/test_contract_schema_alignment.py",
+                "test": "tests/quality/test_contract_schema_alignment.py",
+            }
+        ],
+    }
+
+    assert criterion_benchmark_test_linkage_valid(state) is False
+    assert state["criterion_benchmark_test_linkage_complete"] is False
+    assert state["criterion_benchmark_test_linkage_validation"]["missing_criteria"] == [
+        "Reproducibility"
+    ]
+    assert state["criterion_benchmark_test_linkage_validation"]["reason"] == (
+        "criteria_without_benchmark_or_test_mapping"
+    )
