@@ -1,0 +1,12 @@
+{
+  "build_script": "build_all_indices.py",
+  "dependencies_commit": "ef9fd9cebb82a992cf0af3769f0216dce76a42c3",
+  "embedding_dimension": null,
+  "embedding_model": "text-embedding-3-small",
+  "embedding_provider": "cborg",
+  "generated_at": "2026-03-11T23:37:12.633583+00:00",
+  "level": "2",
+  "repo_commit": "ef9fd9cebb82a992cf0af3769f0216dce76a42c3",
+  "solver": "remora",
+  "version": "1"
+}

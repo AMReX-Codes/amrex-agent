@@ -12,7 +12,7 @@
       "amrex": "bac24575699ecaa6ce153cf088077b1282dfbe87",
       "remora": "ef9fd9cebb82a992cf0af3769f0216dce76a42c3"
     },
-    "generated_at": "2026-03-10T10:43:20.053444+00:00"
+    "generated_at": "2026-03-12T11:12:08.557895+00:00"
   },
   "parameters": {
     "amr.regrid_on_restart": {

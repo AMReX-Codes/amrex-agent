@@ -168,7 +168,7 @@ def _oracle_catalog() -> dict[str, list[dict[str, object]]]:
         ],
         "ERF": [
             {"path": "Exec/RegTests/Bubble", "tags": ["thermal bubble", "dry convection", "stratified atmosphere"]},
-            {"path": "Exec/MoistRegTests/SquallLine_2D", "tags": ["squall line", "moist convection", "cold air outflow"]},
+            {"path": "Exec/CanonicalFlows/SquallLine_2D", "tags": ["squall line", "moist convection", "cold air outflow"]},
         ],
         "incflo": [
             {"path": "benchmark_Godunov", "tags": ["godunov", "incompressible benchmark"]},
@@ -351,7 +351,7 @@ _ORACLE_GATE_CASES_RAW: list[OracleRouteCase] = [
         difficulty="easy",
         prompt="Run a moist squall-line convection scenario with cold-air outflow dynamics.",
         expected_solver="ERF",
-        expected_case="Exec/MoistRegTests/SquallLine_2D",
+        expected_case="Exec/CanonicalFlows/SquallLine_2D",
     ),
     # Medium (8)
     OracleRouteCase(

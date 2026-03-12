@@ -2361,7 +2361,7 @@
     "solver": "REMORA",
     "schema_version": 1,
     "repo_commit": "ef9fd9c",
-    "generated_at": "2026-03-10T10:43:20.043573+00:00"
+    "generated_at": "2026-03-12T11:12:08.539808+00:00"
   },
   "parameters": {
     "amr.max_step": {

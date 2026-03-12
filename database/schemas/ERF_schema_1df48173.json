@@ -10,7 +10,7 @@
     "priority": "tier3",
     "description": null
   },
-  "erf.geometry": {
+  "eb2.geometry": {
     "type": "std::string",
     "required": false,
     "is_array": true,
@@ -21,7 +21,7 @@
     "priority": "tier3",
     "description": null
   },
-  "erf.box_lo": {
+  "eb2.box_lo": {
     "type": "int",
     "required": false,
     "is_array": false,
@@ -32,7 +32,7 @@
     "priority": "tier3",
     "description": null
   },
-  "erf.box_hi": {
+  "eb2.box_hi": {
     "type": null,
     "required": false,
     "is_array": false,
@@ -6989,44 +6989,11 @@
     "priority": "tier3",
     "description": null
   },
-  "erf.rho_0": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": 1.0,
-    "source_file": "Exec/RegTests/ERF_Prob.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "erf.p_inf": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": null,
-    "source_file": "Exec/RegTests/ERF_Prob.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
-  "erf.T_0": {
-    "type": "Real",
-    "required": false,
-    "is_array": false,
-    "build_flags": [],
-    "default": 300.0,
-    "source_file": "Exec/RegTests/ERF_Prob.cpp",
-    "source_type": "manual",
-    "priority": "tier3",
-    "description": null
-  },
   "metadata": {
     "solver": "ERF",
     "schema_version": 1,
-    "repo_commit": "6cc91d3b",
-    "generated_at": "2026-03-10T10:57:05.764919+00:00"
+    "repo_commit": "1df48173",
+    "generated_at": "2026-03-12T11:12:11.596135+00:00"
   },
   "parameters": {
     "erf.fix_random_seed": {
@@ -7040,7 +7007,7 @@
       "priority": "tier3",
       "description": null
     },
-    "erf.geometry": {
+    "eb2.geometry": {
       "type": "std::string",
       "required": false,
       "is_array": true,
@@ -7051,7 +7018,7 @@
       "priority": "tier3",
       "description": null
     },
-    "erf.box_lo": {
+    "eb2.box_lo": {
       "type": "int",
       "required": false,
       "is_array": false,
@@ -7062,7 +7029,7 @@
       "priority": "tier3",
       "description": null
     },
-    "erf.box_hi": {
+    "eb2.box_hi": {
       "type": null,
       "required": false,
       "is_array": false,
@@ -14016,39 +13983,6 @@
       "default": "false",
       "source_file": "Source/Particles/ERF_ParticleData.H",
       "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.rho_0": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 1.0,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.p_inf": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": null,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.T_0": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 300.0,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
       "priority": "tier3",
       "description": null
     }

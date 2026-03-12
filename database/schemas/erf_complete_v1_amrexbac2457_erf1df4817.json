@@ -7,12 +7,12 @@
       "ERF"
     ],
     "composition_method": "auto-compose (gitmodules)",
-    "total_parameters": 860,
+    "total_parameters": 855,
     "repo_commits": {
       "amrex": "bac24575699ecaa6ce153cf088077b1282dfbe87",
-      "erf": "6cc91d3b7601597778ab0b78f02891cf99f6e605"
+      "erf": "1df48173da427f57a8201e157518afa7fd2e73ee"
     },
-    "generated_at": "2026-03-10T10:57:05.796527+00:00"
+    "generated_at": "2026-03-12T11:12:11.621840+00:00"
   },
   "parameters": {
     "amr.regrid_on_restart": {
@@ -659,22 +659,22 @@
     },
     "eb2.box_lo": {
       "type": "int",
-      "required": true,
+      "required": false,
       "is_array": false,
       "build_flags": [],
       "default": null,
-      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_file": "Source/ERF.cpp",
       "source_type": "manual",
       "priority": "tier3",
       "description": null
     },
     "eb2.box_hi": {
-      "type": "int",
-      "required": true,
+      "type": null,
+      "required": false,
       "is_array": false,
       "build_flags": [],
       "default": null,
-      "source_file": "Src/EB/AMReX_EB2.cpp",
+      "source_file": "Source/ERF.cpp",
       "source_type": "manual",
       "priority": "tier3",
       "description": null
@@ -3220,34 +3220,12 @@
       "priority": "tier3",
       "description": null
     },
-    "erf.geometry": {
+    "eb2.geometry": {
       "type": "std::string",
       "required": false,
       "is_array": true,
       "build_flags": [],
       "default": "\"terrain\"",
-      "source_file": "Source/ERF.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.box_lo": {
-      "type": "int",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": null,
-      "source_file": "Source/ERF.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.box_hi": {
-      "type": null,
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": null,
       "source_file": "Source/ERF.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -10075,39 +10053,6 @@
       "default": "false",
       "source_file": "Source/Particles/ERF_ParticleData.H",
       "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.rho_0": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 1.0,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.p_inf": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": null,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.T_0": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 300.0,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
       "priority": "tier3",
       "description": null
     }
