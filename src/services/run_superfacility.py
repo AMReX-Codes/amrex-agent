@@ -91,6 +91,17 @@ class SuperfacilityRunner:
             if exe:
                 logger.debug(f"[ OK ] Found existing executable: {exe.name}")
                 return str(exe)
+            if self._is_erf_solver():
+                exe, checked_paths = self._resolve_erf_executable_fallbacks(
+                    case_dir=case_dir,
+                    require_mpi=require_mpi,
+                    require_cuda=require_cuda,
+                )
+                if exe:
+                    logger.debug(f"[ OK ] Found ERF fallback executable: {exe.name}")
+                    return str(exe)
+                checked = ", ".join(str(path) for path in checked_paths)
+                raise RuntimeError(f"No ERF executable found. Checked paths: {checked}")
 
         # No executable found - compile it
         logger.info("No suitable executable found, compiling...")
@@ -140,6 +151,69 @@ class SuperfacilityRunner:
             return exe
 
         return executables[0]
+
+    def _is_erf_solver(self) -> bool:
+        """Return True when the configured default solver is ERF."""
+        return str(getattr(self.config, "default_solver", "")).strip().upper() == "ERF"
+
+    def _derive_erf_central_build_dir(self, case_dir: Path) -> Path | None:
+        """Derive ERF central build directory (Exec/<group>) from a case path."""
+        case_path = Path(case_dir).resolve()
+
+        repo_root = getattr(self.config, "erf_repo_path", None)
+        repo_path = Path(repo_root).resolve() if repo_root else None
+        relative_case = None
+
+        if repo_path:
+            try:
+                relative_case = case_path.relative_to(repo_path)
+            except ValueError:
+                relative_case = None
+
+        if relative_case is None:
+            parts = case_path.parts
+            if "ERF" not in parts:
+                return None
+            erf_index = parts.index("ERF")
+            repo_path = Path(*parts[:erf_index + 1])
+            relative_case = case_path.relative_to(repo_path)
+
+        if not relative_case.parts or relative_case.parts[0] != "Exec":
+            return None
+        if len(relative_case.parts) < 2:
+            return None
+        return repo_path / "Exec" / relative_case.parts[1]
+
+    def _resolve_erf_executable_fallbacks(
+        self,
+        case_dir: Path,
+        require_mpi: bool = True,
+        require_cuda: bool = True,
+    ) -> tuple[Path | None, list[Path]]:
+        """
+        Resolve ERF executable fallback chain after case-dir search fails.
+
+        Order:
+        1. config.erf_executable_path
+        2. derived central build directory (Exec/<group>)
+        """
+        checked_paths: list[Path] = [Path(case_dir)]
+
+        configured = getattr(self.config, "erf_executable_path", None)
+        if configured:
+            configured_path = Path(os.path.expandvars(str(configured))).expanduser()
+            checked_paths.append(configured_path)
+            if configured_path.is_file():
+                return configured_path, checked_paths
+
+        central_build_dir = self._derive_erf_central_build_dir(Path(case_dir))
+        if central_build_dir and central_build_dir not in checked_paths:
+            checked_paths.append(central_build_dir)
+            exe = self._find_exe_in_dir(central_build_dir, require_mpi, require_cuda)
+            if exe:
+                return exe, checked_paths
+
+        return None, checked_paths
 
     def _resolve_remote_executable(
         self,
