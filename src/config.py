@@ -317,6 +317,14 @@ class AMReXAgentConfig(BaseModel):
         default_factory=lambda: _repo_path_from_env("ERF_REPO_PATH", "ERF"),
         description="Path to ERF repository (Energy Research and Forecasting)"
     )
+    erf_executable_path: Optional[Path] = Field(
+        default=None,
+        description=(
+            "Optional explicit ERF executable path. "
+            "When unset, runners fall back to case-local search first, then "
+            "derive a central ERF build directory (Exec/<group>)."
+        ),
+    )
 
     # Plasma/Accelerator (very well documented)
     warpx_repo_path: Optional[Path] = Field(
