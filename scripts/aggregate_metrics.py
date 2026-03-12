@@ -92,6 +92,57 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
     }
 
 
+def _record_from_benchmark_row(row: dict[str, Any], source: Path) -> dict[str, Any]:
+    strategy = (
+        row.get("retrieval_strategy")
+        or row.get("strategy")
+        or row.get("indexing_strategy")
+    )
+    reason_codes = _collect_error_reason_codes(row)
+    unknown_reason_codes = [code for code in reason_codes if code not in STABLE_ERROR_REASON_CODES]
+    taxonomy_version = row.get("error_taxonomy_version")
+    if not isinstance(taxonomy_version, str) or not taxonomy_version:
+        taxonomy_version = STABLE_ERROR_TAXONOMY_VERSION
+
+    return {
+        "model_id": row.get("model_id", "unknown"),
+        "provider": row.get("provider"),
+        "prompt_id": row.get("prompt_id"),
+        "prompt_excerpt": row.get("prompt_excerpt"),
+        "case_id": row.get("case_id"),
+        "solver": row.get("solver"),
+        "difficulty_tier": row.get("difficulty_tier"),
+        "novelty_tier": row.get("novelty_tier"),
+        "retrieval_strategy": strategy,
+        "job_status": row.get("job_status"),
+        "iteration": row.get("iteration"),
+        "run_directory": row.get("run_directory"),
+        "selected_case": row.get("selected_case"),
+        "tokens_total_input": row.get("tokens_total_input"),
+        "tokens_total_output": row.get("tokens_total_output"),
+        "tokens_total": row.get("tokens_total"),
+        "tokens_by_stage": row.get("tokens_by_stage"),
+        "stages": row.get("stages"),
+        "error_taxonomy_version": taxonomy_version,
+        "error_reason_codes": reason_codes,
+        "error_reason_code_count": len(reason_codes),
+        "error_reason_codes_unknown": unknown_reason_codes,
+        "error_taxonomy_stable": (
+            taxonomy_version == STABLE_ERROR_TAXONOMY_VERSION and not unknown_reason_codes
+        ),
+        "source": str(source),
+    }
+
+
+def _is_benchmark_row(record: dict[str, Any]) -> bool:
+    if record.get("type") == "workflow_summary":
+        return False
+    return any(
+        key in record
+        for key in ("model_id", "prompt_id", "job_status", "analysis_status", "duration_seconds")
+    )
+
+
 def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
     if not records:
         return
@@ -414,9 +465,11 @@ def main() -> None:
     records: list[dict[str, Any]] = []
     for path in _iter_metric_files(input_path):
         for event in _load_events(path):
-            if event.get("type") != "workflow_summary":
+            if event.get("type") == "workflow_summary":
+                records.append(_record_from_event(event, path))
                 continue
-            records.append(_record_from_event(event, path))
+            if _is_benchmark_row(event):
+                records.append(_record_from_benchmark_row(event, path))
 
     _write_jsonl(output_path, records)
     output_dir = output_path.parent

@@ -734,6 +734,97 @@ def _load_benchmark_context(path: str | None) -> dict[str, Any] | None:
     return data
 
 
+def _resolve_metrics_workflow_id(
+    result: dict[str, Any],
+    benchmark_context: dict[str, Any] | None,
+) -> str:
+    """Resolve a stable workflow identifier for persisted metrics records."""
+    candidates = [
+        result.get("workflow_id"),
+        result.get("run_id"),
+    ]
+    if isinstance(benchmark_context, dict):
+        candidates.extend(
+            [
+                benchmark_context.get("workflow_id"),
+                benchmark_context.get("run_id"),
+            ]
+        )
+
+    run_directory = result.get("run_directory")
+    if run_directory:
+        run_name = Path(str(run_directory)).name.strip()
+        if run_name:
+            candidates.append(run_name)
+
+    for candidate in candidates:
+        if isinstance(candidate, str):
+            cleaned = candidate.strip()
+            if cleaned:
+                return cleaned
+    return "unknown"
+
+
+def _resolve_metrics_path(
+    result: dict[str, Any],
+    parsed_args: argparse.Namespace,
+    config: AMReXAgentConfig,
+) -> Path:
+    """Resolve metrics JSONL output path using append-friendly naming."""
+    filename = getattr(config, "metrics_filename", "metrics.jsonl") or "metrics.jsonl"
+    if result.get("run_directory"):
+        return Path(result["run_directory"]) / filename
+
+    base_dir = (
+        Path(parsed_args.output_dir)
+        if parsed_args.output_dir
+        else (config.metrics_output_dir or config.output_dir)
+    )
+    base_dir.mkdir(parents=True, exist_ok=True)
+    return Path(base_dir) / filename
+
+
+def _persist_metrics_jsonl(
+    result: dict[str, Any],
+    parsed_args: argparse.Namespace,
+    config: AMReXAgentConfig,
+    benchmark_context: dict[str, Any] | None,
+) -> Path | None:
+    """Persist collector events to JSONL with workflow-id contract enforcement."""
+    from src.utils.metrics import metrics_collector, metrics_extra
+
+    if not getattr(config, "metrics_enabled", True) or not metrics_collector.events():
+        return None
+
+    workflow_id = _resolve_metrics_workflow_id(result, benchmark_context)
+    summary = metrics_collector.build_workflow_summary()
+    summary.update(
+        {
+            "job_status": result.get("job_status", "unknown"),
+            "iteration": result.get("iteration", 0),
+            "run_directory": result.get("run_directory"),
+        }
+    )
+    with metrics_extra(benchmark_context):
+        metrics_collector.record_event(
+            "workflow_summary",
+            summary,
+            stage="workflow",
+            node="main",
+            iteration=result.get("iteration", 0),
+        )
+
+    raw_events = getattr(metrics_collector, "_events", None)
+    if isinstance(raw_events, list):
+        for event in raw_events:
+            if isinstance(event, dict) and not str(event.get("workflow_id", "")).strip():
+                event["workflow_id"] = workflow_id
+
+    metrics_path = _resolve_metrics_path(result, parsed_args, config)
+    metrics_collector.write_jsonl(str(metrics_path), config=config)
+    return metrics_path
+
+
 def main(args: list[str] | None = None) -> None:
     """
     Run the AMReXAgent CLI workflow.
@@ -839,37 +930,8 @@ def main(args: list[str] | None = None) -> None:
 
         # Save metrics JSONL (if enabled)
         try:
-            from src.utils.metrics import metrics_collector, metrics_extra
-
-            if getattr(config, "metrics_enabled", True) and metrics_collector.events():
-                summary = metrics_collector.build_workflow_summary()
-                summary.update({
-                    "job_status": result.get("job_status", "unknown"),
-                    "iteration": result.get("iteration", 0),
-                    "run_directory": result.get("run_directory"),
-                })
-                with metrics_extra(benchmark_context):
-                    metrics_collector.record_event(
-                        "workflow_summary",
-                        summary,
-                        stage="workflow",
-                        node="main",
-                        iteration=result.get("iteration", 0),
-                    )
-                if 'run_directory' in result:
-                    run_dir = Path(result['run_directory'])
-                    metrics_path = run_dir / getattr(config, "metrics_filename", "metrics.jsonl")
-                else:
-                    base_dir = (
-                        Path(parsed_args.output_dir)
-                        if parsed_args.output_dir
-                        else (config.metrics_output_dir or config.output_dir)
-                    )
-                    base_dir.mkdir(parents=True, exist_ok=True)
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"metrics_{timestamp}.jsonl"
-                    metrics_path = base_dir / filename
-                metrics_collector.write_jsonl(str(metrics_path), config=config)
+            metrics_path = _persist_metrics_jsonl(result, parsed_args, config, benchmark_context)
+            if metrics_path is not None:
                 logger.info(f"Metrics saved to {metrics_path}")
         except Exception as e:
             logger.warning(f"Failed to save metrics JSONL: {e}")
