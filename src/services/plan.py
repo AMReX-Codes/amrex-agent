@@ -280,6 +280,7 @@ def normalize_traceability_evidence_rows(rows: Any) -> list[dict[str, str]]:
 def normalize_unnumbered_284(rows: Any) -> list[dict[str, str]]:
     """Backward-compatible alias for normalize_traceability_evidence_rows."""
     return normalize_traceability_evidence_rows(rows)
+
 def _normalize_case_reference(case_entry: Any) -> str | None:
     """Extract a stable case reference string from mixed evidence values."""
     if isinstance(case_entry, str):
