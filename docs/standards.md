@@ -14,14 +14,15 @@ Coverage notes:
 - API key setup + OpenAI usage: `docs/api_keys.md`
 - Superfacility API usage: `docs/sfapi.md`
 - MCP tool surface + testing guidance: `docs/mcp.md`
-- Indexing + embedding guidance: `docs/BUILD_FAISS_INDICES.md`
+- Indexing + embedding guidance: `docs/build_faiss_indices.md`
 - Integration workflow: `docs/integration.md`
+- See also: dependencies_update_policy.md
 
 Evidence (paths):
 - `docs/api_keys.md`
 - `docs/sfapi.md`
 - `docs/mcp.md`
-- `docs/BUILD_FAISS_INDICES.md`
+- `docs/build_faiss_indices.md`
 - `docs/integration.md`
 
 The tables below map each standard to concrete evidence and tests, and then
@@ -32,7 +33,7 @@ capability ladder.
 
 | Standard | Evidence | Tests | Notes |
 | --- | --- | --- | --- |
-| Reproducibility | `docs/BUILD_FAISS_INDICES.md` | `tests/unit/test_faiss_artifacts.py` | Deterministic index builds and pinned embedding flows |
+| Reproducibility | `docs/build_faiss_indices.md` | `tests/unit/test_faiss_artifacts.py` | Deterministic index builds and pinned embedding flows |
 | Traceability | `docs/coverage_map.md` | `tests/unit/test_architect_node_history.py` | Maps tests, contracts, and graph state fields |
 | Safety and control | `docs/mcp.md` | `tests/unit/test_architect_node_safety.py` | Tool schemas + explicit interfaces for external calls |
 | External orchestration surface | `docs/mcp.md` | `tests/unit/test_mcp_tools.py`, `tests/integration/l1_mcp/test_mcp_stdio.py` | MCP tool surface for external orchestration |
@@ -44,7 +45,7 @@ capability ladder.
 
 | Gap | Impact | Status | Next step | Evidence | Tests |
 | --- | --- | --- | --- | --- | --- |
-| Reproducibility coverage | Deterministic runs for indices and embeddings | Documented | Tie to benchmark and validation tests | `docs/BUILD_FAISS_INDICES.md` | `tests/unit/test_faiss_artifacts.py` |
+| Reproducibility coverage | Deterministic runs for indices and embeddings | Documented | Tie to benchmark and validation tests | `docs/build_faiss_indices.md` | `tests/unit/test_faiss_artifacts.py` |
 | Traceability coverage | Decision trail for outputs | Documented | Map to workflow history fields | `docs/coverage_map.md` | `tests/unit/test_architect_node_history.py` |
 | Safety and control coverage | Guardrails for costly actions | Documented | Tie to gating tests and policies | `docs/mcp.md` | `tests/unit/test_architect_node_safety.py` |
 | Verification coverage | Schema and contract alignment | Documented | Map to quality tests | `tests/quality/test_contract_schema_alignment.py` | `tests/quality/test_contract_schema_alignment.py` |
@@ -56,7 +57,7 @@ capability ladder.
 | Capability | Coverage status | References |
 | --- | --- | --- |
 | Planning | implemented | `src/services/architect.py`, `docs/workflow_visualization.md` |
-| Retrieval | implemented | `docs/BUILD_FAISS_INDICES.md`, `docs/api_keys.md` |
+| Retrieval | implemented | `docs/build_faiss_indices.md`, `docs/api_keys.md` |
 | Validation | implemented | `docs/coverage_map.md`, `tests/contracts/` |
 | Execution | implemented | `docs/sfapi.md`, `demo/superfacility/README.md` |
 | Analysis | implemented | `docs/workflow_visualization.md` |
