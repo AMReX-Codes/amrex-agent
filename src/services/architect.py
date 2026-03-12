@@ -894,12 +894,21 @@ class ArchitectService:
         )
 
         weights_used, weight_source = self._hierarchical_weights_from_config()
+        logger.info(
+            "Hierarchical Level2 weights (%s): %s",
+            weight_source,
+            ", ".join(f"{k}={v:.3f}" for k, v in sorted(weights_used.items())),
+        )
+
+        # Execute weighted search with a larger candidate pool to support
+        # post-search disambiguation (priority/path heuristics).
+        candidate_pool_size = max(5, self._config_int("hierarchical_candidate_pool_size", 100))
 
         # Execute weighted search
         # Weights from Indexing Engine: Physics-Agnostic Keywords & Scoring:
         #   Physics(30%), Grid(20%), Path(15%), Dev(10%),
         #   Complex(10%), Domain(10%), Resource(5%)
-        candidates = searcher.search_all_cases(query, top_k=5, weights=weights_used)
+        candidates = searcher.search_all_cases(query, top_k=candidate_pool_size, weights=weights_used)
         candidates = sorted(
             candidates,
             key=lambda c: c.get("score", 0.0),
@@ -926,6 +935,41 @@ class ArchitectService:
 
         # Apply a small boost for solver-config priority cases.
         candidates = self._apply_priority_case_boost(candidates, solver_config)
+        if self._config_bool("hierarchical_apply_path_adjustment", False):
+            candidates = self._apply_path_quality_adjustment(candidates, solver_config)
+
+        # Emit transparent candidate list for weight tuning/debug.
+        log_top_n = min(len(candidates), max(5, self._config_int("hierarchical_candidate_log_top_n", 30)))
+        logger.info("Hierarchical baseline candidates (top %d of %d):", log_top_n, len(candidates))
+        for rank, candidate in enumerate(candidates[:log_top_n], start=1):
+            case_name = (
+                candidate.get("metadata", {}).get("repo_path")
+                or candidate.get("case")
+                or "unknown"
+            )
+            score = float(candidate.get("score", 0.0))
+            bonus = float(candidate.get("score_bonus", 0.0))
+            path_bonus = float(candidate.get("path_bonus", 0.0))
+            path_quality = float(candidate.get("path_quality", 0.5))
+            breakdown = candidate.get("breakdown", {}) if isinstance(candidate.get("breakdown"), dict) else {}
+            weighted_parts: list[str] = []
+            weighted_total = 0.0
+            for key, weight in sorted(weights_used.items()):
+                value = float(breakdown.get(key, 0.0) or 0.0)
+                contribution = weight * value
+                weighted_total += contribution
+                weighted_parts.append(f"{key}:{value:.3f}*{weight:.3f}={contribution:.3f}")
+            logger.info(
+                "  %d. %s score=%.4f weighted=%.4f priority_bonus=%.4f path_quality=%.3f path_bonus=%.4f",
+                rank,
+                case_name,
+                score,
+                weighted_total,
+                bonus,
+                path_quality,
+                path_bonus,
+            )
+            logger.info("     contributions: %s", ", ".join(weighted_parts))
 
         selected = candidates[0]  # Top ranked
 
@@ -1063,6 +1107,41 @@ class ArchitectService:
                 boosted.append(candidate)
 
         return sorted(boosted, key=lambda c: c.get("score", 0.0), reverse=True)
+
+    def _apply_path_quality_adjustment(self, candidates: list[dict], solver_config) -> list[dict]:
+        """
+        Apply a path-quality adjustment using solver config path scoring.
+
+        This provides deterministic disambiguation for close-scoring candidates:
+        canonical/regtests/production should outrank dev-only examples when
+        semantic scores are nearly tied.
+        """
+        if not candidates or not solver_config or not hasattr(solver_config, "score_path"):
+            return candidates
+
+        adjusted: list[dict[str, Any]] = []
+        for candidate in candidates:
+            case_path = (
+                candidate.get("metadata", {}).get("repo_path")
+                or candidate.get("case")
+                or ""
+            )
+            try:
+                path_quality = float(solver_config.score_path(str(case_path)))
+            except Exception:
+                path_quality = 0.5
+
+            base_score = float(candidate.get("score", 0.0))
+            # Center around neutral quality=0.5; keep influence modest.
+            path_bonus = (path_quality - 0.5) * 0.20
+            updated = dict(candidate)
+            updated["score_before_path"] = base_score
+            updated["path_quality"] = path_quality
+            updated["path_bonus"] = path_bonus
+            updated["score"] = base_score + path_bonus
+            adjusted.append(updated)
+
+        return sorted(adjusted, key=lambda c: c.get("score", 0.0), reverse=True)
 
     def plan_modifications(self, query: str, baseline: dict, solver_code: str = None, parameter_resolution_feedback: dict[str, Any] = None) -> dict:
         """
@@ -1818,7 +1897,6 @@ class ArchitectService:
         requirements = self._extract_requirements(user_prompt)
         requirements['solver'] = code_name
         requirements['solver_source'] = 'baseline_override'
-        solver_config = self.code_configs.get(code_name)
 
         # Gather knowledge
         knowledge = self._gather_knowledge(user_prompt, requirements)
@@ -3739,14 +3817,17 @@ Answer with the solver name and brief justification."""
         # === PART 1: Setup Weights ===
 
         if weights is None:
-            # Default weights for 5-bucket scoring system
-            # FAISS semantic search added as 5th bucket for A/B comparison
+            # Config-driven defaults for 5-bucket scoring system.
+            # These are the primary tuning knobs for simple strategy runs.
             weights = {
-                'kb_relevance': 0.40,
-                'metrics': 0.25,
-                'path_heuristics': 0.10,
-                'domain_specific': 0.25,
-                'faiss_semantic': self.config.faiss_semantic_weight  # 5th bucket (default 0.20)
+                'kb_relevance': self._config_float("simple_weight_kb_relevance", 0.40),
+                'metrics': self._config_float("simple_weight_metrics", 0.25),
+                'path_heuristics': self._config_float("simple_weight_path_heuristics", 0.10),
+                'domain_specific': self._config_float("simple_weight_domain_specific", 0.25),
+                'faiss_semantic': self._config_float(
+                    "simple_weight_faiss_semantic",
+                    self.config.faiss_semantic_weight,
+                ),
             }
 
         # Normalize to sum to 1.0
@@ -3767,15 +3848,18 @@ Answer with the solver name and brief justification."""
 
         # === Get code and cases (keep existing logic) ===
 
-        # Stage 1: LLM picks CODE
+        # Stage 1: LLM picks CODE (and optionally a case hint)
+        llm_case_hint: str | None = None
         if self.llm_client:
             try:
-                code_name, _ = self.cases.find_best_match(
+                code_name, llm_case_hint = self.cases.find_best_match(
                     user_prompt,
                     self.llm_client,
                     prefer_quality=prefer_quality
                 )
                 logger.debug(f" LLM selected code: {code_name}")
+                if llm_case_hint:
+                    logger.debug(f" LLM selected case hint: {llm_case_hint}")
             except Exception as e:
                 logger.warning(f"[WARN] LLM failed: {e}")
                 code_name = requirements.get('solver')
@@ -3801,6 +3885,7 @@ Answer with the solver name and brief justification."""
         # === Get code definition and repo path ONCE ===
         code_def = self.cases.get_code_info(code_name)
         repo_path = code_def.local_path if code_def else None
+        solver_config = self.code_configs.get(code_name)
 
         # === KB Batch Scoring (ONE query for all cases) ===
 
@@ -3890,6 +3975,30 @@ Answer with the solver name and brief justification."""
         # === Rank and return ===
 
         scoring_matrix.sort(key=lambda x: x['total'], reverse=True)
+
+        # Optional thresholded promotion for the LLM-selected case hint.
+        # This preserves the case-selection contract without forcing a hard override.
+        if llm_case_hint and scoring_matrix:
+            hint_entry = next((e for e in scoring_matrix if e.get("case") == llm_case_hint), None)
+            if hint_entry:
+                winner_total = float(scoring_matrix[0].get("total", 0.0))
+                hint_total = float(hint_entry.get("total", 0.0))
+                min_total = self._config_float("simple_case_hint_min_total", 0.30)
+                max_gap = self._config_float("simple_case_hint_max_gap", 0.06)
+                gap = winner_total - hint_total
+
+                if hint_total >= min_total and gap <= max_gap and scoring_matrix[0] is not hint_entry:
+                    logger.info(
+                        "Promoting LLM case hint '%s' (score=%.3f, winner=%.3f, gap=%.3f, min_total=%.3f, max_gap=%.3f)",
+                        llm_case_hint,
+                        hint_total,
+                        winner_total,
+                        gap,
+                        min_total,
+                        max_gap,
+                    )
+                    scoring_matrix.remove(hint_entry)
+                    scoring_matrix.insert(0, hint_entry)
 
         if scoring_matrix:
             winner = scoring_matrix[0]

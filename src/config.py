@@ -615,6 +615,22 @@ class AMReXAgentConfig(BaseModel):
         ge=0.0,
         description="Simple strategy baseline weight: FAISS semantic bucket."
     )
+    simple_case_hint_min_total: float = Field(
+        default=0.30,
+        ge=0.0,
+        description=(
+            "Simple strategy threshold gate for LLM-selected case promotion: "
+            "minimum total score required for the hinted case."
+        ),
+    )
+    simple_case_hint_max_gap: float = Field(
+        default=0.06,
+        ge=0.0,
+        description=(
+            "Simple strategy threshold gate for LLM-selected case promotion: "
+            "maximum allowed score gap between top candidate and hinted case."
+        ),
+    )
 
     hierarchical_weight_physics_parameters: float = Field(
         default=0.30,

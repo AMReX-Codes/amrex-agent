@@ -7,6 +7,8 @@ database/configs discovery.
 
 import importlib.util
 import logging
+import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -372,6 +374,7 @@ class AMReXCasesService:
         all_cases = self.list_all_cases(quality_filter=prefer_quality)
         if not all_cases:
             all_cases = self.list_all_cases()  # Fallback to all
+        all_cases = self._merge_prompt_hinted_codes(user_prompt, all_cases)
 
         prompt_template = self._resolve_case_selection_prompt()
 
@@ -379,14 +382,20 @@ class AMReXCasesService:
         options = []
         for code_name, cases in all_cases.items():
             code = next(c for c in self.codes if c.name == code_name)
+            display_cases = self._select_cases_for_prompt_display(
+                user_prompt=user_prompt,
+                cases=cases,
+                priority_cases=code.common_cases,
+                limit=20,
+            )
 
             options.append(f"\n{code_name} - {code.description}")
             options.append(f"  Docs quality: {code.inputs_quality}")
             options.append("  Cases:")
-            for case in cases[:8]:  # Show up to 8
+            for case in display_cases:
                 options.append(f"    - {case}")
-            if len(cases) > 8:
-                options.append(f"    ... and {len(cases)-8} more")
+            if len(cases) > len(display_cases):
+                options.append(f"    ... and {len(cases)-len(display_cases)} more")
 
         guidance_lines = get_solver_guidance_lines()
         guidance_block = "\n".join(f"- {line}" for line in guidance_lines)
@@ -423,7 +432,12 @@ class AMReXCasesService:
                 if hasattr(result, "code") and hasattr(result, "case"):
                     code_match = result.code.strip()
                     case_match = result.case.strip()
+                elif isinstance(result, dict):
+                    code_match = str(result.get("code", "")).strip() or None
+                    case_match = str(result.get("case", "")).strip() or None
                 else:
+                    use_plain = True
+                if not code_match or not case_match:
                     use_plain = True
             except Exception as exc:
                 logger.warning("LLM structured selection failed: %s", exc)
@@ -444,21 +458,14 @@ class AMReXCasesService:
                 response = call_llm(llm_client, spec, config=self.config)
 
                 content = response.choices[0].message.content.strip()
-
-                # Parse
-                for line in content.split('\n'):
-                    if line.startswith("CODE:"):
-                        code_match = line.split("CODE:")[1].strip()
-                    elif line.startswith("CASE:"):
-                        case_match = line.split("CASE:")[1].strip()
+                code_match, case_match = self._parse_case_selection_content(content)
 
             # Validate
             if code_match in all_cases:
-                # Fuzzy match case
-                for case in all_cases[code_match]:
-                    if case_match and (case_match in case or case in case_match):
-                        logger.debug(f" LLM selected: {code_match}/{case}")
-                        return (code_match, case)
+                resolved_case = self._resolve_case_match(case_match, all_cases[code_match])
+                if resolved_case:
+                    logger.debug(f" LLM selected: {code_match}/{resolved_case}")
+                    return (code_match, resolved_case)
 
                 # Try to recover from prompt (no default fallback)
                 prompt_case = self._match_case_from_prompt(user_prompt, all_cases[code_match])
@@ -477,6 +484,158 @@ class AMReXCasesService:
         except Exception as e:
             logger.error(f"[ERROR] LLM failed: {e}")
             return self._keyword_match(user_prompt, all_cases)
+
+    def _merge_prompt_hinted_codes(self, user_prompt: str, all_cases: dict[str, list[str]]) -> dict[str, list[str]]:
+        full_cases = self.list_all_cases()
+        keywords = filter_keyword_map_for_codes(full_cases.keys())
+        prompt_lower = user_prompt.lower()
+        hinted_codes = {code for keyword, code in keywords.items() if keyword in prompt_lower}
+        if not hinted_codes:
+            return all_cases
+        merged = dict(all_cases)
+        for code in hinted_codes:
+            if code not in merged and code in full_cases:
+                merged[code] = full_cases[code]
+        return merged
+
+    @staticmethod
+    def _clean_selection_token(value: str | None) -> str | None:
+        if not value:
+            return None
+        token = value.strip().strip("`").strip().strip("\"'")
+        return token or None
+
+    @staticmethod
+    def _normalize_case_token(value: str | None) -> str:
+        text = str(value or "").strip().lower()
+        return re.sub(r"[^a-z0-9]+", "", text)
+
+    def _select_cases_for_prompt_display(
+        self,
+        user_prompt: str,
+        cases: list[str],
+        priority_cases: list[str] | None = None,
+        limit: int = 20,
+    ) -> list[str]:
+        """
+        Select prompt-relevant cases for LLM display to avoid hiding likely matches
+        behind static truncation.
+        """
+        if not cases:
+            return []
+
+        priority_norm = {
+            self._normalize_case_token(p) for p in (priority_cases or []) if str(p).strip()
+        }
+        prompt_tokens = {
+            tok for tok in re.findall(r"[a-z0-9_]+", (user_prompt or "").lower())
+            if len(tok) >= 3
+        }
+
+        scored: list[tuple[int, str]] = []
+        for idx, case in enumerate(cases):
+            case_lower = case.lower()
+            case_norm = self._normalize_case_token(case)
+            score = 0
+
+            if case_norm in priority_norm:
+                score += 8
+            if any(tok in case_lower for tok in prompt_tokens):
+                score += 6
+            if self._match_case_from_prompt(user_prompt, [case]):
+                score += 12
+
+            # Keep stable ordering among ties.
+            score -= min(idx, 50) // 10
+            scored.append((score, case))
+
+        ranked = [case for _, case in sorted(scored, key=lambda item: item[0], reverse=True)]
+        selected = ranked[: max(1, min(limit, len(ranked)))]
+
+        # Ensure at least one canonical top entry from original ordering is visible.
+        if cases[0] not in selected:
+            selected = [cases[0]] + selected[:-1]
+        return selected
+
+    def _resolve_case_match(self, case_match: str | None, cases: list[str]) -> str | None:
+        """Resolve an LLM-provided case string against available cases."""
+        if not case_match:
+            return None
+
+        raw = str(case_match).strip()
+        # Handle formats like "ERF/Exec/..." by dropping code prefix.
+        if "/" in raw:
+            first, rest = raw.split("/", 1)
+            if first.upper() == "ERF":
+                raw = rest
+
+        raw_norm = self._normalize_case_token(raw)
+        if not raw_norm:
+            return None
+
+        # 1) direct containment checks
+        for case in cases:
+            if raw in case or case in raw:
+                return case
+
+        # 2) normalized exact/containment checks
+        for case in cases:
+            case_norm = self._normalize_case_token(case)
+            if raw_norm == case_norm:
+                return case
+            if raw_norm in case_norm or case_norm.endswith(raw_norm):
+                return case
+
+        # 3) leaf name fallback
+        raw_leaf = raw_norm.split("exec")[-1] if "exec" in raw_norm else raw_norm
+        for case in cases:
+            leaf_norm = self._normalize_case_token(case.split("/")[-1])
+            if raw_leaf == leaf_norm or raw_leaf in leaf_norm:
+                return case
+
+        return None
+
+    def _parse_case_selection_content(self, content: str) -> tuple[str | None, str | None]:
+        text = (content or "").strip()
+        if not text:
+            return None, None
+
+        # First, try JSON (plain or fenced).
+        code_match, case_match = self._parse_case_selection_json(text)
+        if code_match and case_match:
+            return code_match, case_match
+
+        # Then, parse labeled lines (case-insensitive, ':' or '=').
+        code_match = None
+        case_match = None
+        for line in text.splitlines():
+            code_hit = re.match(r"^\s*code\s*[:=]\s*(.+?)\s*$", line, flags=re.IGNORECASE)
+            if code_hit:
+                code_match = self._clean_selection_token(code_hit.group(1))
+                continue
+            case_hit = re.match(r"^\s*case\s*[:=]\s*(.+?)\s*$", line, flags=re.IGNORECASE)
+            if case_hit:
+                case_match = self._clean_selection_token(case_hit.group(1))
+        return code_match, case_match
+
+    def _parse_case_selection_json(self, text: str) -> tuple[str | None, str | None]:
+        blocks = []
+        fenced = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.IGNORECASE | re.DOTALL)
+        blocks.extend(fenced)
+        inline = re.findall(r"(\{.*?\})", text, flags=re.DOTALL)
+        blocks.extend(inline)
+        for block in blocks:
+            try:
+                data = json.loads(block)
+            except Exception:
+                continue
+            if not isinstance(data, dict):
+                continue
+            code_val = self._clean_selection_token(str(data.get("code", "")))
+            case_val = self._clean_selection_token(str(data.get("case", "")))
+            if code_val and case_val:
+                return code_val, case_val
+        return None, None
 
     def _match_case_from_prompt(self, prompt: str, cases: list[str]) -> str | None:
         """Return a case if the prompt references it, otherwise None."""
