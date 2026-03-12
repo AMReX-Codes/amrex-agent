@@ -8,7 +8,7 @@ Related solvers: PeleC, PeleLMeX, ERF, WarpX, incflo.
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from src.services.rules.base import RuleViolation
 
@@ -90,6 +90,50 @@ class ERFConfig(BaseAMReXConfig):
 
     documentation_map = {
         'solver_readme': ['README.md', 'README.rst'],
+    }
+
+    prompt_templates: ClassVar[dict[str, Any]] = {
+        "misc": {
+            "inputs_select": (
+                "You are selecting the best inputs file for an ERF atmospheric case.\n"
+                "ERF atmospheric case directory: {case_name}\n\n"
+                "Choose the file that best matches the benchmark intent from filename and header.\n"
+                "Prefer files that preserve the intended atmospheric setup (e.g., terrain, ABL, "
+                "moist/dry convection, forcing) without assuming case-specific IDs.\n"
+                "Return ONLY one filename from the candidate list.\n\n"
+                "{candidates}\n"
+            ),
+        },
+        "architect": {
+            "modification_extraction": (
+                "Extract parameter modifications needed for this ERF simulation case.\n\n"
+                "Case Description:\n"
+                "{case_description}\n\n"
+                "Baseline Input File:\n"
+                "```\n"
+                "{inputs_content}\n"
+                "```\n\n"
+                "{param_guidance}\n\n"
+                "TASK - work through step-by-step:\n"
+                "1. Identify each requested atmospheric behavior or value in the case description.\n"
+                "2. For EACH requested change:\n"
+                "   a. Find the exact corresponding parameter name in baseline or schema list.\n"
+                "   b. Preserve atmospheric consistency: stratification, forcing, terrain/ABL setup, "
+                "boundary conditions, and initialization assumptions.\n"
+                "   c. Determine whether value differs from baseline.\n"
+                "3. Include only parameters that differ from baseline or must be added.\n"
+                "4. Keep modifications generic and transferable across ERF cases.\n\n"
+                "CRITICAL RULES:\n"
+                "- Never invent parameter names.\n"
+                "- Use exact keys as present in baseline inputs or valid schema list.\n"
+                "- Keep updates generic; do not hardcode benchmark IDs or case names.\n\n"
+                "Return JSON:\n"
+                "{{\n"
+                '  "working": "brief step-by-step notes",\n'
+                '  "modifications": [{{"parameter": "name", "value": "value"}}]\n'
+                "}}\n"
+            ),
+        },
     }
 
     @classmethod
