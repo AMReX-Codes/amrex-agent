@@ -80,6 +80,8 @@ python database/scripts/build_index.py \
   --source /path/to/your/repo
 ```
 
+See also: dependencies_update_policy.md
+
 For hierarchical indices (L0/L1/L2), use:
 
 ```bash

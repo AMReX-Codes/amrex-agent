@@ -26,6 +26,7 @@ ReadTheDocs plan:
 - Use `pip install -e .` for editable installs of the repo itself.
 - Prefer lower bounds in `environment.yaml` and avoid upper bounds unless
   there is a known incompatibility.
+- See also: dependencies_update_policy.md
 
 ### Tests/examples
 
