@@ -237,6 +237,51 @@ def normalize_unnumbered_023(modifications: Any) -> list[tuple[str, Any]]:
     return normalized
 
 
+def normalize_traceability_evidence_rows(rows: Any) -> list[dict[str, str]]:
+    """Normalize mixed checklist rows to stable criterion/artifact/test records."""
+    if not isinstance(rows, list):
+        return []
+
+    normalized: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    for row in rows:
+        criterion = artifact = test_name = ""
+
+        if isinstance(row, dict):
+            criterion = str(row.get("criterion") or row.get("standard") or "").strip()
+            artifact = str(row.get("artifact") or row.get("evidence") or "").strip()
+            test_name = str(row.get("test") or row.get("tests") or "").strip()
+        elif isinstance(row, (list, tuple)) and len(row) >= 3:
+            criterion = str(row[0]).strip()
+            artifact = str(row[1]).strip()
+            test_name = str(row[2]).strip()
+        else:
+            continue
+
+        if not criterion or not artifact or not test_name:
+            continue
+
+        key = (criterion, artifact, test_name)
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(
+            {
+                "criterion": criterion,
+                "artifact": artifact,
+                "test": test_name,
+            }
+        )
+
+    return normalized
+
+
+def normalize_unnumbered_284(rows: Any) -> list[dict[str, str]]:
+    """Backward-compatible alias for normalize_traceability_evidence_rows."""
+    return normalize_traceability_evidence_rows(rows)
+
+
 def _normalize_case_reference(case_entry: Any) -> str | None:
     """Extract a stable case reference string from mixed evidence values."""
     if isinstance(case_entry, str):

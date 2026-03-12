@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Iterable, Set, get_type_hints
 
 from src.models import GraphState
-from src.services.plan import normalize_unnumbered_284
+from src.services.plan import normalize_traceability_evidence_rows
 
 
 _SIMPLE_FIELD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -78,7 +78,7 @@ def test_contracts_reference_graphstate_fields() -> None:
     )
 
 
-def test_normalize_unnumbered_284_enforces_stable_rows() -> None:
+def test_normalize_traceability_evidence_rows_enforces_stable_rows() -> None:
     rows = [
         {
             "criterion": "Verification coverage",
@@ -97,7 +97,7 @@ def test_normalize_unnumbered_284_enforces_stable_rows() -> None:
         "ignore-me",
     ]
 
-    assert normalize_unnumbered_284(rows) == [
+    assert normalize_traceability_evidence_rows(rows) == [
         {
             "criterion": "Verification coverage",
             "artifact": "tests/quality/test_contract_schema_alignment.py",
