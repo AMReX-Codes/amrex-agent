@@ -1,0 +1,70 @@
+{
+  "entries": [
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": "99914444329f6be784c6a153581c53bc60ae8937",
+      "embedding_dimension": null,
+      "embedding_model": "text-embedding-3-small",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-11T23:59:26.554232+00:00",
+      "level": "2",
+      "manifest_path": "level2/amrex_faiss_provenance.json",
+      "repo_commit": "99914444329f6be784c6a153581c53bc60ae8937",
+      "solver": "amrex",
+      "version": "1"
+    },
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": "1df48173da427f57a8201e157518afa7fd2e73ee",
+      "embedding_dimension": null,
+      "embedding_model": "text-embedding-3-small",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-11T22:53:38.819203+00:00",
+      "level": "2",
+      "manifest_path": "level2/erf_faiss_provenance.json",
+      "repo_commit": "1df48173da427f57a8201e157518afa7fd2e73ee",
+      "solver": "erf",
+      "version": "1"
+    },
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": "a6b4dff152c2cad2cf0edee58099eefffd2ba328",
+      "embedding_dimension": null,
+      "embedding_model": "text-embedding-3-small",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-11T23:20:00.712017+00:00",
+      "level": "2",
+      "manifest_path": "level2/pelec_faiss_provenance.json",
+      "repo_commit": "a6b4dff152c2cad2cf0edee58099eefffd2ba328",
+      "solver": "pelec",
+      "version": "1"
+    },
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": "9e7fb9f245c3ef363fc0cbd14960089247934157",
+      "embedding_dimension": null,
+      "embedding_model": "text-embedding-3-small",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-11T23:32:31.489997+00:00",
+      "level": "2",
+      "manifest_path": "level2/pelelmex_faiss_provenance.json",
+      "repo_commit": "9e7fb9f245c3ef363fc0cbd14960089247934157",
+      "solver": "pelelmex",
+      "version": "1"
+    },
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": "ef9fd9cebb82a992cf0af3769f0216dce76a42c3",
+      "embedding_dimension": null,
+      "embedding_model": "text-embedding-3-small",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-11T23:37:12.633583+00:00",
+      "level": "2",
+      "manifest_path": "level2/remora_faiss_provenance.json",
+      "repo_commit": "ef9fd9cebb82a992cf0af3769f0216dce76a42c3",
+      "solver": "remora",
+      "version": "1"
+    }
+  ],
+  "version": "1"
+}

@@ -2,6 +2,7 @@
 
 import os
 import random
+import shutil
 import time
 from pathlib import Path
 from typing import Optional, Dict, Literal, List, Any
@@ -154,6 +155,100 @@ def resolve_database_path(relative_path: str) -> Path:
         # Local development: relative to repo root
         repo_root = Path(__file__).parent.parent
         return repo_root / 'database' / relative_path
+
+
+def _has_flat_faiss_artifacts(faiss_root: Path) -> bool:
+    if not faiss_root.exists() or not faiss_root.is_dir():
+        return False
+    for child in faiss_root.iterdir():
+        if child.name in {"cborg", "amsc"}:
+            continue
+        return True
+    return False
+
+
+def _move_path(src: Path, dst: Path) -> None:
+    if not src.exists():
+        return
+    if not dst.exists():
+        src.rename(dst)
+        return
+    if src.is_file():
+        if not dst.exists():
+            src.rename(dst)
+        return
+
+    for child in src.iterdir():
+        target = dst / child.name
+        if target.exists():
+            continue
+        shutil.move(str(child), str(target))
+    try:
+        src.rmdir()
+    except OSError:
+        pass
+
+
+def migrate_flat_faiss_to_provider(
+    faiss_root: Path,
+    provider: str = "cborg",
+) -> bool:
+    if provider != "cborg":
+        return False
+    if not faiss_root.exists() or not faiss_root.is_dir():
+        return False
+
+    provider_root = faiss_root / provider
+    provider_root.mkdir(parents=True, exist_ok=True)
+
+    moved_static = _migrate_static_faiss_paths(faiss_root, provider_root)
+    moved_solver_dirs = _migrate_solver_faiss_dirs(faiss_root, provider_root)
+    return moved_static or moved_solver_dirs
+
+
+def _migrate_static_faiss_paths(faiss_root: Path, provider_root: Path) -> bool:
+    moved_any = False
+    for name in ("level0", "level1", "level2", "build_session_manifest.json"):
+        src = faiss_root / name
+        if not src.exists():
+            continue
+        _move_path(src, provider_root / name)
+        moved_any = True
+    return moved_any
+
+
+def _migrate_solver_faiss_dirs(faiss_root: Path, provider_root: Path) -> bool:
+    moved_any = False
+    for child in faiss_root.iterdir():
+        if child.name in {"cborg", "amsc"}:
+            continue
+        if not child.is_dir() or "_" not in child.name:
+            continue
+        _move_path(child, provider_root / child.name)
+        moved_any = True
+    return moved_any
+
+
+def resolve_faiss_db_path_for_provider(
+    faiss_root: Path,
+    provider: str | None,
+) -> Path:
+    provider_slug = (provider or "").strip().lower()
+    if not provider_slug:
+        return faiss_root
+
+    provider_root = faiss_root / provider_slug
+    if provider_root.exists():
+        return provider_root
+
+    if provider_slug == "cborg":
+        migrate_flat_faiss_to_provider(faiss_root, provider_slug)
+        if provider_root.exists():
+            return provider_root
+
+    if _has_flat_faiss_artifacts(faiss_root):
+        return faiss_root
+    return provider_root
 
 
 
@@ -889,6 +984,13 @@ class AMReXAgentConfig(BaseModel):
         self.benchmark_environment_lockfile = resolved_lockfile
         if self.benchmark_require_lockfile and not resolved_lockfile.exists():
             raise ValueError(f"benchmark_environment_lockfile_missing: {resolved_lockfile}")
+
+        if "faiss_db_path" not in fields_set:
+            faiss_root = resolve_database_path("faiss")
+            self.faiss_db_path = resolve_faiss_db_path_for_provider(
+                faiss_root=faiss_root,
+                provider=self.embedding_provider,
+            )
 
         self.repositories = {
             'PeleC': self.pelec_repo_path,

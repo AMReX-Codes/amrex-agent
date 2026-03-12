@@ -237,6 +237,45 @@ def normalize_unnumbered_023(modifications: Any) -> list[tuple[str, Any]]:
     return normalized
 
 
+def normalize_unnumbered_284(rows: Any) -> list[dict[str, str]]:
+    """Normalize traceability rows to stable criterion/artifact/test mappings."""
+    if not isinstance(rows, list):
+        return []
+
+    normalized: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    for row in rows:
+        criterion = artifact = test_ref = ""
+        if isinstance(row, dict):
+            criterion = str(row.get("criterion") or row.get("standard") or "").strip()
+            artifact = str(row.get("artifact") or row.get("evidence") or "").strip()
+            test_ref = str(row.get("test") or row.get("tests") or "").strip()
+        elif isinstance(row, (list, tuple)) and len(row) >= 3:
+            criterion = str(row[0]).strip()
+            artifact = str(row[1]).strip()
+            test_ref = str(row[2]).strip()
+        else:
+            continue
+
+        if not (criterion and artifact and test_ref):
+            continue
+
+        key = (criterion, artifact, test_ref)
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(
+            {
+                "criterion": criterion,
+                "artifact": artifact,
+                "test": test_ref,
+            }
+        )
+
+    return normalized
+
+
 def _normalize_case_reference(case_entry: Any) -> str | None:
     """Extract a stable case reference string from mixed evidence values."""
     if isinstance(case_entry, str):
