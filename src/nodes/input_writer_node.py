@@ -224,6 +224,7 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
                 modifications=modifications,
                 baseline=baseline,
                 reasoning=reasoning,
+                user_prompt=(state.get("prompt") or state.get("user_prompt") or ""),
                 output_dir=str(run_dir),  # Service physically creates this
                 requested_plot_vars=requested_plot_vars,
             )

@@ -102,9 +102,13 @@ class ERFConfig(BaseAMReXConfig):
             "inputs_select": (
                 "You are selecting the best inputs file for an ERF atmospheric case.\n"
                 "ERF atmospheric case directory: {case_name}\n\n"
+                "Requested simulation prompt:\n"
+                "{user_prompt}\n\n"
                 "Choose the file that best matches the benchmark intent from filename and header.\n"
                 "Prefer files that preserve the intended atmospheric setup (e.g., terrain, ABL, "
                 "moist/dry convection, forcing) without assuming case-specific IDs.\n"
+                "Strongly prioritize explicit matches to requested boundary conditions, moisture model, "
+                "and timestep style when present in the prompt.\n"
                 "Return ONLY one filename from the candidate list.\n\n"
                 "{candidates}\n"
             ),

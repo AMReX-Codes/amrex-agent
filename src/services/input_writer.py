@@ -220,6 +220,7 @@ class InputWriterService:
                    modifications: list,
                    baseline: dict[str, str],
                    reasoning: str = "",
+                   user_prompt: str = "",
                    output_dir: Path | None = None,
                    requested_plot_vars: list[str] | None = None) -> dict:
         """
@@ -394,7 +395,8 @@ class InputWriterService:
                                 strategy=strategy,
                                 excluded_files=[],
                                 available_files=inputs_candidates,
-                                config=self.config
+                                config=self.config,
+                                user_prompt=user_prompt,
                             )
                             if selected:
                                 selected_inputs_path = str(selected)
