@@ -189,6 +189,152 @@ def _write_build_session_manifest(
     manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return manifest_path
 
+def _load_runtime_config():
+    from src.services.config_service import ConfigService
+
+    return ConfigService().initialize()
+
+
+def _load_manifest_entries(faiss_root: Path) -> list[dict[str, Any]]:
+    manifest_path = faiss_root / "build_session_manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Manifest not found: {manifest_path}")
+
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if isinstance(payload, list):
+        return [entry for entry in payload if isinstance(entry, dict)]
+
+    entries = payload.get("entries", [])
+    if not isinstance(entries, list):
+        raise ValueError("Manifest is invalid: expected top-level list or entries list")
+    return [entry for entry in entries if isinstance(entry, dict)]
+
+
+def _resolve_repo_head_for_solver(solver: str, config: Any) -> str:
+    repo_path = getattr(config, "repositories", {}).get(solver)
+    if repo_path is None:
+        return "MISSING"
+    if not repo_path.exists():
+        return "MISSING"
+
+    result = subprocess.run(
+        ["git", "-C", str(repo_path), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return "MISSING"
+    sha = result.stdout.strip()
+    return sha if sha else "MISSING"
+
+
+def _format_check_row(entry: dict[str, Any], flags: list[str]) -> str:
+    return (
+        f"solver={entry.get('solver', '-')}; "
+        f"level={entry.get('level', '-')}; "
+        f"generated_at={entry.get('generated_at', '-')}; "
+        f"repo_commit={entry.get('repo_commit', '-')}; "
+        f"dependencies_commit={entry.get('dependencies_commit', '-')}; "
+        f"embedding_model={entry.get('embedding_model', '-')}; "
+        f"embedding_provider={entry.get('embedding_provider', '-')}; "
+        f"flags={','.join(flags) if flags else 'OK'}"
+    )
+
+
+def _evaluate_manifest_entry(
+    entry: dict[str, Any],
+    *,
+    active_provider: str,
+    active_model: str,
+    config: Any,
+) -> tuple[str, list[str]]:
+    solver = str(entry.get("solver", "")).strip()
+    provider = str(entry.get("embedding_provider", "")).strip().lower()
+    model = str(entry.get("embedding_model", "")).strip()
+    repo_commit = str(entry.get("repo_commit", "")).strip()
+
+    if provider != active_provider or model != active_model:
+        return solver, ["MODEL MISMATCH"]
+
+    current_head = _resolve_repo_head_for_solver(solver, config)
+    if repo_commit != current_head:
+        return solver, ["STALE"]
+    return solver, []
+
+
+def _append_missing_solver_rows(
+    *,
+    lines: list[str],
+    registry: list[str],
+    matched_solvers: set[str],
+    active_provider: str,
+    active_model: str,
+) -> bool:
+    found_missing = False
+    for solver in registry:
+        if solver in matched_solvers:
+            continue
+        found_missing = True
+        lines.append(
+            _format_check_row(
+                {
+                    "solver": solver,
+                    "level": "-",
+                    "generated_at": "-",
+                    "repo_commit": "-",
+                    "dependencies_commit": "-",
+                    "embedding_model": active_model,
+                    "embedding_provider": active_provider,
+                },
+                ["MISSING"],
+            )
+        )
+    return found_missing
+
+
+def run_manifest_provenance_check(
+    faiss_root: Path,
+    config: Any | None = None,
+) -> tuple[int, list[str]]:
+    config = config or _load_runtime_config()
+    active_provider = str(getattr(config, "embedding_provider", "")).strip().lower()
+    active_model = str(getattr(config, "faiss_embedding_model", "")).strip()
+    manifest_entries = _load_manifest_entries(faiss_root)
+    registry = [cfg.code_name for cfg in discover_code_configs()]
+
+    has_failures = False
+    matched_solvers: set[str] = set()
+    lines: list[str] = [
+        "Manifest provenance check:",
+        f"  faiss_root={faiss_root}",
+        f"  active_embedding_provider={active_provider}",
+        f"  active_embedding_model={active_model}",
+    ]
+
+    for entry in manifest_entries:
+        solver, flags = _evaluate_manifest_entry(
+            entry,
+            active_provider=active_provider,
+            active_model=active_model,
+            config=config,
+        )
+        if not flags:
+            matched_solvers.add(solver)
+        has_failures = has_failures or bool(flags)
+        lines.append(_format_check_row(entry, flags))
+
+    has_failures = _append_missing_solver_rows(
+        lines=lines,
+        registry=registry,
+        matched_solvers=matched_solvers,
+        active_provider=active_provider,
+        active_model=active_model,
+    ) or has_failures
+
+    lines.append("Result: FAIL" if has_failures else "Result: PASS")
+    return (1 if has_failures else 0), lines
+
 def _resolve_config_class(repo_path: Path | None = None, code_name: str | None = None):
     configs = list(discover_code_configs())
 
@@ -451,7 +597,7 @@ def build_level2(
     return len(indices)
 
 
-def main() -> None:
+def main() -> int:
     """
     Run the multi-level index build CLI.
 
@@ -502,31 +648,147 @@ Examples:
         action='store_true',
         help='Use mock embedder (fast, no API calls)'
     )
+    parser.add_argument(
+        '--check',
+        action='store_true',
+        help='Check build_session_manifest.json provenance only (no index build)',
+    )
 
     args = parser.parse_args()
+    return _run_cli(parser, args)
 
+
+def _run_check_mode(output: Path) -> int:
+    try:
+        exit_code, lines = run_manifest_provenance_check(faiss_root=output)
+    except Exception as exc:
+        print(f"Manifest provenance check failed: {exc}")
+        return 1
+    for line in lines:
+        print(line)
+    return exit_code
+
+
+def _resolve_build_context(parser: argparse.ArgumentParser, args: argparse.Namespace) -> tuple[Any, Any, str]:
     requires_repo = args.level in ['1', '2', 'all']
-    repo_root = None
-    config_class = None
-    solver_name = "N/A"
-    if requires_repo:
-        repo_root = _resolve_repo_root(args.repo, args.code)
-        if not repo_root:
-            parser.error("Could not resolve repository. Provide --repo or --code with a configured repo path.")
+    if not requires_repo:
+        return None, None, "N/A"
 
-        config_class = _resolve_config_class(repo_path=repo_root, code_name=args.code)
-        if not config_class:
-            config_class = type(
-                "GenericAMReXConfig",
-                (BaseAMReXConfig,),
-                {"code_name": repo_root.name},
-            )
-        solver_name = config_class.code_name
+    repo_root = _resolve_repo_root(args.repo, args.code)
+    if not repo_root:
+        parser.error("Could not resolve repository. Provide --repo or --code with a configured repo path.")
 
-    # Create embedder
+    config_class = _resolve_config_class(repo_path=repo_root, code_name=args.code)
+    if not config_class:
+        config_class = type(
+            "GenericAMReXConfig",
+            (BaseAMReXConfig,),
+            {"code_name": repo_root.name},
+        )
+    return repo_root, config_class, config_class.code_name
+
+
+def _run_build_levels(
+    *,
+    args: argparse.Namespace,
+    repo_root: Path | None,
+    config_class: type[BaseAMReXConfig] | None,
+    embedder: Any,
+) -> int:
+    total_indices = 0
+    if args.level in ['0', 'all']:
+        total_indices += build_level0(args.output / 'level0', embedder)
+    if args.level in ['1', 'all']:
+        total_indices += build_level1(repo_root, args.output / 'level1', embedder, config_class)
+    if args.level in ['2', 'all']:
+        total_indices += build_level2(repo_root, args.output / 'level2', embedder, config_class)
+    return total_indices
+
+
+def _selected_build_tasks(
+    *,
+    level: str,
+    output_root: Path,
+    repo_root: Path | None,
+    config_class: type[BaseAMReXConfig] | None,
+    solver_name: str,
+) -> list[dict[str, Any]]:
+    solver_slug = str(solver_name).lower()
+    tasks: list[dict[str, Any]] = [
+        {
+            "level": "0",
+            "enabled": level in ["0", "all"],
+            "output_dir": output_root / "level0",
+            "builder": lambda embedder: build_level0(output_root / "level0", embedder),
+            "filename": "faiss_provenance.json",
+            "solver": None,
+            "source_dir": None,
+        },
+        {
+            "level": "1",
+            "enabled": level in ["1", "all"],
+            "output_dir": output_root / "level1",
+            "builder": lambda embedder: build_level1(repo_root, output_root / "level1", embedder, config_class),
+            "filename": f"{solver_slug}_faiss_provenance.json",
+            "solver": solver_slug,
+            "source_dir": repo_root,
+        },
+        {
+            "level": "2",
+            "enabled": level in ["2", "all"],
+            "output_dir": output_root / "level2",
+            "builder": lambda embedder: build_level2(repo_root, output_root / "level2", embedder, config_class),
+            "filename": f"{solver_slug}_faiss_provenance.json",
+            "solver": solver_slug,
+            "source_dir": repo_root,
+        },
+    ]
+    return tasks
+
+
+def _build_and_collect_provenance(
+    *,
+    tasks: list[dict[str, Any]],
+    embedder: Any,
+    output_root: Path,
+) -> tuple[int, list[dict[str, Any]]]:
+    total_indices = 0
+    session_entries: list[dict[str, Any]] = []
+
+    for task in tasks:
+        if not task["enabled"]:
+            continue
+
+        built = task["builder"](embedder)
+        total_indices += built
+        if built <= 0:
+            continue
+
+        manifest_path, payload = _write_provenance_file(
+            output_dir=task["output_dir"],
+            filename=task["filename"],
+            embedder=embedder,
+            solver=task["solver"],
+            level=task["level"],
+            source_dir=task["source_dir"],
+        )
+        logger.debug(f"Provenance manifest written to: {manifest_path}")
+        session_entries.append(
+            {
+                "manifest_path": manifest_path.relative_to(output_root).as_posix(),
+                **payload,
+            }
+        )
+
+    return total_indices, session_entries
+
+
+def _run_cli(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+    if args.check:
+        return _run_check_mode(args.output)
+
+    repo_root, config_class, solver_name = _resolve_build_context(parser, args)
     embedder = create_embedder(use_real=not args.mock)
-
-    # Create output directories
     args.output.mkdir(parents=True, exist_ok=True)
 
     logger.debug(f"""
@@ -541,77 +803,18 @@ Configuration:
   Level:      {args.level}
   Embedder:   {'Mock (test mode)' if args.mock else 'Real (OpenAI API)'}
 """)
-
-    # Build requested levels
-    total_indices = 0
-    session_entries: list[dict[str, Any]] = []
-
-    if args.level in ['0', 'all']:
-        level0_dir = args.output / 'level0'
-        built = build_level0(level0_dir, embedder)
-        total_indices += built
-        if built > 0:
-            manifest_path, payload = _write_provenance_file(
-                output_dir=level0_dir,
-                filename="faiss_provenance.json",
-                embedder=embedder,
-                solver=None,
-                level="0",
-                source_dir=None,
-            )
-            logger.debug(f"Provenance manifest written to: {manifest_path}")
-            session_entries.append(
-                {
-                    "manifest_path": manifest_path.relative_to(args.output).as_posix(),
-                    **payload,
-                }
-            )
-
-    if args.level in ['1', 'all']:
-        level1_dir = args.output / 'level1'
-        built = build_level1(repo_root, level1_dir, embedder, config_class)
-        total_indices += built
-        if built > 0:
-            solver_slug = str(solver_name).lower()
-            filename = f"{solver_slug}_faiss_provenance.json"
-            manifest_path, payload = _write_provenance_file(
-                output_dir=level1_dir,
-                filename=filename,
-                embedder=embedder,
-                solver=solver_slug,
-                level="1",
-                source_dir=repo_root,
-            )
-            logger.debug(f"Provenance manifest written to: {manifest_path}")
-            session_entries.append(
-                {
-                    "manifest_path": manifest_path.relative_to(args.output).as_posix(),
-                    **payload,
-                }
-            )
-
-    if args.level in ['2', 'all']:
-        level2_dir = args.output / 'level2'
-        built = build_level2(repo_root, level2_dir, embedder, config_class)
-        total_indices += built
-        if built > 0:
-            solver_slug = str(solver_name).lower()
-            filename = f"{solver_slug}_faiss_provenance.json"
-            manifest_path, payload = _write_provenance_file(
-                output_dir=level2_dir,
-                filename=filename,
-                embedder=embedder,
-                solver=solver_slug,
-                level="2",
-                source_dir=repo_root,
-            )
-            logger.debug(f"Provenance manifest written to: {manifest_path}")
-            session_entries.append(
-                {
-                    "manifest_path": manifest_path.relative_to(args.output).as_posix(),
-                    **payload,
-                }
-            )
+    tasks = _selected_build_tasks(
+        level=args.level,
+        output_root=args.output,
+        repo_root=repo_root,
+        config_class=config_class,
+        solver_name=solver_name,
+    )
+    total_indices, session_entries = _build_and_collect_provenance(
+        tasks=tasks,
+        embedder=embedder,
+        output_root=args.output,
+    )
 
     if session_entries:
         session_manifest = _write_build_session_manifest(
@@ -633,7 +836,8 @@ Next Steps:
   2. Test search (Architect Service: Solver Selection)
   3. Use in production
 """)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())
