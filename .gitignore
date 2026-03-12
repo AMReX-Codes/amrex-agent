@@ -17,6 +17,9 @@ downloads/
 eggs/
 .eggs/
 lib/
+!scripts/erf_benchmark/lib/
+!scripts/erf_benchmark/lib/__init__.py
+!scripts/erf_benchmark/lib/explainability_scoring.py
 lib64/
 parts/
 sdist/
