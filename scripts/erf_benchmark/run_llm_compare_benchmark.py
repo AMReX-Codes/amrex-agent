@@ -13,6 +13,7 @@ from typing import Any
 def detect_llm_unavailable(
     metrics_events: list[dict[str, Any]],
     workflow_summary: dict[str, Any] | None = None,
+    workflow_payload: dict[str, Any] | None = None,
     parser_signal: bool = False,
 ) -> bool:
     for event in metrics_events:
@@ -23,15 +24,50 @@ def detect_llm_unavailable(
     if parser_signal:
         return True
     last = ((workflow_summary or {}).get("stages") or {}).get("input_writer", {}).get("retrieval", {}).get("last", {})
-    return last.get("fallback_reason") == "llm_unavailable"
+    if last.get("fallback_reason") == "llm_unavailable":
+        return True
+    history = (workflow_payload or {}).get("workflow_history", [])
+    if not isinstance(history, list):
+        return False
+    for entry in reversed(history):
+        details = entry.get("details", {}) if isinstance(entry, dict) else {}
+        nested = (details.get("metrics") or {}).get("retrieval", {}).get("last", {})
+        if nested.get("fallback_reason") == "llm_unavailable":
+            return True
+    return False
+
+
+def _extract_exec_relpath(value: str, kind: str) -> str:
+    text = value.strip().replace("\\", "/")
+    idx = text.find("Exec/")
+    rel = text[idx:] if idx >= 0 else text
+    rel = rel.rstrip("/")
+    if kind == "case" and rel.split("/")[-1].startswith("inputs"):
+        return "/".join(rel.split("/")[:-1])
+    return rel
+
+
+def _find_history_value(payload: dict[str, Any], keys: tuple[str, ...]) -> str:
+    history = payload.get("workflow_history", [])
+    if not isinstance(history, list):
+        return ""
+    for entry in reversed(history):
+        details = entry.get("details", {}) if isinstance(entry, dict) else {}
+        for key in keys:
+            value = details.get(key)
+            if isinstance(value, str) and value:
+                return value
+    return ""
 
 
 def score_rows(rows: list[dict[str, Any]], predictions: dict[str, dict[str, str]]) -> dict[str, Any]:
     scored_rows: list[dict[str, Any]] = []
     for row in rows:
         pred = predictions.get(row["row_id"], {})
-        case_match = int(pred.get("selected_case") == row["target_case_relpath"])
-        inputs_match = int(pred.get("selected_inputs") == row["target_inputs_relpath"])
+        selected_case = _extract_exec_relpath(pred.get("selected_case", ""), kind="case")
+        selected_inputs = _extract_exec_relpath(pred.get("selected_inputs", ""), kind="inputs")
+        case_match = int(selected_case == row["target_case_relpath"])
+        inputs_match = int(selected_inputs == row["target_inputs_relpath"])
         scored_rows.append({**row, "case_match": case_match, "inputs_match": inputs_match, "row_score": 0.7 * case_match + 0.3 * inputs_match})
     count = len(scored_rows) or 1
     case_accuracy = sum(r["case_match"] for r in scored_rows) / count
@@ -47,28 +83,23 @@ def score_rows(rows: list[dict[str, Any]], predictions: dict[str, dict[str, str]
 def extract_selected_case(payload: dict[str, Any]) -> str:
     case = payload.get("selected_case")
     if isinstance(case, str) and case:
-        return case
-    history = payload.get("workflow_history", [])
-    if isinstance(history, list):
-        for entry in reversed(history):
-            details = entry.get("details", {}) if isinstance(entry, dict) else {}
-            selected = details.get("selected_case")
-            if isinstance(selected, str) and selected:
-                return selected
+        return _extract_exec_relpath(case, kind="case")
+    hist_case = _find_history_value(payload, ("selected_case",))
+    if hist_case:
+        return _extract_exec_relpath(hist_case, kind="case")
+    selected_inputs = extract_selected_inputs(payload)
+    if selected_inputs:
+        return _extract_exec_relpath(selected_inputs, kind="case")
     return ""
 
 
 def extract_selected_inputs(payload: dict[str, Any]) -> str:
     selected = payload.get("used_inputs_file") or payload.get("inputs_file_selected")
     if isinstance(selected, str) and selected:
-        return selected
-    history = payload.get("workflow_history", [])
-    if isinstance(history, list):
-        for entry in reversed(history):
-            details = entry.get("details", {}) if isinstance(entry, dict) else {}
-            value = details.get("inputs_file_selected")
-            if isinstance(value, str) and value:
-                return value
+        return _extract_exec_relpath(selected, kind="inputs")
+    hist_inputs = _find_history_value(payload, ("inputs_file_selected", "used_inputs_file"))
+    if hist_inputs:
+        return _extract_exec_relpath(hist_inputs, kind="inputs")
     return ""
 
 
@@ -114,7 +145,12 @@ def _run_strategy(rows: list[dict[str, Any]], strategy: str) -> dict[str, Any]:
     evidences: list[dict[str, Any]] = []
     for row in rows:
         payload, metrics, summary = _run_one(row["prompt_text"], strategy)
-        unavailable = detect_llm_unavailable(metrics, summary, parser_signal=payload.get("llm_unavailable", False) is True)
+        unavailable = detect_llm_unavailable(
+            metrics,
+            summary,
+            workflow_payload=payload,
+            parser_signal=payload.get("llm_unavailable", False) is True,
+        )
         if unavailable:
             raise RuntimeError(f"Abort: llm_unavailable fallback detected (strategy={strategy}, row_id={row['row_id']})")
         predictions[row["row_id"]] = {"selected_case": extract_selected_case(payload), "selected_inputs": extract_selected_inputs(payload)}
@@ -169,4 +205,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

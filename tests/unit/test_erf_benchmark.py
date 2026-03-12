@@ -8,6 +8,8 @@ from scripts.erf_benchmark.generate_prompt_matrix import build_prompt_matrix_row
 from scripts.erf_benchmark.make_splits import build_splits
 from scripts.erf_benchmark.run_llm_compare_benchmark import (
     detect_llm_unavailable,
+    extract_selected_case,
+    extract_selected_inputs,
     score_rows,
 )
 
@@ -48,6 +50,26 @@ def test_score_rows_applies_weighted_rule() -> None:
     assert scored["weighted_score"] == 0.85
 
 
+def test_score_rows_normalizes_absolute_paths() -> None:
+    rows = [
+        {
+            "row_id": "a",
+            "target_case_relpath": "Exec/ABL/MOST_test_suite",
+            "target_inputs_relpath": "Exec/ABL/MOST_test_suite/inputs_anel_most",
+        }
+    ]
+    predictions = {
+        "a": {
+            "selected_case": "/home/user/ERF/Exec/ABL/MOST_test_suite/inputs_anel_most",
+            "selected_inputs": "/home/user/ERF/Exec/ABL/MOST_test_suite/inputs_anel_most",
+        }
+    }
+    scored = score_rows(rows, predictions)
+    assert scored["case_accuracy"] == 1.0
+    assert scored["inputs_accuracy"] == 1.0
+    assert scored["weighted_score"] == 1.0
+
+
 def test_detect_llm_unavailable_from_metrics_and_summary() -> None:
     metrics = [
         {"type": "retrieval_strategy", "data": {"fallback_reason": "llm_unavailable"}},
@@ -55,6 +77,40 @@ def test_detect_llm_unavailable_from_metrics_and_summary() -> None:
     payload = {"stages": {"input_writer": {"retrieval": {"last": {"fallback_reason": None}}}}}
     assert detect_llm_unavailable(metrics_events=metrics, workflow_summary=payload) is True
     assert detect_llm_unavailable(metrics_events=[], workflow_summary=payload) is False
+
+
+def test_detect_llm_unavailable_from_workflow_payload_history() -> None:
+    payload = {
+        "workflow_history": [
+            {
+                "details": {
+                    "metrics": {
+                        "retrieval": {
+                            "last": {
+                                "fallback_reason": "llm_unavailable",
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+    assert detect_llm_unavailable(metrics_events=[], workflow_payload=payload) is True
+
+
+def test_extract_selected_values_from_workflow_history() -> None:
+    payload = {
+        "workflow_history": [
+            {
+                "details": {
+                    "selected_case": "/tmp/ERF/Exec/Wave/CaseA",
+                    "inputs_file_selected": "/tmp/ERF/Exec/Wave/CaseA/inputs_base",
+                }
+            }
+        ]
+    }
+    assert extract_selected_case(payload) == "Exec/Wave/CaseA"
+    assert extract_selected_inputs(payload) == "Exec/Wave/CaseA/inputs_base"
 
 
 def test_compare_runs_acceptance_logic() -> None:
@@ -77,4 +133,3 @@ def test_compare_runs_acceptance_logic() -> None:
     verdict_bad = evaluate_candidate_vs_baseline(baseline, candidate_bad)
     assert verdict_bad["accepted"] is False
     assert verdict_bad["checks"]["category_guardrail"] is False
-
