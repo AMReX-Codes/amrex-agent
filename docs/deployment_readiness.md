@@ -101,6 +101,21 @@ Success criteria should be mapped to measurable artifacts.
 | Benchmark runs across target models | Benchmark outputs + manifest | `scripts/` outputs |
 | Summary tables reproducible | Aggregated CSV + table scripts | `scripts/generate_paper_tables.py` |
 | Validation catches >=90% injected physics errors | Validator tests + metrics | `tests/` + metrics outputs |
+| Every documented use case references at least one artifact (`UNNUMBERED-024`) | Use-case artifact mapping report + quality gate evidence | `docs/deployment_readiness.md` + `tests/quality/test_standards.py` |
+
+### Use-case Artifact Contract (`UNNUMBERED-024`)
+
+Use-case traceability must be machine-checkable. Each documented use case must
+reference at least one concrete artifact.
+
+Required mapping contract:
+- `use_case_artifacts`: list of mapping entries
+- each entry includes:
+  - `use_case`: use-case identifier (for example `UC1`, `UC-login-flow`)
+  - `artifacts`: non-empty list of artifact references
+
+Accepted artifact references include test files, benchmark outputs, manifests,
+or other reproducible evidence links that can be verified in CI.
 
 ## Release Gates (proposed)
 

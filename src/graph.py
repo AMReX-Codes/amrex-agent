@@ -106,6 +106,7 @@ PLAN_GENERATION_P95_MAX_SECONDS = 180.0
 STABLE_ERROR_TAXONOMY_ID = "UNNUMBERED-238"
 STABLE_ERROR_TAXONOMY_VERSION = "v1"
 UC_ROW_TRACEABLE_ARTIFACT_ID = "UNNUMBERED-038"
+CRITERION_BENCHMARK_TEST_LINKAGE_ID = "UNNUMBERED-283"
 STABLE_ERROR_REASON_CODES = frozenset(
     {
         "feature_a_dependency_unverified",
@@ -216,6 +217,135 @@ def _normalize_test_mappings(value: Any) -> list[str]:
             if normalized:
                 mappings.append(normalized)
     return mappings
+
+
+def _normalize_matrix_cell(value: Any) -> str | None:
+    if isinstance(value, str):
+        normalized = value.strip()
+        return normalized or None
+    if isinstance(value, (list, tuple)):
+        values = [item.strip() for item in value if isinstance(item, str) and item.strip()]
+        if values:
+            return " | ".join(values)
+    return None
+
+
+def _first_matrix_value(entry: dict[str, Any], keys: tuple[str, ...]) -> str | None:
+    for key in keys:
+        normalized = _normalize_matrix_cell(entry.get(key))
+        if normalized:
+            return normalized
+    return None
+
+
+def normalize_unnumbered_284(rows: Any) -> list[dict[str, str]]:
+    """Normalize mixed rows into stable criterion/artifact/test mappings."""
+    if not isinstance(rows, list):
+        return []
+
+    normalized_rows: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for row in rows:
+        criterion: str | None = None
+        benchmark: str | None = None
+        test_ref: str | None = None
+
+        if isinstance(row, dict):
+            criterion = _first_matrix_value(row, ("criterion", "id", "standard"))
+            benchmark = _first_matrix_value(row, ("artifact", "evidence", "benchmark", "benchmark_output"))
+            test_ref = _first_matrix_value(row, ("test", "tests", "test_case", "test_id"))
+        elif isinstance(row, (tuple, list)) and len(row) >= 3:
+            criterion = _normalize_matrix_cell(row[0])
+            benchmark = _normalize_matrix_cell(row[1])
+            test_ref = _normalize_matrix_cell(row[2])
+
+        if not (criterion and benchmark and test_ref):
+            continue
+
+        dedupe_key = (criterion, benchmark, test_ref)
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+        normalized_rows.append(
+            {
+                "criterion": criterion,
+                "artifact": benchmark,
+                "test": test_ref,
+            }
+        )
+
+    return normalized_rows
+
+
+def normalize_criterion_benchmark_test_matrix(rows: Any) -> list[dict[str, str]]:
+    """Back-compat normalization alias for historical benchmark terminology."""
+    normalized_rows = normalize_unnumbered_284(rows)
+    remapped_rows: list[dict[str, str]] = []
+    for row in normalized_rows:
+        remapped_rows.append(
+            {
+                "criterion": row["criterion"],
+                "benchmark": row["artifact"],
+                "test": row["test"],
+            }
+        )
+    return remapped_rows
+
+
+def _normalize_required_criteria(entries: Any) -> list[str]:
+    if not isinstance(entries, list):
+        return []
+
+    normalized: list[str] = []
+    for entry in entries:
+        value: str | None = None
+        if isinstance(entry, str):
+            value = entry.strip()
+        elif isinstance(entry, dict):
+            for key in ("criterion", "id", "name"):
+                candidate = entry.get(key)
+                if isinstance(candidate, str) and candidate.strip():
+                    value = candidate.strip()
+                    break
+        if value:
+            normalized.append(value)
+    return normalized
+
+
+def criterion_benchmark_test_linkage_valid(state: dict[str, Any]) -> bool:
+    """Validate executable criterion-to-benchmark-and-test linkage matrix."""
+    if not state.get("criterion_benchmark_test_linkage_required", False):
+        return True
+
+    normalized_rows = normalize_criterion_benchmark_test_matrix(
+        state.get("criterion_benchmark_test_matrix")
+    )
+    if not normalized_rows:
+        state["criterion_benchmark_test_linkage_validation"] = {
+            "criterion": CRITERION_BENCHMARK_TEST_LINKAGE_ID,
+            "passed": False,
+            "reason": "missing_criterion_benchmark_test_matrix",
+            "missing_criteria": [],
+            "rows": [],
+        }
+        state["criterion_benchmark_test_linkage_complete"] = False
+        return False
+
+    required = _normalize_required_criteria(state.get("success_criteria"))
+    mapped_criteria = {row["criterion"].strip().lower() for row in normalized_rows}
+    missing = [criterion for criterion in required if criterion.strip().lower() not in mapped_criteria]
+
+    passed = not missing
+    state["criterion_benchmark_test_linkage_validation"] = {
+        "criterion": CRITERION_BENCHMARK_TEST_LINKAGE_ID,
+        "passed": passed,
+        "reason": "ok" if passed else "criteria_without_benchmark_or_test_mapping",
+        "missing_criteria": missing,
+        "rows": normalized_rows,
+    }
+    state["criterion_benchmark_test_matrix"] = normalized_rows
+    state["criterion_benchmark_test_linkage_complete"] = passed
+    return passed
 
 
 def has_acceptance_checklist_mapped_tests(context: dict[str, Any]) -> bool:
@@ -707,6 +837,105 @@ def _route_after_clarification(state: dict) -> str:
     return "input_writer_node"
 
 
+def _manifest_declares_session_dependency(state: dict[str, Any]) -> bool:
+    """Return True when validation_manifest provides B2 session dependency evidence."""
+    manifest = state.get("validation_manifest")
+    if not isinstance(manifest, dict):
+        return False
+    if SESSION_DEPENDENCY_COMPLETION_MARKER in manifest:
+        return True
+    if isinstance(manifest.get("session_markers"), dict):
+        return True
+    if isinstance(manifest.get("completed_sessions"), list):
+        return True
+    b2_manifest = manifest.get("b2")
+    if isinstance(b2_manifest, dict) and "orchestration_session_complete" in b2_manifest:
+        return True
+    sessions_manifest = manifest.get("sessions")
+    if isinstance(sessions_manifest, dict):
+        b2_session = sessions_manifest.get("b2")
+        if isinstance(b2_session, dict) and "complete" in b2_session:
+            return True
+    return False
+
+
+def _session_dependency_gate_required_from_approvals(state: dict[str, Any]) -> bool:
+    approvals = state.get("gate_approvals")
+    if not isinstance(approvals, list):
+        return False
+    for approval in approvals:
+        if not isinstance(approval, dict):
+            continue
+        details = approval.get("details")
+        if not isinstance(details, dict):
+            continue
+        if details.get("criterion") == SESSION_DEPENDENCY_COMPLETION_MARKER:
+            return True
+    return False
+
+
+def _session_dependency_complete_from_approvals(state: dict[str, Any]) -> bool | None:
+    approvals = state.get("gate_approvals")
+    if not isinstance(approvals, list):
+        return None
+
+    for approval in approvals:
+        if not isinstance(approval, dict):
+            continue
+        details = approval.get("details")
+        if not isinstance(details, dict):
+            continue
+        if details.get("criterion") != SESSION_DEPENDENCY_COMPLETION_MARKER:
+            continue
+        decision = str(approval.get("decision", "")).strip().lower()
+        if decision in {"approved", "passed", "complete", "completed"}:
+            return True
+        if decision in {"rejected", "failed", "incomplete", "pending", "required"}:
+            return False
+    return None
+
+
+def _merge_manifest_session_dependency_state(state: dict[str, Any]) -> dict[str, Any]:
+    """Merge validation_manifest session dependency markers into top-level state."""
+    merged = dict(state)
+    approval_marker = _session_dependency_complete_from_approvals(merged)
+    if approval_marker is not None and SESSION_DEPENDENCY_COMPLETION_MARKER not in merged:
+        merged[SESSION_DEPENDENCY_COMPLETION_MARKER] = approval_marker
+
+    manifest = state.get("validation_manifest")
+    if not isinstance(manifest, dict):
+        return merged
+
+    if isinstance(manifest.get("session_markers"), dict) and "session_markers" not in merged:
+        merged["session_markers"] = manifest["session_markers"]
+
+    if isinstance(manifest.get("completed_sessions"), list) and "completed_sessions" not in merged:
+        merged["completed_sessions"] = manifest["completed_sessions"]
+
+    marker_from_manifest = manifest.get(SESSION_DEPENDENCY_COMPLETION_MARKER)
+    if isinstance(marker_from_manifest, bool) and SESSION_DEPENDENCY_COMPLETION_MARKER not in merged:
+        merged[SESSION_DEPENDENCY_COMPLETION_MARKER] = marker_from_manifest
+
+    b2_manifest = manifest.get("b2")
+    if isinstance(b2_manifest, dict):
+        marker_from_b2 = b2_manifest.get("orchestration_session_complete")
+        if isinstance(marker_from_b2, bool) and SESSION_DEPENDENCY_COMPLETION_MARKER not in merged:
+            merged[SESSION_DEPENDENCY_COMPLETION_MARKER] = marker_from_b2
+
+    sessions_manifest = manifest.get("sessions")
+    if isinstance(sessions_manifest, dict):
+        b2_session = sessions_manifest.get("b2")
+        if isinstance(b2_session, dict):
+            marker_from_sessions = b2_session.get("complete")
+            if (
+                isinstance(marker_from_sessions, bool)
+                and SESSION_DEPENDENCY_COMPLETION_MARKER not in merged
+            ):
+                merged[SESSION_DEPENDENCY_COMPLETION_MARKER] = marker_from_sessions
+
+    return merged
+
+
 def _route_after_sweep_detection(state: dict) -> str:
     enforce_dependency_gate = state.get("enforce_feature_a_dependency_gate", False) is True
     resolved_state = resolve_dependency_state(state) if enforce_dependency_gate else state
@@ -716,13 +945,17 @@ def _route_after_sweep_detection(state: dict) -> str:
     if resolved_state.get("sweep_id") is None:
         return "architect_node"
 
+    resolved_state = _merge_manifest_session_dependency_state(resolved_state)
     session_gate_flag = resolved_state.get("enforce_session_dependency_gate")
-    session_gate_required = bool(resolved_state.get("session_dependency_required"))
+    session_gate_required = bool(resolved_state.get("session_dependency_required")) or (
+        _session_dependency_gate_required_from_approvals(resolved_state)
+    )
+    manifest_declares_session_dependency = _manifest_declares_session_dependency(resolved_state)
     # Preserve legacy behavior: sweeps execute by default unless the
     # session-dependency gate is explicitly enabled/required.
     if session_gate_flag is False and not session_gate_required:
         enforce_session_gate = False
-    elif session_gate_required or session_gate_flag is True:
+    elif session_gate_required or session_gate_flag is True or manifest_declares_session_dependency:
         enforce_session_gate = True
     else:
         enforce_session_gate = False
@@ -1187,6 +1420,8 @@ def _paper_validator_traceability_and_release_checks_pass(state: dict[str, Any])
     if not _risk_owner_status_updates_valid(state):
         return False
     if not _release_gate_criteria_valid(state):
+        return False
+    if not criterion_benchmark_test_linkage_valid(state):
         return False
     return True
 
