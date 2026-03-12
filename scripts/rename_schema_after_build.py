@@ -53,7 +53,10 @@ def _backup_if_modified(path: Path, repo_root: Path) -> None:
 
 
 def _group_schemas(schema_dir: Path) -> list[SchemaGroup]:
-    complete_files = list(schema_dir.glob("*_complete_v*.json"))
+    complete_files = [
+        p for p in schema_dir.glob("*_complete_*.json")
+        if not p.name.endswith("_complete_current.json")
+    ]
     schema_files = list(schema_dir.glob("*_schema_*.json"))
 
     groups: dict[tuple[str, str], list[Path]] = {}
@@ -69,6 +72,24 @@ def _group_schemas(schema_dir: Path) -> list[SchemaGroup]:
 
 def _select_newest(files: list[Path]) -> Path:
     return max(files, key=lambda p: p.stat().st_mtime)
+
+
+def _sync_complete_current_symlink(schema_dir: Path, group: SchemaGroup) -> None:
+    """Ensure <solver>_complete_current.json points at the newest complete schema."""
+    if group.kind != "complete" or not group.files:
+        return
+
+    newest = _select_newest(group.files)
+    current_link = schema_dir / f"{group.solver}_complete_current.json"
+    desired_target = newest.name
+
+    if current_link.is_symlink() and current_link.readlink().as_posix() == desired_target:
+        return
+
+    if current_link.exists() or current_link.is_symlink():
+        current_link.unlink()
+    current_link.symlink_to(desired_target)
+    print(f"[OK] synced {current_link.name} -> {desired_target}")
 
 
 def _rename_preserving_history(
@@ -89,7 +110,12 @@ def _rename_preserving_history(
     if not tracked_group:
         return
 
-    tracked_group = [p for p in tracked_group if p.exists() and p != newest]
+    tracked_group = [
+        p for p in tracked_group
+        if p.exists()
+        and p != newest
+        and not p.name.endswith("_complete_current.json")
+    ]
     if not tracked_group:
         return
 
@@ -148,9 +174,14 @@ def main() -> int:
 
     groups = _group_schemas(schema_dir)
     for group in groups:
-        if len(group.files) < 2:
-            continue
-        _rename_preserving_history(repo_root, schema_dir, group, args.singleton_rename)
+        if len(group.files) >= 2:
+            _rename_preserving_history(repo_root, schema_dir, group, args.singleton_rename)
+            # Refresh file list after potential rename.
+            group.files = [
+                p for p in schema_dir.glob(f"{group.solver}_{group.kind}_*.json")
+                if p.exists()
+            ]
+        _sync_complete_current_symlink(schema_dir, group)
 
     return 0
 
