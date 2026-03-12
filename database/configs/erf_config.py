@@ -32,11 +32,15 @@ class ERFConfig(BaseAMReXConfig):
     default_exec_pattern = "ERF*ex"
 
     selection_keywords = [
+        "abl",
         "atmospheric",
+        "boundary layer",
         "weather",
         "wind",
         "thermal bubble",
         "dry convection",
+        "2d squall line",
+        "squallline",
         "squall line",
         "squall-line",
         "moist convection",
@@ -73,10 +77,11 @@ class ERFConfig(BaseAMReXConfig):
     level0_cross_cutting_guidance = [
         "Use ERF for atmospheric, ABL, and weather-oriented simulations.",
     ]
-    github_search_paths = ["Exec/RegTests", "Exec/ABL"]
+    github_search_paths = ["Exec/RegTests", "Exec/ABL", "Exec/CanonicalFlows"]
     schema_pattern = "erf_complete_*.json"
 
     priority_cases = [
+        "Exec/CanonicalFlows/SquallLine_2D",
         "Exec/MoistRegTests/SquallLine_2D",
         "Exec/RegTests/Bubble",
         "Exec/RegTests/DensityCurrent",
