@@ -532,6 +532,11 @@ Examples:
         '--provider',
         help='Embedding provider to scope output layout (e.g., cborg, amsc)',
     )
+    parser.add_argument(
+        '--check',
+        action='store_true',
+        help='Check build_session_manifest.json provenance only (no index build)',
+    )
     return parser
 
 
@@ -630,7 +635,174 @@ def _run_requested_levels(
     return total_indices, session_entries
 
 
-def main() -> None:
+def _load_runtime_config():
+    from src.services.config_service import ConfigService
+    return ConfigService().initialize()
+
+
+def _load_manifest_entries(faiss_root: Path) -> list[dict[str, Any]]:
+    manifest_path = faiss_root / "build_session_manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Manifest not found: {manifest_path}")
+
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if isinstance(payload, list):
+        return [entry for entry in payload if isinstance(entry, dict)]
+
+    entries = payload.get("entries", [])
+    if not isinstance(entries, list):
+        raise ValueError("Manifest is invalid: expected top-level list or entries list")
+    return [entry for entry in entries if isinstance(entry, dict)]
+
+
+def _resolve_repo_head_for_solver(solver: str, config: Any) -> str:
+    repo_path = getattr(config, "repositories", {}).get(solver)
+    if repo_path is None:
+        return "MISSING"
+    path_obj = Path(repo_path)
+    if not path_obj.exists():
+        return "MISSING"
+
+    result = subprocess.run(
+        ["git", "-C", str(path_obj), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return "MISSING"
+    sha = result.stdout.strip()
+    return sha if sha else "MISSING"
+
+
+def _format_check_row(entry: dict[str, Any], flags: list[str]) -> str:
+    return (
+        f"solver={entry.get('solver', '-')}; "
+        f"level={entry.get('level', '-')}; "
+        f"generated_at={entry.get('generated_at', '-')}; "
+        f"repo_commit={entry.get('repo_commit', '-')}; "
+        f"dependencies_commit={entry.get('dependencies_commit', '-')}; "
+        f"embedding_model={entry.get('embedding_model', '-')}; "
+        f"embedding_provider={entry.get('embedding_provider', '-')}; "
+        f"flags={','.join(flags) if flags else 'OK'}"
+    )
+
+
+def _evaluate_manifest_entry(
+    entry: dict[str, Any],
+    *,
+    active_provider: str,
+    active_model: str,
+    config: Any,
+) -> tuple[str, list[str]]:
+    solver = str(entry.get("solver", "")).strip()
+    provider = str(entry.get("embedding_provider", "")).strip().lower()
+    model = str(entry.get("embedding_model", "")).strip()
+    repo_commit = str(entry.get("repo_commit", "")).strip()
+
+    if provider != active_provider or model != active_model:
+        return solver, ["MODEL MISMATCH"]
+
+    current_head = _resolve_repo_head_for_solver(solver, config)
+    if repo_commit != current_head:
+        return solver, ["STALE"]
+    return solver, []
+
+
+def _append_missing_solver_rows(
+    *,
+    lines: list[str],
+    registry: list[str],
+    matched_solvers: set[str],
+    active_provider: str,
+    active_model: str,
+) -> bool:
+    found_missing = False
+    for solver in registry:
+        if solver in matched_solvers:
+            continue
+        found_missing = True
+        lines.append(
+            _format_check_row(
+                {
+                    "solver": solver,
+                    "level": "-",
+                    "generated_at": "-",
+                    "repo_commit": "-",
+                    "dependencies_commit": "-",
+                    "embedding_model": active_model,
+                    "embedding_provider": active_provider,
+                },
+                ["MISSING"],
+            )
+        )
+    return found_missing
+
+
+def run_manifest_provenance_check(
+    faiss_root: Path,
+    config: Any | None = None,
+) -> tuple[int, list[str]]:
+    config = config or _load_runtime_config()
+    active_provider = str(getattr(config, "embedding_provider", "")).strip().lower()
+    active_model = str(getattr(config, "faiss_embedding_model", "")).strip()
+    manifest_entries = _load_manifest_entries(faiss_root)
+    registry = [cfg.code_name for cfg in discover_code_configs()]
+
+    has_failures = False
+    matched_solvers: set[str] = set()
+    lines: list[str] = [
+        "Manifest provenance check:",
+        f"  faiss_root={faiss_root}",
+        f"  active_embedding_provider={active_provider}",
+        f"  active_embedding_model={active_model}",
+    ]
+
+    for entry in manifest_entries:
+        solver, flags = _evaluate_manifest_entry(
+            entry,
+            active_provider=active_provider,
+            active_model=active_model,
+            config=config,
+        )
+        if not flags:
+            matched_solvers.add(solver)
+        has_failures = has_failures or bool(flags)
+        lines.append(_format_check_row(entry, flags))
+
+    has_failures = _append_missing_solver_rows(
+        lines=lines,
+        registry=registry,
+        matched_solvers=matched_solvers,
+        active_provider=active_provider,
+        active_model=active_model,
+    ) or has_failures
+
+    lines.append("Result: FAIL" if has_failures else "Result: PASS")
+    return (1 if has_failures else 0), lines
+
+
+def _run_check_mode(output: Path, provider_override: str | None = None) -> int:
+    try:
+        runtime_config = _load_runtime_config()
+        effective_provider = _resolve_effective_provider(
+            provider_override,
+            str(getattr(runtime_config, "embedding_provider", "")).strip().lower() or None,
+        )
+        faiss_root = _provider_output_root(output, effective_provider)
+        exit_code, lines = run_manifest_provenance_check(
+            faiss_root=faiss_root,
+            config=runtime_config,
+        )
+    except Exception as exc:
+        print(f"Manifest provenance check failed: {exc}")
+        return 1
+    for line in lines:
+        print(line)
+    return exit_code
+
+
+def main() -> int:
     """
     Run the multi-level index build CLI.
 
@@ -641,6 +813,8 @@ def main() -> None:
     """
     parser = _build_parser()
     args = parser.parse_args()
+    if args.check:
+        return _run_check_mode(args.output, args.provider)
     repo_root, config_class, solver_name = _resolve_build_context(args, parser)
 
     # Create embedder
@@ -698,7 +872,8 @@ Next Steps:
   2. Test search (Architect Service: Solver Selection)
   3. Use in production
 """)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())
