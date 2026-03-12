@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.erf_benchmark.compare_runs import evaluate_candidate_vs_baseline
+from scripts.erf_benchmark.compare_runs import (
+    build_tiebreak_metrics,
+    evaluate_candidate_vs_baseline,
+    select_better_candidate,
+)
 from scripts.erf_benchmark.generate_prompt_matrix import build_prompt_matrix_rows
 from scripts.erf_benchmark.make_splits import build_splits
 from scripts.erf_benchmark.run_llm_compare_benchmark import (
@@ -133,3 +137,27 @@ def test_compare_runs_acceptance_logic() -> None:
     verdict_bad = evaluate_candidate_vs_baseline(baseline, candidate_bad)
     assert verdict_bad["accepted"] is False
     assert verdict_bad["checks"]["category_guardrail"] is False
+
+
+def test_compare_runs_tiebreak_prefers_lower_variance_then_misses() -> None:
+    baseline_metrics = build_tiebreak_metrics(
+        {"simple_weighted_score": 0.90, "hierarchical_weighted_score": 0.92},
+        [
+            {"strategy": "simple", "category": "A", "weighted_score": "0.9"},
+            {"strategy": "hierarchical", "category": "A", "weighted_score": "0.9"},
+            {"strategy": "simple", "category": "B", "weighted_score": "0.7"},
+            {"strategy": "hierarchical", "category": "B", "weighted_score": "0.7"},
+        ],
+        [{"strategy": "simple", "row_id": "x"}],
+    )
+    candidate_metrics = build_tiebreak_metrics(
+        {"simple_weighted_score": 0.90, "hierarchical_weighted_score": 0.92},
+        [
+            {"strategy": "simple", "category": "A", "weighted_score": "0.8"},
+            {"strategy": "hierarchical", "category": "A", "weighted_score": "0.8"},
+            {"strategy": "simple", "category": "B", "weighted_score": "0.8"},
+            {"strategy": "hierarchical", "category": "B", "weighted_score": "0.8"},
+        ],
+        [],
+    )
+    assert select_better_candidate(baseline_metrics, candidate_metrics) == "candidate"

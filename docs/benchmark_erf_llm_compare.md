@@ -162,6 +162,31 @@ Guardrails against overfitting:
 - no direct case-name hardcoding intended to memorize benchmark IDs
 - all template changes must pass holdout/paraphrase/non-ERF gates
 
+## Tuning Workflow
+
+### Step A: Baseline Run
+- Use current templates and current config weights.
+- Run pass-2 evaluation on train, holdout, holdout paraphrase, and non-ERF sanity datasets.
+- Persist baseline summary at:
+  - `benchmark/erf_llm_compare/runs/{run_id}/summary_baseline.json`
+
+### Step B: Tuning Loop
+Allowed knobs:
+1. strategy-specific config weights
+2. ERF prompt templates
+3. prompt wave selection (`wave0`, `wave1`, `wave2`)
+
+For each candidate:
+- evaluate on train first
+- if train improves, evaluate holdout + paraphrase + non-ERF sanity
+- keep candidate only if all acceptance gates pass
+
+### Step C: Final Candidate Selection
+Select best accepted candidate by:
+1. highest mean holdout weighted score across strategies
+2. tie-breaker: lower variance across categories
+3. tie-breaker: fewer catastrophic misses
+
 ## Implementation Artifacts
 New scripts:
 - `scripts/erf_benchmark/generate_prompt_matrix.py`
@@ -172,6 +197,7 @@ New scripts:
 Run outputs:
 - `benchmark/erf_llm_compare/runs/{run_id}/results.jsonl`
 - `benchmark/erf_llm_compare/runs/{run_id}/summary.json`
+- `benchmark/erf_llm_compare/runs/{run_id}/summary_baseline.json` (baseline step only)
 - `benchmark/erf_llm_compare/runs/{run_id}/category_report.csv`
 - `benchmark/erf_llm_compare/runs/{run_id}/failures.csv`
 
