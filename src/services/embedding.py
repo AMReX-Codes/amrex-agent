@@ -359,6 +359,7 @@ class EmbeddingService:
                 self._last_embed_request_ts = time.monotonic()
 
             attempt = 0
+            rate_limit_delay = 2.0
             while True:
                 attempt += 1
                 try:
@@ -377,11 +378,15 @@ class EmbeddingService:
                     retryable = status_code in {429, 500, 502, 503}
                     if not retryable or attempt >= max_attempts:
                         raise
-                    base_delay = 1.0
-                    max_delay = 20.0
-                    backoff = 2.0
-                    delay = min(max_delay, base_delay * (backoff ** (attempt - 1)))
-                    delay += random.uniform(0.0, delay * 0.1)
+                    if status_code == 429:
+                        delay = rate_limit_delay
+                        rate_limit_delay = min(60.0, (rate_limit_delay * 2.0) + random.uniform(0.0, 1.0))
+                    else:
+                        base_delay = 1.0
+                        max_delay = 20.0
+                        backoff = 2.0
+                        delay = min(max_delay, base_delay * (backoff ** (attempt - 1)))
+                        delay += random.uniform(0.0, delay * 0.1)
                     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
                     logger.warning(
                         "[%s] Embedding batch %s/%s failed (attempt %s/%s, status %s, sample='%s'): %s",

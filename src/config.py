@@ -1501,6 +1501,7 @@ class _LLMRetryCompletions:
     def create(self, *args: Any, **kwargs: Any) -> Any:
         attempt = 0
         saw_transient_failure = False
+        rate_limit_delay = 2.0
         while True:
             attempt += 1
             try:
@@ -1517,11 +1518,15 @@ class _LLMRetryCompletions:
                 if attempt >= self._max_attempts:
                     self._transient_recovery_outcomes.append(False)
                     raise
-                base_delay = 1.0
-                max_delay = 20.0
-                backoff = 2.0
-                delay = min(max_delay, base_delay * (backoff ** (attempt - 1)))
-                delay += random.uniform(0.0, delay * 0.1)
+                if status_code == 429:
+                    delay = rate_limit_delay
+                    rate_limit_delay = min(60.0, (rate_limit_delay * 2.0) + random.uniform(0.0, 1.0))
+                else:
+                    base_delay = 1.0
+                    max_delay = 20.0
+                    backoff = 2.0
+                    delay = min(max_delay, base_delay * (backoff ** (attempt - 1)))
+                    delay += random.uniform(0.0, delay * 0.1)
                 timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
                 logger.warning(
                     "[%s] LLM request failed (attempt %s/%s, status %s): %s",
