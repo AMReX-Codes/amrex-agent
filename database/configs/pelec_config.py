@@ -372,6 +372,56 @@ Return JSON:
     }
 
     @classmethod
+    def get_viz_variable_catalog(cls, repo_root: Path | None = None) -> list[dict[str, Any]]:
+        """
+        Build PeleC visualization variable catalog from live setup sources.
+        """
+        if repo_root:
+            root = Path(repo_root)
+        else:
+            root = Path(__file__).resolve().parents[2].parent / "PeleC"
+
+        setup = root / "Source" / "Setup.cpp"
+        if not setup.exists():
+            return []
+
+        try:
+            text = setup.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            return []
+
+        names: list[str] = []
+        names.extend(re.findall(r'name\[cnt\]\s*=\s*"([^"]+)"', text))
+        names.extend(re.findall(r'derive_lst\.add\(\s*"([^"]+)"', text))
+
+        aliases = {
+            "Temp": ["temperature", "temp"],
+            "pressure": ["pres"],
+            "magvel": ["velocity", "speed"],
+            "magvort": ["vorticity", "vort"],
+            "z_velocity": ["vertical velocity", "w velocity"],
+            "density": ["rho"],
+        }
+
+        catalog: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        source_ref = str(setup)
+        for name in names:
+            if name in seen:
+                continue
+            seen.add(name)
+            catalog.append(
+                {
+                    "name": name,
+                    "aliases": aliases.get(name, []),
+                    "units": None,
+                    "description": None,
+                    "source": source_ref,
+                }
+            )
+        return catalog
+
+    @classmethod
     def analysis_error_patterns(cls) -> list[dict[str, str]]:
         """
         Extend stderr error patterns with PeleC-specific cases.

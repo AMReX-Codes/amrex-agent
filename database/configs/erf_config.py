@@ -7,6 +7,7 @@ Related solvers: PeleC, PeleLMeX, ERF, WarpX, incflo.
 """
 
 import logging
+import re
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -20,6 +21,13 @@ class ERFConfig(BaseAMReXConfig):
     """ERF (Energy Research and Forecasting) configuration."""
 
     code_name = "ERF"
+
+    @classmethod
+    def get_default_slice_axis(cls) -> str | None:
+        """
+        Prefer x-z style cross-sections (normal=y) so z is vertical on plots.
+        """
+        return "y"
 
     # === Registry Metadata ===
     github_org = "erf-model"
@@ -144,6 +152,71 @@ class ERFConfig(BaseAMReXConfig):
             ),
         },
     }
+
+    @classmethod
+    def get_viz_variable_catalog(cls, repo_root: Path | None = None) -> list[dict[str, Any]]:
+        """
+        Build ERF visualization variable catalog from live ERF source files.
+        """
+        if repo_root:
+            root = Path(repo_root)
+        else:
+            root = Path(__file__).resolve().parents[2].parent / "ERF"
+
+        header = root / "Source" / "ERF.H"
+        if not header.exists():
+            return []
+
+        try:
+            text = header.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            return []
+
+        vector_pattern = re.compile(
+            r'const\s+amrex::Vector<std::string>\s+(cons_names|derived_names|derived_names_2d)\s*\{(.*?)\};',
+            re.DOTALL,
+        )
+        names: list[str] = []
+        for _, body in vector_pattern.findall(text):
+            names.extend(re.findall(r'"([^"]+)"', body))
+
+        units = {
+            "density": "kg/m^3",
+            "temp": "K",
+            "pressure": "Pa",
+            "qv": "kg/kg",
+            "qc": "kg/kg",
+            "qi": "kg/kg",
+            "qrain": "kg/kg",
+            "qsnow": "kg/kg",
+            "qgraup": "kg/kg",
+            "qt": "kg/kg",
+        }
+        aliases = {
+            "temp": ["temperature"],
+            "magvel": ["velocity", "speed"],
+            "vorticity_z": ["vorticity", "vertical vorticity"],
+            "qc": ["cloud water", "cloud_water", "liquid water", "cloud liquid"],
+            "qv": ["water vapor", "vapor mixing ratio", "humidity"],
+        }
+
+        catalog: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        source_ref = str(header)
+        for name in names:
+            if name in seen:
+                continue
+            seen.add(name)
+            catalog.append(
+                {
+                    "name": name,
+                    "aliases": aliases.get(name, []),
+                    "units": units.get(name),
+                    "description": None,
+                    "source": source_ref,
+                }
+            )
+        return catalog
 
     @classmethod
     def extract_metadata(cls, case_path: Path, repo_root: Path | None = None) -> dict[str, Any]:

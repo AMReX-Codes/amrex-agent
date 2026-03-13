@@ -7,6 +7,7 @@ Related solvers: PeleC, PeleLMeX, ERF, WarpX, incflo, REMORA.
 """
 
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,13 @@ class REMORAConfig(BaseAMReXConfig):
     """REMORA (Regional Ocean Modeling with AMReX) configuration."""
 
     code_name = "REMORA"
+
+    @classmethod
+    def get_default_slice_axis(cls) -> str | None:
+        """
+        Prefer x-z style cross-sections (normal=y) so z is vertical on plots.
+        """
+        return "y"
 
     # === Registry Metadata ===
     github_org = "AMReX-Codes"
@@ -83,6 +91,80 @@ class REMORAConfig(BaseAMReXConfig):
     documentation_map = {
         'solver_readme': ['README.md', 'README.rst'],
     }
+
+    @classmethod
+    def get_viz_variable_catalog(cls, repo_root: Path | None = None) -> list[dict[str, Any]]:
+        """
+        Build REMORA visualization variable catalog from live source files.
+        """
+        if repo_root:
+            root = Path(repo_root)
+        else:
+            root = Path(__file__).resolve().parents[2].parent / "REMORA"
+
+        header = root / "Source" / "REMORA.H"
+        if not header.exists():
+            return []
+
+        try:
+            header_text = header.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            return []
+
+        names: list[str] = []
+        for _, body in re.findall(
+            r'const\s+amrex::Vector<std::string>\s+(cons_names|derived_names)\s*\{(.*?)\};',
+            header_text,
+            flags=re.DOTALL,
+        ):
+            names.extend(re.findall(r'"([^"]+)"', body))
+        names.extend(["x_velocity", "y_velocity", "z_velocity"])
+
+        long_name_map: dict[str, str] = {}
+        units_map: dict[str, str] = {}
+        ncplot = root / "Source" / "IO" / "REMORA_NCPlotFile.cpp"
+        if ncplot.exists():
+            try:
+                nc_text = ncplot.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                nc_text = ""
+            for var, desc in re.findall(
+                r'ncf\.var\("([^"]+)"\)\.put_attr\("long_name","([^"]*)"\);',
+                nc_text,
+            ):
+                long_name_map[var] = desc
+            for var, unit in re.findall(
+                r'ncf\.var\("([^"]+)"\)\.put_attr\("units","([^"]*)"\);',
+                nc_text,
+            ):
+                units_map[var] = unit
+
+        aliases = {
+            "temp": ["temperature"],
+            "salt": ["salinity"],
+            "vorticity": ["vort"],
+            "x_velocity": ["x velocity", "u velocity"],
+            "y_velocity": ["y velocity", "v velocity"],
+            "z_velocity": ["z velocity", "vertical velocity", "w velocity"],
+        }
+
+        catalog: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        source_ref = str(header)
+        for name in names:
+            if name in seen:
+                continue
+            seen.add(name)
+            catalog.append(
+                {
+                    "name": name,
+                    "aliases": aliases.get(name, []),
+                    "units": units_map.get(name),
+                    "description": long_name_map.get(name),
+                    "source": source_ref,
+                }
+            )
+        return catalog
 
     @classmethod
     def extract_metadata(cls, case_path: Path, repo_root: Path | None = None) -> dict[str, Any]:

@@ -15,6 +15,7 @@ Phase 5 enhancements:
 """
 
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -281,11 +282,27 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
 
     # Build visualization config
     logger.debug("\n[Step 3/4] Building visualization configuration...")
+    solver_name = (
+        state.get("selected_solver")
+        or plan.get("selected_solver")
+        or (plan.get("baseline") or {}).get("code_name")
+        or ""
+    )
+    inputs_file_path = (
+        state.get("inputs_file_path")
+        or state.get("inputs_file")
+        or plan.get("inputs_file_path")
+        or plan.get("baseline_inputs_path")
+    )
     vis_config = _build_vis_config(
         plan=plan,
         analysis_report=analysis_report,
         plotfiles=plotfiles,
-        viz_service=viz
+        viz_service=viz,
+        prompt=state.get("prompt", ""),
+        solver_name=solver_name,
+        inputs_file_path=inputs_file_path,
+        requested_plot_vars=state.get("requested_plot_vars", []) or [],
     )
 
     logger.debug(f"  Will generate {len(vis_config.get('plots', []))} plot(s):")
@@ -397,7 +414,11 @@ def _build_vis_config(
     plan: dict[str, Any],
     analysis_report: dict[str, Any],
     plotfiles: list[Path],
-    viz_service: VisualizationService
+    viz_service: VisualizationService,
+    prompt: str = "",
+    solver_name: str = "",
+    inputs_file_path: str | None = None,
+    requested_plot_vars: list[str] | None = None,
 ) -> dict[str, Any]:
     """
     Build visualization configuration from plan and analysis signals.
@@ -418,44 +439,105 @@ def _build_vis_config(
     dict
         Visualization configuration with a ``plots`` list.
     """
+    preferred_axis = _infer_preferred_slice_axis(
+        prompt=prompt,
+        solver_name=solver_name,
+        n_cell=_parse_inputs_n_cell(inputs_file_path),
+    )
+
     # Start with plan config if provided
     vis_config = plan.get('visualization') or {'plots': []}
     if not isinstance(vis_config, dict):
         vis_config = {'plots': []}
+    if not isinstance(vis_config.get("plots"), list):
+        vis_config["plots"] = []
 
-    # Validate requested plots against available fields when possible
-    if vis_config.get('plots'):
+    # Normalize plan-provided entries so defaults are deterministic.
+    plan_plots: list[dict[str, Any]] = []
+    for plot_cfg in vis_config.get("plots", []):
+        if not isinstance(plot_cfg, dict):
+            continue
+        if plot_cfg.get("type", "slice") != "slice":
+            continue
+        field = plot_cfg.get("field")
+        if not field:
+            continue
+        axis = plot_cfg.get("axis") or preferred_axis
+        plan_plots.append({
+            "type": "slice",
+            "field": field,
+            "axis": axis,
+            **({k: v for k, v in plot_cfg.items() if k not in {"type", "field", "axis"}}),
+        })
+
+    fields: list[str] = []
+    try:
+        fields = viz_service.backend.get_field_list(plotfiles[-1]) if plotfiles else []
+    except Exception as exc:
+        logger.debug(f"  [WARN] Field detection failed: {exc}")
+
+    requested = list(requested_plot_vars or [])
+    requested_fields = _resolve_requested_fields(requested, fields) if fields else []
+
+    merged_plots: list[dict[str, Any]] = []
+    seen_keys: set[tuple[str, str, str]] = set()
+
+    def _add_plot(plot_cfg: dict[str, Any]) -> None:
+        field = str(plot_cfg.get("field", "")).strip()
+        ptype = str(plot_cfg.get("type", "slice")).strip() or "slice"
+        axis = str(plot_cfg.get("axis", preferred_axis)).strip() or preferred_axis
+        if not field or ptype != "slice":
+            return
+        key = (ptype, field, axis)
+        if key in seen_keys:
+            return
+        seen_keys.add(key)
+        merged_plots.append({"type": ptype, "field": field, "axis": axis})
+
+    # 1) Requested plot vars are primary source of truth.
+    for field in requested_fields:
+        _add_plot({"type": "slice", "field": field, "axis": preferred_axis})
+
+    if requested and not fields:
+        # If we cannot inspect fields, still honor requested vars as plot intents.
+        for token in requested:
+            _add_plot({"type": "slice", "field": token, "axis": preferred_axis})
+
+    # 2) Plan plots are optional add-ons (never replace requested).
+    if plan_plots:
+        missing_plan_fields: list[str] = []
+        for plot_cfg in plan_plots:
+            field = str(plot_cfg.get("field", ""))
+            if fields and field not in fields:
+                missing_plan_fields.append(field)
+                continue
+            _add_plot(plot_cfg)
+        if missing_plan_fields:
+            logger.info(
+                "Requested visualization fields not available: %s; keeping requested plot vars and skipping unavailable plan fields.",
+                ", ".join([m for m in missing_plan_fields if m]),
+            )
+
+    if merged_plots:
+        vis_config["plots"] = merged_plots
+        return vis_config
+
+    # If still empty, build defaults.
+    if not vis_config.get("plots"):
+        vis_config["plots"] = []
+
         try:
-            fields = viz_service.backend.get_field_list(plotfiles[-1]) if plotfiles else []
-        except Exception as exc:
-            fields = []
-            logger.debug(f"  [WARN] Field detection failed: {exc}")
-        if fields:
-            requested = vis_config.get('plots', [])
-            filtered = [p for p in requested if p.get('field') in fields]
-            if len(filtered) != len(requested):
-                missing = [p.get('field') for p in requested if p.get('field') not in fields]
-                logger.info(
-                    "Requested visualization fields not available: %s; falling back to available fields.",
-                    ", ".join([m for m in missing if m])
-                )
-                vis_config['plots'] = filtered
+            if not fields:
+                fields = viz_service.backend.get_field_list(plotfiles[-1])
 
-    # If no plots specified (or all were filtered out), build default set
-    if not vis_config.get('plots'):
-        vis_config['plots'] = []
-
-        # Always plot Temp and density if available
-        try:
-            fields = viz_service.backend.get_field_list(plotfiles[-1])
-
+            # Always plot Temp and density if available
             # Temperature
             if 'Temp' in fields or 'temperature' in fields:
                 field_name = 'Temp' if 'Temp' in fields else 'temperature'
                 vis_config['plots'].append({
                     'type': 'slice',
                     'field': field_name,
-                    'axis': 'z'
+                    'axis': preferred_axis
                 })
 
             # Density
@@ -463,7 +545,7 @@ def _build_vis_config(
                 vis_config['plots'].append({
                     'type': 'slice',
                     'field': 'density',
-                    'axis': 'z'
+                    'axis': preferred_axis
                 })
 
             # Velocity (if analysis detected high velocities)
@@ -472,7 +554,7 @@ def _build_vis_config(
                 vis_config['plots'].append({
                     'type': 'slice',
                     'field': 'x_velocity',
-                    'axis': 'z'
+                    'axis': preferred_axis
                 })
 
             # Chemistry species (detect Y(...) fields)
@@ -483,7 +565,7 @@ def _build_vis_config(
                     vis_config['plots'].append({
                         'type': 'slice',
                         'field': sp,
-                        'axis': 'z'
+                        'axis': preferred_axis
                     })
 
             # If still no plots, fall back to density or components
@@ -492,31 +574,161 @@ def _build_vis_config(
                     vis_config['plots'].append({
                         'type': 'slice',
                         'field': 'density',
-                        'axis': 'z'
+                        'axis': preferred_axis
                     })
                 elif len(fields) < 10:
                     for field in fields:
                         vis_config['plots'].append({
                             'type': 'slice',
                             'field': field,
-                            'axis': 'z'
+                            'axis': preferred_axis
                         })
                 elif fields:
                     vis_config['plots'].append({
                         'type': 'slice',
                         'field': fields[0],
-                        'axis': 'z'
+                        'axis': preferred_axis
                     })
 
         except Exception as e:
             # Field detection failed - use minimal default
             logger.debug(f"  [WARN] Field detection failed: {e}")
             vis_config['plots'] = [
-                {'type': 'slice', 'field': 'Temp', 'axis': 'z'},
-                {'type': 'slice', 'field': 'density', 'axis': 'z'}
+                {'type': 'slice', 'field': 'Temp', 'axis': preferred_axis},
+                {'type': 'slice', 'field': 'density', 'axis': preferred_axis}
             ]
 
     return vis_config
+
+
+def _resolve_requested_fields(requested: list[str], available_fields: list[str]) -> list[str]:
+    """
+    Map semantic requested plot vars to available plotfile field names.
+    """
+    if not requested or not available_fields:
+        return []
+
+    available_lower = {f.lower(): f for f in available_fields}
+
+    semantic_candidates: dict[str, list[str]] = {
+        "temperature": ["temp", "temperature"],
+        "velocity": ["magvel", "mag_vel", "x_velocity"],
+        "vertical_velocity": ["z_velocity", "w_velocity", "w"],
+        "pressure": ["pressure", "pres"],
+        "density": ["density", "rho"],
+        "vorticity": ["vorticity", "magvort", "mag_vort", "vorticity_z", "VortZ"],
+        "cloud_water": ["qc", "cloud water", "cloud_water", "liquid water"],
+    }
+
+    resolved: list[str] = []
+    for token in requested:
+        token_lower = str(token).strip().lower()
+        candidates = semantic_candidates.get(token_lower, [token_lower])
+        selected = None
+        for candidate in candidates:
+            key = candidate.lower()
+            if key in available_lower:
+                selected = available_lower[key]
+                break
+        if selected and selected not in resolved:
+            resolved.append(selected)
+    return resolved
+
+
+def _parse_inputs_n_cell(inputs_file_path: str | None) -> list[int] | None:
+    """
+    Parse amr.n_cell from an inputs file, if available.
+    """
+    if not inputs_file_path:
+        return None
+    path = Path(inputs_file_path)
+    if not path.exists() or not path.is_file():
+        return None
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return None
+
+    pattern = re.compile(r"^\s*amr\.n_cell\s*=\s*(.*?)\s*$")
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = pattern.match(line)
+        if not match:
+            continue
+        values = [token for token in match.group(1).split() if token]
+        parsed: list[int] = []
+        for token in values:
+            try:
+                parsed.append(int(float(token)))
+            except ValueError:
+                return None
+        return parsed or None
+
+    return None
+
+
+def _infer_preferred_slice_axis(
+    prompt: str,
+    solver_name: str,
+    n_cell: list[int] | None,
+) -> str:
+    """
+    Choose a deterministic default slice normal axis.
+
+    Rules:
+    1. ERF/REMORA default to 'y' so z stays vertical on x-z plots.
+    2. Honor explicit prompt cues (x-z => y, y-z => x, x-y => z).
+    3. If grid suggests a collapsed dimension (n_cell == 1), use it.
+    4. Otherwise choose shortest-axis normal for 3D grids.
+    5. Fallback to z.
+    """
+    text = (prompt or "").lower()
+    solver = (solver_name or "").strip().upper()
+
+    if "x-z" in text or "xz " in text or " xz" in text or "vertical slice" in text:
+        return "y"
+    if "y-z" in text or "yz " in text or " yz" in text:
+        return "x"
+    if "x-y" in text or "xy " in text or " xy" in text or "plan view" in text:
+        return "z"
+
+    if n_cell and len(n_cell) >= 3:
+        axis_labels = ["x", "y", "z"]
+        for idx, val in enumerate(n_cell[:3]):
+            if val == 1:
+                return axis_labels[idx]
+
+    config_default = _get_config_default_slice_axis(solver)
+    if config_default in {"x", "y", "z"}:
+        return config_default
+
+    if n_cell and len(n_cell) >= 3:
+        axis_labels = ["x", "y", "z"]
+        min_idx = min(range(3), key=lambda i: n_cell[i])
+        return axis_labels[min_idx]
+
+    return "z"
+
+
+def _get_config_default_slice_axis(solver_name: str) -> str | None:
+    if not solver_name:
+        return None
+    try:
+        from database.configs.registry import get_config_class
+
+        config_cls = get_config_class(solver_name)
+        getter = getattr(config_cls, "get_default_slice_axis", None)
+        if getter is None:
+            return None
+        axis = getter()
+        if isinstance(axis, str):
+            axis = axis.strip().lower()
+            return axis or None
+    except Exception:
+        return None
+    return None
 
 
 # Export for LangGraph

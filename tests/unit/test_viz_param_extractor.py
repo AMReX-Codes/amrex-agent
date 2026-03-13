@@ -7,6 +7,7 @@ import logging
 import pytest
 
 from src.services.viz_param_extractor import (
+    canonicalize_requested_plot_vars,
     extract_viz_params_from_prompt,
     get_plotfile_var_param,
 )
@@ -114,6 +115,46 @@ class TestVizParamExtractor:
         assert "vertical_velocity" in requested_plot_vars
         assert "temperature" in requested_plot_vars
         assert visualization_config["color_scale"] == "logarithmic"
+
+    def test_cloud_water_keyword_extracted(self):
+        """
+        Given: prompt asks to visualize cloud water
+        When:  extract_viz_params_from_prompt runs without solver context
+        Then:  semantic token cloud_water is extracted
+        """
+        requested_plot_vars, _ = extract_viz_params_from_prompt(
+            "visualize cloud water output"
+        )
+        assert "cloud_water" in requested_plot_vars
+
+    def test_canonicalize_uses_solver_catalog_aliases(self, monkeypatch):
+        """
+        Given: solver catalog with alias cloud water -> qc
+        When:  canonicalize_requested_plot_vars runs
+        Then:  requested semantic token maps to solver-native qc
+        """
+
+        class _MockConfig:
+            @classmethod
+            def get_viz_variable_catalog(cls, repo_root=None):
+                del cls, repo_root
+                return [
+                    {
+                        "name": "qc",
+                        "aliases": ["cloud water", "cloud_water", "liquid water"],
+                        "units": "kg/kg",
+                        "description": "cloud liquid water",
+                        "source": "mock",
+                    }
+                ]
+
+        monkeypatch.setattr(
+            "database.configs.registry.get_config_class",
+            lambda code_name: _MockConfig,
+        )
+
+        mapped = canonicalize_requested_plot_vars(["cloud_water"], code_name="ERF")
+        assert mapped == ["qc"]
 
 
 class TestPlotfileParamLookup:

@@ -19,6 +19,7 @@ from src.services.inputs_file_writer import InputsFileWriter
 from src.services.viz_param_extractor import (
     PLOTFILE_VAR_PARAM,
     PLOTFILE_VAR_PARAM_DEFAULT,
+    canonicalize_requested_plot_vars,
     get_plotfile_var_param,
 )
 
@@ -431,8 +432,20 @@ class InputWriterService:
                 logger.warning(f"Empty baseline for {baseline_case} at {local_path}")
                 baseline_text = "# Empty baseline\n"
 
+            repo_root = None
+            if hasattr(self.config, "repositories"):
+                repo_root = self.config.repositories.get(code_name)
+            if not repo_root:
+                repo_root = baseline.get("repo_path")
+
+            requested_plot_vars_resolved = canonicalize_requested_plot_vars(
+                requested_plot_vars or [],
+                code_name=code_name,
+                repo_root=repo_root,
+            )
+
             plotfile_setting = _resolve_plotfile_vars(
-                requested=requested_plot_vars or [],
+                requested=requested_plot_vars_resolved,
                 baseline_inputs_content=baseline_text,
                 code_name=code_name,
             )
