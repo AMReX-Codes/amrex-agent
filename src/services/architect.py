@@ -1021,9 +1021,9 @@ class ArchitectService:
             ", ".join(f"{k}={v:.3f}" for k, v in sorted(weights_used.items())),
         )
 
-        # Default to top-5 candidate retrieval unless explicitly overridden in config.
-        # Respect explicit small values from config instead of forcing a larger floor.
-        candidate_pool_size = max(1, self._config_int("hierarchical_candidate_pool_size", 5))
+        # Execute weighted search with a larger candidate pool to support
+        # post-search disambiguation (priority/path heuristics).
+        candidate_pool_size = max(5, self._config_int("hierarchical_candidate_pool_size", 100))
 
         # Execute weighted search
         # Weights from Indexing Engine: Physics-Agnostic Keywords & Scoring:
@@ -4949,9 +4949,9 @@ If uncertain, still return numeric scores for all candidates."""
 
         # === Score combination with weights ===
         weights = {
-            'names': 0.70,      # Favor explicit case-name/path alignment
-            'structure': 0.15,  # High-level descriptions
-            'details': 0.10,    # Detailed semantic content
+            'names': 0.80,      # Favor explicit case-name/path alignment
+            'structure': 0.12,  # High-level descriptions
+            'details': 0.08,    # Detailed semantic content
         }
 
         scores = {}
