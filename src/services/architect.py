@@ -749,6 +749,127 @@ class ArchitectService:
 
         logger.info("Selected solver: %s (confidence: %.2f)", code_name, confidence)
 
+        # Flatness guard: if top solver scores are too close, avoid hard-locking
+        # on a potentially wrong solver family.
+        top2_margin = None
+        if len(results) > 1:
+            runner_up_score = float(results[1].get("score") or 0.0)
+            top2_margin = confidence - runner_up_score
+
+        flat_enabled = self._config_bool("level0_flat_disambiguation_enabled", True)
+        flat_margin_threshold = self._config_float("level0_flat_margin_threshold", 0.08)
+        is_flat = (
+            flat_enabled
+            and top2_margin is not None
+            and top2_margin <= flat_margin_threshold
+        )
+
+        if is_flat:
+            logger.warning(
+                "Level0 near-tie detected (top1=%.3f, top2=%.3f, margin=%.3f <= %.3f); "
+                "attempting solver disambiguation.",
+                confidence,
+                float(results[1].get("score") or 0.0),
+                float(top2_margin or 0.0),
+                flat_margin_threshold,
+            )
+
+            switched_by_flat_disambiguation = False
+
+            # Prefer deterministic case-name evidence before additional LLM calls.
+            flat_min_hits = self._config_int("level0_flat_min_metadata_hits", 3)
+            flat_case_threshold = self._config_float("level0_flat_case_match_threshold", 0.90)
+            case_name_candidate = self._find_level2_case_name_candidate(
+                prompt=query,
+                min_metadata_hits=flat_min_hits,
+            )
+            if case_name_candidate:
+                candidate_confidence = float(case_name_candidate.get("match_confidence", 0.0))
+                candidate_solver_name = case_name_candidate.get("solver")
+                if (
+                    candidate_confidence >= flat_case_threshold
+                    and candidate_solver_name in self.code_configs
+                    and candidate_solver_name != code_name
+                ):
+                    logger.info(
+                        "[Level0 flat disambiguation] Switching solver %s -> %s "
+                        "(case=%s, confidence=%.2f)",
+                        code_name,
+                        candidate_solver_name,
+                        case_name_candidate.get("repo_path") or case_name_candidate.get("case_name"),
+                        candidate_confidence,
+                    )
+                    code_name = candidate_solver_name
+                    confidence = max(confidence, candidate_confidence)
+                    switched_by_flat_disambiguation = True
+                    for alt in alternatives:
+                        if alt.get("code") == code_name:
+                            alt["selected"] = True
+                            alt["selection_source"] = "level0_flat_case_override"
+                            alt["selection_reason"] = (
+                                "Selected via case-name disambiguation after near-tie Level0 routing result"
+                            )
+                            alt["rejection_reason"] = None
+                        else:
+                            alt["selected"] = False
+                            alt["rejection_reason"] = (
+                                "Rejected after near-tie Level0 routing; case-name disambiguation selected "
+                                "a different solver"
+                            )
+                    if not any(alt.get("code") == code_name for alt in alternatives):
+                        alternatives.insert(
+                            0,
+                            {
+                                "code": code_name,
+                                "score": confidence,
+                                "selected": True,
+                                "selection_source": "level0_flat_case_override",
+                                "selection_reason": (
+                                    "Selected via case-name disambiguation after near-tie Level0 routing result"
+                                ),
+                                "rejection_reason": None,
+                            },
+                        )
+
+            # If deterministic disambiguation cannot resolve the near-tie, use LLM.
+            if not switched_by_flat_disambiguation and self.llm_client:
+                logger.info("Using LLM to resolve near-tie Level0 solver routing")
+                try:
+                    llm_code_name, _ = self.cases.find_best_match(query, self.llm_client)
+                    if llm_code_name in self.code_configs:
+                        logger.info("LLM selected solver: %s", llm_code_name)
+                        code_name = llm_code_name
+                        confidence = max(confidence, 0.8)
+                        for alt in alternatives:
+                            if alt.get("code") == code_name:
+                                alt["selected"] = True
+                                alt["selection_source"] = "llm_flat_disambiguation"
+                                alt["selection_reason"] = (
+                                    "Selected by LLM disambiguation after near-tie Level0 routing result"
+                                )
+                                alt["rejection_reason"] = None
+                            else:
+                                alt["selected"] = False
+                                alt["rejection_reason"] = (
+                                    "LLM disambiguation selected a different solver after near-tie Level0 result"
+                                )
+                        if not any(alt.get("code") == code_name for alt in alternatives):
+                            alternatives.insert(
+                                0,
+                                {
+                                    "code": code_name,
+                                    "score": confidence,
+                                    "selected": True,
+                                    "selection_source": "llm_flat_disambiguation",
+                                    "selection_reason": (
+                                        "Selected by LLM disambiguation after near-tie Level0 routing result"
+                                    ),
+                                    "rejection_reason": None,
+                                },
+                            )
+                except Exception as e:
+                    logger.warning("LLM near-tie disambiguation failed: %s", e)
+
         # LLM fallback for low-confidence results
         if confidence < confidence_threshold:
             logger.warning(f"Low confidence ({confidence:.2f} < {confidence_threshold})")
@@ -1893,6 +2014,11 @@ class ArchitectService:
         3. Build baseline dict for simple pipeline
         4. Return plan with 0 modifications
         """
+        if code_name not in self.code_configs:
+            raise ValueError(f"No config found for override solver {code_name}")
+
+        solver_config = self.code_configs[code_name]
+
         # Extract requirements (solver forced to override)
         requirements = self._extract_requirements(user_prompt)
         requirements['solver'] = code_name
