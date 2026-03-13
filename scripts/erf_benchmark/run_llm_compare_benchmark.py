@@ -361,6 +361,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run ERF llm_compare benchmark.")
     parser.add_argument("--prompt-matrix", type=Path, default=Path("benchmark/erf_llm_compare/prompt_matrix.jsonl"))
     parser.add_argument("--out-dir", type=Path, default=None)
+    parser.add_argument("--strategy", choices=["simple", "hierarchical"], default=None)
     parser.add_argument("--max-rows", type=int, default=0)
     parser.add_argument("--verbose-cli", action="store_true")
     parser.add_argument("--explainability-threshold", type=float, default=0.9)
@@ -386,23 +387,17 @@ def main() -> int:
     if args.max_rows > 0:
         rows = rows[: args.max_rows]
 
+    selected_strategies = [args.strategy] if args.strategy else ["simple", "hierarchical"]
     strategy_runs = [
         _run_strategy(
             rows,
-            "simple",
-            strategy_output_root=strategy_roots["simple"],
+            strategy,
+            strategy_output_root=strategy_roots[strategy],
             agent_config=args.agent_config,
             inputs_file_strategy=args.inputs_file_strategy,
             verbose_cli=args.verbose_cli,
-        ),
-        _run_strategy(
-            rows,
-            "hierarchical",
-            strategy_output_root=strategy_roots["hierarchical"],
-            agent_config=args.agent_config,
-            inputs_file_strategy=args.inputs_file_strategy,
-            verbose_cli=args.verbose_cli,
-        ),
+        )
+        for strategy in selected_strategies
     ]
     results_rows: list[dict[str, Any]] = []
     category_rows: list[dict[str, Any]] = []
@@ -429,14 +424,21 @@ def main() -> int:
                     }
                 )
 
+    runs_by_strategy = {item["strategy"]: item for item in strategy_runs}
+    simple_scored = runs_by_strategy["simple"]["scored"]["weighted_score"] if "simple" in runs_by_strategy else 0.0
+    hier_scored = runs_by_strategy["hierarchical"]["scored"]["weighted_score"] if "hierarchical" in runs_by_strategy else 0.0
+    simple_failed = runs_by_strategy["simple"]["failed_rows"] if "simple" in runs_by_strategy else 0
+    hier_failed = runs_by_strategy["hierarchical"]["failed_rows"] if "hierarchical" in runs_by_strategy else 0
+    score_count = len(runs_by_strategy) if runs_by_strategy else 1
+
     summary = {
-        "simple_weighted_score": strategy_runs[0]["scored"]["weighted_score"],
-        "hierarchical_weighted_score": strategy_runs[1]["scored"]["weighted_score"],
-        "simple_failed_rows": strategy_runs[0]["failed_rows"],
-        "hierarchical_failed_rows": strategy_runs[1]["failed_rows"],
+        "simple_weighted_score": simple_scored,
+        "hierarchical_weighted_score": hier_scored,
+        "simple_failed_rows": simple_failed,
+        "hierarchical_failed_rows": hier_failed,
     }
     summary["total_failed_rows"] = summary["simple_failed_rows"] + summary["hierarchical_failed_rows"]
-    summary["holdout_weighted_score"] = round((summary["simple_weighted_score"] + summary["hierarchical_weighted_score"]) / 2.0, 6)
+    summary["holdout_weighted_score"] = round((summary["simple_weighted_score"] + summary["hierarchical_weighted_score"]) / score_count, 6)
     summary["paraphrase_weighted_score"] = summary["holdout_weighted_score"]
     summary["category_min_weighted_score"] = min((r["weighted_score"] for r in category_rows), default=0.0)
     # NOTE: non_erf_sanity_weighted_score uses holdout score as placeholder.

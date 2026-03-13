@@ -145,13 +145,13 @@ launch_wave_pair() {
   log "${wave_name}: launching simple strategy -> $out_simple"
   local simple_start
   simple_start="$(date +%s)"
-  python "$BENCH_RUNNER" --prompt-matrix "$matrix_path" --out-dir "$out_simple" >"$out_simple/stdout.log" 2>&1 &
+  python "$BENCH_RUNNER" --strategy simple --prompt-matrix "$matrix_path" --out-dir "$out_simple" >"$out_simple/stdout.log" 2>&1 &
   local pid_simple=$!
 
   log "${wave_name}: launching hierarchical strategy -> $out_hier"
   local hier_start
   hier_start="$(date +%s)"
-  python "$BENCH_RUNNER" --prompt-matrix "$matrix_path" --out-dir "$out_hier" >"$out_hier/stdout.log" 2>&1 &
+  python "$BENCH_RUNNER" --strategy hierarchical --prompt-matrix "$matrix_path" --out-dir "$out_hier" >"$out_hier/stdout.log" 2>&1 &
   local pid_hier=$!
 
   log "${wave_name}: PID simple=$pid_simple"
