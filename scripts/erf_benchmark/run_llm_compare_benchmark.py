@@ -439,6 +439,9 @@ def main() -> int:
     summary["holdout_weighted_score"] = round((summary["simple_weighted_score"] + summary["hierarchical_weighted_score"]) / 2.0, 6)
     summary["paraphrase_weighted_score"] = summary["holdout_weighted_score"]
     summary["category_min_weighted_score"] = min((r["weighted_score"] for r in category_rows), default=0.0)
+    # NOTE: non_erf_sanity_weighted_score uses holdout score as placeholder.
+    # Dedicated non-ERF split execution is deferred to follow-on benchmarking.
+    # The 20-row non_erf_sanity.jsonl file exists and is reserved for that pass.
     summary["non_erf_sanity_weighted_score"] = summary["holdout_weighted_score"]
     summary.update(summarize_explainability(explainability_rows, threshold=args.explainability_threshold))
 
