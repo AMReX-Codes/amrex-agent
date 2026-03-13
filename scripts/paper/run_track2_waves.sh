@@ -212,6 +212,11 @@ row_lookup = {str(row.get("row_id", "")): row for row in matrix_rows}
 
 def solver_for(row_id: str):
     row = row_lookup.get(row_id, {})
+    target_case_relpath = row.get("target_case_relpath")
+    if isinstance(target_case_relpath, str) and target_case_relpath:
+        solver = target_case_relpath.split("/", 1)[0].strip()
+        if solver:
+            return solver
     for key in ("solver", "code", "expected_solver", "target_solver"):
         value = row.get(key)
         if isinstance(value, str) and value:
