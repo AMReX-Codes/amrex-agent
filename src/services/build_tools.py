@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def compile_amrex(
     case_dir: str,
     use_cuda: bool = True,
-    jobs: int = 16,
+    jobs: int = 12,
     config: dict | None = None,
 ) -> bool:
     """
@@ -52,6 +52,7 @@ def compile_amrex(
         make_flags.append("USE_CUDA=TRUE")
 
     make_flags.append("USE_MPI=TRUE")
+    make_flags.append("DEBUG=FALSE")
 
     is_pele_code = is_pele_case_path(case_dir)
 
@@ -60,7 +61,7 @@ def compile_amrex(
         commands = [
             ["make", "TPLrealclean"] + make_flags,
             ["make", "realclean"],
-            ["make", "TPL"] + make_flags,
+            ["make", "TPL", f"-j{jobs}"] + make_flags,
             ["nice", "make", f"-j{jobs}"] + make_flags,
         ]
     else:

@@ -548,7 +548,7 @@ def mcp_run_simulation(payload: dict) -> dict:
 
     if dry_run and executable_path is None and case_dir:
         dry_run_steps.append(
-            f"Skipping compile in {case_dir}: make USE_MPI=TRUE",
+            f"Skipping compile in {case_dir}: nice make -j12 USE_MPI=TRUE DEBUG=FALSE",
         )
         dry_run_steps.append(
             f"Skipping run directory setup under {active_config.output_dir}",
