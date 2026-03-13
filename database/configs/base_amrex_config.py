@@ -2326,6 +2326,22 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         return None
 
     @classmethod
+    def supports_physical_time_cadence(cls) -> bool:
+        """
+        Return whether solver time-based cadence can be interpreted from seconds.
+        """
+        return True
+
+    @classmethod
+    def convert_plot_cadence_prompt_seconds_to_solver_time(cls, seconds: float) -> float | None:
+        """
+        Convert prompt seconds into solver-time cadence units.
+
+        Default behavior assumes solver time is seconds (identity transform).
+        """
+        return float(seconds)
+
+    @classmethod
     def _resource_bytes_per_cell(cls, config: dict[str, Any]) -> int:
         return 200
 

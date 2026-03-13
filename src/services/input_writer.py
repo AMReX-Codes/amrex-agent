@@ -142,27 +142,47 @@ def _resolve_plotfile_period_settings(
     if not isinstance(visualization_config, dict):
         return []
 
-    seconds = visualization_config.get("plot_interval_seconds")
-    if seconds is None:
-        return []
-
-    try:
-        cadence_value = float(seconds)
-    except (TypeError, ValueError):
-        return []
-    if cadence_value <= 0:
-        return []
-
-    cadence_str = str(int(cadence_value)) if cadence_value.is_integer() else str(cadence_value)
     settings: list[tuple[str, str]] = []
-
     period_param = get_plotfile_period_param(code_name)
-    if period_param:
-        settings.append((period_param, cadence_str))
-
     step_interval_param = get_plotfile_step_interval_param(code_name)
-    if step_interval_param:
-        settings.append((step_interval_param, "-1"))
+
+    cadence_solver_time = visualization_config.get("cadence_solver_time")
+    if cadence_solver_time is not None:
+        try:
+            cadence_value = float(cadence_solver_time)
+        except (TypeError, ValueError):
+            cadence_value = 0.0
+        if cadence_value > 0:
+            cadence_str = str(int(cadence_value)) if cadence_value.is_integer() else str(cadence_value)
+            if period_param:
+                settings.append((period_param, cadence_str))
+            if step_interval_param:
+                settings.append((step_interval_param, "-1"))
+            return settings
+
+    cadence_solver_steps = visualization_config.get("cadence_solver_steps")
+    if cadence_solver_steps is not None:
+        try:
+            step_value = int(round(float(cadence_solver_steps)))
+        except (TypeError, ValueError):
+            step_value = 0
+        if step_value > 0 and step_interval_param:
+            settings.append((step_interval_param, str(step_value)))
+            return settings
+
+    # Backward compatibility for existing payloads still using raw seconds.
+    seconds = visualization_config.get("plot_interval_seconds")
+    if seconds is not None:
+        try:
+            cadence_value = float(seconds)
+        except (TypeError, ValueError):
+            cadence_value = 0.0
+        if cadence_value > 0:
+            cadence_str = str(int(cadence_value)) if cadence_value.is_integer() else str(cadence_value)
+            if period_param:
+                settings.append((period_param, cadence_str))
+            if step_interval_param:
+                settings.append((step_interval_param, "-1"))
 
     return settings
 

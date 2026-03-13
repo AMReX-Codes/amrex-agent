@@ -118,6 +118,30 @@ class TestInputWriterPlotfileInjection:
         assert ("erf.plot_per_1", "120") in settings
         assert ("erf.plot_int_1", "-1") in settings
 
+    def test_cadence_settings_for_pelelmex_use_amr_keys(self):
+        settings = _resolve_plotfile_period_settings(
+            visualization_config={"plot_interval_seconds": 15},
+            code_name="PeleLMeX",
+        )
+        assert ("amr.plot_per", "15") in settings
+        assert ("amr.plot_int", "-1") in settings
+
+    def test_cadence_settings_for_remora_use_remora_keys(self):
+        settings = _resolve_plotfile_period_settings(
+            visualization_config={"plot_interval_seconds": 30},
+            code_name="REMORA",
+        )
+        assert ("remora.plot_int_time", "30") in settings
+        assert ("remora.plot_int", "-1") in settings
+
+    def test_cadence_settings_step_fallback_writes_step_interval_only(self):
+        settings = _resolve_plotfile_period_settings(
+            visualization_config={"cadence_solver_steps": 12},
+            code_name="ERF",
+        )
+        assert ("erf.plot_int_1", "12") in settings
+        assert ("erf.plot_per_1", "12") not in settings
+
     def test_upsert_inputs_param_replaces_existing_value(self):
         original = "amr.n_cell = 64 64 64\nerf.plot_per_1 = 30\n"
         updated = upsert_inputs_param(original, "erf.plot_per_1", "120")
@@ -188,8 +212,22 @@ class TestInputWriterPlotfileInjection:
                     },
                 }
             ],
-            "requested_plot_vars": ["temperature"],
-            "visualization_config": {"plot_interval_seconds": 120, "timesteps": "all"},
+            "visualization_intent": {
+                "requested_fields": ["temperature"],
+                "cadence_prompt_seconds": 120,
+                "cadence_solver_time": 120.0,
+                "timestep_scope": "all",
+                "plots": [],
+                "solver_name": "PeleC",
+                "source": "prompt",
+                "adjustments": [],
+                "visualization_config": {
+                    "plot_interval_seconds": 120,
+                    "cadence_prompt_seconds": 120,
+                    "cadence_solver_time": 120.0,
+                    "timesteps": "all",
+                },
+            },
         }
 
         with patch("src.services.viz_param_extractor.extract_viz_params_from_prompt") as mock_extract, \

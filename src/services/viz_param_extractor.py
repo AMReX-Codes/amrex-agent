@@ -57,17 +57,17 @@ PLOTFILE_VAR_PARAM_DEFAULT = "amr.plot_vars"
 # "snapshots every 2 minutes".
 PLOTFILE_PERIOD_PARAM: dict[str, str] = {
     "AMReX": "amr.plot_per",
-    "PeleLMeX": "peleLM.plot_per",
+    "PeleLMeX": "amr.plot_per",
     "ERF": "erf.plot_per_1",
-    "REMORA": "amr.plot_int_time",
+    "REMORA": "remora.plot_int_time",
 }
 
 # Optional companions to disable step-based output when a time cadence is set.
 PLOTFILE_STEP_INTERVAL_PARAM: dict[str, str] = {
     "AMReX": "amr.plot_int",
-    "PeleLMeX": "peleLM.plot_int",
+    "PeleLMeX": "amr.plot_int",
     "ERF": "erf.plot_int_1",
-    "REMORA": "amr.plot_int",
+    "REMORA": "remora.plot_int",
 }
 
 
@@ -183,6 +183,50 @@ def get_plotfile_step_interval_param(code_name: str) -> str | None:
         logger.debug("plotfile-step param lookup via config failed for %s: %s", code_name, exc)
 
     return PLOTFILE_STEP_INTERVAL_PARAM.get(code_name)
+
+
+def convert_prompt_seconds_to_solver_time(code_name: str, prompt_seconds: int | float | None) -> float | None:
+    """
+    Convert prompt-extracted seconds to solver-time cadence units.
+
+    Returns None when conversion cannot be determined.
+    """
+    if prompt_seconds is None:
+        return None
+    try:
+        seconds = float(prompt_seconds)
+    except (TypeError, ValueError):
+        return None
+    if seconds <= 0:
+        return None
+    if not code_name:
+        return None
+
+    try:
+        from database.configs.registry import get_config_class
+
+        config_cls = get_config_class(code_name)
+        if getattr(config_cls, "code_name", "") == "amrex_base" and code_name not in PLOTFILE_PERIOD_PARAM:
+            return None
+        supports_fn = getattr(config_cls, "supports_physical_time_cadence", None)
+        if callable(supports_fn) and supports_fn() is False:
+            return None
+        converter = getattr(config_cls, "convert_plot_cadence_prompt_seconds_to_solver_time", None)
+        if callable(converter):
+            converted = converter(seconds)
+            if converted is None:
+                return None
+            converted_value = float(converted)
+            if converted_value <= 0:
+                return None
+            return converted_value
+    except Exception as exc:
+        logger.debug("cadence conversion via config failed for %s: %s", code_name, exc)
+
+    # Conservative fallback: only known solvers with time-cadence params get identity conversion.
+    if code_name in PLOTFILE_PERIOD_PARAM:
+        return seconds
+    return None
 
 
 def _extract_plot_interval_seconds(prompt_lower: str) -> int | None:

@@ -36,6 +36,7 @@ from src.router_func import (
     route_after_reviewer,
     route_after_runner,  # Phase 4
 )
+from src.nodes.visualization_intent_node import build_visualization_intent
 from src.services.viz_param_extractor import extract_viz_params_from_prompt
 
 
@@ -1126,6 +1127,14 @@ def initialize_state(
         raise ValueError("User requirement prompt cannot be empty")
 
     requested_plot_vars, visualization_config = extract_viz_params_from_prompt(prompt_content)
+    visualization_intent = build_visualization_intent(
+        prompt=prompt_content,
+        solver_name="",
+        repo_root=None,
+        requested_plot_vars=requested_plot_vars,
+        visualization_config=visualization_config,
+        prior_intent=None,
+    ).model_dump()
 
     # 3. Initialize state with defaults
     return {
@@ -1134,6 +1143,7 @@ def initialize_state(
         "config": config,
         "requested_plot_vars": requested_plot_vars,
         "visualization_config": visualization_config,
+        "visualization_intent": visualization_intent,
         "paper_source": paper_source,
         "paper_input_type": paper_input_type,
         "paper_validator_enabled": paper_validator_enabled,

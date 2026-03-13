@@ -173,11 +173,11 @@ class PeleLMeXConfig(BaseAMReXConfig):
 
     @classmethod
     def get_plotfile_period_param(cls) -> str | None:
-        return "peleLM.plot_per"
+        return "amr.plot_per"
 
     @classmethod
     def get_plotfile_step_interval_param(cls) -> str | None:
-        return "peleLM.plot_int"
+        return "amr.plot_int"
 
     prompt_templates: ClassVar[dict[str, Any]] = {
         "misc": {

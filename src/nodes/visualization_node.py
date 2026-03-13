@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from src.models import GraphState
+from src.nodes.visualization_intent_node import resolve_visualization_intent
 from src.services.visualization import VisualizationService
 from src.utils.gate import run_preconfirm_gate
 
@@ -294,6 +295,7 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
         or plan.get("inputs_file_path")
         or plan.get("baseline_inputs_path")
     )
+    vis_intent = resolve_visualization_intent(state)
     vis_config = _build_vis_config(
         plan=plan,
         analysis_report=analysis_report,
@@ -302,8 +304,8 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
         prompt=state.get("prompt", ""),
         solver_name=solver_name,
         inputs_file_path=inputs_file_path,
-        requested_plot_vars=state.get("requested_plot_vars", []) or [],
-        prompt_visualization_config=state.get("visualization_config", {}) or {},
+        requested_plot_vars=vis_intent.get("requested_fields", []) or [],
+        prompt_visualization_config=vis_intent.get("visualization_config", {}) or {},
     )
 
     if (

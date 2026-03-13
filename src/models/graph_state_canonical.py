@@ -53,6 +53,7 @@ class GraphState(TypedDict, total=False):
     submit: Optional[Dict[str, Any]] # Submission settings (e.g., dry_run)
     requested_plot_vars: Optional[List[str]]       # Prompt-extracted plot quantities
     visualization_config: Optional[Dict[str, Any]] # Prompt-extracted visualization settings
+    visualization_intent: Optional[Dict[str, Any]] # Canonical visualization intent contract
 
     # ========================================
     # PLANNING PHASE (Architect outputs)
