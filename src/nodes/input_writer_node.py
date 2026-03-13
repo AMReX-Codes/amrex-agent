@@ -168,9 +168,9 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     # COMPONENT 10b: SERVICE ORCHESTRATION
     # ========================================
 
-    # 1. Determine run directory path (Node Responsibility)
-    # Format: run_YYYYMMDD_HHMMSS
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # 1. Determine run directory path under configured output root.
+    # Keep generated directories nested under config.output_dir (e.g., benchmark strategy root).
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     output_base = Path(config.output_dir)
     run_dir = output_base / f"run_{timestamp}"
 

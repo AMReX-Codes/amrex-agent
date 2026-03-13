@@ -175,6 +175,7 @@ def _run_one(
     prompt: str,
     strategy: str,
     *,
+    output_root: Path | None = None,
     agent_config: Path | None = None,
     inputs_file_strategy: str = "llm_compare",
     verbose_cli: bool = False,
@@ -189,6 +190,8 @@ def _run_one(
     ]
     if agent_config:
         cmd.extend(["--config", str(agent_config)])
+    if output_root:
+        cmd.extend(["--output-dir", str(output_root)])
     if verbose_cli:
         cmd.extend(["--verbose"])
     completed: subprocess.CompletedProcess[str] | None = None
@@ -246,6 +249,7 @@ def _run_strategy(
     rows: list[dict[str, Any]],
     strategy: str,
     *,
+    strategy_output_root: Path | None = None,
     agent_config: Path | None = None,
     inputs_file_strategy: str = "llm_compare",
     verbose_cli: bool = False,
@@ -265,6 +269,7 @@ def _run_strategy(
             payload, metrics, summary, console = _run_one(
                 row["prompt_text"],
                 strategy,
+                output_root=strategy_output_root,
                 agent_config=agent_config,
                 inputs_file_strategy=inputs_file_strategy,
                 verbose_cli=verbose_cli,
@@ -363,8 +368,20 @@ def main() -> int:
     parser.add_argument("--inputs-file-strategy", type=str, default="llm_compare")
     args = parser.parse_args()
 
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_dir = args.out_dir or Path(f"benchmark/erf_llm_compare/runs/{run_id}")
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    out_dir = args.out_dir or Path(f"benchmark/erf_llm_compare/runs/{run_id}_benchmark")
+    strategy_roots: dict[str, Path]
+    if args.out_dir:
+        strategy_roots = {
+            "simple": args.out_dir / "simple",
+            "hierarchical": args.out_dir / "hierarchical",
+        }
+    else:
+        base = Path("benchmark/erf_llm_compare/runs")
+        strategy_roots = {
+            "simple": base / f"{run_id}_simple",
+            "hierarchical": base / f"{run_id}_hierarchical",
+        }
     rows = _load_jsonl(args.prompt_matrix)
     if args.max_rows > 0:
         rows = rows[: args.max_rows]
@@ -373,6 +390,7 @@ def main() -> int:
         _run_strategy(
             rows,
             "simple",
+            strategy_output_root=strategy_roots["simple"],
             agent_config=args.agent_config,
             inputs_file_strategy=args.inputs_file_strategy,
             verbose_cli=args.verbose_cli,
@@ -380,6 +398,7 @@ def main() -> int:
         _run_strategy(
             rows,
             "hierarchical",
+            strategy_output_root=strategy_roots["hierarchical"],
             agent_config=args.agent_config,
             inputs_file_strategy=args.inputs_file_strategy,
             verbose_cli=args.verbose_cli,
