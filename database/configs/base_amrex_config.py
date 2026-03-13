@@ -2305,6 +2305,27 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         return None
 
     @classmethod
+    def get_plotfile_var_param(cls) -> str:
+        """
+        Return solver-specific parameter key for plot variable selection.
+        """
+        return "amr.plot_vars"
+
+    @classmethod
+    def get_plotfile_period_param(cls) -> str | None:
+        """
+        Return solver-specific time-based plot cadence parameter, if supported.
+        """
+        return None
+
+    @classmethod
+    def get_plotfile_step_interval_param(cls) -> str | None:
+        """
+        Return solver-specific step-based plot interval parameter, if supported.
+        """
+        return None
+
+    @classmethod
     def _resource_bytes_per_cell(cls, config: dict[str, Any]) -> int:
         return 200
 

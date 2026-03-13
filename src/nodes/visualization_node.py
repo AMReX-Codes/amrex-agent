@@ -303,7 +303,19 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
         solver_name=solver_name,
         inputs_file_path=inputs_file_path,
         requested_plot_vars=state.get("requested_plot_vars", []) or [],
+        prompt_visualization_config=state.get("visualization_config", {}) or {},
     )
+
+    if (
+        str(getattr(config, "environment", "local")).lower() != "local"
+        and str(vis_config.get("timesteps", "latest")).lower() == "all"
+    ):
+        logger.info(
+            "Requested visualization over all plotfiles, but remote stage-out currently "
+            "retrieves only the latest plotfile; using latest."
+        )
+        vis_config["timesteps"] = "latest"
+        vis_config["timesteps_adjusted_reason"] = "remote_stage_out_latest_only"
 
     logger.debug(f"  Will generate {len(vis_config.get('plots', []))} plot(s):")
     for plot_cfg in vis_config.get('plots', []):
@@ -419,6 +431,7 @@ def _build_vis_config(
     solver_name: str = "",
     inputs_file_path: str | None = None,
     requested_plot_vars: list[str] | None = None,
+    prompt_visualization_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build visualization configuration from plan and analysis signals.
@@ -451,6 +464,11 @@ def _build_vis_config(
         vis_config = {'plots': []}
     if not isinstance(vis_config.get("plots"), list):
         vis_config["plots"] = []
+
+    prompt_vis = prompt_visualization_config if isinstance(prompt_visualization_config, dict) else {}
+    prompt_timestep_scope = str(prompt_vis.get("timesteps", "")).strip().lower()
+    if prompt_timestep_scope in {"all", "latest"}:
+        vis_config["timesteps"] = prompt_timestep_scope
 
     # Normalize plan-provided entries so defaults are deterministic.
     plan_plots: list[dict[str, Any]] = []

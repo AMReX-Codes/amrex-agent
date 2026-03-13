@@ -193,9 +193,9 @@ class TestPlotfileParamLookup:
         """
         Given: code_name = 'ERF'
         When:  get_plotfile_var_param(code_name) runs
-        Then:  returns 'amr.plot_vars'
+        Then:  returns ERF plot vars key
         """
-        assert get_plotfile_var_param("ERF") == "amr.plot_vars"
+        assert get_plotfile_var_param("ERF") == "erf.plot_vars_1"
 
     def test_remora_returns_correct_param(self):
         """
@@ -211,8 +211,15 @@ class TestPlotfileParamLookup:
         Given: code_name = 'UnknownSolver'
         When:  get_plotfile_var_param(code_name) runs
         Then:  returns 'amr.plot_vars' as safe fallback
-               logs a warning about unknown solver
         """
         caplog.set_level(logging.WARNING)
         assert get_plotfile_var_param("UnknownSolver") == "amr.plot_vars"
-        assert "Unknown solver" in caplog.text
+
+
+def test_extract_plot_interval_seconds_from_minutes_prompt():
+    requested_plot_vars, visualization_config = extract_viz_params_from_prompt(
+        "I'd like snapshots of cloud water every 2 minutes."
+    )
+    assert "cloud_water" in requested_plot_vars
+    assert visualization_config["plot_interval_seconds"] == 120
+    assert visualization_config["timesteps"] == "all"

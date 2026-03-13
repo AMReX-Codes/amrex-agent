@@ -180,11 +180,13 @@ class VisualizationService:
             logger.warning("[WARN] No plotfiles found")
             return []
 
-        # Use latest plotfile
-        latest = plotfiles[-1]
+        timestep_mode = "latest"
+        if isinstance(vis_config, dict):
+            timestep_mode = str(vis_config.get("timesteps", "latest")).strip().lower() or "latest"
+        target_plotfiles = plotfiles if timestep_mode == "all" else [plotfiles[-1]]
 
         # Get available fields
-        fields = self.backend.get_field_list(latest)
+        fields = self.backend.get_field_list(target_plotfiles[-1])
         logger.debug("available fields (%d): %s", len(fields), fields)
 
         # Determine which fields to plot
@@ -204,33 +206,37 @@ class VisualizationService:
         # Create plots
         images = []
         logger.debug("plots to render (%d): %s", len(plots), plots)
-        for plot_cfg in plots:
-            try:
-                if plot_cfg.get('type') != 'slice':
-                    logger.debug(f"  Skipping unsupported plot type: {plot_cfg.get('type')}")
-                    continue
-                field = plot_cfg.get('field')
-                axis = plot_cfg.get('axis', 'z')
-                colormap = plot_cfg.get('colormap', 'viridis')
-                if not field:
-                    logger.debug("  Skipping plot with missing field")
-                    continue
+        for plotfile in target_plotfiles:
+            for plot_cfg in plots:
+                try:
+                    if plot_cfg.get('type') != 'slice':
+                        logger.debug(f"  Skipping unsupported plot type: {plot_cfg.get('type')}")
+                        continue
+                    field = plot_cfg.get('field')
+                    axis = plot_cfg.get('axis', 'z')
+                    colormap = plot_cfg.get('colormap', 'viridis')
+                    if not field:
+                        logger.debug("  Skipping plot with missing field")
+                        continue
 
-                output_path = output_dir / f"{field}_slice.png"
+                    if len(target_plotfiles) > 1:
+                        output_path = output_dir / f"{plotfile.name}_{field}_slice.png"
+                    else:
+                        output_path = output_dir / f"{field}_slice.png"
 
-                self.backend.create_slice_plot(
-                    plotfile=latest,
-                    field=field,
-                    axis=axis,
-                    output_path=output_path,
-                    colormap=colormap
-                )
+                    self.backend.create_slice_plot(
+                        plotfile=plotfile,
+                        field=field,
+                        axis=axis,
+                        output_path=output_path,
+                        colormap=colormap
+                    )
 
-                images.append(output_path)
-                logger.debug(f"  Created {field} slice")
+                    images.append(output_path)
+                    logger.debug(f"  Created {plotfile.name}: {field} slice")
 
-            except Exception as e:
-                logger.debug(f"  Failed to create {field} slice: {e}")
+                except Exception as e:
+                    logger.debug(f"  Failed to create {field} slice for {plotfile.name}: {e}")
 
         logger.debug(f"\n[ OK ] Generated {len(images)} visualizations")
 

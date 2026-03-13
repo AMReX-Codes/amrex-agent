@@ -29,6 +29,18 @@ class ERFConfig(BaseAMReXConfig):
         """
         return "y"
 
+    @classmethod
+    def get_plotfile_var_param(cls) -> str:
+        return "erf.plot_vars_1"
+
+    @classmethod
+    def get_plotfile_period_param(cls) -> str | None:
+        return "erf.plot_per_1"
+
+    @classmethod
+    def get_plotfile_step_interval_param(cls) -> str | None:
+        return "erf.plot_int_1"
+
     # === Registry Metadata ===
     github_org = "erf-model"
     github_repo = "ERF"

@@ -5,6 +5,7 @@ Deterministic visualization parameter extraction from user prompt text.
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -46,10 +47,28 @@ PLOTFILE_VAR_PARAM: dict[str, str] = {
     "AMReX": "amr.plot_vars",
     "PeleC": "amr.plot_vars",
     "PeleLMeX": "peleLM.derive_plot_vars",
-    "ERF": "amr.plot_vars",
+    "ERF": "erf.plot_vars_1",
     "REMORA": "amr.plot_vars",
 }
 PLOTFILE_VAR_PARAM_DEFAULT = "amr.plot_vars"
+
+# Solver-specific time-based plot cadence parameters.
+# These are used when prompt intent includes time cadence such as:
+# "snapshots every 2 minutes".
+PLOTFILE_PERIOD_PARAM: dict[str, str] = {
+    "AMReX": "amr.plot_per",
+    "PeleLMeX": "peleLM.plot_per",
+    "ERF": "erf.plot_per_1",
+    "REMORA": "amr.plot_int_time",
+}
+
+# Optional companions to disable step-based output when a time cadence is set.
+PLOTFILE_STEP_INTERVAL_PARAM: dict[str, str] = {
+    "AMReX": "amr.plot_int",
+    "PeleLMeX": "peleLM.plot_int",
+    "ERF": "erf.plot_int_1",
+    "REMORA": "amr.plot_int",
+}
 
 
 def _extract_quantities(prompt_lower: str) -> list[str]:
@@ -101,11 +120,108 @@ def get_plotfile_var_param(code_name: str) -> str:
         logger.warning("Unknown solver '' - falling back to %s", PLOTFILE_VAR_PARAM_DEFAULT)
         return PLOTFILE_VAR_PARAM_DEFAULT
 
+    try:
+        from database.configs.registry import get_config_class
+
+        config_cls = get_config_class(code_name)
+        getter = getattr(config_cls, "get_plotfile_var_param", None)
+        if callable(getter):
+            value = getter()
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    except Exception as exc:
+        logger.debug("plotfile-var param lookup via config failed for %s: %s", code_name, exc)
+
     if code_name in PLOTFILE_VAR_PARAM:
         return PLOTFILE_VAR_PARAM[code_name]
 
     logger.warning("Unknown solver '%s' - falling back to %s", code_name, PLOTFILE_VAR_PARAM_DEFAULT)
     return PLOTFILE_VAR_PARAM_DEFAULT
+
+
+def get_plotfile_period_param(code_name: str) -> str | None:
+    """
+    Return the code-specific time-based plot cadence parameter, if available.
+    """
+    if not code_name:
+        return None
+
+    try:
+        from database.configs.registry import get_config_class
+
+        config_cls = get_config_class(code_name)
+        getter = getattr(config_cls, "get_plotfile_period_param", None)
+        if callable(getter):
+            value = getter()
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+            return None
+    except Exception as exc:
+        logger.debug("plotfile-period param lookup via config failed for %s: %s", code_name, exc)
+
+    return PLOTFILE_PERIOD_PARAM.get(code_name)
+
+
+def get_plotfile_step_interval_param(code_name: str) -> str | None:
+    """
+    Return the code-specific step-based plot interval parameter, if available.
+    """
+    if not code_name:
+        return None
+
+    try:
+        from database.configs.registry import get_config_class
+
+        config_cls = get_config_class(code_name)
+        getter = getattr(config_cls, "get_plotfile_step_interval_param", None)
+        if callable(getter):
+            value = getter()
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+            return None
+    except Exception as exc:
+        logger.debug("plotfile-step param lookup via config failed for %s: %s", code_name, exc)
+
+    return PLOTFILE_STEP_INTERVAL_PARAM.get(code_name)
+
+
+def _extract_plot_interval_seconds(prompt_lower: str) -> int | None:
+    """
+    Extract cadence from phrases like "every 2 minutes" or "each 30 s".
+    """
+    pattern = re.compile(
+        r"\b(?:every|each)\s+(\d+(?:\.\d+)?)\s*"
+        r"(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h)\b"
+    )
+    match = pattern.search(prompt_lower)
+    if not match:
+        return None
+
+    amount = float(match.group(1))
+    unit = match.group(2).lower()
+    if unit.startswith("h"):
+        seconds = amount * 3600.0
+    elif unit.startswith("m"):
+        seconds = amount * 60.0
+    else:
+        seconds = amount
+    if seconds <= 0:
+        return None
+    return int(round(seconds))
+
+
+def _extract_timestep_scope(prompt_lower: str, has_cadence: bool) -> str | None:
+    """
+    Infer whether visualization should use latest output or all outputs.
+    """
+    if has_cadence:
+        return "all"
+    if any(
+        kw in prompt_lower
+        for kw in ("movie", "animation", "evolution", "all timesteps", "all plotfiles")
+    ):
+        return "all"
+    return None
 
 
 def canonicalize_requested_plot_vars(
@@ -205,5 +321,16 @@ def extract_viz_params_from_prompt(
     viz_type = _extract_viz_type(normalized)
     if viz_type:
         visualization_config["viz_type"] = viz_type
+
+    plot_interval_seconds = _extract_plot_interval_seconds(normalized)
+    if plot_interval_seconds is not None:
+        visualization_config["plot_interval_seconds"] = plot_interval_seconds
+
+    timestep_scope = _extract_timestep_scope(
+        normalized,
+        has_cadence=plot_interval_seconds is not None,
+    )
+    if timestep_scope:
+        visualization_config["timesteps"] = timestep_scope
 
     return _dedupe_preserve_order(requested_plot_vars), visualization_config

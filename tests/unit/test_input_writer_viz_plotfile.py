@@ -9,7 +9,9 @@ from unittest.mock import patch
 from src.nodes.input_writer_node import input_writer_node
 from src.services.input_writer import (
     _resolve_plotfile_vars,
+    _resolve_plotfile_period_settings,
     apply_plotfile_vars_to_inputs_text,
+    upsert_inputs_param,
 )
 
 
@@ -101,6 +103,27 @@ class TestInputWriterPlotfileInjection:
         assert "peleLM.derive_plot_vars = temperature" in updated
         assert "amr.plot_vars = temperature" not in updated
 
+    def test_code_specific_param_used_for_erf(self, tmp_path):
+        baseline = "erf.plot_vars_1 = density pressure\n"
+        setting = _resolve_plotfile_vars(["qc"], baseline, "ERF")
+        updated = apply_plotfile_vars_to_inputs_text(baseline, setting)
+        assert "erf.plot_vars_1 = qc" in updated
+        assert "amr.plot_vars = qc" not in updated
+
+    def test_cadence_settings_for_erf_use_time_period_and_disable_step_interval(self):
+        settings = _resolve_plotfile_period_settings(
+            visualization_config={"plot_interval_seconds": 120},
+            code_name="ERF",
+        )
+        assert ("erf.plot_per_1", "120") in settings
+        assert ("erf.plot_int_1", "-1") in settings
+
+    def test_upsert_inputs_param_replaces_existing_value(self):
+        original = "amr.n_cell = 64 64 64\nerf.plot_per_1 = 30\n"
+        updated = upsert_inputs_param(original, "erf.plot_per_1", "120")
+        assert "erf.plot_per_1 = 120" in updated
+        assert "erf.plot_per_1 = 30" not in updated
+
     def test_input_writer_reads_state_not_prompt(
             self, tmp_path):
         """
@@ -124,9 +147,13 @@ class TestInputWriterPlotfileInjection:
                 baseline,
                 reasoning,
                 output_dir,
+                user_prompt="",
                 requested_plot_vars=None,
+                visualization_config=None,
             ):
                 captured["requested_plot_vars"] = requested_plot_vars
+                captured["visualization_config"] = visualization_config
+                captured["user_prompt"] = user_prompt
                 run_dir = Path(output_dir)
                 run_dir.mkdir(parents=True, exist_ok=True)
                 inputs = run_dir / "inputs"
@@ -162,6 +189,7 @@ class TestInputWriterPlotfileInjection:
                 }
             ],
             "requested_plot_vars": ["temperature"],
+            "visualization_config": {"plot_interval_seconds": 120, "timesteps": "all"},
         }
 
         with patch("src.services.viz_param_extractor.extract_viz_params_from_prompt") as mock_extract, \
@@ -171,3 +199,4 @@ class TestInputWriterPlotfileInjection:
             input_writer_node(state)
 
         assert captured["requested_plot_vars"] == ["temperature"]
+        assert captured["visualization_config"]["plot_interval_seconds"] == 120

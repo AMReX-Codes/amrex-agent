@@ -123,3 +123,26 @@ def test_build_vis_config_prioritizes_requested_over_plan_fields():
     assert fields[0] == "qc"
     assert "density" in fields
     assert "velocity_magnitude" not in fields
+
+
+def test_build_vis_config_uses_prompt_timestep_scope():
+    class _Backend:
+        @staticmethod
+        def get_field_list(_plotfile):
+            return ["qc"]
+
+    class _VizService:
+        backend = _Backend()
+
+    vis_config = _build_vis_config(
+        plan={"visualization": {"plots": [{"type": "slice", "field": "qc"}]}},
+        analysis_report={},
+        plotfiles=[Path("plt00000")],
+        viz_service=_VizService(),
+        prompt="show cloud water every 2 minutes",
+        solver_name="ERF",
+        inputs_file_path=None,
+        requested_plot_vars=["cloud_water"],
+        prompt_visualization_config={"timesteps": "all"},
+    )
+    assert vis_config.get("timesteps") == "all"
