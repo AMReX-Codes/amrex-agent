@@ -1,0 +1,133 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0 -- /home/jmsexton/miniconda3/envs/amrex-agent-dev/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf
+configfile: pyproject.toml
+plugins: mock-3.15.1, anyio-4.12.1, asyncio-1.3.0, cov-7.0.0, langsmith-0.7.5
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/e2e/test_demo_smoke.py::test_demo_prompt_file_pelelmex_jicf_short PASSED [ 20%]
+tests/e2e/test_demo_smoke.py::test_demo_prompt_file_erf PASSED           [ 40%]
+tests/e2e/test_demo_smoke.py::test_demo_inline_prompt_remora PASSED      [ 60%]
+tests/e2e/test_demo_smoke.py::test_demo_inline_prompt_pelec PASSED       [ 80%]
+tests/e2e/test_demo_smoke.py::test_demo_amrex_baseline_override PASSED   [100%]
+
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.11.14-final-0 _______________
+
+Name                                                       Stmts   Miss Branch BrPart  Cover   Missing
+------------------------------------------------------------------------------------------------------
+src/academy_mcp_agent.py                                      72     72      8      0  0.00%   3-233
+src/benchmark_runner.py                                      703    703    302      0  0.00%   3-1317
+src/config.py                                                655    393    224     17 31.97%   20-23, 31-39, 49-57, 80->83, 84, 86, 93-110, 141, 147-148, 152, 161-167, 171-189, 196-206, 210-217, 221-229, 238, 244-251, 260-265, 293, 296, 1007-1008, 1013-1014, 1018-1019, 1023, 1027-1029, 1038-1044, 1050-1054, 1058, 1066, 1070-1078, 1080, 1089, 1091->1098, 1113-1115, 1134-1152, 1165-1175, 1199-1208, 1212, 1217-1224, 1229-1245, 1250-1319, 1327-1370, 1374-1380, 1384-1393, 1397-1405, 1410, 1415, 1420-1424, 1429-1431, 1434, 1439-1441, 1444, 1449-1451, 1454, 1459-1460, 1463-1474, 1479-1481, 1484, 1489-1492, 1499, 1502-1534, 1538-1546, 1551-1554, 1557, 1562-1565, 1572, 1577-1579, 1582-1599, 1603-1610, 1614-1623
+src/erf_cases.py                                             141    141     48      0  0.00%   3-263
+src/graph.py                                                1321   1321    702      0  0.00%   3-2378
+src/interactive_service.py                                    30     30      8      0  0.00%   3-124
+src/main.py                                                  550    550    198      0  0.00%   10-1329
+src/mcp_adapter.py                                             1      1      0      0  0.00%   6
+src/mcp_tools.py                                             373    373    138      0  0.00%   3-837
+src/models.py                                                 34     34      0      0  0.00%   15-101
+src/models/__init__.py                                         2      2      0      0  0.00%   6-8
+src/models/clarification_schemas.py                           15     15      0      0  0.00%   3-23
+src/models/gate_approval.py                                   11     11      0      0  0.00%   3-17
+src/models/graph_state_canonical.py                           81     81      0      0  0.00%   24-339
+src/models/paper_validation_manifest.py                       46     46      6      0  0.00%   3-77
+src/models/state_compatibility.py                             73     73     46      0  0.00%   15-194
+src/models/state_transitions.py                               34     34      6      0  0.00%   13-188
+src/models/sweep_schemas.py                                   43     43      2      0  0.00%   3-70
+src/nodes/__init__.py                                         25     25      0      0  0.00%   21-51
+src/nodes/analysis_node.py                                   180    180     60      0  0.00%   11-441
+src/nodes/architect_node.py                                  248    248     98      0  0.00%   13-584
+src/nodes/clarification_handler_node.py                       94     94     32      0  0.00%   3-205
+src/nodes/clarification_node.py                              175    175     84      0  0.00%   3-443
+src/nodes/input_writer_node.py                               155    155     46      0  0.00%   7-439
+src/nodes/intent_extraction_node.py                           58     58     12      0  0.00%   5-147
+src/nodes/paper_validator_node.py                             92     92     36      0  0.00%   3-205
+src/nodes/reviewer_node.py                                   373    373    132      0  0.00%   7-905
+src/nodes/runner_node.py                                     198    198     94      0  0.00%   6-448
+src/nodes/sweep_detection_node.py                             10     10      2      0  0.00%   3-29
+src/nodes/visualization_node.py                              310    310    124      0  0.00%   17-735
+src/policy/__init__.py                                         2      2      0      0  0.00%   3-10
+src/policy/gate_policy.py                                     37     37     12      0  0.00%   3-80
+src/router_func.py                                            83     83     32      0  0.00%   22-221
+src/services/amrex_tools_backend.py                          113    113     60      0  0.00%   14-398
+src/services/analysis.py                                     312    312    166      0  0.00%   11-718
+src/services/architect.py                                   2384   2384   1050      0  0.00%   12-5465
+src/services/baseline_loader.py                               75     75     38      0  0.00%   11-189
+src/services/build_tools.py                                   35     35     16      0  0.00%   3-95
+src/services/cases.py                                        489    489    210      0  0.00%   8-1007
+src/services/config_model_factory.py                         819    819    364      0  0.00%   22-1969
+src/services/config_service.py                               239    239    110      0  0.00%   9-487
+src/services/embedding.py                                    261    261     88      0  0.00%   14-576
+src/services/embedding_factory.py                            157    157     60      0  0.00%   24-428
+src/services/embedding_service_factory.py                     14     14      2      0  0.00%   20-100
+src/services/execution_tools.py                               52     52     22      0  0.00%   3-134
+src/services/faiss_artifacts.py                              103     83     40      0 13.99%   18-22, 26-30, 34-36, 40-44, 48-51, 55-74, 83-103, 131-174
+src/services/feedback_generator.py                            61     61     32      0  0.00%   14-186
+src/services/file_generation.py                              144    144     36      0  0.00%   8-363
+src/services/files.py                                        145    145     48      0  0.00%   7-390
+src/services/input_writer.py                                 525    525    218      0  0.00%   8-1203
+src/services/inputs_file_selector.py                         155    155     46      0  0.00%   3-372
+src/services/inputs_file_writer.py                            62     62     20      0  0.00%   24-195
+src/services/knowledge.py                                    301    301    112      0  0.00%   3-661
+src/services/meta_visualizer.py                               52     52     28      0  0.00%   3-99
+src/services/paper_validator.py                               17     17      8      0  0.00%   3-49
+src/services/plan.py                                         669    669    384      0  0.00%   22-1403
+src/services/result_aggregator.py                             46     46     22      0  0.00%   3-113
+src/services/reviewer.py                                      49     49     14      0  0.00%   7-144
+src/services/rule_engine.py                                   49     49     12      0  0.00%   20-189
+src/services/rules/__init__.py                                13      4      2      0 60.00%   41-45
+src/services/rules/base.py                                    40     19     14      0 38.89%   29-36, 41, 51-65
+src/services/rules/common.py                                  82     66     38      0 13.33%   27, 52-108, 124, 149-174, 196-210, 226, 251-272
+src/services/rules/physics.py                                 78     63     48      0 11.90%   34, 59-93, 114, 139-167, 188, 213-257
+src/services/rules/schema_existence.py                        37     28     20      0 15.79%   44, 76-112, 136-155
+src/services/run_local.py                                    193    193     82      0  0.00%   6-462
+src/services/run_superfacility.py                            308    308    140      0  0.00%   8-770
+src/services/run_superfacility_tools.py                      819    819    424      0  0.00%   3-1596
+src/services/schema_staleness.py                              74     74     24      0  0.00%   3-180
+src/services/sweep_detector.py                                73     73     40      0  0.00%   3-186
+src/services/sweep_orchestrator.py                           146    146     74      0  0.00%   3-320
+src/services/validation.py                                    81     81     28      0  0.00%   7-264
+src/services/validation_result.py                              8      8      0      0  0.00%   2-15
+src/services/validators/build_validator.py                    83     83     28      0  0.00%   7-248
+src/services/validators/config_validator.py                   67     67     32      0  0.00%   8-127
+src/services/validators/physics_validator.py                  97     97     38      0  0.00%   7-238
+src/services/validators/resource_validator.py                 68     68     28      0  0.00%   18-195
+src/services/validators/schema_validator.py                   92     92     38      0  0.00%   7-251
+src/services/vector_store_backends.py                         84     84     28      0  0.00%   8-191
+src/services/visualization.py                                229    229     72      0  0.00%   13-536
+src/services/visualization_backend.py                          7      7      0      0  0.00%   12-41
+src/services/viz_param_extractor.py                           97     97     48      0  0.00%   5-209
+src/services/workflow_store.py                               130    130     46      0  0.00%   3-238
+src/services/yt_backend.py                                    64     64     22      0  0.00%   12-200
+src/session_manager.py                                       132    132     68      0  0.00%   3-261
+src/skills/__init__.py                                         3      3      0      0  0.00%   3-6
+src/skills/loader.py                                          21     21      6      0  0.00%   3-42
+src/skills/runtime.py                                         15     15      6      0  0.00%   3-34
+src/tool_registry.py                                          39     39     12      0  0.00%   3-106
+src/utils/__init__.py                                          2      2      0      0  0.00%   6-8
+src/utils/gate.py                                            170    170     56      0  0.00%   4-463
+src/utils/generate_workflow_architecture_paper_figure.py      44     44      6      0  0.00%   4-126
+src/utils/llm_calls.py                                        63     63     16      0  0.00%   3-105
+src/utils/metrics.py                                         597    597    296      0  0.00%   3-937
+src/utils/privacy.py                                         148    148     52      0  0.00%   3-231
+src/utils/state_management.py                                 26     26      4      0  0.00%   16-196
+src/utils/status_icons.py                                     14     14      4      0  0.00%   3-49
+src/utils/write_policy.py                                     59     59     26      0  0.00%   3-92
+------------------------------------------------------------------------------------------------------
+TOTAL                                                      17856  17504   7524     17  1.46%
+
+5 files skipped due to complete coverage.
+============================= slowest 10 durations =============================
+74.01s call     tests/e2e/test_demo_smoke.py::test_demo_prompt_file_pelelmex_jicf_short
+20.47s call     tests/e2e/test_demo_smoke.py::test_demo_inline_prompt_pelec
+14.30s call     tests/e2e/test_demo_smoke.py::test_demo_prompt_file_erf
+12.60s call     tests/e2e/test_demo_smoke.py::test_demo_inline_prompt_remora
+12.32s call     tests/e2e/test_demo_smoke.py::test_demo_amrex_baseline_override
+0.01s setup    tests/e2e/test_demo_smoke.py::test_demo_prompt_file_erf
+0.01s setup    tests/e2e/test_demo_smoke.py::test_demo_prompt_file_pelelmex_jicf_short
+0.01s setup    tests/e2e/test_demo_smoke.py::test_demo_amrex_baseline_override
+0.01s setup    tests/e2e/test_demo_smoke.py::test_demo_inline_prompt_pelec
+0.01s setup    tests/e2e/test_demo_smoke.py::test_demo_inline_prompt_remora
+======================== 5 passed in 138.43s (0:02:18) =========================

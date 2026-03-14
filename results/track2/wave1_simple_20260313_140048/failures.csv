@@ -1,0 +1,4 @@
+strategy,row_id,expected_case,expected_inputs
+simple,00d365989b09585d,Exec/DevTests/Tornado,Exec/DevTests/Tornado/inputs_tornado_wrf_files_PBL_Smag2d
+simple,019b835399b503b4,Exec/RegTests/ScalarAdvDiff,Exec/RegTests/ScalarAdvDiff/inputs_diffuse_gaussian
+simple,02b7f52302fe6ed9,Exec/ABL,Exec/ABL/inputs_deardorff_no_msf

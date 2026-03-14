@@ -1,0 +1,42 @@
+{
+  "wave": "wave1",
+  "matrix_path": "benchmark/erf_llm_compare/train_subsample_s42.jsonl",
+  "strategies": {
+    "simple": {
+      "strategy": "simple",
+      "output_dir": "results/track2/wave1_simple_20260313_144401",
+      "total_rows": 100,
+      "case_correct": 30,
+      "case_accuracy": 0.3,
+      "failed_rows": 74,
+      "per_solver_failure_counts": {
+        "Exec": 74
+      },
+      "per_solver_accuracy": {
+        "Exec": {
+          "correct": 30,
+          "total": 100,
+          "accuracy": 0.3
+        }
+      }
+    },
+    "hierarchical": {
+      "strategy": "hierarchical",
+      "output_dir": "results/track2/wave1_hierarchical_20260313_144401",
+      "total_rows": 100,
+      "case_correct": 0,
+      "case_accuracy": 0.0,
+      "failed_rows": 100,
+      "per_solver_failure_counts": {
+        "Exec": 100
+      },
+      "per_solver_accuracy": {
+        "Exec": {
+          "correct": 0,
+          "total": 100,
+          "accuracy": 0.0
+        }
+      }
+    }
+  }
+}

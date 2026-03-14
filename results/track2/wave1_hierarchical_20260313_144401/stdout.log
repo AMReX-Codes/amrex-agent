@@ -1,0 +1,601 @@
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.72s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.94s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.82s
+[hierarchical] row=00d365989b09585d warnings=1 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.58s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.11s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.84s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.93s
+[hierarchical] row=019b835399b503b4 warnings=2 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.42s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.15s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.09s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.42s
+[hierarchical] row=02b7f52302fe6ed9 warnings=3 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.18s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.61s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.89s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.08s
+[hierarchical] row=044aa002dd4dfd20 warnings=4 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.66s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.81s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=39.62s
+[hierarchical] row=097d4e7bc5c12639 warnings=5 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.74s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.63s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.62s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.21s
+[hierarchical] row=0a50784987204f69 warnings=6 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.07s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.45s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.03s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=34.63s
+[hierarchical] row=100a3848527bbcf1 warnings=7 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.02s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.06s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=16.74s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=33.52s
+[hierarchical] row=16cafaa8bd6cb4c7 warnings=8 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.18s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.16s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.99s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.88s
+[hierarchical] row=1d6f3de1dc69721c warnings=9 errors=0
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.21s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.28s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.59s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.35s
+[hierarchical] llm_unavailable row_index=9 prompt_id=2b0066345c5861a3 attempt=1/3
+[hierarchical] llm_unavailable row_index=9 prompt_id=2b0066345c5861a3 attempt=2/3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.67s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.61s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.61s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.22s
+[hierarchical] llm_unavailable row_index=9 prompt_id=2b0066345c5861a3 attempt=3/3
+[hierarchical] row=2b0066345c5861a3 warnings=12 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.07s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.26s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.31s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=35.27s
+[hierarchical] row=2cffa38307036698 warnings=13 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.92s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.47s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.65s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=44.22s
+[hierarchical] row=33406d89e7d13ec8 warnings=14 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.01s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.73s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.10s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.52s
+[hierarchical] row=35a4886cbb0b6d7a warnings=15 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.27s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.03s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.12s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.09s
+[hierarchical] row=36ee01b9e53ba413 warnings=16 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.30s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.81s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.38s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.46s
+[hierarchical] row=39df8cb2bf580e53 warnings=17 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.98s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.36s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.67s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=43.87s
+[hierarchical] row=3fefb88b407d4111 warnings=18 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.60s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.75s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.58s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.10s
+[hierarchical] row=40a94c16e74baa8b warnings=19 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.72s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.69s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.29s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.41s
+[hierarchical] row=436a11512a1422de warnings=20 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.70s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.99s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.61s
+[hierarchical] row=451e42f7895b87e8 warnings=21 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.68s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.65s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=39.34s
+[hierarchical] row=499f1b2839a700fd warnings=22 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.93s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.69s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.69s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=43.72s
+[hierarchical] row=4a28e05d7ad8dddc warnings=23 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.87s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.25s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.98s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.50s
+[hierarchical] row=4c2e15c7a2b1807e warnings=24 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.02s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.66s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.82s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.07s
+[hierarchical] row=4e49a70f9aa43608 warnings=25 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.61s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.97s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.36s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.56s
+[hierarchical] row=50fc59087cc65e41 warnings=26 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.62s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.15s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.77s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.51s
+[hierarchical] row=5502d952a197e044 warnings=27 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.63s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.81s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.03s
+[hierarchical] row=55d65853b3dc5807 warnings=28 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.94s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.40s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.17s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.67s
+[hierarchical] row=56c7b5f8607b9e2b warnings=29 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.30s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.60s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.76s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.32s
+[hierarchical] row=57a35b822fb3fb63 warnings=30 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.63s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.28s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.03s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.76s
+[hierarchical] row=58ac9ebd5dbe5287 warnings=31 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.28s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.90s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.95s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.05s
+[hierarchical] row=5a5b55bd50b2195b warnings=32 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.01s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.18s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.21s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=35.34s
+[hierarchical] row=5b7211868a6fc7bd warnings=33 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.32s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.65s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.99s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.45s
+[hierarchical] row=5bd21f3859c1c7ea warnings=34 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.85s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.46s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.94s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.85s
+[hierarchical] row=5d36bcbbb3955583 warnings=35 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.00s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.18s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.31s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=35.24s
+[hierarchical] row=5d6d8a3e782072e0 warnings=36 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.50s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.29s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.95s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.61s
+[hierarchical] row=5dec9fb84c6b48e4 warnings=37 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.65s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.98s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.98s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.37s
+[hierarchical] row=5df5fbeb43411485 warnings=38 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.94s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.58s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.54s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=43.71s
+[hierarchical] row=6037371246cbeaf9 warnings=39 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.64s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.32s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.65s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.22s
+[hierarchical] row=61440a7571417cab warnings=40 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.34s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.56s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.62s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=39.52s
+[hierarchical] row=625ddcabb2d84b45 warnings=41 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.17s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.06s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.29s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.07s
+[hierarchical] row=650ab438a4e15aa5 warnings=42 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.99s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.32s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.46s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=43.39s
+[hierarchical] row=661578fbae6c6c98 warnings=43 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.11s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.14s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.58s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.45s
+[hierarchical] row=6679b106b67a72c7 warnings=44 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.62s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.94s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.37s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.74s
+[hierarchical] row=67827a0a12f2782e warnings=45 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] row=67d45fafd496e5e1 warnings=46 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.21s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.94s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.26s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.76s
+[hierarchical] row=683f741d537d6446 warnings=47 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.37s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.55s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.18s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.66s
+[hierarchical] row=6861a4cd9e823196 warnings=48 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.23s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.16s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.65s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.98s
+[hierarchical] row=6d64255a9f75b7f0 warnings=49 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.85s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.75s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.65s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.24s
+[hierarchical] row=7072c3dac4e98d2c warnings=50 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.54s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.17s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.01s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.06s
+[hierarchical] row=75d5217a630e2f08 warnings=51 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.31s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.00s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.98s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.40s
+[hierarchical] row=79451bce1b25f5b5 warnings=52 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.73s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.38s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.82s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.70s
+[hierarchical] row=79c27203548041a9 warnings=53 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.16s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.26s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.81s
+[hierarchical] row=79e1a7439abda7e0 warnings=54 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.32s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.45s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.15s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.57s
+[hierarchical] row=7c133fd9955e3326 warnings=55 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.34s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.36s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.96s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.12s
+[hierarchical] row=7c2dbb058ae9dd01 warnings=56 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.58s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.32s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.66s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.99s
+[hierarchical] row=7d00c442b7e16ab1 warnings=57 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.77s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.48s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.13s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.28s
+[hierarchical] row=83e8394891c2b4f5 warnings=58 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.17s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.32s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.99s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.98s
+[hierarchical] row=83fe4a2b485cd186 warnings=59 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.99s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.11s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.21s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=43.04s
+[hierarchical] row=882f54a5e0b15e95 warnings=60 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.63s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.93s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.78s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.07s
+[hierarchical] row=8910adb5f9352180 warnings=61 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.28s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.93s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.96s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.07s
+[hierarchical] row=89daffe9760ad84b warnings=62 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.41s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.03s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.65s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.08s
+[hierarchical] row=8c07fcdb62c834d2 warnings=63 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.09s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.55s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.02s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.87s
+[hierarchical] row=8db27d1f4b0ecf8d warnings=64 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.75s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.64s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.14s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.28s
+[hierarchical] row=8f2c280dffb509c9 warnings=65 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.99s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.49s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.20s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.82s
+[hierarchical] row=8f7ccf0243473c24 warnings=66 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.53s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.48s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.42s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.88s
+[hierarchical] row=900b3f88f35b2073 warnings=67 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.86s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.06s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.25s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.99s
+[hierarchical] row=91d955c98dbaf8ec warnings=68 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.89s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.52s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.66s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=44.04s
+[hierarchical] row=94772f74c97b17a1 warnings=69 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.19s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.56s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.03s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.71s
+[hierarchical] row=9634472d23ee150d warnings=70 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.47s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.32s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.14s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=39.05s
+[hierarchical] row=975e73596660e2e4 warnings=71 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.20s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.62s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.04s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.09s
+[hierarchical] row=986363e97e04cf16 warnings=72 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.65s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.85s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.55s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.98s
+[hierarchical] row=9a6fdfe94d4a0de8 warnings=73 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.81s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.81s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.00s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.44s
+[hierarchical] row=9aa20744dbed59f7 warnings=74 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.89s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.25s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.01s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.77s
+[hierarchical] row=a4e50e087b4b88d1 warnings=75 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.28s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.64s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.68s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=35.66s
+[hierarchical] row=b4a636f4cce992b8 warnings=76 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.19s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.52s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.06s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=34.56s
+[hierarchical] row=b8c23290959781cc warnings=77 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] row=b9e263561623ce24 warnings=78 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.20s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.48s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.61s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=35.31s
+[hierarchical] row=bd834f7aa9fce2f1 warnings=79 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.56s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.59s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.43s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=39.51s
+[hierarchical] row=beabac2255eb1381 warnings=80 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.58s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.85s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.94s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.71s
+[hierarchical] row=c22b5166bc752ddc warnings=81 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.28s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.24s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.01s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.22s
+[hierarchical] row=ca121bbd8567cee1 warnings=82 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.12s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.61s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.11s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.65s
+[hierarchical] row=d4ff3983e853152c warnings=83 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.56s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.32s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.54s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.02s
+[hierarchical] row=d59c797241bb0a3b warnings=84 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.11s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.08s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.33s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.26s
+[hierarchical] row=d7650878c7b9e6fb warnings=85 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.17s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.59s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.47s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=35.52s
+[hierarchical] row=d78a69f22d771488 warnings=86 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.43s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.93s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.57s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=37.79s
+[hierarchical] row=db4e657509d10746 warnings=87 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.84s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.26s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.05s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.87s
+[hierarchical] row=dea760769a6cda9c warnings=88 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.51s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.31s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.44s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=39.73s
+[hierarchical] row=e22751b24f2fd087 warnings=89 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.98s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.46s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.98s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=42.02s
+[hierarchical] row=e4dda71206cf700e warnings=90 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.92s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.07s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.69s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.98s
+[hierarchical] row=e4e660bdea33ede2 warnings=91 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.67s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.14s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.52s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.43s
+[hierarchical] row=e865e13d142b3282 warnings=92 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.93s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.06s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.17s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=40.82s
+[hierarchical] row=efefa2fa3b6c6685 warnings=93 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.21s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.45s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.17s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=34.60s
+[hierarchical] row=f03e0b5fcd298923 warnings=94 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.81s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=10.36s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=21.27s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=43.29s
+[hierarchical] row=f4b7fbcf2fd600d8 warnings=95 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.23s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.15s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.03s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.86s
+[hierarchical] row=f51acb0e294033b0 warnings=96 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.78s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.70s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=19.73s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=39.87s
+[hierarchical] row=f5d00c4d9faa26b1 warnings=97 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.27s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.83s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.84s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=36.50s
+[hierarchical] row=f7f0fe9b158bfc49 warnings=98 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.02s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.16s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.12s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=34.75s
+[hierarchical] row=f806ff461babe232 warnings=99 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.02s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.20s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=17.38s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=35.25s
+[hierarchical] row=f8ac8735c653a08a warnings=100 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.00s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=8.97s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=18.59s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=38.18s
+[hierarchical] row=f9f6f930077c05b7 warnings=101 errors=3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] retrying after 429/rate-limit response; retry=2 wait=4.85s
+[hierarchical] retrying after 429/rate-limit response; retry=3 wait=9.94s
+[hierarchical] retrying after 429/rate-limit response; retry=4 wait=20.85s
+[hierarchical] retrying after 429/rate-limit response; retry=5 wait=41.83s
+[hierarchical] row=fc44ea8611497ca0 warnings=102 errors=3
+Wrote benchmark artifacts under results/track2/wave1_hierarchical_20260313_144401

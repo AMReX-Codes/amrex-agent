@@ -1,0 +1,13 @@
+[simple] llm_unavailable row_index=0 prompt_id=00d365989b09585d attempt=1/3
+[simple] llm_unavailable row_index=0 prompt_id=00d365989b09585d attempt=2/3
+[simple] llm_unavailable row_index=0 prompt_id=00d365989b09585d attempt=3/3
+[simple] row=00d365989b09585d warnings=3 errors=9
+[simple] llm_unavailable row_index=1 prompt_id=019b835399b503b4 attempt=1/3
+[simple] llm_unavailable row_index=1 prompt_id=019b835399b503b4 attempt=2/3
+[simple] llm_unavailable row_index=1 prompt_id=019b835399b503b4 attempt=3/3
+[simple] row=019b835399b503b4 warnings=6 errors=18
+[simple] llm_unavailable row_index=2 prompt_id=02b7f52302fe6ed9 attempt=1/3
+[simple] llm_unavailable row_index=2 prompt_id=02b7f52302fe6ed9 attempt=2/3
+[simple] llm_unavailable row_index=2 prompt_id=02b7f52302fe6ed9 attempt=3/3
+[simple] row=02b7f52302fe6ed9 warnings=9 errors=27
+Wrote benchmark artifacts under results/track2/wave1_simple_20260313_140048

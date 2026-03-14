@@ -1,0 +1,525 @@
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.58s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.27s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.07s
+[simple] row=00d365989b09585d warnings=1 errors=2
+[simple] row=019b835399b503b4 warnings=2 errors=4
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.42s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.69s
+[simple] row=02b7f52302fe6ed9 warnings=3 errors=4
+[simple] row=044aa002dd4dfd20 warnings=4 errors=6
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.92s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.18s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.60s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.62s
+[simple] llm_unavailable row_index=4 prompt_id=097d4e7bc5c12639 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.34s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.75s
+[simple] retrying after 429/rate-limit response; retry=4 wait=17.66s
+[simple] retrying after 429/rate-limit response; retry=5 wait=35.62s
+[simple] llm_unavailable row_index=4 prompt_id=097d4e7bc5c12639 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.04s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.67s
+[simple] retrying after 429/rate-limit response; retry=4 wait=17.91s
+[simple] retrying after 429/rate-limit response; retry=5 wait=36.40s
+[simple] llm_unavailable row_index=4 prompt_id=097d4e7bc5c12639 attempt=3/3
+[simple] row=097d4e7bc5c12639 warnings=7 errors=15
+[simple] row=0a50784987204f69 warnings=8 errors=15
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.26s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.08s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.28s
+[simple] retrying after 429/rate-limit response; retry=5 wait=36.57s
+[simple] row=100a3848527bbcf1 warnings=9 errors=15
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.90s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.10s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.83s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.80s
+[simple] row=16cafaa8bd6cb4c7 warnings=10 errors=17
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.28s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.69s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.08s
+[simple] retrying after 429/rate-limit response; retry=5 wait=36.58s
+[simple] row=1d6f3de1dc69721c warnings=11 errors=19
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=2b0066345c5861a3 warnings=12 errors=21
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.38s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.06s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.20s
+[simple] retrying after 429/rate-limit response; retry=5 wait=36.68s
+[simple] row=2cffa38307036698 warnings=13 errors=23
+[simple] row=33406d89e7d13ec8 warnings=14 errors=23
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=35a4886cbb0b6d7a warnings=15 errors=23
+[simple] row=36ee01b9e53ba413 warnings=16 errors=23
+[simple] llm_unavailable row_index=14 prompt_id=39df8cb2bf580e53 attempt=1/3
+[simple] llm_unavailable row_index=14 prompt_id=39df8cb2bf580e53 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.55s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.42s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.61s
+[simple] llm_unavailable row_index=14 prompt_id=39df8cb2bf580e53 attempt=3/3
+[simple] row=39df8cb2bf580e53 warnings=19 errors=32
+[simple] llm_unavailable row_index=15 prompt_id=3fefb88b407d4111 attempt=1/3
+[simple] llm_unavailable row_index=15 prompt_id=3fefb88b407d4111 attempt=2/3
+[simple] llm_unavailable row_index=15 prompt_id=3fefb88b407d4111 attempt=3/3
+[simple] row=3fefb88b407d4111 warnings=22 errors=41
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=16 prompt_id=40a94c16e74baa8b attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.62s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.08s
+[simple] llm_unavailable row_index=16 prompt_id=40a94c16e74baa8b attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.62s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.24s
+[simple] llm_unavailable row_index=16 prompt_id=40a94c16e74baa8b attempt=3/3
+[simple] row=40a94c16e74baa8b warnings=25 errors=50
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.61s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.72s
+[simple] llm_unavailable row_index=17 prompt_id=436a11512a1422de attempt=1/3
+[simple] llm_unavailable row_index=17 prompt_id=436a11512a1422de attempt=2/3
+[simple] llm_unavailable row_index=17 prompt_id=436a11512a1422de attempt=3/3
+[simple] row=436a11512a1422de warnings=28 errors=59
+[simple] llm_unavailable row_index=18 prompt_id=451e42f7895b87e8 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.20s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.95s
+[simple] llm_unavailable row_index=18 prompt_id=451e42f7895b87e8 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.46s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.54s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.29s
+[simple] retrying after 429/rate-limit response; retry=5 wait=39.01s
+[simple] llm_unavailable row_index=18 prompt_id=451e42f7895b87e8 attempt=3/3
+[simple] row=451e42f7895b87e8 warnings=31 errors=68
+[simple] row=499f1b2839a700fd warnings=32 errors=70
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.55s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.17s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.26s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.55s
+[simple] row=4a28e05d7ad8dddc warnings=33 errors=72
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.57s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.23s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.37s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.84s
+[simple] row=4c2e15c7a2b1807e warnings=34 errors=74
+[simple] row=4e49a70f9aa43608 warnings=35 errors=74
+[simple] row=50fc59087cc65e41 warnings=36 errors=76
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.89s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.21s
+[simple] retrying after 429/rate-limit response; retry=4 wait=21.19s
+[simple] retrying after 429/rate-limit response; retry=5 wait=42.46s
+[simple] llm_unavailable row_index=24 prompt_id=5502d952a197e044 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.01s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.90s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.22s
+[simple] retrying after 429/rate-limit response; retry=5 wait=36.95s
+[simple] llm_unavailable row_index=24 prompt_id=5502d952a197e044 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.77s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.85s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.47s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.29s
+[simple] llm_unavailable row_index=24 prompt_id=5502d952a197e044 attempt=3/3
+[simple] row=5502d952a197e044 warnings=39 errors=85
+[simple] row=55d65853b3dc5807 warnings=40 errors=85
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.35s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.85s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.01s
+[simple] retrying after 429/rate-limit response; retry=5 wait=36.24s
+[simple] row=56c7b5f8607b9e2b warnings=41 errors=87
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.57s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.07s
+[simple] retrying after 429/rate-limit response; retry=4 wait=21.06s
+[simple] row=57a35b822fb3fb63 warnings=42 errors=87
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.98s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.68s
+[simple] retrying after 429/rate-limit response; retry=4 wait=22.15s
+[simple] retrying after 429/rate-limit response; retry=5 wait=45.01s
+[simple] row=58ac9ebd5dbe5287 warnings=43 errors=89
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.59s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.02s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.27s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.27s
+[simple] llm_unavailable row_index=29 prompt_id=5a5b55bd50b2195b attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.99s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.23s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.48s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.37s
+[simple] llm_unavailable row_index=29 prompt_id=5a5b55bd50b2195b attempt=2/3
+[simple] llm_unavailable row_index=29 prompt_id=5a5b55bd50b2195b attempt=3/3
+[simple] row=5a5b55bd50b2195b warnings=46 errors=98
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.71s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.20s
+[simple] row=5b7211868a6fc7bd warnings=47 errors=100
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.90s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.34s
+[simple] retrying after 429/rate-limit response; retry=4 wait=21.64s
+[simple] retrying after 429/rate-limit response; retry=5 wait=44.13s
+[simple] row=5bd21f3859c1c7ea warnings=48 errors=100
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.95s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.89s
+[simple] retrying after 429/rate-limit response; retry=4 wait=22.61s
+[simple] row=5d36bcbbb3955583 warnings=49 errors=102
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.56s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.03s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.37s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.37s
+[simple] row=5d6d8a3e782072e0 warnings=50 errors=104
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=34 prompt_id=5dec9fb84c6b48e4 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=34 prompt_id=5dec9fb84c6b48e4 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.23s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.79s
+[simple] llm_unavailable row_index=34 prompt_id=5dec9fb84c6b48e4 attempt=3/3
+[simple] row=5dec9fb84c6b48e4 warnings=53 errors=113
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.17s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.16s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.35s
+[simple] retrying after 429/rate-limit response; retry=5 wait=37.44s
+[simple] row=5df5fbeb43411485 warnings=54 errors=113
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.63s
+[simple] row=6037371246cbeaf9 warnings=55 errors=113
+[simple] llm_unavailable row_index=37 prompt_id=61440a7571417cab attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.11s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.13s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.16s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.79s
+[simple] llm_unavailable row_index=37 prompt_id=61440a7571417cab attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.45s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.44s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.47s
+[simple] retrying after 429/rate-limit response; retry=5 wait=39.84s
+[simple] llm_unavailable row_index=37 prompt_id=61440a7571417cab attempt=3/3
+[simple] row=61440a7571417cab warnings=58 errors=122
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.32s
+[simple] llm_unavailable row_index=38 prompt_id=625ddcabb2d84b45 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.83s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.06s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.93s
+[simple] llm_unavailable row_index=38 prompt_id=625ddcabb2d84b45 attempt=2/3
+[simple] llm_unavailable row_index=38 prompt_id=625ddcabb2d84b45 attempt=3/3
+[simple] row=625ddcabb2d84b45 warnings=61 errors=131
+[simple] row=650ab438a4e15aa5 warnings=62 errors=133
+[simple] row=661578fbae6c6c98 warnings=63 errors=135
+[simple] llm_unavailable row_index=41 prompt_id=6679b106b67a72c7 attempt=1/3
+[simple] llm_unavailable row_index=41 prompt_id=6679b106b67a72c7 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.56s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.83s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.83s
+[simple] retrying after 429/rate-limit response; retry=5 wait=40.61s
+[simple] llm_unavailable row_index=41 prompt_id=6679b106b67a72c7 attempt=3/3
+[simple] row=6679b106b67a72c7 warnings=66 errors=144
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.71s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.96s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.41s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.26s
+[simple] row=67827a0a12f2782e warnings=67 errors=144
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.01s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.37s
+[simple] retrying after 429/rate-limit response; retry=4 wait=16.95s
+[simple] retrying after 429/rate-limit response; retry=5 wait=34.36s
+[simple] row=67d45fafd496e5e1 warnings=68 errors=146
+[simple] row=683f741d537d6446 warnings=69 errors=148
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.33s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.67s
+[simple] retrying after 429/rate-limit response; retry=4 wait=17.95s
+[simple] retrying after 429/rate-limit response; retry=5 wait=36.58s
+[simple] row=6861a4cd9e823196 warnings=70 errors=148
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.87s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.53s
+[simple] retrying after 429/rate-limit response; retry=4 wait=21.31s
+[simple] retrying after 429/rate-limit response; retry=5 wait=42.81s
+[simple] row=6d64255a9f75b7f0 warnings=71 errors=148
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.55s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.42s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.70s
+[simple] retrying after 429/rate-limit response; retry=5 wait=39.45s
+[simple] row=7072c3dac4e98d2c warnings=72 errors=148
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.81s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.01s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.62s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.68s
+[simple] row=75d5217a630e2f08 warnings=73 errors=148
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.68s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.90s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.80s
+[simple] retrying after 429/rate-limit response; retry=5 wait=42.22s
+[simple] row=79451bce1b25f5b5 warnings=74 errors=150
+[simple] llm_unavailable row_index=50 prompt_id=79c27203548041a9 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.41s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.25s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.33s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.72s
+[simple] llm_unavailable row_index=50 prompt_id=79c27203548041a9 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=50 prompt_id=79c27203548041a9 attempt=3/3
+[simple] row=79c27203548041a9 warnings=77 errors=159
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.36s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.07s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.73s
+[simple] retrying after 429/rate-limit response; retry=5 wait=37.88s
+[simple] row=79e1a7439abda7e0 warnings=78 errors=161
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=7c133fd9955e3326 warnings=79 errors=161
+[simple] row=7c2dbb058ae9dd01 warnings=80 errors=161
+[simple] row=7d00c442b7e16ab1 warnings=81 errors=161
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.84s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.33s
+[simple] retrying after 429/rate-limit response; retry=4 wait=21.15s
+[simple] retrying after 429/rate-limit response; retry=5 wait=43.07s
+[simple] llm_unavailable row_index=55 prompt_id=83e8394891c2b4f5 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.22s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.20s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.79s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.57s
+[simple] llm_unavailable row_index=55 prompt_id=83e8394891c2b4f5 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.42s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.83s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.35s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.34s
+[simple] llm_unavailable row_index=55 prompt_id=83e8394891c2b4f5 attempt=3/3
+[simple] row=83e8394891c2b4f5 warnings=84 errors=170
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.54s
+[simple] row=83fe4a2b485cd186 warnings=85 errors=172
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=882f54a5e0b15e95 warnings=86 errors=174
+[simple] llm_unavailable row_index=58 prompt_id=8910adb5f9352180 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.97s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.05s
+[simple] llm_unavailable row_index=58 prompt_id=8910adb5f9352180 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=58 prompt_id=8910adb5f9352180 attempt=3/3
+[simple] row=8910adb5f9352180 warnings=89 errors=183
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.66s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.01s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.75s
+[simple] retrying after 429/rate-limit response; retry=5 wait=42.29s
+[simple] llm_unavailable row_index=59 prompt_id=89daffe9760ad84b attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.23s
+[simple] llm_unavailable row_index=59 prompt_id=89daffe9760ad84b attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.27s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.37s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.89s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.07s
+[simple] llm_unavailable row_index=59 prompt_id=89daffe9760ad84b attempt=3/3
+[simple] row=89daffe9760ad84b warnings=92 errors=192
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=8c07fcdb62c834d2 warnings=93 errors=192
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=61 prompt_id=8db27d1f4b0ecf8d attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=61 prompt_id=8db27d1f4b0ecf8d attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.65s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.67s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.25s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.08s
+[simple] llm_unavailable row_index=61 prompt_id=8db27d1f4b0ecf8d attempt=3/3
+[simple] row=8db27d1f4b0ecf8d warnings=96 errors=201
+[simple] row=8f2c280dffb509c9 warnings=97 errors=201
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.57s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.98s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.36s
+[simple] retrying after 429/rate-limit response; retry=5 wait=40.79s
+[simple] llm_unavailable row_index=63 prompt_id=8f7ccf0243473c24 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.82s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.15s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.80s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.72s
+[simple] llm_unavailable row_index=63 prompt_id=8f7ccf0243473c24 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=63 prompt_id=8f7ccf0243473c24 attempt=3/3
+[simple] row=8f7ccf0243473c24 warnings=100 errors=210
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.08s
+[simple] row=900b3f88f35b2073 warnings=101 errors=212
+[simple] row=91d955c98dbaf8ec warnings=102 errors=214
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.47s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.48s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.43s
+[simple] retrying after 429/rate-limit response; retry=5 wait=39.45s
+[simple] row=94772f74c97b17a1 warnings=103 errors=214
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.27s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.98s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.55s
+[simple] retrying after 429/rate-limit response; retry=5 wait=37.70s
+[simple] row=9634472d23ee150d warnings=104 errors=214
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.41s
+[simple] row=975e73596660e2e4 warnings=105 errors=216
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=986363e97e04cf16 warnings=106 errors=218
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.49s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.35s
+[simple] llm_unavailable row_index=70 prompt_id=9a6fdfe94d4a0de8 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.89s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.07s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.48s
+[simple] llm_unavailable row_index=70 prompt_id=9a6fdfe94d4a0de8 attempt=2/3
+[simple] llm_unavailable row_index=70 prompt_id=9a6fdfe94d4a0de8 attempt=3/3
+[simple] row=9a6fdfe94d4a0de8 warnings=109 errors=227
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.96s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.00s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.67s
+[simple] llm_unavailable row_index=71 prompt_id=9aa20744dbed59f7 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.01s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.05s
+[simple] retrying after 429/rate-limit response; retry=4 wait=16.76s
+[simple] retrying after 429/rate-limit response; retry=5 wait=34.07s
+[simple] llm_unavailable row_index=71 prompt_id=9aa20744dbed59f7 attempt=2/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.94s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.27s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.78s
+[simple] retrying after 429/rate-limit response; retry=5 wait=41.71s
+[simple] llm_unavailable row_index=71 prompt_id=9aa20744dbed59f7 attempt=3/3
+[simple] row=9aa20744dbed59f7 warnings=112 errors=236
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=a4e50e087b4b88d1 warnings=113 errors=238
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.36s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.53s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.31s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.96s
+[simple] row=b4a636f4cce992b8 warnings=114 errors=240
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.51s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.48s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.14s
+[simple] retrying after 429/rate-limit response; retry=5 wait=39.01s
+[simple] row=b8c23290959781cc warnings=115 errors=242
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=b9e263561623ce24 warnings=116 errors=242
+[simple] row=bd834f7aa9fce2f1 warnings=117 errors=242
+[simple] row=beabac2255eb1381 warnings=118 errors=244
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.72s
+[simple] retrying after 429/rate-limit response; retry=3 wait=10.00s
+[simple] retrying after 429/rate-limit response; retry=4 wait=20.98s
+[simple] retrying after 429/rate-limit response; retry=5 wait=42.53s
+[simple] row=c22b5166bc752ddc warnings=119 errors=246
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.33s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.18s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.99s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.68s
+[simple] row=ca121bbd8567cee1 warnings=120 errors=246
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=d4ff3983e853152c warnings=121 errors=246
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.48s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.73s
+[simple] retrying after 429/rate-limit response; retry=4 wait=19.86s
+[simple] retrying after 429/rate-limit response; retry=5 wait=40.03s
+[simple] row=d59c797241bb0a3b warnings=122 errors=248
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.26s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.57s
+[simple] retrying after 429/rate-limit response; retry=4 wait=17.74s
+[simple] retrying after 429/rate-limit response; retry=5 wait=35.94s
+[simple] row=d7650878c7b9e6fb warnings=123 errors=250
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=d78a69f22d771488 warnings=124 errors=252
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.37s
+[simple] retrying after 429/rate-limit response; retry=3 wait=8.75s
+[simple] retrying after 429/rate-limit response; retry=4 wait=17.56s
+[simple] retrying after 429/rate-limit response; retry=5 wait=35.57s
+[simple] row=db4e657509d10746 warnings=125 errors=254
+[simple] row=dea760769a6cda9c warnings=126 errors=256
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] retrying after 429/rate-limit response; retry=2 wait=4.31s
+[simple] retrying after 429/rate-limit response; retry=3 wait=9.08s
+[simple] retrying after 429/rate-limit response; retry=4 wait=18.99s
+[simple] retrying after 429/rate-limit response; retry=5 wait=38.06s
+[simple] row=e22751b24f2fd087 warnings=127 errors=258
+[simple] row=e4dda71206cf700e warnings=128 errors=260
+[simple] row=e4e660bdea33ede2 warnings=129 errors=262
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=89 prompt_id=e865e13d142b3282 attempt=1/3
+[simple] llm_unavailable row_index=89 prompt_id=e865e13d142b3282 attempt=2/3
+[simple] llm_unavailable row_index=89 prompt_id=e865e13d142b3282 attempt=3/3
+[simple] row=e865e13d142b3282 warnings=132 errors=271
+[simple] row=efefa2fa3b6c6685 warnings=133 errors=271
+[simple] llm_unavailable row_index=91 prompt_id=f03e0b5fcd298923 attempt=1/3
+[simple] llm_unavailable row_index=91 prompt_id=f03e0b5fcd298923 attempt=2/3
+[simple] llm_unavailable row_index=91 prompt_id=f03e0b5fcd298923 attempt=3/3
+[simple] row=f03e0b5fcd298923 warnings=136 errors=280
+[simple] llm_unavailable row_index=92 prompt_id=f4b7fbcf2fd600d8 attempt=1/3
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] llm_unavailable row_index=92 prompt_id=f4b7fbcf2fd600d8 attempt=2/3
+[simple] llm_unavailable row_index=92 prompt_id=f4b7fbcf2fd600d8 attempt=3/3
+[simple] row=f4b7fbcf2fd600d8 warnings=139 errors=289
+[simple] row=f51acb0e294033b0 warnings=140 errors=289
+[simple] llm_unavailable row_index=94 prompt_id=f5d00c4d9faa26b1 attempt=1/3
+[simple] llm_unavailable row_index=94 prompt_id=f5d00c4d9faa26b1 attempt=2/3
+[simple] llm_unavailable row_index=94 prompt_id=f5d00c4d9faa26b1 attempt=3/3
+[simple] row=f5d00c4d9faa26b1 warnings=143 errors=298
+[simple] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[simple] row=f7f0fe9b158bfc49 warnings=144 errors=298
+[simple] row=f806ff461babe232 warnings=145 errors=298
+[simple] row=f8ac8735c653a08a warnings=146 errors=298
+[simple] row=f9f6f930077c05b7 warnings=147 errors=300
+[simple] llm_unavailable row_index=99 prompt_id=fc44ea8611497ca0 attempt=1/3
+[simple] llm_unavailable row_index=99 prompt_id=fc44ea8611497ca0 attempt=2/3
+[simple] llm_unavailable row_index=99 prompt_id=fc44ea8611497ca0 attempt=3/3
+[simple] row=fc44ea8611497ca0 warnings=150 errors=309
+Wrote benchmark artifacts under results/track2/wave1_simple_20260313_144401

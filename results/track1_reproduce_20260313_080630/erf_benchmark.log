@@ -1,0 +1,7 @@
+usage: run_llm_compare_benchmark.py [-h] [--prompt-matrix PROMPT_MATRIX]
+                                    [--out-dir OUT_DIR] [--max-rows MAX_ROWS]
+                                    [--verbose-cli]
+                                    [--explainability-threshold EXPLAINABILITY_THRESHOLD]
+                                    [--agent-config AGENT_CONFIG]
+                                    [--inputs-file-strategy INPUTS_FILE_STRATEGY]
+run_llm_compare_benchmark.py: error: unrecognized arguments: --output-dir benchmark/erf_llm_compare/runs/track1_reproduce_minimal

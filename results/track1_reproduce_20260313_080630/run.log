@@ -1,0 +1,23 @@
+=== Step 1 (optional): README registry audit ===
+=== Step 2: Cross-domain smoke ===
+=== Step 3: Indexing strategies (JICF) ===
+Step 3 status: FAIL (continuing for pilot and artifact collection)
+=== Step 3b (optional): Hierarchical-only verbose diagnostics ===
+=== Step 4 (optional): Direct ERF dry-run probes with persisted workflow/log artifacts ===
+Pilot config dir: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/scripts/paper/configs
+  - /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/scripts/paper/configs/ab_simple_sonnet.yaml
+=== Step 5 (optional): Minimal benchmark summary regeneration ===
+=== Summary ===
+results/track1_reproduce_20260313_080630/smoke.log:133:============================== 5 passed in 20.76s ==============================
+results/track1_reproduce_20260313_080630/indexing_strategies.log:18:E   AssertionError: assert 'Exec/Production/CounterFlow' == 'Exec/Production/JetInCrossflow'
+results/track1_reproduce_20260313_080630/indexing_strategies.log:138:=========================== short test summary info ============================
+results/track1_reproduce_20260313_080630/indexing_strategies.log:139:FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical] - AssertionError: assert 'Exec/Production/CounterFlow' == 'Exec/Production/JetInCrossflow'
+results/track1_reproduce_20260313_080630/indexing_strategies.log:143:=================== 1 failed, 2 passed in 155.99s (0:02:35) ====================
+results/track1_reproduce_20260313_080630/hierarchical_verbose.log:16:E   AssertionError: assert 'Exec/Production/CounterFlow' == 'Exec/Production/JetInCrossflow'
+results/track1_reproduce_20260313_080630/hierarchical_verbose.log:130:=========================== short test summary info ============================
+results/track1_reproduce_20260313_080630/hierarchical_verbose.log:131:FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical] - AssertionError: assert 'Exec/Production/CounterFlow' == 'Exec/Production/JetInCrossflow'
+results/track1_reproduce_20260313_080630/hierarchical_verbose.log:135:================== 1 failed, 2 deselected in 74.57s (0:01:14) ==================
+=== Pilot matrix outputs ===
+  - results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_hierarchical/result.json
+  - results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_override_static/result.json
+  - results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_simple/result.json

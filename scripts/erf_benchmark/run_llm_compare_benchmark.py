@@ -179,6 +179,9 @@ def _run_one(
     agent_config: Path | None = None,
     inputs_file_strategy: str = "llm_compare",
     verbose_cli: bool = False,
+    save_workflow: bool = False,
+    save_transcript: bool = False,
+    save_log: bool = False,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any] | None, dict[str, Any]]:
     cmd = [
         "python", "amrex_agent.py",
@@ -194,6 +197,12 @@ def _run_one(
         cmd.extend(["--output-dir", str(output_root)])
     if verbose_cli:
         cmd.extend(["--verbose"])
+    if save_workflow:
+        cmd.extend(["--save-workflow"])
+    if save_transcript:
+        cmd.extend(["--save-transcript"])
+    if save_log:
+        cmd.extend(["--save-log"])
     completed: subprocess.CompletedProcess[str] | None = None
     retry_delay = 2.0
     rate_limit_retries = 0
@@ -253,6 +262,9 @@ def _run_strategy(
     agent_config: Path | None = None,
     inputs_file_strategy: str = "llm_compare",
     verbose_cli: bool = False,
+    save_workflow: bool = False,
+    save_transcript: bool = False,
+    save_log: bool = False,
 ) -> dict[str, Any]:
     predictions: dict[str, dict[str, str]] = {}
     evidences: list[dict[str, Any]] = []
@@ -273,6 +285,9 @@ def _run_strategy(
                 agent_config=agent_config,
                 inputs_file_strategy=inputs_file_strategy,
                 verbose_cli=verbose_cli,
+                save_workflow=save_workflow,
+                save_transcript=save_transcript,
+                save_log=save_log,
             )
             console_rows.append({"row_id": row["row_id"], "strategy": strategy, "row_index": row_idx, "attempt": attempt, **console})
             row_events = _scan_console_events(console["stdout_tail"], console["stderr_tail"], row_id=row["row_id"], strategy=strategy)
@@ -363,10 +378,14 @@ def main() -> int:
     parser.add_argument("--out-dir", type=Path, default=None)
     parser.add_argument("--strategy", choices=["simple", "hierarchical"], default=None)
     parser.add_argument("--max-rows", type=int, default=0)
+    parser.add_argument("--row-offset", type=int, default=0, help="Skip first N rows before evaluation.")
     parser.add_argument("--verbose-cli", action="store_true")
     parser.add_argument("--explainability-threshold", type=float, default=0.9)
     parser.add_argument("--agent-config", type=Path, default=None)
     parser.add_argument("--inputs-file-strategy", type=str, default="llm_compare")
+    parser.add_argument("--save-workflow", action="store_true", help="Forward --save-workflow to amrex_agent runs.")
+    parser.add_argument("--save-transcript", action="store_true", help="Forward --save-transcript to amrex_agent runs.")
+    parser.add_argument("--save-log", action="store_true", help="Forward --save-log to amrex_agent runs.")
     args = parser.parse_args()
 
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -384,6 +403,8 @@ def main() -> int:
             "hierarchical": base / f"{run_id}_hierarchical",
         }
     rows = _load_jsonl(args.prompt_matrix)
+    if args.row_offset > 0:
+        rows = rows[args.row_offset :]
     if args.max_rows > 0:
         rows = rows[: args.max_rows]
 
@@ -396,6 +417,9 @@ def main() -> int:
             agent_config=args.agent_config,
             inputs_file_strategy=args.inputs_file_strategy,
             verbose_cli=args.verbose_cli,
+            save_workflow=args.save_workflow,
+            save_transcript=args.save_transcript,
+            save_log=args.save_log,
         )
         for strategy in selected_strategies
     ]

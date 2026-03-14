@@ -1,0 +1,207 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0 -- /home/jmsexton/miniconda3/envs/amrex-agent-dev/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf
+configfile: pyproject.toml
+plugins: mock-3.15.1, anyio-4.12.1, asyncio-1.3.0, cov-7.0.0, langsmith-0.7.5
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/e2e/test_readme_command_registry.py::test_readme_command_registry_complete FAILED [100%]/home/jmsexton/miniconda3/envs/amrex-agent-dev/lib/python3.11/site-packages/coverage/control.py:958: CoverageWarning: No data was collected. (no-data-collected); see https://coverage.readthedocs.io/en/7.13.1/messages.html#warning-no-data-collected
+  self._warn("No data was collected.", slug="no-data-collected")
+
+
+=================================== FAILURES ===================================
+____________________ test_readme_command_registry_complete _____________________
+tests/e2e/test_readme_command_registry.py:40: in test_readme_command_registry_complete
+    pytest.fail("\n".join(parts))
+E   Failed: Missing registry entries:
+E     - README.md (bash_block) sha256:39e15893b09b523928fd5a7bd7a981da1c154e841955dfbffef1e597dfffd8e9
+E     - README.md (bash_block) sha256:c17f2abae2ccd6b5081e384c8c4d2206e5c81e51b4cfa9046dede1656d3ead2c
+E     - demo/README.md (amrex_agent_inline) sha256:3bab2b30c82595dd20ed5de5ad8a3d1aae863287f220388ebd0a59855919b69a
+E     - demo/README.md (amrex_agent_inline) sha256:d50277fe266f70694bec7962e9a7acf5cb36dd147261cb6a6e9589ba15e3a1d4
+E     - demo/amsc-i2/README.md (bash_block) sha256:3fd3bae900769d0ac05035230b90a5a0f8b19760329f3f2754066143d3719b40
+E     - demo/amsc-i2/README.md (bash_block) sha256:9b62d7f1a71b148a422952acb741096640214de629d284f9af1930f88d1ddafe
+E     - demo/amsc-i2/README.md (bash_block) sha256:a75551d06b916f1af61805f8f4c792bccdca689bab2b4568227399ccfc308d5c
+E     - demo/mcp/README.md (bash_block) sha256:4f75d84aad0634311e2cc93164ca4d234de78155c07e0a016880672010c6a0a8
+E     - demo/mcp/README.md (bash_block) sha256:80fb8cee2fcefc917a3098c2d2b6592df1ce79f0204e856f8c2433431abcdfea
+E     - demo/mcp/README.md (bash_block) sha256:8332a46a2abad86bd94f608500758fbf63e26152fd3ece4f0b6b49e6ef501fa4
+E     - demo/mcp/README.md (bash_block) sha256:854ea53300ae5934cd1a6953291f7483a6420121e14802d1cc386d40129edfee
+E     - demo/mcp/README.md (bash_block) sha256:a0470fb8c9c4adc21be2d5cc69791347df83babd34e6616dc5823cf8d54120b6
+E     - demo/mcp/README.md (bash_block) sha256:b99b2fdb21f937c69d04887fedd55ace8bb3a329ec6a948bfad7a3753ea65f39
+E     - demo/mcp/README.md (bash_block) sha256:cb7344c95779882a20f445a8a4b3cba3115387c9ab0ce49e1c869f31b1581902
+E     - demo/pelelmex/README.md (bash_block) sha256:27a8583a8a17a24dd39af45e5bf8481ada2df8280ae14909a58cfbd7783dc154
+E     - demo/pelelmex/README.md (bash_block) sha256:455f553b22d9be3e705438f52d793549dc304b3e18034bea559841e428c52f42
+E     - demo/pelelmex/README.md (bash_block) sha256:64c161420f8557f5c65cdd796d78f70f4210dd7d8f4752a6d0c3740dfc2eaaac
+E     - demo/pelelmex/README.md (bash_block) sha256:6f7e9cbb19b12e2448e64ccfe306349b0db6869f4989e38fb7d9056650f1a311
+E     - demo/pelelmex/README.md (bash_block) sha256:700e3318c417f45c959c6ab8d9916fbbc71a5178afa6244c4c903dfaaf44ef3a
+E     - demo/pelelmex/README.md (bash_block) sha256:eb8d2f8d45a32ca5049daa0310b49ba42b31b8596c9e1536a35e98f9dc531246
+E     - demo/pelelmex/README.md (bash_block) sha256:fbda57da80e7d04f354b9bd7a1abf9e86b876098aa7f4509f3f52e245470de55
+E     - demo/pelelmex/README.md (bash_block) sha256:ffdae78b9d79b251ded5f2b99655eb0fc2c2630b085a8bf39fde948a987bb002
+E     - output/run_20260312_064502/README.md (bash_block) sha256:1139e288377e5f0a03c0bd5f7e1c277c8b0e7c448f12a98cbc92325ffe63f96b
+E     - output/run_20260312_064502/README.md (bash_block) sha256:b94d7cd733c409dc3a962b1b65791820450e1e2426322cd9bb13db83775006bc
+E     - output/run_20260312_064502/README.md (bash_block) sha256:e5e06b21c49fdf72ea723260c1a2b1800252272c85145581220bb20c51878411
+E     - ... and 390 more
+E   Extra registry entries (no longer in readmes):
+E     - demo/mcp/README.md (bash_block) sha256:5d298aa7e620abb1c8432da7b173407e92933816e1b9aacd5508ed186c94291d
+E     - demo/mcp/README.md (bash_block) sha256:624872aa809c6348936d478ca8d33097aa067c6f0ca3066de418d3851a4ada0a
+E     - demo/mcp/README.md (bash_block) sha256:86321cc89cddab6084a631582d8d1a362f3204c515c419e8bb627247911543cf
+E     - demo/mcp/README.md (bash_block) sha256:ca8203801498ee34f5332c59704b81cf4866f32be2bf30caac8a21a44eed05f8
+E     - demo/mcp/README.md (bash_block) sha256:fc29455ac36ccafda8e0188a7186c27b78b1e1e603bb3a41db1aec0b5664b583
+E     - demo/pelelmex/README.md (bash_block) sha256:3bf384a1ddc8423a05040ab1716458df1d7704370a32d7a56c9b00a5f8b99328
+E     - demo/pelelmex/README.md (bash_block) sha256:edfef53a53e263a9e0914642d29f9a87791377a55a63a77187e872ea9d78e590
+E     - output/run_20260202_091048/README.md (bash_block) sha256:62052093f40b6d7db0c8b99e86d8bf2e26ed5fdd15760285c8f6e9f37031dfe5
+E     - output/run_20260202_091048/README.md (bash_block) sha256:b43482a22e6a170aa27a95abd3254b5830b2bfd2f2801b15abb902633439b4d6
+E     - output/run_20260202_091204/README.md (bash_block) sha256:62052093f40b6d7db0c8b99e86d8bf2e26ed5fdd15760285c8f6e9f37031dfe5
+E     - output/run_20260202_091204/README.md (bash_block) sha256:cc5a923e195382c15e269b3e0aa11d9ed2aeb1f8132eba9d92505938075bc1d7
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.11.14-final-0 _______________
+
+Name                                                       Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------------
+src/academy_mcp_agent.py                                      72     72  0.00%   3-233
+src/benchmark_runner.py                                      703    703  0.00%   3-1317
+src/config.py                                                655    655  0.00%   3-1623
+src/erf_cases.py                                             141    141  0.00%   3-263
+src/graph.py                                                1321   1321  0.00%   3-2378
+src/interactive_service.py                                    30     30  0.00%   3-124
+src/main.py                                                  550    550  0.00%   10-1329
+src/mcp_adapter.py                                             1      1  0.00%   6
+src/mcp_tools.py                                             373    373  0.00%   3-837
+src/models.py                                                 34     34  0.00%   15-101
+src/models/__init__.py                                         2      2  0.00%   6-8
+src/models/clarification_schemas.py                           15     15  0.00%   3-23
+src/models/gate_approval.py                                   11     11  0.00%   3-17
+src/models/graph_state_canonical.py                           81     81  0.00%   24-339
+src/models/paper_validation_manifest.py                       46     46  0.00%   3-77
+src/models/state_compatibility.py                             73     73  0.00%   15-194
+src/models/state_transitions.py                               34     34  0.00%   13-188
+src/models/sweep_schemas.py                                   43     43  0.00%   3-70
+src/nodes/__init__.py                                         25     25  0.00%   21-51
+src/nodes/analysis_node.py                                   180    180  0.00%   11-441
+src/nodes/architect_node.py                                  248    248  0.00%   13-584
+src/nodes/clarification_handler_node.py                       94     94  0.00%   3-205
+src/nodes/clarification_node.py                              175    175  0.00%   3-443
+src/nodes/input_writer_node.py                               155    155  0.00%   7-439
+src/nodes/intent_extraction_node.py                           58     58  0.00%   5-147
+src/nodes/paper_validator_node.py                             92     92  0.00%   3-205
+src/nodes/reviewer_node.py                                   373    373  0.00%   7-905
+src/nodes/runner_node.py                                     198    198  0.00%   6-448
+src/nodes/sweep_detection_node.py                             10     10  0.00%   3-29
+src/nodes/visualization_node.py                              310    310  0.00%   17-735
+src/policy/__init__.py                                         2      2  0.00%   3-10
+src/policy/gate_policy.py                                     37     37  0.00%   3-80
+src/router_func.py                                            83     83  0.00%   22-221
+src/services/amrex_tools_backend.py                          113    113  0.00%   14-398
+src/services/analysis.py                                     312    312  0.00%   11-718
+src/services/architect.py                                   2384   2384  0.00%   12-5465
+src/services/baseline_loader.py                               75     75  0.00%   11-189
+src/services/build_tools.py                                   35     35  0.00%   3-95
+src/services/cases.py                                        489    489  0.00%   8-1007
+src/services/config_model_factory.py                         819    819  0.00%   22-1969
+src/services/config_service.py                               239    239  0.00%   9-487
+src/services/embedding.py                                    261    261  0.00%   14-576
+src/services/embedding_factory.py                            157    157  0.00%   24-428
+src/services/embedding_service_factory.py                     14     14  0.00%   20-100
+src/services/execution_tools.py                               52     52  0.00%   3-134
+src/services/faiss_artifacts.py                              103    103  0.00%   3-191
+src/services/feedback_generator.py                            61     61  0.00%   14-186
+src/services/file_generation.py                              144    144  0.00%   8-363
+src/services/files.py                                        145    145  0.00%   7-390
+src/services/input_writer.py                                 525    525  0.00%   8-1203
+src/services/inputs_file_selector.py                         155    155  0.00%   3-372
+src/services/inputs_file_writer.py                            62     62  0.00%   24-195
+src/services/knowledge.py                                    301    301  0.00%   3-661
+src/services/meta_visualizer.py                               52     52  0.00%   3-99
+src/services/paper_validator.py                               17     17  0.00%   3-49
+src/services/plan.py                                         669    669  0.00%   22-1403
+src/services/result_aggregator.py                             46     46  0.00%   3-113
+src/services/reviewer.py                                      49     49  0.00%   7-144
+src/services/rule_engine.py                                   49     49  0.00%   20-189
+src/services/rules/__init__.py                                13     13  0.00%   7-48
+src/services/rules/base.py                                    40     40  0.00%   7-110
+src/services/rules/common.py                                  82     82  0.00%   7-272
+src/services/rules/physics.py                                 78     78  0.00%   7-257
+src/services/rules/schema_existence.py                        37     37  0.00%   8-155
+src/services/run_local.py                                    193    193  0.00%   6-462
+src/services/run_superfacility.py                            308    308  0.00%   8-770
+src/services/run_superfacility_tools.py                      819    819  0.00%   3-1596
+src/services/schema_staleness.py                              74     74  0.00%   3-180
+src/services/sweep_detector.py                                73     73  0.00%   3-186
+src/services/sweep_orchestrator.py                           146    146  0.00%   3-320
+src/services/validation.py                                    81     81  0.00%   7-264
+src/services/validation_result.py                              8      8  0.00%   2-15
+src/services/validators/build_validator.py                    83     83  0.00%   7-248
+src/services/validators/config_validator.py                   67     67  0.00%   8-127
+src/services/validators/physics_validator.py                  97     97  0.00%   7-238
+src/services/validators/resource_validator.py                 68     68  0.00%   18-195
+src/services/validators/schema_validator.py                   92     92  0.00%   7-251
+src/services/vector_store_backends.py                         84     84  0.00%   8-191
+src/services/visualization.py                                229    229  0.00%   13-536
+src/services/visualization_backend.py                          7      7  0.00%   12-41
+src/services/viz_param_extractor.py                           97     97  0.00%   5-209
+src/services/workflow_store.py                               130    130  0.00%   3-238
+src/services/yt_backend.py                                    64     64  0.00%   12-200
+src/session_manager.py                                       132    132  0.00%   3-261
+src/skills/__init__.py                                         3      3  0.00%   3-6
+src/skills/loader.py                                          21     21  0.00%   3-42
+src/skills/runtime.py                                         15     15  0.00%   3-34
+src/tool_registry.py                                          39     39  0.00%   3-106
+src/utils/__init__.py                                          2      2  0.00%   6-8
+src/utils/gate.py                                            170    170  0.00%   4-463
+src/utils/generate_workflow_architecture_paper_figure.py      44     44  0.00%   4-126
+src/utils/llm_calls.py                                        63     63  0.00%   3-105
+src/utils/metrics.py                                         597    597  0.00%   3-937
+src/utils/privacy.py                                         148    148  0.00%   3-231
+src/utils/state_management.py                                 26     26  0.00%   16-196
+src/utils/status_icons.py                                     14     14  0.00%   3-49
+src/utils/write_policy.py                                     59     59  0.00%   3-92
+----------------------------------------------------------------------------------------
+TOTAL                                                      17856  17856  0.00%
+
+5 files skipped due to complete coverage.
+============================= slowest 10 durations =============================
+0.36s call     tests/e2e/test_readme_command_registry.py::test_readme_command_registry_complete
+0.00s setup    tests/e2e/test_readme_command_registry.py::test_readme_command_registry_complete
+0.00s teardown tests/e2e/test_readme_command_registry.py::test_readme_command_registry_complete
+=========================== short test summary info ============================
+FAILED tests/e2e/test_readme_command_registry.py::test_readme_command_registry_complete - Failed: Missing registry entries:
+  - README.md (bash_block) sha256:39e15893b09b523928fd5a7bd7a981da1c154e841955dfbffef1e597dfffd8e9
+  - README.md (bash_block) sha256:c17f2abae2ccd6b5081e384c8c4d2206e5c81e51b4cfa9046dede1656d3ead2c
+  - demo/README.md (amrex_agent_inline) sha256:3bab2b30c82595dd20ed5de5ad8a3d1aae863287f220388ebd0a59855919b69a
+  - demo/README.md (amrex_agent_inline) sha256:d50277fe266f70694bec7962e9a7acf5cb36dd147261cb6a6e9589ba15e3a1d4
+  - demo/amsc-i2/README.md (bash_block) sha256:3fd3bae900769d0ac05035230b90a5a0f8b19760329f3f2754066143d3719b40
+  - demo/amsc-i2/README.md (bash_block) sha256:9b62d7f1a71b148a422952acb741096640214de629d284f9af1930f88d1ddafe
+  - demo/amsc-i2/README.md (bash_block) sha256:a75551d06b916f1af61805f8f4c792bccdca689bab2b4568227399ccfc308d5c
+  - demo/mcp/README.md (bash_block) sha256:4f75d84aad0634311e2cc93164ca4d234de78155c07e0a016880672010c6a0a8
+  - demo/mcp/README.md (bash_block) sha256:80fb8cee2fcefc917a3098c2d2b6592df1ce79f0204e856f8c2433431abcdfea
+  - demo/mcp/README.md (bash_block) sha256:8332a46a2abad86bd94f608500758fbf63e26152fd3ece4f0b6b49e6ef501fa4
+  - demo/mcp/README.md (bash_block) sha256:854ea53300ae5934cd1a6953291f7483a6420121e14802d1cc386d40129edfee
+  - demo/mcp/README.md (bash_block) sha256:a0470fb8c9c4adc21be2d5cc69791347df83babd34e6616dc5823cf8d54120b6
+  - demo/mcp/README.md (bash_block) sha256:b99b2fdb21f937c69d04887fedd55ace8bb3a329ec6a948bfad7a3753ea65f39
+  - demo/mcp/README.md (bash_block) sha256:cb7344c95779882a20f445a8a4b3cba3115387c9ab0ce49e1c869f31b1581902
+  - demo/pelelmex/README.md (bash_block) sha256:27a8583a8a17a24dd39af45e5bf8481ada2df8280ae14909a58cfbd7783dc154
+  - demo/pelelmex/README.md (bash_block) sha256:455f553b22d9be3e705438f52d793549dc304b3e18034bea559841e428c52f42
+  - demo/pelelmex/README.md (bash_block) sha256:64c161420f8557f5c65cdd796d78f70f4210dd7d8f4752a6d0c3740dfc2eaaac
+  - demo/pelelmex/README.md (bash_block) sha256:6f7e9cbb19b12e2448e64ccfe306349b0db6869f4989e38fb7d9056650f1a311
+  - demo/pelelmex/README.md (bash_block) sha256:700e3318c417f45c959c6ab8d9916fbbc71a5178afa6244c4c903dfaaf44ef3a
+  - demo/pelelmex/README.md (bash_block) sha256:eb8d2f8d45a32ca5049daa0310b49ba42b31b8596c9e1536a35e98f9dc531246
+  - demo/pelelmex/README.md (bash_block) sha256:fbda57da80e7d04f354b9bd7a1abf9e86b876098aa7f4509f3f52e245470de55
+  - demo/pelelmex/README.md (bash_block) sha256:ffdae78b9d79b251ded5f2b99655eb0fc2c2630b085a8bf39fde948a987bb002
+  - output/run_20260312_064502/README.md (bash_block) sha256:1139e288377e5f0a03c0bd5f7e1c277c8b0e7c448f12a98cbc92325ffe63f96b
+  - output/run_20260312_064502/README.md (bash_block) sha256:b94d7cd733c409dc3a962b1b65791820450e1e2426322cd9bb13db83775006bc
+  - output/run_20260312_064502/README.md (bash_block) sha256:e5e06b21c49fdf72ea723260c1a2b1800252272c85145581220bb20c51878411
+  - ... and 390 more
+Extra registry entries (no longer in readmes):
+  - demo/mcp/README.md (bash_block) sha256:5d298aa7e620abb1c8432da7b173407e92933816e1b9aacd5508ed186c94291d
+  - demo/mcp/README.md (bash_block) sha256:624872aa809c6348936d478ca8d33097aa067c6f0ca3066de418d3851a4ada0a
+  - demo/mcp/README.md (bash_block) sha256:86321cc89cddab6084a631582d8d1a362f3204c515c419e8bb627247911543cf
+  - demo/mcp/README.md (bash_block) sha256:ca8203801498ee34f5332c59704b81cf4866f32be2bf30caac8a21a44eed05f8
+  - demo/mcp/README.md (bash_block) sha256:fc29455ac36ccafda8e0188a7186c27b78b1e1e603bb3a41db1aec0b5664b583
+  - demo/pelelmex/README.md (bash_block) sha256:3bf384a1ddc8423a05040ab1716458df1d7704370a32d7a56c9b00a5f8b99328
+  - demo/pelelmex/README.md (bash_block) sha256:edfef53a53e263a9e0914642d29f9a87791377a55a63a77187e872ea9d78e590
+  - output/run_20260202_091048/README.md (bash_block) sha256:62052093f40b6d7db0c8b99e86d8bf2e26ed5fdd15760285c8f6e9f37031dfe5
+  - output/run_20260202_091048/README.md (bash_block) sha256:b43482a22e6a170aa27a95abd3254b5830b2bfd2f2801b15abb902633439b4d6
+  - output/run_20260202_091204/README.md (bash_block) sha256:62052093f40b6d7db0c8b99e86d8bf2e26ed5fdd15760285c8f6e9f37031dfe5
+  - output/run_20260202_091204/README.md (bash_block) sha256:cc5a923e195382c15e269b3e0aa11d9ed2aeb1f8132eba9d92505938075bc1d7
+============================== 1 failed in 2.61s ===============================

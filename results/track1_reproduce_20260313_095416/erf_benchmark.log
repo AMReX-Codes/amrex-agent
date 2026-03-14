@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/scripts/erf_benchmark/run_llm_compare_benchmark.py", line 383, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/scripts/erf_benchmark/run_llm_compare_benchmark.py", line 305, in main
+    _run_strategy(
+  File "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/scripts/erf_benchmark/run_llm_compare_benchmark.py", line 257, in _run_strategy
+    raise RuntimeError(f"Abort: llm_unavailable fallback detected (strategy={strategy}, row_id={row['row_id']})")
+RuntimeError: Abort: llm_unavailable fallback detected (strategy=simple, row_id=02a42a0b038f5639)
+[simple] row=8b67b5a0cba6e6bf warnings=1 errors=0
+[simple] row=7c41d6e1798d4c19 warnings=2 errors=0
+[simple] row=30e1cf56f3aa5710 warnings=3 errors=0
+[simple] row=fc37d22fb678db8b warnings=4 errors=0
+[simple] row=5d6d8a3e782072e0 warnings=5 errors=0
+[simple] row=cbc29e5eac552acf warnings=6 errors=0
+[simple] row=23926c005a0e9725 warnings=7 errors=0

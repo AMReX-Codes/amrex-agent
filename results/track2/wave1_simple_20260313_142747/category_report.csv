@@ -1,0 +1,4 @@
+strategy,category,weighted_score
+simple,ABL,0.0
+simple,DevTests,0.0
+simple,RegTests,0.0

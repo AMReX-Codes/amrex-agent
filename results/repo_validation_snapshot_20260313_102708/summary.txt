@@ -1,0 +1,7 @@
+commit: 2c2d600
+unit_exit_code: 1
+full_exit_code: 1
+cov_exit_code: 1
+unit_summary: 
+full_summary: 
+coverage_total: 

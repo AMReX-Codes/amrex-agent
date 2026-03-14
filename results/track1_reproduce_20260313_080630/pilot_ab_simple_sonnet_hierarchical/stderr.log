@@ -1,0 +1,148 @@
+/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/src/main.py:173: FutureWarning: Possible nested set at position 7
+  TeeStream._ansi_re = re.compile(r"\x1b\\[[0-9;]*m")
+Using LLM model: cborg/claude-sonnet-4-5
+HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+================================================================================
+Starting AMReXAgent workflow
+================================================================================
+================================================================================
+Starting Architect node
+================================================================================
+Using indexing strategy: hierarchical
+[Strategy Router] strategy_router -> hierarchical_strategy (branch=hierarchical, strategy=hierarchical)
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+Selected solver: ERF (confidence: 0.52)
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+Hierarchical Level2 weights (config): configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 60.000000 seconds
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+Hierarchical baseline candidates (top 30 of 45):
+  1. Exec/DevTests/WindFarmTests/WindFarm/SimpleActuatorDisk/WithTerrain score=0.4361 weighted=0.4361 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.391*0.100=0.039, development_activity:0.384*0.100=0.038, domain_models:0.389*0.100=0.039, grid_specifications:0.417*0.200=0.083, path_hierarchy:0.407*0.150=0.061, physics_parameters:0.520*0.300=0.156, resource_requirements:0.389*0.050=0.019
+  2. Exec/DevTests/WindFarmTests/SingleTurbine/Fitch score=0.4349 weighted=0.4349 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.406*0.100=0.041, development_activity:0.380*0.100=0.038, domain_models:0.386*0.100=0.039, grid_specifications:0.415*0.200=0.083, path_hierarchy:0.402*0.150=0.060, physics_parameters:0.517*0.300=0.155, resource_requirements:0.386*0.050=0.019
+  3. Exec/DevTests/WindFarmTests/WindFarm/Fitch score=0.4322 weighted=0.4322 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.390*0.100=0.039, development_activity:0.380*0.100=0.038, domain_models:0.386*0.100=0.039, grid_specifications:0.410*0.200=0.082, path_hierarchy:0.401*0.150=0.060, physics_parameters:0.517*0.300=0.155, resource_requirements:0.386*0.050=0.019
+  4. Exec/DevTests/WindFarmTests/SingleTurbine/SimpleActuatorDisk/WithTerrain score=0.3974 weighted=0.3974 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.384*0.100=0.038, domain_models:0.389*0.100=0.039, grid_specifications:0.414*0.200=0.083, path_hierarchy:0.413*0.150=0.062, physics_parameters:0.520*0.300=0.156, resource_requirements:0.389*0.050=0.019
+  5. Exec/CanonicalFlows/Idealized_Terrain/ScharMountain score=0.3928 weighted=0.3928 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.374*0.100=0.037, domain_models:0.382*0.100=0.038, grid_specifications:0.410*0.200=0.082, path_hierarchy:0.411*0.150=0.062, physics_parameters:0.515*0.300=0.155, resource_requirements:0.382*0.050=0.019
+  6. Exec/DevTests/WindFarmTests/SingleTurbine/SimpleActuatorDisk/NoTerrain score=0.3757 weighted=0.3757 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.402*0.100=0.040, development_activity:0.384*0.100=0.038, domain_models:0.389*0.100=0.039, grid_specifications:0.414*0.200=0.083, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.520*0.300=0.156, resource_requirements:0.389*0.050=0.019
+  7. Exec/DevTests/WindFarmTests/SingleTurbine/EWP score=0.3745 weighted=0.3745 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.406*0.100=0.041, development_activity:0.380*0.100=0.038, domain_models:0.386*0.100=0.039, grid_specifications:0.415*0.200=0.083, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.517*0.300=0.155, resource_requirements:0.386*0.050=0.019
+  8. Exec/DevTests/WindFarmTests/WindFarm/GeneralActuatorDisk score=0.3738 weighted=0.3738 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.394*0.100=0.039, development_activity:0.380*0.100=0.038, domain_models:0.386*0.100=0.039, grid_specifications:0.417*0.200=0.083, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.517*0.300=0.155, resource_requirements:0.386*0.050=0.019
+  9. Exec/DevTests/WindFarmTests/WindFarm/EWP score=0.3720 weighted=0.3720 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.390*0.100=0.039, development_activity:0.380*0.100=0.038, domain_models:0.386*0.100=0.039, grid_specifications:0.410*0.200=0.082, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.517*0.300=0.155, resource_requirements:0.386*0.050=0.019
+  10. Exec/CanonicalFlows/Idealized_Terrain/WitchOfAgnesi score=0.3503 weighted=0.3503 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.390*0.100=0.039, development_activity:0.374*0.100=0.037, domain_models:0.382*0.100=0.038, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.414*0.150=0.062, physics_parameters:0.515*0.300=0.155, resource_requirements:0.382*0.050=0.019
+  11. Exec/ABL/Scaling/Perlmutter score=0.3080 weighted=0.3080 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.374*0.100=0.037, domain_models:0.376*0.100=0.038, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.403*0.150=0.061, physics_parameters:0.512*0.300=0.154, resource_requirements:0.376*0.050=0.019
+  12. Exec/ABL/Scaling/Aurora score=0.3077 weighted=0.3077 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.374*0.100=0.037, domain_models:0.376*0.100=0.038, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.402*0.150=0.060, physics_parameters:0.512*0.300=0.154, resource_requirements:0.376*0.050=0.019
+  13. Exec/DevTests/sinusoidal_mass_flux score=0.2913 weighted=0.2913 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.420*0.100=0.042, development_activity:0.415*0.100=0.041, domain_models:0.407*0.100=0.041, grid_specifications:0.424*0.200=0.085, path_hierarchy:0.413*0.150=0.062, physics_parameters:0.000*0.300=0.000, resource_requirements:0.407*0.050=0.020
+  14. Exec/CanonicalFlows/Real_Terrain/Altamont score=0.2889 weighted=0.2889 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.396*0.100=0.040, development_activity:0.374*0.100=0.037, domain_models:0.382*0.100=0.038, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.515*0.300=0.155, resource_requirements:0.382*0.050=0.019
+  15. Exec/CanonicalFlows/Canonical_LES/Stable_ABL score=0.2192 weighted=0.2192 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.419*0.100=0.042, development_activity:0.377*0.100=0.038, domain_models:0.384*0.100=0.038, grid_specifications:0.411*0.200=0.082, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.000*0.300=0.000, resource_requirements:0.384*0.050=0.019
+  16. Exec/CanonicalFlows/Real_Terrain/Askervein score=0.2118 weighted=0.2118 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.382*0.100=0.038, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.515*0.300=0.155, resource_requirements:0.382*0.050=0.019
+  17. Exec/CanonicalFlows/Canonical_LES/Convective_ABL score=0.1942 weighted=0.1942 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.390*0.100=0.039, development_activity:0.377*0.100=0.038, domain_models:0.384*0.100=0.038, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.400*0.150=0.060, physics_parameters:0.000*0.300=0.000, resource_requirements:0.384*0.050=0.019
+  18. Exec/RegTests/Couette_Poiseuille score=0.1923 weighted=0.1923 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.390*0.100=0.039, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.511*0.300=0.153, resource_requirements:0.000*0.050=0.000
+  19. Exec/ABL/Rayleigh_check score=0.1772 weighted=0.1772 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.381*0.100=0.038, domain_models:0.378*0.100=0.038, grid_specifications:0.412*0.200=0.082, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.000*0.300=0.000, resource_requirements:0.378*0.050=0.019
+  20. Exec/CanonicalFlows/SquallLine_2D score=0.1612 weighted=0.0812 priority_bonus=0.0800 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.541*0.150=0.081, physics_parameters:0.000*0.300=0.000, resource_requirements:0.000*0.050=0.000
+  21. Exec/ABL/MYNN_Debug score=0.1533 weighted=0.1533 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.511*0.300=0.153, resource_requirements:0.000*0.050=0.000
+  22. Exec/CanonicalFlows/Channel_DNS score=0.1533 weighted=0.1533 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.511*0.300=0.153, resource_requirements:0.000*0.050=0.000
+  23. Exec/RegTests/EB_Poiseuille score=0.1533 weighted=0.1533 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.511*0.300=0.153, resource_requirements:0.000*0.050=0.000
+  24. Exec/RegTests/EB_SquareCylinder score=0.1533 weighted=0.1533 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.511*0.300=0.153, resource_requirements:0.000*0.050=0.000
+  25. Exec/RegTests/Terrain2d_Cylinder score=0.1533 weighted=0.1533 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.511*0.300=0.153, resource_requirements:0.000*0.050=0.000
+  26. Exec/DevTests/Tornado score=0.1501 weighted=0.1501 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.417*0.200=0.083, path_hierarchy:0.444*0.150=0.067, physics_parameters:0.000*0.300=0.000, resource_requirements:0.000*0.050=0.000
+  27. Exec/CanonicalFlows/EkmanSpiral score=0.1437 weighted=0.1437 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.000*0.100=0.000, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.413*0.200=0.083, path_hierarchy:0.408*0.150=0.061, physics_parameters:0.000*0.300=0.000, resource_requirements:0.000*0.050=0.000
+  28. Exec/ABL/column_diffusion_test score=0.1394 weighted=0.1394 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.400*0.100=0.040, development_activity:0.399*0.100=0.040, domain_models:0.396*0.100=0.040, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.000*0.300=0.000, resource_requirements:0.396*0.050=0.020
+  29. Exec/CanonicalFlows/Canonical_LES/Neutral_ABL score=0.1345 weighted=0.1345 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.393*0.100=0.039, development_activity:0.377*0.100=0.038, domain_models:0.384*0.100=0.038, grid_specifications:0.000*0.200=0.000, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.000*0.300=0.000, resource_requirements:0.384*0.050=0.019
+  30. Exec/RegTests/MetGrid score=0.1222 weighted=0.1222 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+     contributions: configuration_complexity:0.396*0.100=0.040, development_activity:0.000*0.100=0.000, domain_models:0.000*0.100=0.000, grid_specifications:0.413*0.200=0.083, path_hierarchy:0.000*0.150=0.000, physics_parameters:0.000*0.300=0.000, resource_requirements:0.000*0.050=0.000
+Selected baseline: Exec/DevTests/WindFarmTests/WindFarm/SimpleActuatorDisk/WithTerrain (score: 0.44)
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+Plan created: Exec/DevTests/WindFarmTests/WindFarm/SimpleActuatorDisk/WithTerrain
+Iteration 1, Retry 0, Mode: proceed
+--------------------------------------------------------------------------------
+Architect node complete
+--------------------------------------------------------------------------------
+================================================================================
+Starting Reviewer node
+================================================================================
+Reviewing plan...
+No build config found - skipping dependency checks
+Plan approved - proceeding to execution
+Review complete: proceed (errors: 0)
+--------------------------------------------------------------------------------
+Reviewer node complete
+--------------------------------------------------------------------------------
+================================================================================
+Starting Input Writer node
+================================================================================
+Default inputs path is outside selected case directory; strategy_first will ignore it: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Bubble/inputs (case: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/DevTests/WindFarmTests/WindFarm/SimpleActuatorDisk/WithTerrain)
+Selected inputs file: inputs_AWAKEN_SimpleAD_KingPlains_WithTerrain (strategy: newest, score: 1.00)
+[2/5] Skipping model hydration (no modifications)
+Wrote 2529 bytes to results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_hierarchical/run_20260313_081236/inputs
+Files written to: results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_hierarchical/run_20260313_081236
+Input Writer complete: run_20260313_081236
+  Inputs selected: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/DevTests/WindFarmTests/WindFarm/SimpleActuatorDisk/WithTerrain/inputs_AWAKEN_SimpleAD_KingPlains_WithTerrain (strategy: newest, override: None)
+--------------------------------------------------------------------------------
+Input Writer node complete
+--------------------------------------------------------------------------------
+================================================================================
+Starting Runner node
+================================================================================
+Validation passed: run_20260313_081236
+Using LocalRunner for local execution
+Job setup complete: 
+Executable resolution failed: No executable found in results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_hierarchical/run_20260313_081236
+[ROUTE] Runtime failure → Analysis (retryable): 
+================================================================================
+Starting Analysis node
+================================================================================
+[INFO] Run mode dry - skipping analysis
+================================================================================
+Starting Visualization node
+================================================================================
+[WARN] No plotfiles found in run directory
+--------------------------------------------------------------------------------
+Workflow complete. Status: completed
+--------------------------------------------------------------------------------
+Metrics saved to results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_hierarchical/run_20260313_081236/metrics.jsonl
+Workflow history saved to results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_hierarchical/run_20260313_081236/workflow_history.json
+Agent transcript saved to results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_hierarchical/run_20260313_081236/agent_transcript.txt

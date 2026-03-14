@@ -1,0 +1,30 @@
+/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/src/main.py:173: FutureWarning: Possible nested set at position 7
+  TeeStream._ansi_re = re.compile(r"\x1b\\[[0-9;]*m")
+Using LLM model: cborg/claude-sonnet-4-5
+HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+================================================================================
+Starting AMReXAgent workflow
+================================================================================
+================================================================================
+Starting Architect node
+================================================================================
+Using indexing strategy: override_static
+Architect planning failed: override_static strategy requires baseline_override to be set
+Traceback (most recent call last):
+  File "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/src/nodes/architect_node.py", line 317, in architect_node
+    plan_result = service.execute_planning(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/src/services/architect.py", line 1458, in execute_planning
+    raise ValueError("override_static strategy requires baseline_override to be set")
+ValueError: override_static strategy requires baseline_override to be set
+================================================================================
+Starting Reviewer node
+================================================================================
+Plan not found in workflow_history or state
+[WARN] No plan to review (skipping)
+Review skipped: no plan
+[ROUTE] Reviewer → END (Validation Failed: fail)
+--------------------------------------------------------------------------------
+Workflow complete. Status: unknown
+--------------------------------------------------------------------------------
+Workflow history saved to results/track1_reproduce_20260313_080630/pilot_ab_simple_sonnet_override_static/workflow_history_20260313_081240.json

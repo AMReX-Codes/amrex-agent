@@ -1,0 +1,12 @@
+[
+  {
+    "node": "reviewer",
+    "timestamp": "2026-03-13T15:12:40.436682Z",
+    "action": "skipped",
+    "iteration": 1,
+    "details": {
+      "reason": "no plan",
+      "message": "Reviewer: Skipped (no plan)"
+    }
+  }
+]

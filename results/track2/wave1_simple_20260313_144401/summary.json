@@ -1,0 +1,16 @@
+{
+  "simple_weighted_score": 0.288,
+  "hierarchical_weighted_score": 0.0,
+  "simple_failed_rows": 25,
+  "hierarchical_failed_rows": 0,
+  "total_failed_rows": 25,
+  "holdout_weighted_score": 0.288,
+  "paraphrase_weighted_score": 0.288,
+  "category_min_weighted_score": 0.083333,
+  "non_erf_sanity_weighted_score": 0.288,
+  "explainability_pass": false,
+  "explainability_mean_score": 0.2806,
+  "correctness_mean_score": 0.28,
+  "generalizability_mean_score": 0.282,
+  "explainability_fail_count": 144
+}

@@ -1,0 +1,75 @@
+/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/src/main.py:173: FutureWarning: Possible nested set at position 7
+  TeeStream._ansi_re = re.compile(r"\x1b\\[[0-9;]*m")
+Using LLM model: cborg/claude-sonnet-4-5
+HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+================================================================================
+Starting AMReXAgent workflow
+================================================================================
+================================================================================
+Starting Architect node
+================================================================================
+Using indexing strategy: simple
+[Strategy Router] strategy_router -> simple_strategy (branch=simple, strategy=simple)
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+Selected solver: ERF (confidence: 0.52)
+HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+Using retrieval-heavy simple-weight profile due to weak KB signal (code=ERF)
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 60.000000 seconds
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+Promoting LLM case hint 'Exec/CanonicalFlows/SquallLine_2D' (raw=0.061, boost=0.200, effective=0.261, winner=0.178, gap=-0.083, min_total=0.000, max_gap=0.140)
+Plan created: Exec/CanonicalFlows/SquallLine_2D
+Iteration 1, Retry 0, Mode: proceed
+--------------------------------------------------------------------------------
+Architect node complete
+--------------------------------------------------------------------------------
+================================================================================
+Starting Reviewer node
+================================================================================
+Reviewing plan...
+No build config found - skipping dependency checks
+Plan approved - proceeding to execution
+Review complete: proceed (errors: 0)
+--------------------------------------------------------------------------------
+Reviewer node complete
+--------------------------------------------------------------------------------
+================================================================================
+Starting Input Writer node
+================================================================================
+Default inputs path is outside selected case directory; strategy_first will ignore it: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Bubble/inputs (case: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/CanonicalFlows/SquallLine_2D)
+Selected inputs file: inputs_moisture_SAM (strategy: newest, score: 1.00)
+[2/5] Skipping model hydration (no modifications)
+Wrote 2045 bytes to results/track1_reproduce_20260313_095416/pilot_ab_simple_sonnet_simple/run_20260313_095917/inputs
+Files written to: results/track1_reproduce_20260313_095416/pilot_ab_simple_sonnet_simple/run_20260313_095917
+Input Writer complete: run_20260313_095917
+  Inputs selected: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/CanonicalFlows/SquallLine_2D/inputs_moisture_SAM (strategy: newest, override: None)
+--------------------------------------------------------------------------------
+Input Writer node complete
+--------------------------------------------------------------------------------
+================================================================================
+Starting Runner node
+================================================================================
+Validation passed: run_20260313_095917
+Using LocalRunner for local execution
+Job setup complete: 
+Executable resolution failed: No executable found in results/track1_reproduce_20260313_095416/pilot_ab_simple_sonnet_simple/run_20260313_095917
+[ROUTE] Runtime failure → Analysis (retryable): 
+================================================================================
+Starting Analysis node
+================================================================================
+[INFO] Run mode dry - skipping analysis
+================================================================================
+Starting Visualization node
+================================================================================
+[WARN] No plotfiles found in run directory
+--------------------------------------------------------------------------------
+Workflow complete. Status: completed
+--------------------------------------------------------------------------------
+Metrics saved to results/track1_reproduce_20260313_095416/pilot_ab_simple_sonnet_simple/run_20260313_095917/metrics.jsonl
+Workflow history saved to results/track1_reproduce_20260313_095416/pilot_ab_simple_sonnet_simple/run_20260313_095917/workflow_history.json
+Agent transcript saved to results/track1_reproduce_20260313_095416/pilot_ab_simple_sonnet_simple/run_20260313_095917/agent_transcript.txt

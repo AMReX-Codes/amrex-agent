@@ -1,0 +1,18 @@
+{"reason": "warn_log_statement", "row_id": "00d365989b09585d", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "00d365989b09585d", "reason": "llm_unavailable", "row_id": "00d365989b09585d", "row_index": "0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "00d365989b09585d", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "00d365989b09585d", "reason": "llm_unavailable", "row_id": "00d365989b09585d", "row_index": "0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "00d365989b09585d", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "3", "prompt_id": "00d365989b09585d", "reason": "llm_unavailable", "row_id": "00d365989b09585d", "row_index": "0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "019b835399b503b4", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "019b835399b503b4", "reason": "llm_unavailable", "row_id": "019b835399b503b4", "row_index": "1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "019b835399b503b4", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "019b835399b503b4", "reason": "llm_unavailable", "row_id": "019b835399b503b4", "row_index": "1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "019b835399b503b4", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "3", "prompt_id": "019b835399b503b4", "reason": "llm_unavailable", "row_id": "019b835399b503b4", "row_index": "1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "02b7f52302fe6ed9", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "02b7f52302fe6ed9", "reason": "llm_unavailable", "row_id": "02b7f52302fe6ed9", "row_index": "2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "02b7f52302fe6ed9", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "02b7f52302fe6ed9", "reason": "llm_unavailable", "row_id": "02b7f52302fe6ed9", "row_index": "2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "02b7f52302fe6ed9", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "3", "prompt_id": "02b7f52302fe6ed9", "reason": "llm_unavailable", "row_id": "02b7f52302fe6ed9", "row_index": "2", "severity": "error", "strategy": "hierarchical"}

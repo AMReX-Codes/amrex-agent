@@ -1,0 +1,14 @@
+[hierarchical] llm_unavailable row_index=0 prompt_id=00d365989b09585d attempt=1/3
+[hierarchical] llm_unavailable row_index=0 prompt_id=00d365989b09585d attempt=2/3
+[hierarchical] llm_unavailable row_index=0 prompt_id=00d365989b09585d attempt=3/3
+[hierarchical] row=00d365989b09585d warnings=3 errors=3
+[hierarchical] llm_unavailable row_index=1 prompt_id=019b835399b503b4 attempt=1/3
+[hierarchical] llm_unavailable row_index=1 prompt_id=019b835399b503b4 attempt=2/3
+[hierarchical] llm_unavailable row_index=1 prompt_id=019b835399b503b4 attempt=3/3
+[hierarchical] row=019b835399b503b4 warnings=6 errors=6
+[hierarchical] llm_unavailable row_index=2 prompt_id=02b7f52302fe6ed9 attempt=1/3
+[hierarchical] retrying after 429/rate-limit response; retry=1 wait=2.00s
+[hierarchical] llm_unavailable row_index=2 prompt_id=02b7f52302fe6ed9 attempt=2/3
+[hierarchical] llm_unavailable row_index=2 prompt_id=02b7f52302fe6ed9 attempt=3/3
+[hierarchical] row=02b7f52302fe6ed9 warnings=9 errors=9
+Wrote benchmark artifacts under results/track2/wave1_hierarchical_20260313_140048

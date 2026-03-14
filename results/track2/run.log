@@ -1,0 +1,96 @@
+[2026-03-13T20:44:27Z] Track 2 wave orchestration entrypoint (wave2_mode=0)
+[2026-03-13T20:44:27Z] Wave 1 start
+[2026-03-13T20:44:27Z] WAVE1_START_EPOCH=1773434667
+[2026-03-13T20:44:27Z] WAVE1_START_ISO=2026-03-13T20:44:27Z
+[2026-03-13T20:44:27Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+[2026-03-13T20:44:27Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+subsample_rows=100 stratify_key=None
+[2026-03-13T20:44:27Z] Wave 1 / Step 2: launching simple and hierarchical in parallel
+[2026-03-13T20:44:27Z] wave1: launching simple strategy -> results/track2/wave1_simple_20260313_134427
+[2026-03-13T20:44:27Z] wave1: launching hierarchical strategy -> results/track2/wave1_hierarchical_20260313_134427
+[2026-03-13T20:44:27Z] wave1: PID simple=1142750
+[2026-03-13T20:44:27Z] wave1: PID hierarchical=1142755
+[2026-03-13T20:54:06Z] wave1: simple wall_time_sec=579 exit_code=143
+[2026-03-13T20:54:06Z] wave1: hierarchical wall_time_sec=579 exit_code=143
+[2026-03-13T20:54:06Z] ERROR: wave1 strategy run failed (simple=143, hierarchical=143)
+[2026-03-13T21:00:48Z] Track 2 wave orchestration entrypoint (wave2_mode=0)
+[2026-03-13T21:00:48Z] Wave 1 start
+[2026-03-13T21:00:48Z] WAVE1_START_EPOCH=1773435648
+[2026-03-13T21:00:48Z] WAVE1_START_ISO=2026-03-13T21:00:48Z
+[2026-03-13T21:00:48Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+[2026-03-13T21:00:48Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+subsample_rows=3 stratify_key=None
+[2026-03-13T21:00:48Z] Wave 1 / Step 2: launching simple and hierarchical in parallel
+[2026-03-13T21:00:48Z] wave1: launching simple strategy -> results/track2/wave1_simple_20260313_140048
+[2026-03-13T21:00:48Z] wave1: launching hierarchical strategy -> results/track2/wave1_hierarchical_20260313_140048
+[2026-03-13T21:00:48Z] wave1: PID simple=1152627
+[2026-03-13T21:00:48Z] wave1: PID hierarchical=1152632
+[2026-03-13T21:06:37Z] wave1: simple wall_time_sec=349 exit_code=0
+[2026-03-13T21:06:37Z] wave1: hierarchical wall_time_sec=349 exit_code=0
+[2026-03-13T21:06:37Z] Wave 1 / Step 3: summarizing wave outputs
+wave1: simple case_accuracy=0.000000 failed_rows=3
+wave1: simple per-solver failure counts={"__unknown__": 3}
+wave1: hierarchical case_accuracy=0.000000 failed_rows=3
+wave1: hierarchical per-solver failure counts={"__unknown__": 3}
+wave1: wrote summary=results/track2/wave1_summary.json
+[2026-03-13T21:06:38Z] Wave 1 / Step 4: stopping for human tuning checkpoint
+Wave 1 complete. Review results/track2/wave1_summary.json.
+Adjust L2 weights in config based on observed failure patterns.
+When ready, run: ./run_track2_waves.sh --wave2
+[2026-03-13T21:06:38Z] Track 2 wave orchestration complete
+[2026-03-13T21:27:47Z] Track 2 wave orchestration entrypoint (wave2_mode=0)
+[2026-03-13T21:27:47Z] Wave 1 start
+[2026-03-13T21:27:47Z] WAVE1_START_EPOCH=1773437267
+[2026-03-13T21:27:47Z] WAVE1_START_ISO=2026-03-13T21:27:47Z
+[2026-03-13T21:27:47Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+[2026-03-13T21:27:47Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+subsample_rows=3 stratify_key=None
+[2026-03-13T21:27:47Z] Wave 1 / Step 2: launching simple and hierarchical in parallel
+[2026-03-13T21:27:47Z] wave1: launching simple strategy -> results/track2/wave1_simple_20260313_142747
+[2026-03-13T21:27:47Z] wave1: launching hierarchical strategy -> results/track2/wave1_hierarchical_20260313_142747
+[2026-03-13T21:27:47Z] wave1: PID simple=1165630
+[2026-03-13T21:27:47Z] wave1: PID hierarchical=1165635
+[2026-03-13T21:35:49Z] wave1: simple wall_time_sec=482 exit_code=0
+[2026-03-13T21:35:49Z] wave1: hierarchical wall_time_sec=482 exit_code=0
+[2026-03-13T21:35:49Z] Wave 1 / Step 3: summarizing wave outputs
+wave1: simple case_accuracy=0.000000 failed_rows=3
+wave1: simple per-solver failure counts={"Exec": 3}
+wave1: hierarchical case_accuracy=0.000000 failed_rows=3
+wave1: hierarchical per-solver failure counts={"Exec": 3}
+wave1: wrote summary=results/track2/wave1_summary.json
+[2026-03-13T21:35:49Z] Wave 1 / Step 4: stopping for human tuning checkpoint
+Wave 1 complete. Review results/track2/wave1_summary.json.
+Adjust L2 weights in config based on observed failure patterns.
+When ready, run: ./run_track2_waves.sh --wave2
+[2026-03-13T21:35:49Z] Track 2 wave orchestration complete
+[2026-03-13T21:42:21Z] Track 2 wave orchestration entrypoint (wave2_mode=0)
+[2026-03-13T21:42:21Z] Wave 1 start
+[2026-03-13T21:42:21Z] WAVE1_START_EPOCH=1773438141
+[2026-03-13T21:42:21Z] WAVE1_START_ISO=2026-03-13T21:42:21Z
+[2026-03-13T21:42:21Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+[2026-03-13T21:42:21Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+[2026-03-13T21:44:01Z] Track 2 wave orchestration entrypoint (wave2_mode=0)
+[2026-03-13T21:44:01Z] Wave 1 start
+[2026-03-13T21:44:01Z] WAVE1_START_EPOCH=1773438241
+[2026-03-13T21:44:01Z] WAVE1_START_ISO=2026-03-13T21:44:01Z
+[2026-03-13T21:44:01Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+[2026-03-13T21:44:01Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
+subsample_rows=100 stratify_key=None
+[2026-03-13T21:44:01Z] Wave 1 / Step 2: launching simple and hierarchical in parallel
+[2026-03-13T21:44:01Z] wave1: launching simple strategy -> results/track2/wave1_simple_20260313_144401
+[2026-03-13T21:44:01Z] wave1: launching hierarchical strategy -> results/track2/wave1_hierarchical_20260313_144401
+[2026-03-13T21:44:01Z] wave1: PID simple=1214992
+[2026-03-13T21:44:01Z] wave1: PID hierarchical=1214997
+[2026-03-14T13:06:38Z] wave1: simple wall_time_sec=55357 exit_code=0
+[2026-03-14T13:06:38Z] wave1: hierarchical wall_time_sec=55357 exit_code=0
+[2026-03-14T13:06:38Z] Wave 1 / Step 3: summarizing wave outputs
+wave1: simple case_accuracy=0.300000 failed_rows=74
+wave1: simple per-solver failure counts={"Exec": 74}
+wave1: hierarchical case_accuracy=0.000000 failed_rows=100
+wave1: hierarchical per-solver failure counts={"Exec": 100}
+wave1: wrote summary=results/track2/wave1_summary.json
+[2026-03-14T13:06:38Z] Wave 1 / Step 4: stopping for human tuning checkpoint
+Wave 1 complete. Review results/track2/wave1_summary.json.
+Adjust L2 weights in config based on observed failure patterns.
+When ready, run: ./run_track2_waves.sh --wave2
+[2026-03-14T13:06:38Z] Track 2 wave orchestration complete

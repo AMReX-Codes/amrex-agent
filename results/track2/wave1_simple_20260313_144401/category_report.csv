@@ -1,0 +1,5 @@
+strategy,category,weighted_score
+simple,ABL,0.656522
+simple,CanonicalFlows,0.217647
+simple,DevTests,0.5
+simple,RegTests,0.083333

@@ -1,0 +1,31 @@
+=== Step 1: Unit tests ===
+Step 1: Unit tests status: FAIL (continuing to collect full snapshot)
+=== Step 2: Full test suite ===
+Step 2: Full test suite status: FAIL (continuing to collect full snapshot)
+=== Step 3: Coverage snapshot ===
+Step 3: Coverage snapshot status: FAIL (continuing to collect full snapshot)
+=== Summary ===
+commit: 2c2d600
+unit_exit_code: 1
+full_exit_code: 1
+cov_exit_code: 1
+unit_summary: 
+full_summary: 
+coverage_total: 
+=== Known failing tests (full suite) ===
+1930:ERROR    src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed
+1939:ERROR    src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully
+2072:ERROR    src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed
+2313:FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow
+2314:FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]
+2315:FAILED tests/unit/test_architect_baseline_selection.py::TestHierarchicalWeightsFromConfig::test_select_baseline_passes_config_weights_to_searcher
+2316:FAILED tests/unit/test_architect_scoring.py::test_score_faiss_semantic_batch_combines_indices
+2317:FAILED tests/unit/test_architect_scoring.py::test_score_faiss_semantic_batch_handles_partial_indices
+2318:FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices
+2319:FAILED tests/unit/test_build_all_indices_check.py::test_main_cli_branches - S...
+2320:FAILED tests/unit/test_build_all_indices_check.py::test_resolve_build_context_and_run_build_levels
+2321:FAILED tests/unit/test_build_all_indices_check.py::test_run_cli_provenance_paths_for_levels
+2322:FAILED tests/unit/test_input_writer_viz_plotfile.py::TestInputWriterPlotfileInjection::test_input_writer_reads_state_not_prompt
+2323:FAILED tests/unit/test_knowledge_query.py::test_query_combines_faiss_and_llm
+2324:FAILED tests/unit/test_run_local.py::test_erf_missing_all_fallbacks_raises_with_checked_paths
+2325:FAILED tests/unit/test_run_superfacility.py::test_erf_missing_all_fallbacks_raises_with_checked_paths

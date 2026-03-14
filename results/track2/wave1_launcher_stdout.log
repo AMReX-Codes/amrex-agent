@@ -1,0 +1,5 @@
+[2026-03-13T21:42:21Z] Track 2 wave orchestration entrypoint (wave2_mode=0)
+[2026-03-13T21:42:21Z] Wave 1 start
+[2026-03-13T21:42:21Z] WAVE1_START_EPOCH=1773438141
+[2026-03-13T21:42:21Z] WAVE1_START_ISO=2026-03-13T21:42:21Z
+[2026-03-13T21:42:21Z] Wave 1 / Step 1: building deterministic 100-row train subsample (seed=42)
