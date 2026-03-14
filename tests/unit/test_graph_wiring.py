@@ -137,21 +137,27 @@ class TestGraphConditionalWiring:
         assert expected_destinations.issubset(destinations), \
             f"Analysis should route to {expected_destinations}, got {destinations}"
 
-    def test_input_writer_to_runner_edge_exists(self, compiled_app):
+    def test_input_writer_to_execution_intent_edge_exists(self, compiled_app):
         """
         GIVEN: Graph with linear execution path
         WHEN: Checking edges
-        THEN: input_writer→runner edge exists
+        THEN: input_writer→execution_intent edge exists
         """
         graph_def = compiled_app.get_graph()
-        
+
         writer_edges = [edge for edge in graph_def.edges 
                        if edge[0] == "input_writer"]
-        
+
         destinations = {edge[1] for edge in writer_edges}
-        
-        assert "runner" in destinations, \
-            "Input writer should route to runner"
+
+        assert "execution_intent" in destinations, \
+            "Input writer should route to execution_intent"
+
+    def test_execution_intent_to_runner_edge_exists(self, compiled_app):
+        graph_def = compiled_app.get_graph()
+        intent_edges = [edge for edge in graph_def.edges if edge[0] == "execution_intent"]
+        destinations = {edge[1] for edge in intent_edges}
+        assert "runner" in destinations, "execution_intent should route to runner"
 
     def test_runner_to_analysis_edge_exists(self, compiled_app):
         """
@@ -198,7 +204,7 @@ class TestGraphConditionalWiring:
         
         expected_nodes = {
             "__start__", "architect", "reviewer", 
-            "input_writer", "runner", "analysis", 
+            "input_writer", "execution_intent", "runner", "analysis",
             "visualization", "__end__"
         }
         

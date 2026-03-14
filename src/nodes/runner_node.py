@@ -5,16 +5,101 @@ Executes simulations using SuperfacilityRunner service.
 """
 import inspect
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from src.models import GraphState
+from src.nodes.execution_intent_node import resolve_execution_intent
 from src.services.run_superfacility import SuperfacilityRunner
 from src.services.run_superfacility_tools import stage_out_outputs
 from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
+
+
+def _default_perlmutter_root(config: Any) -> Path:
+    configured = getattr(config, "remote_output_dir", None)
+    if configured:
+        return Path(os.path.expandvars(str(configured))).expanduser()
+    return Path("/global/cfs/cdirs")
+
+
+def _is_perlmutter_reachable(config: Any) -> tuple[bool, str]:
+    target = _default_perlmutter_root(config)
+    try:
+        if not target.exists():
+            return False, f"missing_path:{target}"
+        if not os.access(target, os.R_OK):
+            return False, f"not_readable:{target}"
+        next(target.iterdir(), None)
+        return True, f"ok:{target}"
+    except Exception as exc:
+        return False, f"probe_error:{exc}"
+
+
+def _effective_runtime_from_intent(config: Any, state: GraphState) -> tuple[dict[str, Any], list[str]]:
+    intent = resolve_execution_intent(state)
+    adjustments = list(intent.get("adjustments", [])) if isinstance(intent.get("adjustments"), list) else []
+
+    detected_environment = str(getattr(config, "environment", "local") or "local")
+    try:
+        from src.config import detect_environment
+
+        host_environment = detect_environment()
+    except Exception:
+        host_environment = detected_environment
+    allow_prompt_environment = detected_environment == host_environment
+
+    if allow_prompt_environment and isinstance(intent.get("environment"), str):
+        environment = intent["environment"]
+    else:
+        environment = detected_environment
+    intent_environment = intent.get("environment") if isinstance(intent.get("environment"), str) else None
+
+    configured_ranks = getattr(config, "mpi_ranks", 1)
+    total_procs = _coerce_positive_int(configured_ranks) or 1
+    if total_procs == 1 and isinstance(intent.get("total_procs"), int) and intent["total_procs"] > 0:
+        total_procs = intent["total_procs"]
+
+    run_mode = str(getattr(config, "run_mode", "full") or "full")
+    if run_mode == "full" and isinstance(intent.get("run_mode"), str):
+        run_mode = intent["run_mode"]
+
+    walltime = "00:10:00"
+    if isinstance(intent.get("walltime"), str):
+        walltime = intent["walltime"]
+    qos = str(intent.get("qos") or "regular")
+    constraint = str(intent.get("constraint") or "gpu&hbm40g")
+    account = intent.get("account")
+    system = str(intent.get("system") or "perlmutter")
+
+    if environment == "perlmutter" and intent_environment == "perlmutter":
+        reachable, reason = _is_perlmutter_reachable(config)
+        if not reachable:
+            environment = "local"
+            adjustments.append("environment_fallback_perlmutter_unreachable")
+            adjustments.append(reason)
+
+    return {
+        "environment": environment,
+        "total_procs": max(1, int(total_procs)),
+        "run_mode": run_mode,
+        "walltime": walltime,
+        "qos": qos,
+        "constraint": constraint,
+        "account": account,
+        "system": system,
+    }, adjustments
+
+
+def _coerce_positive_int(value: Any) -> int | None:
+    try:
+        candidate = int(value)
+    except (TypeError, ValueError):
+        return None
+    return candidate if candidate > 0 else None
 
 
 def runner_node(state: GraphState) -> dict[str, Any]:
@@ -114,7 +199,9 @@ def runner_node(state: GraphState) -> dict[str, Any]:
     compile_gate_entry = None
     run_gate_entry = None
     try:
-        run_mode = getattr(config, "run_mode", None)
+        runtime, runtime_adjustments = _effective_runtime_from_intent(config, state)
+
+        run_mode = runtime.get("run_mode")
         if run_mode is None or run_mode == "full":
             if getattr(config, "dry_run", False):
                 run_mode = "dry"
@@ -125,7 +212,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             node_name="runner_compile",
             summary_lines=[
                 "This step compiles/links the executable and prepares the run directory.",
-                f"Environment: {config.environment}",
+                f"Environment: {runtime.get('environment')}",
                 f"Run mode: {run_mode}",
                 f"Run directory: {run_directory}",
                 f"Inputs file: {inputs_file_path}",
@@ -155,13 +242,13 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             run_after_compile = False
 
         # Select runner based on environment
-        if config.environment == "local":
+        if runtime.get("environment") == "local":
             from src.services.run_local import LocalRunner
             runner = LocalRunner(config)
             logger.info("Using LocalRunner for local execution")
         else:
             runner = SuperfacilityRunner(config)
-            logger.info(f"Using SuperfacilityRunner for {config.environment}")
+            logger.info(f"Using SuperfacilityRunner for {runtime.get('environment')}")
 
         # Setup job (Runner Node: Executable Resolution: Executable Discovery & Linking)
         # Service handles:
@@ -222,7 +309,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
             summary_lines=[
                 "This step submits the job to run.",
                 f"Run directory: {actual_run_dir}",
-                f"Environment: {config.environment}",
+                f"Environment: {runtime.get('environment')}",
                 f"Run mode: {run_mode}",
             ],
             options=[{"label": "Submit run", "value": "run_now"}],
@@ -255,7 +342,17 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         if submit_sig:
             params = submit_sig.parameters
             if "nodes" in params:
-                submit_kwargs["nodes"] = getattr(config, "mpi_ranks", 1)
+                submit_kwargs["nodes"] = runtime.get("total_procs", 1)
+            if "walltime" in params:
+                submit_kwargs["walltime"] = runtime.get("walltime", "00:10:00")
+            if "qos" in params:
+                submit_kwargs["qos"] = runtime.get("qos", "regular")
+            if "constraint" in params:
+                submit_kwargs["constraint"] = runtime.get("constraint", "gpu&hbm40g")
+            if "account" in params and runtime.get("account"):
+                submit_kwargs["account"] = runtime.get("account")
+            if "system" in params:
+                submit_kwargs["system"] = runtime.get("system", "perlmutter")
             if "run_mode" in params:
                 submit_kwargs["run_mode"] = run_mode
             if "dry_run" in params:
@@ -265,7 +362,7 @@ def runner_node(state: GraphState) -> dict[str, Any]:
 
         submit_result = runner.submit(**submit_kwargs)
 
-        if config.environment != "local":
+        if runtime.get("environment") != "local":
             monitor_enabled = getattr(config, "monitor_job", True)
             job_status = submit_result.get("job_status")
             monitor_states = {None, "queued", "pending", "running", "submitted"}
@@ -333,6 +430,8 @@ def runner_node(state: GraphState) -> dict[str, Any]:
                 "job_id": job_id,
                 "script_path": submit_result.get("script_path"),
                 "run_directory": str(actual_run_dir),
+                "runtime_effective": runtime,
+                "runtime_adjustments": runtime_adjustments,
             }
         }
 

@@ -36,6 +36,7 @@ from src.router_func import (
     route_after_reviewer,
     route_after_runner,  # Phase 4
 )
+from src.nodes.execution_intent_node import build_execution_intent, execution_intent_node
 from src.nodes.visualization_intent_node import build_visualization_intent
 from src.services.viz_param_extractor import extract_viz_params_from_prompt
 
@@ -1135,6 +1136,11 @@ def initialize_state(
         visualization_config=visualization_config,
         prior_intent=None,
     ).model_dump()
+    execution_intent = build_execution_intent(
+        prompt=prompt_content,
+        resolved_config={},
+        prior_intent=None,
+    ).model_dump()
 
     # 3. Initialize state with defaults
     return {
@@ -1144,6 +1150,7 @@ def initialize_state(
         "requested_plot_vars": requested_plot_vars,
         "visualization_config": visualization_config,
         "visualization_intent": visualization_intent,
+        "execution_intent": execution_intent,
         "paper_source": paper_source,
         "paper_input_type": paper_input_type,
         "paper_validator_enabled": paper_validator_enabled,
@@ -1185,6 +1192,7 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     workflow.add_node("architect", architect_node)
     workflow.add_node("reviewer", reviewer_node)
     workflow.add_node("input_writer", input_writer_node)
+    workflow.add_node("execution_intent", execution_intent_node)
     workflow.add_node("runner", runner_node)
     workflow.add_node("analysis", analysis_node)
     workflow.add_node("visualization", visualization_node)
@@ -1214,7 +1222,8 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     )
 
     # 4. Linear execution path
-    workflow.add_edge("input_writer", "runner")
+    workflow.add_edge("input_writer", "execution_intent")
+    workflow.add_edge("execution_intent", "runner")
 
     # 4b. Conditional routing from runner (check for failures)
     workflow.add_conditional_edges(

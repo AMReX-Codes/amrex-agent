@@ -183,6 +183,14 @@ python amrex_agent.py \
 - Stage-out fails: ensure a REST token or OAuth session is available for
   downloads (`~/.nersc/token` or `NERSC_API_TOKEN`).
 
+## Runtime intent interaction
+
+When `perlmutter` is requested via runtime intent, runner performs a read-only
+remote filesystem probe before execution. If the probe fails, execution falls
+back to `local` and records the adjustment in workflow history.
+
+For full precedence and gating behavior, see `docs/intent_runtime_routing.md`.
+
 ## Related references
 
 - Demo configs: `demo/superfacility/`

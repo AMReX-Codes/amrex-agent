@@ -114,6 +114,7 @@ def test_schema_has_node_required_fields(mock_config: Mock) -> None:
     assert "retry_count" in state
     assert "modifications" in state
     assert "workflow_history" in state
+    assert "execution_intent" in state
     assert "visualization_intent" in state
 
 
