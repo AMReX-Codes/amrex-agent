@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Select the ERF setup matching Exec/RegTests/ScalarAdvDiff; prefer inputs file inputs_diffuse_gaussian.
+
+================================================================================
+
+[2026-03-14T15:38:52.610074Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-14T15:38:52.617728Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-14T15:38:53.284032Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-14T15:38:53.292656Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-14T15:38:53.295139Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-14T15:38:53.297799Z] NODE: VISUALIZATION
+ACTION: skipped
+

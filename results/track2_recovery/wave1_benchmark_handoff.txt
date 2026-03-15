@@ -1,0 +1,64 @@
+Handoff Summary
+
+Wave Goals
+1. Recover Track 2 benchmarking with trustworthy Wave 1 signal before any Wave 2/3 promotion.
+2. Preserve full solver observability per run: workflow_history, transcripts, console logs, metrics, and verbose retrieval traces (including top-k/baseline evidence when available).
+3. Reduce wasted runtime from 429/retry tails and catch bad runs early with explicit gates (especially hierarchical wrong-solver drift).
+
+What Was Completed
+1. Added artifact-preserving options to benchmark runner:
+- scripts/erf_benchmark/run_llm_compare_benchmark.py
+- New CLI pass-through flags to amrex_agent.py: --save-workflow, --save-transcript, --save-log
+- Added --row-offset for future resumable slicing.
+
+2. Added batched restart orchestrator with early gating:
+- scripts/paper/track2_wave1_batched_restart.sh
+- Supports batch slicing, sleep between batches, optional gate enforcement, and writes batch-level run metadata.
+
+3. Added restart protocol/runbook:
+- docs/track2_wave_restart_protocol.md
+
+4. Built row-level diagnostic artifacts from prior run:
+- results/track2/wave1_row_diagnostics_joined.csv
+- results/track2/wave1_row_examples_10x2.md
+
+5. Preserved prototype state on dedicated branch:
+- Branch: results/wave-prototype-2026-03-14
+- Commit: ab2173d
+- Note: results/ was force-added because it is gitignored.
+
+Latest Batch Run Outcome
+Run root:
+- results/track2_recovery/wave1_batched_restart_20260314_080504
+
+Batch result:
+- batch_001_rows_0000_0010 completed and stopped by gate.
+- simple_score=0.27
+- hier_score=0.0
+- simple_failed_sentinel=2
+- hier_failed_sentinel=1
+- hier_non_erf_rows=10
+- Gate status: fail:hier_non_erf (expected early-stop behavior worked).
+
+Status CSV:
+- results/track2_recovery/wave1_batched_restart_20260314_080504/batch_status.csv
+
+Key Findings
+1. Hierarchical remains systematically wrong-solver (non-ERF) in this batch.
+2. Simple is functioning and producing non-zero signal.
+3. Artifact preservation is working (workflow/transcript/log/metrics present in run dirs).
+4. Current runner still writes summary/results only at batch end (no incremental row-level scoring output during active batch).
+
+Recommended Next Actions
+1. Patch runner for faster observability and less retry tail:
+- configurable lower retries (max_rate_limit_retries, max_unavailable_attempts)
+- incremental row-level checkpoint files while running
+- unbuffered progress output (python -u / PYTHONUNBUFFERED=1).
+2. Re-run batch 1 after patch to verify:
+- hierarchical solver routing correction (ERF-only expectation)
+- improved time-to-signal.
+3. Keep gate enforcement on until hierarchical non-ERF drift is zero.
+
+Current Repo State
+- Current branch: results/wave-prototype-2026-03-14
+- Unstaged pre-existing change remains in .gitignore (intentionally left untouched).

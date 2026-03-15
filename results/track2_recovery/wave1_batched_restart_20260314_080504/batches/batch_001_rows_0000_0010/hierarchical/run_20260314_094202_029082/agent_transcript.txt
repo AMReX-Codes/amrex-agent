@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure ERF for the Exec/RegTests/ScalarAdvDiff scenario and choose inputs_diffuse_sine as baseline inputs.
+
+================================================================================
+
+[2026-03-14T16:42:02.009495Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-14T16:42:02.025815Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-14T16:42:02.524827Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-14T16:42:02.533467Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-14T16:42:02.535911Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-14T16:42:02.539044Z] NODE: VISUALIZATION
+ACTION: skipped
+

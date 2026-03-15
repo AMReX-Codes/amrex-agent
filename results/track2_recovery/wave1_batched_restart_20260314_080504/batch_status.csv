@@ -1,0 +1,2 @@
+batch_idx,row_start,row_end,row_count,simple_score,hier_score,simple_failed_sentinel,hier_failed_sentinel,hier_non_erf_rows,gate_status,batch_dir
+1,0,10,10,0.27,0.0,2,1,10,fail:hier_non_erf,results/track2_recovery/wave1_batched_restart_20260314_080504/batches/batch_001_rows_0000_0010

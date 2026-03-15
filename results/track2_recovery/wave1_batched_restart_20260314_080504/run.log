@@ -1,0 +1,6 @@
+[2026-03-14T15:05:04Z] Wave1 restart run root: results/track2_recovery/wave1_batched_restart_20260314_080504
+[2026-03-14T15:05:04Z] Rows=100 batch_size=10
+[2026-03-14T15:05:04Z] Starting batch_001_rows_0000_0010 count=10
+[2026-03-14T16:55:02Z] Completed batch_001_rows_0000_0010 simple_score=0.27 hier_score=0.0 simple_failed_sentinel=2 hier_failed_sentinel=1 hier_non_erf_rows=10 gate=fail:hier_non_erf
+[2026-03-14T16:55:02Z] Stopping early due to gate failure in batch_001_rows_0000_0010
+[2026-03-14T16:55:02Z] Batch run complete. Status CSV: results/track2_recovery/wave1_batched_restart_20260314_080504/batch_status.csv

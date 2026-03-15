@@ -1,0 +1,87 @@
+{"reason": "error_token", "row_id": "00d365989b09585d", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "00d365989b09585d", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "00d365989b09585d", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "019b835399b503b4", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "019b835399b503b4", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "019b835399b503b4", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "02b7f52302fe6ed9", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "02b7f52302fe6ed9", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "02b7f52302fe6ed9", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "044aa002dd4dfd20", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "044aa002dd4dfd20", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "044aa002dd4dfd20", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "097d4e7bc5c12639", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "simple"}
+{"attempt": "1", "prompt_id": "097d4e7bc5c12639", "reason": "llm_unavailable", "row_id": "097d4e7bc5c12639", "row_index": "4", "severity": "error", "strategy": "simple"}
+{"reason": "error_token", "row_id": "097d4e7bc5c12639", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "simple"}
+{"attempt": "2", "prompt_id": "097d4e7bc5c12639", "reason": "llm_unavailable", "row_id": "097d4e7bc5c12639", "row_index": "4", "severity": "error", "strategy": "simple"}
+{"reason": "error_token", "row_id": "097d4e7bc5c12639", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "simple"}
+{"attempt": "3", "prompt_id": "097d4e7bc5c12639", "reason": "llm_unavailable", "row_id": "097d4e7bc5c12639", "row_index": "4", "severity": "error", "strategy": "simple"}
+{"reason": "error_token", "row_id": "0a50784987204f69", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "0a50784987204f69", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "0a50784987204f69", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "100a3848527bbcf1", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "100a3848527bbcf1", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "100a3848527bbcf1", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "16cafaa8bd6cb4c7", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "16cafaa8bd6cb4c7", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "16cafaa8bd6cb4c7", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "1d6f3de1dc69721c", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "1d6f3de1dc69721c", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "1d6f3de1dc69721c", "severity": "warning", "strategy": "simple"}
+{"reason": "error_token", "row_id": "2b0066345c5861a3", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "simple"}
+{"attempt": "1", "prompt_id": "2b0066345c5861a3", "reason": "llm_unavailable", "row_id": "2b0066345c5861a3", "row_index": "9", "severity": "error", "strategy": "simple"}
+{"reason": "error_token", "row_id": "2b0066345c5861a3", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "simple"}
+{"attempt": "2", "prompt_id": "2b0066345c5861a3", "reason": "llm_unavailable", "row_id": "2b0066345c5861a3", "row_index": "9", "severity": "error", "strategy": "simple"}
+{"reason": "error_token", "row_id": "2b0066345c5861a3", "severity": "error", "strategy": "simple"}
+{"reason": "warn_log_statement", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "simple"}
+{"reason": "warning_token", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "simple"}
+{"attempt": "3", "prompt_id": "2b0066345c5861a3", "reason": "llm_unavailable", "row_id": "2b0066345c5861a3", "row_index": "9", "severity": "error", "strategy": "simple"}
+{"reason": "error_token", "row_id": "00d365989b09585d", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "00d365989b09585d", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "00d365989b09585d", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "019b835399b503b4", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "019b835399b503b4", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "019b835399b503b4", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "02b7f52302fe6ed9", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "02b7f52302fe6ed9", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "02b7f52302fe6ed9", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "044aa002dd4dfd20", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "044aa002dd4dfd20", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "044aa002dd4dfd20", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "097d4e7bc5c12639", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "097d4e7bc5c12639", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "0a50784987204f69", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "0a50784987204f69", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "0a50784987204f69", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "100a3848527bbcf1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "100a3848527bbcf1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "100a3848527bbcf1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "16cafaa8bd6cb4c7", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "16cafaa8bd6cb4c7", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "16cafaa8bd6cb4c7", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "1d6f3de1dc69721c", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "1d6f3de1dc69721c", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "1d6f3de1dc69721c", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "2b0066345c5861a3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "2b0066345c5861a3", "reason": "llm_unavailable", "row_id": "2b0066345c5861a3", "row_index": "9", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "2b0066345c5861a3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "2b0066345c5861a3", "reason": "llm_unavailable", "row_id": "2b0066345c5861a3", "row_index": "9", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "2b0066345c5861a3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "2b0066345c5861a3", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "3", "prompt_id": "2b0066345c5861a3", "reason": "llm_unavailable", "row_id": "2b0066345c5861a3", "row_index": "9", "severity": "error", "strategy": "hierarchical"}

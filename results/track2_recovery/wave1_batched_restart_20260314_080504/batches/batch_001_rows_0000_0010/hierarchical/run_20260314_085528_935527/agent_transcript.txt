@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Select the ERF setup matching Exec/RegTests/Terrain3d_Hemisphere; prefer inputs file inputs.
+
+================================================================================
+
+[2026-03-14T15:55:28.924035Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-14T15:55:28.933089Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-14T15:55:29.400956Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-14T15:55:29.405046Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-14T15:55:29.406081Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-14T15:55:29.407243Z] NODE: VISUALIZATION
+ACTION: skipped
+

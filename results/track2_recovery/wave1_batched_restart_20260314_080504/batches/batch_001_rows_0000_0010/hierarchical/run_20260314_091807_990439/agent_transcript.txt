@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Select the ERF setup matching Exec/DevTests/WindFarmTests/SingleTurbine/Fitch; prefer inputs file inputs_1WT_x_y_Fitch.
+
+================================================================================
+
+[2026-03-14T16:18:07.974087Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-14T16:18:07.989023Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-14T16:18:08.640222Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-14T16:18:08.646900Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-14T16:18:08.649845Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-14T16:18:08.653155Z] NODE: VISUALIZATION
+ACTION: skipped
+

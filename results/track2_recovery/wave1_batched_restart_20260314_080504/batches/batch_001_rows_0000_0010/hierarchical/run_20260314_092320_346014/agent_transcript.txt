@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Select the ERF setup matching Exec/DevTests/Hurricane; prefer inputs file inputs_20210819_Henri_NoAMR.
+
+================================================================================
+
+[2026-03-14T16:23:20.329896Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-14T16:23:20.342807Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-14T16:23:20.907239Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-14T16:23:20.913983Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-14T16:23:20.915427Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-14T16:23:20.917022Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,9 @@
+strategy,category,weighted_score
+simple,ABL,0.85
+simple,CanonicalFlows,0.0
+simple,DevTests,0.333333
+simple,RegTests,0.0
+hierarchical,ABL,0.0
+hierarchical,CanonicalFlows,0.0
+hierarchical,DevTests,0.0
+hierarchical,RegTests,0.0

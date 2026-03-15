@@ -1,0 +1,14 @@
+{
+  "matrix": "benchmark/erf_llm_compare/train_subsample_s42.jsonl",
+  "total_rows": 100,
+  "batch_size": 10,
+  "sleep_sec": 20,
+  "inputs_file_strategy": "llm_compare",
+  "verbose_cli": 1,
+  "enforce_gates": 1,
+  "preserve_agent_artifacts": {
+    "save_workflow": true,
+    "save_transcript": true,
+    "save_log": true
+  }
+}

@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Select the ERF setup matching Exec/DevTests/Tornado; prefer inputs file inputs_tornado_wrf_files_PBL_Smag2d.
+
+================================================================================
+
+[2026-03-14T15:27:43.980459Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-14T15:27:43.994022Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-14T15:27:44.558369Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-14T15:27:44.566014Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-14T15:27:44.568270Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-14T15:27:44.570787Z] NODE: VISUALIZATION
+ACTION: skipped
+
