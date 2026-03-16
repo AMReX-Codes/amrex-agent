@@ -196,7 +196,6 @@ def route_after_analysis(state: GraphState) -> str:
         logger.debug(f"   Issues: {len(issues)}")
         if len(issues) == 0:
             logger.warning("[ROUTE] Analysis failure without actionable issues → Reviewer")
-        state["mode"] = "retry"  # Signal post-execution retry
         return "reviewer"
 
     logger.debug("[ROUTE] Router: Analysis → Visualization (simulation passed)")

@@ -136,6 +136,21 @@ class TestGraphRoutingLogic:
         
         assert route_after_analysis(state) == "reviewer"
 
+    def test_route_after_analysis_failure_ignores_mode_and_uses_status(self):
+        """
+        GIVEN: mode='proceed' but analysis_report.status='failed'
+        WHEN: route_after_analysis called
+        THEN: Returns 'reviewer' based on analysis status signal
+        """
+        state = {
+            "mode": "proceed",
+            "analysis_report": {
+                "status": "failed"
+            }
+        }
+
+        assert route_after_analysis(state) == "reviewer"
+
     def test_route_after_analysis_missing_report(self):
         """
         GIVEN: analysis_report missing from state
@@ -164,4 +179,23 @@ class TestGraphRoutingLogic:
         route_after_reviewer(original_state)
         
         # State should be unchanged
+        assert original_state == state_copy
+
+    def test_route_after_analysis_is_pure_function(self):
+        """
+        GIVEN: analysis failure state
+        WHEN: route_after_analysis called
+        THEN: Does not mutate the input state
+        """
+        original_state = {
+            "mode": "proceed",
+            "analysis_report": {"status": "failed", "issues": ["runtime crash"]},
+        }
+        state_copy = {
+            "mode": original_state["mode"],
+            "analysis_report": dict(original_state["analysis_report"]),
+        }
+
+        route_after_analysis(original_state)
+
         assert original_state == state_copy

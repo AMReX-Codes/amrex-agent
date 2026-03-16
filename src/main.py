@@ -612,6 +612,13 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
         help='Retry attempts to fix inputs/mods before switching baseline directory (default: 3)'
     )
     parser.add_argument(
+        '--max-iterations', '--max_iterations',
+        type=int,
+        default=None,
+        dest='max_iterations',
+        help='Maximum retry iterations for reflexion loop (default: 3)'
+    )
+    parser.add_argument(
         '--run-serial',
         action='store_true',
         help='Run locally without MPI (use serial executable if available)'
@@ -897,6 +904,8 @@ def main(args: list[str] | None = None) -> None:
             config.baseline_override = parsed_args.baseline_override
         if getattr(parsed_args, 'baseline_switch_after_retries', None) is not None:
             config.baseline_switch_after_retries = parsed_args.baseline_switch_after_retries
+        if getattr(parsed_args, 'max_iterations', None) is not None:
+            config.max_iterations = parsed_args.max_iterations
         if getattr(parsed_args, 'run_serial', False):
             config.use_mpi = False
         if getattr(parsed_args, 'mpi_ranks', None) is not None:
