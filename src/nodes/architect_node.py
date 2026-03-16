@@ -258,11 +258,26 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             if reviewer_entries:
                 last_reviewer = reviewer_entries[-1]
                 details = last_reviewer.get("details", {})
+                postexec_feedback = details.get("postexec_repair_feedback")
+                if isinstance(postexec_feedback, dict) and postexec_feedback.get("required_assignments"):
+                    parameter_resolution_feedback = {
+                        "unresolved_parameters": postexec_feedback.get("unresolved_parameters", []),
+                        "resolution_guidance": postexec_feedback.get("resolution_guidance", ""),
+                        "available_schema_params": details.get("available_schema_params", []),
+                        "suggested_params": postexec_feedback.get("suggested_params", {}),
+                        "remap_mapping": postexec_feedback.get("remap_mapping", {}),
+                        "required_assignments": postexec_feedback.get("required_assignments", {}),
+                        "required_assignments_meta": postexec_feedback.get("required_assignments_meta", {}),
+                    }
+                    logger.debug(
+                        "[DATA TRANSFER] Built parameter_resolution_feedback from post-exec reviewer feedback "
+                        f"({len(parameter_resolution_feedback.get('required_assignments', {}))} assignments)"
+                    )
                 unresolved = details.get("unresolved_parameters", [])
                 suggested = details.get("suggested_params", {})
                 available = details.get("available_schema_params", [])
                 remap_mapping = details.get("remap_mapping", {})
-                if unresolved:
+                if unresolved and not parameter_resolution_feedback:
                     parameter_resolution_feedback = {
                         "unresolved_parameters": unresolved,
                         "resolution_guidance": details.get("resolution_guidance", ""),

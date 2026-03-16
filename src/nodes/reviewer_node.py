@@ -423,6 +423,129 @@ def _resolve_schema_backed_intent_assignments(
     return required_assignments, meta, {"remap_mapping": remap_mapping, "suggested_params": suggested_params}
 
 
+def _coerce_float(value: Any) -> float | None:
+    try:
+        if value is None:
+            return None
+        return float(str(value).strip())
+    except Exception:
+        return None
+
+
+def _format_numeric_value(value: float) -> str:
+    if float(value).is_integer():
+        return str(int(value))
+    return f"{value:.8g}"
+
+
+def _build_postexec_repair_feedback(
+    *,
+    plan: dict[str, Any],
+    analysis_report: dict[str, Any] | None,
+    reviewer_guidance: dict[str, Any],
+    available_schema_params: list[str] | None,
+) -> dict[str, Any] | None:
+    report = analysis_report if isinstance(analysis_report, dict) else {}
+    issues = report.get("issues") if isinstance(report.get("issues"), list) else []
+    suggestions = report.get("suggestions") if isinstance(report.get("suggestions"), list) else []
+    diagnosis = reviewer_guidance.get("diagnosis", "") if isinstance(reviewer_guidance, dict) else ""
+    stderr_excerpt = report.get("stderr_excerpt", "")
+
+    evidence_text = " ".join(
+        [str(item) for item in [*issues, *suggestions, diagnosis, stderr_excerpt] if item]
+    ).lower()
+    instability_tokens = [
+        "floating point",
+        "arithmetic operation",
+        "nan",
+        "diverg",
+        "cfl",
+        "unstable",
+        "timestep",
+        "dt",
+        "abort",
+        "runner_execution_failed",
+    ]
+    if not any(token in evidence_text for token in instability_tokens):
+        return None
+
+    modifications = plan.get("modifications", [])
+    modification_map: dict[str, Any] = {}
+    if isinstance(modifications, list):
+        for item in modifications:
+            if isinstance(item, (list, tuple)) and len(item) >= 2:
+                modification_map[str(item[0])] = item[1]
+
+    baseline_inputs = _load_baseline_inputs_content(plan)
+    baseline_flat: dict[str, Any] = {}
+    if isinstance(baseline_inputs, dict):
+        for key, value in baseline_inputs.items():
+            if isinstance(value, dict):
+                for sub_key, sub_value in value.items():
+                    baseline_flat[f"{key}.{sub_key}"] = sub_value
+            else:
+                baseline_flat[str(key)] = value
+
+    available_set = {str(k) for k in (available_schema_params or []) if isinstance(k, str)}
+
+    def _dt_score(param_name: str) -> int:
+        key = str(param_name).strip().lower().replace("-", "_")
+        score = 0
+        if "fixed_dt" in key:
+            score += 50
+        if key.endswith(".dt") or key.endswith("_dt") or key == "dt":
+            score += 45
+        if "time_step" in key or "timestep" in key:
+            score += 30
+        if "dt" in key:
+            score += 20
+        if param_name in available_set:
+            score += 10
+        if param_name in modification_map:
+            score += 8
+        return score
+
+    candidate_keys = set(modification_map.keys()) | set(baseline_flat.keys())
+    dt_candidates = sorted(candidate_keys, key=_dt_score, reverse=True)
+    dt_candidates = [k for k in dt_candidates if _dt_score(k) > 0]
+    if not dt_candidates:
+        return None
+
+    dt_key = dt_candidates[0]
+    current_dt = _coerce_float(modification_map.get(dt_key))
+    baseline_dt = _coerce_float(baseline_flat.get(dt_key))
+    if current_dt is None:
+        current_dt = baseline_dt if baseline_dt and baseline_dt > 0 else 1.0
+
+    severity_scale = 0.25 if any(t in evidence_text for t in ["floating point", "nan", "diverg", "abort"]) else 0.5
+    proposed_dt = max(current_dt * severity_scale, 1e-8)
+    if baseline_dt is not None and baseline_dt > 0:
+        proposed_dt = min(proposed_dt, baseline_dt)
+    if proposed_dt >= current_dt:
+        proposed_dt = max(current_dt * 0.5, 1e-8)
+
+    required_assignments = {dt_key: _format_numeric_value(proposed_dt)}
+    required_assignments_meta = {
+        dt_key: {
+            "schema_verified": dt_key in available_set,
+            "source": "post_execution_analysis",
+            "match_method": "stability_heuristic",
+        }
+    }
+
+    return {
+        "unresolved_parameters": [("postexec_stability", _format_numeric_value(current_dt))],
+        "required_assignments": required_assignments,
+        "required_assignments_meta": required_assignments_meta,
+        "resolution_guidance": (
+            "Post-execution stability repair: reduce timestep-related parameter and rerun."
+        ),
+        "suggested_params": {"dt": dt_key},
+        "remap_mapping": {"dt": dt_key},
+        "reason_code": "postexec_stability_repair",
+    }
+
+
 def reviewer_node(state: GraphState) -> dict[str, Any]:
     """
     Validate the architect plan before execution.
@@ -849,7 +972,28 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     # ========================================
     # Mirror schema-resolution retry flow, but with a simpler contract:
     # explicit user-assigned params (e.g., "dt = 20") must appear in plan modifications.
-    if review_context == "pre_execution" and getattr(config, "reviewer_intent_coverage_enabled", True):
+    skip_intent_coverage_for_postexec_repair = False
+    if review_context == "pre_execution":
+        latest_postexec_idx = None
+        latest_runner_idx = None
+        for idx, entry in enumerate(workflow_history):
+            if entry.get("node") == "reviewer" and entry.get("details", {}).get("review_context") == "post_execution":
+                latest_postexec_idx = idx
+            elif entry.get("node") == "runner":
+                latest_runner_idx = idx
+        if latest_postexec_idx is not None and (
+            latest_runner_idx is None or latest_runner_idx < latest_postexec_idx
+        ):
+            postexec_details = workflow_history[latest_postexec_idx].get("details", {})
+            repair_feedback = postexec_details.get("postexec_repair_feedback", {})
+            if isinstance(repair_feedback, dict) and repair_feedback.get("required_assignments"):
+                skip_intent_coverage_for_postexec_repair = True
+
+    if (
+        review_context == "pre_execution"
+        and getattr(config, "reviewer_intent_coverage_enabled", True)
+        and not skip_intent_coverage_for_postexec_repair
+    ):
         prompt_text = (
             state.get("prompt")
             or state.get("user_requirement")
@@ -1008,8 +1152,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             next_mode = "retry"
     elif (
         "intent_missing" in (getattr(validation_result, "replan_reason_codes", []) or [])
-        and getattr(config, "clarification_route_on_intent_missing_only", False)
-        and getattr(config, "enable_clarification_subgraph", False)
+        and getattr(config, "clarification_route_on_intent_missing_only", False) is True
+        and getattr(config, "enable_clarification_subgraph", False) is True
     ):
         logger.info("Intent gap detected - routing to clarification")
         next_mode = "clarification"
@@ -1220,6 +1364,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             logger.debug(f"Retry guidance LLM unavailable: {exc}")
 
     feasibility_payload = None
+    postexec_repair_feedback = None
+    postexec_errors: list[str] = []
     if review_context == "post_execution" and analysis_status in {"failed", "unstable"}:
         feasibility_payload = _run_postexec_feasibility_review_llm(
             state=state,
@@ -1251,6 +1397,49 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             ):
                 if key in guidance_payload and guidance_payload.get(key) is not None:
                     reviewer_guidance[key] = guidance_payload[key]
+
+        if isinstance(state.get("postexec_repair_hints"), dict):
+            postexec_repair_feedback = dict(state["postexec_repair_hints"])
+            required_assignments = postexec_repair_feedback.get("required_assignments", {})
+            required_assignments_meta = postexec_repair_feedback.get("required_assignments_meta", {})
+            available_set = {
+                str(k) for k in (validation_result.available_schema_params or []) if isinstance(k, str)
+            }
+            if isinstance(required_assignments, dict) and available_set:
+                if not isinstance(required_assignments_meta, dict):
+                    required_assignments_meta = {}
+                for key in required_assignments.keys():
+                    key_text = str(key)
+                    current = required_assignments_meta.get(key_text, {})
+                    if not isinstance(current, dict):
+                        current = {}
+                    if key_text in available_set:
+                        current["schema_verified"] = True
+                    current.setdefault("source", "analysis_node")
+                    current.setdefault("match_method", "state_handoff")
+                    required_assignments_meta[key_text] = current
+                postexec_repair_feedback["required_assignments_meta"] = required_assignments_meta
+        else:
+            postexec_repair_feedback = _build_postexec_repair_feedback(
+                plan=plan,
+                analysis_report=state.get("analysis_report") or {},
+                reviewer_guidance=reviewer_guidance,
+                available_schema_params=validation_result.available_schema_params,
+            )
+        if isinstance(state.get("analysis_report"), dict):
+            analysis_issues = state["analysis_report"].get("issues", [])
+            if isinstance(analysis_issues, list):
+                postexec_errors = [f"Post-exec issue: {str(item)}" for item in analysis_issues if str(item).strip()]
+        if next_mode == "retry" and not postexec_repair_feedback:
+            if (
+                getattr(config, "enable_clarification_subgraph", False) is True
+                and getattr(config, "postexec_route_to_clarification_on_no_repair", False) is True
+            ):
+                next_mode = "clarification"
+                reviewer_guidance["diagnosis"] = (
+                    f"{reviewer_guidance.get('diagnosis', '')} "
+                    "[No actionable deterministic repair; routing to clarification.]"
+                ).strip()
 
     # ========================================
     # WORKFLOW HISTORY ENTRY (CANONICAL PATH)
@@ -1319,6 +1508,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             "baseline_dir_rejected": baseline_dir_rejected,
             "plan_rejected_baseline": rejected_baseline,
             "plan_rejected_inputs_file": rejected_inputs,
+            "postexec_repair_feedback": postexec_repair_feedback,
         }
     }
     if final_error_taxonomy:
@@ -1334,11 +1524,16 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     # ========================================
     # Return dict of updates, not modified state
 
+    retry_count_out = retry_count + 1 if next_mode == "retry" else retry_count
+    if next_mode == "retry" and review_context == "post_execution":
+        # Keep counter stable here; architect_node applies the retry increment for this cycle.
+        retry_count_out = retry_count
+
     updates = {
         # === UTILITY FLAGS ===
         "mode": next_mode,
         "iteration": iteration,
-        "retry_count": retry_count + 1 if next_mode == "retry" else retry_count,
+        "retry_count": retry_count_out,
 
         # === AUDIT TRAIL ===
         "workflow_history": new_history,
@@ -1376,6 +1571,11 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         "reviewer_failure_category": reviewer_failure_category,
         "final_error_taxonomy": final_error_taxonomy,
     }
+    if next_mode == "retry" and review_context == "post_execution":
+        if postexec_repair_feedback:
+            updates["parameter_resolution_feedback"] = postexec_repair_feedback
+        if not errors_current and postexec_errors:
+            updates["errors_active"] = postexec_errors
 
     logger.info(f"Review complete: {next_mode} (errors: {len(errors_current)})")
     logger.info("-" * 80)

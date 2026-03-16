@@ -258,3 +258,374 @@ class TestReviewerNodeFinalTaxonomy:
         assert taxonomy["type"] == "retry_exhausted"
         assert taxonomy["category"] == "parameter_resolution_max_retries"
         assert updates["workflow_history"][-1]["details"]["final_error_taxonomy"] == taxonomy
+
+    def test_postexec_retry_emits_repair_feedback(self, monkeypatch, mock_config):
+        """
+        GIVEN: Post-execution failure with timestep-like modification present
+        WHEN: reviewer_node() routes to retry
+        THEN: retry payload includes parameter_resolution_feedback with required_assignments
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.retry_guidance_use_llm = False
+        mock_config.enable_clarification_subgraph = False
+
+        class FakeOrchestrator:
+            def __init__(self, _config):
+                pass
+
+            def validate_plan(self, _plan):
+                return type(
+                    "ValidationResult",
+                    (),
+                    {
+                        "mode": "proceed",
+                        "violations": [],
+                        "summary": "ok",
+                        "available_schema_params": ["erf.fixed_dt", "max_step"],
+                        "required_solver": None,
+                        "forbidden_path_patterns": [],
+                        "preferred_path_patterns": [],
+                        "excluded_cases": [],
+                        "schema_escalation_required": False,
+                        "replan_reason_codes": [],
+                    },
+                )
+
+        monkeypatch.setattr(reviewer_node_module, "ReviewerOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(
+            reviewer_node_module,
+            "_run_postexec_feasibility_review_llm",
+            lambda **_kwargs: {
+                "feasible": False,
+                "intent_consistent": False,
+                "diagnosis": "Floating point exception indicates instability.",
+                "guidance": {"reconfigure": True},
+            },
+        )
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "ERF/Exec/ABL",
+                        "modifications": [("max_step", "10"), ("erf.fixed_dt", "20")],
+                        "baseline": {"code_name": "ERF", "local_path": "ERF/Exec/ABL"},
+                    },
+                }
+            ],
+            "analysis_report": {
+                "status": "failed",
+                "issues": ["Simulation aborted (see stderr.log for details)", "runner_execution_failed"],
+            },
+            "review_context": "post_execution",
+            "iteration": 2,
+            "retry_count": 2,
+            "max_retries": 6,
+            "errors_active": [],
+            "errors_found": [],
+            "errors_fixed": [],
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+
+        assert updates["mode"] == "retry"
+        feedback = updates.get("parameter_resolution_feedback")
+        assert isinstance(feedback, dict)
+        required = feedback.get("required_assignments", {})
+        assert "erf.fixed_dt" in required
+        assert float(required["erf.fixed_dt"]) < 20.0
+        assert updates.get("errors_active")
+
+    def test_postexec_retry_routes_clarification_when_no_actionable_feedback(
+        self,
+        monkeypatch,
+        mock_config,
+    ):
+        """
+        GIVEN: Post-execution failure but no deterministic parameter repair can be inferred
+        WHEN: clarification subgraph is enabled
+        THEN: reviewer routes to clarification instead of blind retry
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.retry_guidance_use_llm = False
+        mock_config.enable_clarification_subgraph = True
+        mock_config.postexec_route_to_clarification_on_no_repair = True
+
+        class FakeOrchestrator:
+            def __init__(self, _config):
+                pass
+
+            def validate_plan(self, _plan):
+                return type(
+                    "ValidationResult",
+                    (),
+                    {
+                        "mode": "proceed",
+                        "violations": [],
+                        "summary": "ok",
+                        "available_schema_params": ["max_step"],
+                        "required_solver": None,
+                        "forbidden_path_patterns": [],
+                        "preferred_path_patterns": [],
+                        "excluded_cases": [],
+                        "schema_escalation_required": False,
+                        "replan_reason_codes": [],
+                    },
+                )
+
+        monkeypatch.setattr(reviewer_node_module, "ReviewerOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(
+            reviewer_node_module,
+            "_run_postexec_feasibility_review_llm",
+            lambda **_kwargs: {
+                "feasible": False,
+                "intent_consistent": False,
+                "diagnosis": "Failure detected",
+                "guidance": {},
+            },
+        )
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "ERF/Exec/ABL",
+                        "modifications": [("max_step", "10")],
+                        "baseline": {"code_name": "ERF", "local_path": "ERF/Exec/ABL"},
+                    },
+                }
+            ],
+            "analysis_report": {"status": "failed", "issues": ["Segmentation fault in third-party library"]},
+            "review_context": "post_execution",
+            "iteration": 3,
+            "retry_count": 1,
+            "max_retries": 6,
+            "errors_active": [],
+            "errors_found": [],
+            "errors_fixed": [],
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+
+        assert updates["mode"] == "clarification"
+        assert updates.get("parameter_resolution_feedback") is None
+
+    def test_postexec_prefers_analysis_hints_handoff(self, monkeypatch, mock_config):
+        """
+        GIVEN: analysis_node provided postexec_repair_hints in state
+        WHEN: reviewer processes post-execution retry
+        THEN: reviewer forwards those hints as parameter_resolution_feedback
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.retry_guidance_use_llm = False
+        mock_config.enable_clarification_subgraph = False
+
+        class FakeOrchestrator:
+            def __init__(self, _config):
+                pass
+
+            def validate_plan(self, _plan):
+                return type(
+                    "ValidationResult",
+                    (),
+                    {
+                        "mode": "proceed",
+                        "violations": [],
+                        "summary": "ok",
+                        "available_schema_params": ["erf.fixed_dt", "max_step"],
+                        "required_solver": None,
+                        "forbidden_path_patterns": [],
+                        "preferred_path_patterns": [],
+                        "excluded_cases": [],
+                        "schema_escalation_required": False,
+                        "replan_reason_codes": [],
+                    },
+                )
+
+        monkeypatch.setattr(reviewer_node_module, "ReviewerOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(
+            reviewer_node_module,
+            "_run_postexec_feasibility_review_llm",
+            lambda **_kwargs: {
+                "feasible": False,
+                "intent_consistent": False,
+                "diagnosis": "post-exec failure",
+                "guidance": {},
+            },
+        )
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "ERF/Exec/ABL",
+                        "modifications": [("max_step", "10"), ("erf.fixed_dt", "20")],
+                        "baseline": {"code_name": "ERF", "local_path": "ERF/Exec/ABL"},
+                    },
+                }
+            ],
+            "analysis_report": {
+                "status": "failed",
+                "issues": ["runner_execution_failed"],
+            },
+            "postexec_repair_hints": {
+                "required_assignments": {"erf.fixed_dt": "0.1"},
+                "required_assignments_meta": {
+                    "erf.fixed_dt": {"schema_verified": False, "source": "analysis_node"}
+                },
+                "resolution_guidance": "reduce timestep",
+                "reason_code": "postexec_stability_repair",
+            },
+            "review_context": "post_execution",
+            "iteration": 3,
+            "retry_count": 2,
+            "max_retries": 6,
+            "errors_active": [],
+            "errors_found": [],
+            "errors_fixed": [],
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+        assert updates["mode"] == "retry"
+        feedback = updates.get("parameter_resolution_feedback")
+        assert isinstance(feedback, dict)
+        assert feedback.get("required_assignments", {}).get("erf.fixed_dt") == "0.1"
+        assert (
+            feedback.get("required_assignments_meta", {}).get("erf.fixed_dt", {}).get("schema_verified")
+            is True
+        )
+
+
+class TestReviewerNodeRoutingContracts:
+
+    def test_post_execution_failure_routes_to_retry_not_proceed(self, monkeypatch, mock_config):
+        """
+        GIVEN: post_execution review context after failed analysis
+        WHEN: reviewer_node runs
+        THEN: reviewer cannot directly proceed to input_writer path
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.baseline_switch_after_retries = 3
+        mock_config.clarification_route_on_intent_missing_only = True
+        mock_config.enable_clarification_subgraph = True
+
+        class FakeOrchestrator:
+            def __init__(self, _config):
+                pass
+
+            def validate_plan(self, _plan):
+                return type(
+                    "ValidationResult",
+                    (),
+                    {
+                        "mode": "proceed",
+                        "violations": [],
+                        "summary": "validator says proceed",
+                        "available_schema_params": [],
+                        "required_solver": "ERF",
+                        "forbidden_path_patterns": [],
+                        "preferred_path_patterns": [],
+                        "excluded_cases": [],
+                        "schema_escalation_required": False,
+                        "replan_reason_codes": [],
+                    },
+                )
+
+        monkeypatch.setattr(reviewer_node_module, "ReviewerOrchestrator", FakeOrchestrator)
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "ERF/Exec/ABL",
+                        "modifications": [("amr.n_cell", "64 64 64")],
+                        "baseline": {"code_name": "ERF", "local_path": "ERF/Exec/ABL"},
+                    },
+                }
+            ],
+            "iteration": 1,
+            "retry_count": 0,
+            "max_retries": 3,
+            "review_context": "post_execution",
+            "analysis_report": {"status": "failed", "issues": ["run crashed"]},
+            "errors_active": [],
+            "errors_found": [],
+            "errors_fixed": [],
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+        assert updates["mode"] == "retry"
+        assert updates["retry_count"] == 0
+
+    def test_pre_execution_intent_missing_still_routes_to_clarification(self, monkeypatch, mock_config):
+        """
+        GIVEN: pre_execution review context and intent_missing code
+        WHEN: reviewer_node runs
+        THEN: clarification behavior is preserved
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.clarification_route_on_intent_missing_only = True
+        mock_config.enable_clarification_subgraph = True
+
+        class FakeOrchestrator:
+            def __init__(self, _config):
+                pass
+
+            def validate_plan(self, _plan):
+                return type(
+                    "ValidationResult",
+                    (),
+                    {
+                        "mode": "retry",
+                        "violations": [
+                            RuleViolation("IntentRule", "error", "intent unclear")
+                        ],
+                        "summary": "intent missing",
+                        "available_schema_params": [],
+                        "required_solver": "ERF",
+                        "forbidden_path_patterns": [],
+                        "preferred_path_patterns": [],
+                        "excluded_cases": [],
+                        "schema_escalation_required": False,
+                        "replan_reason_codes": ["intent_missing"],
+                    },
+                )
+
+        monkeypatch.setattr(reviewer_node_module, "ReviewerOrchestrator", FakeOrchestrator)
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "ERF/Exec/ABL",
+                        "modifications": [("amr.n_cell", "64 64 64")],
+                        "baseline": {"code_name": "ERF", "local_path": "ERF/Exec/ABL"},
+                    },
+                }
+            ],
+            "iteration": 0,
+            "retry_count": 0,
+            "max_retries": 3,
+            "review_context": "pre_execution",
+            "errors_active": [],
+            "errors_found": [],
+            "errors_fixed": [],
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+        assert updates["mode"] == "clarification"
