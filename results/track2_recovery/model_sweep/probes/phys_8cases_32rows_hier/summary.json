@@ -1,0 +1,20 @@
+{
+  "simple_weighted_score": 0.0,
+  "hierarchical_weighted_score": 0.0,
+  "simple_failed_rows": 0,
+  "hierarchical_failed_rows": 6,
+  "total_failed_rows": 6,
+  "holdout_weighted_score": 0.0,
+  "paraphrase_weighted_score": 0.0,
+  "category_min_weighted_score": 0.0,
+  "non_erf_sanity_weighted_score": 0.0,
+  "explainability_pass": false,
+  "explainability_mean_score": 0.1005,
+  "correctness_mean_score": 0.0,
+  "generalizability_mean_score": 0.335,
+  "explainability_fail_count": 80,
+  "max_rate_limit_retries": 1,
+  "max_unavailable_attempts": 2,
+  "checkpoint_every_row": true,
+  "checkpoint_prefix": "partial"
+}

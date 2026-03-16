@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run BOMEX in ERF (6.4x6.4x3 km, 100/40 m, Deardorff TKE, Kessler, BOMEX forcings, top sponge). Spin up 3 hours, average final 3 hours, and report q_l, cloud fraction, flux profiles, and mass flux against BOMEX reference behavior.
+
+================================================================================
+
+[2026-03-16T12:55:17.490795Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:55:17.605155Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:55:19.481769Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:55:19.488564Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:55:19.490378Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:55:19.492562Z] NODE: VISUALIZATION
+ACTION: skipped
+

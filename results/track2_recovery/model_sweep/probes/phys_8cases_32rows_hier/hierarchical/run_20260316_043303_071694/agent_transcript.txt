@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run a 2D Straka density current in ERF: 51.2 km x 6.4 km, dx=dz=200 m. Initialize theta'=-15 K ellipsoid (xc=0, zc=3 km, rx=4 km, rz=2 km) on a theta0=300 K base state. Set explicit nu=kappa=75 m^2/s with no SGS model. Apply free-slip top/bottom walls, periodic x BCs. Run 900 s.
+
+================================================================================
+
+[2026-03-16T11:33:02.951668Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:33:03.069440Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:33:03.685232Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:33:03.693457Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:33:03.695530Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:33:03.697513Z] NODE: VISUALIZATION
+ACTION: skipped
+

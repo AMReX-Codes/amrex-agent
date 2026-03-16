@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure Couette flow in ERF: H=1 m, top plate U=1 m/s, bottom no-slip, nu=0.01 m^2/s (Re=100), periodic in x and y. Also configure a Poiseuille variant with body-force-driven centerline velocity Ucl=1 m/s. Run to steady state.
+
+================================================================================
+
+[2026-03-16T11:11:09.864449Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:11:09.990383Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:11:10.434383Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:11:10.440271Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:11:10.441226Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:11:10.442328Z] NODE: VISUALIZATION
+ACTION: skipped
+

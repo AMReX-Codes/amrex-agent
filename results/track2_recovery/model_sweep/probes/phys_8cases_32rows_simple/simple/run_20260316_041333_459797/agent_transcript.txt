@@ -1,0 +1,27 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure isentropic vortex in ERF: 2D periodic domain [-5,5]^2, 64x64 grid, gamma=1.4, vortex strength eps=5, mean flow u_inf=1, v_inf=1. Disable SGS, Coriolis, gravity, and diffusion. CFL<=0.8.
+
+================================================================================
+
+[2026-03-16T11:13:33.345653Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 1 changes
+    - amr.n_cell = 64 64
+
+[2026-03-16T11:13:33.457043Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:13:34.621459Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:13:34.628050Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:13:34.629624Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:13:34.631277Z] NODE: VISUALIZATION
+ACTION: skipped
+

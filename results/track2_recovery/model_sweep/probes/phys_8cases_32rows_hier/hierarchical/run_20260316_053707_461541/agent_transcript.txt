@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure ERF scalar advection-diffusion: 1 km^2 periodic domain, 128^2 grid, Gaussian scalar (sigma=50 m, peak=1), u=1 m/s, v=0, kappa=0.01 m^2/s. Use 3rd-order upwind advection for scalar. Output scalar field at t=0,250,500,750,1000 s.
+
+================================================================================
+
+[2026-03-16T12:37:07.442238Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:37:07.458963Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:37:08.172244Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:37:08.191955Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:37:08.198387Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:37:08.201559Z] NODE: VISUALIZATION
+ACTION: skipped
+

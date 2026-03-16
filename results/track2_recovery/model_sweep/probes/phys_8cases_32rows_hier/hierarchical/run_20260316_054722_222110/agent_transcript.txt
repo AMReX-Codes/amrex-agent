@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure BOMEX in ERF: 6.4x6.4x3 km, dx=dy=100 m, dz=40 m, 75 levels. Initialize theta_l and q_t from Siebesma 2003 profiles. Prescribe surface SHF=9.5 W/m^2, LHF=153.3 W/m^2, large-scale subsidence and advective tendencies per BOMEX protocol. Deardorff TKE SGS and Kessler microphysics.
+
+================================================================================
+
+[2026-03-16T12:47:22.203082Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:47:22.219567Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:47:22.959372Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:47:22.969892Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:47:22.974839Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:47:22.976223Z] NODE: VISUALIZATION
+ACTION: skipped
+

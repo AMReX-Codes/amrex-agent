@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run ERF Taylor-Green Vortex (64^3 and 128^3, Re=1600, 2pi periodic, standard ICs, nu=1/1600, no SGS, CFL<=0.5) to t=20. Verify E(t), Omega(t), and peak dissipation behavior near t~9.
+
+================================================================================
+
+[2026-03-16T12:01:27.454473Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:01:27.597355Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:01:28.202116Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:01:28.206761Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:01:28.207876Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:01:28.209140Z] NODE: VISUALIZATION
+ACTION: skipped
+

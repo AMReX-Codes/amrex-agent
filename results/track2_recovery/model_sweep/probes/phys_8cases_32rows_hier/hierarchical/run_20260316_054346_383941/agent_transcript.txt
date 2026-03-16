@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run ERF scalar advection-diffusion (1 km^2 periodic, 128^2, Gaussian sigma=50 m, u=1 m/s, kappa=0.01 m^2/s) to t=1000 s. Verify analytic broadening trend, mass conservation, and no negative scalar values.
+
+================================================================================
+
+[2026-03-16T12:43:46.361118Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:43:46.379511Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:43:47.434543Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:43:47.447252Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:43:47.450092Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:43:47.453319Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure ERF Ekman spiral (dz=5 m, Nz=200, nu=0.1 m^2/s, f=1.028e-4 s^-1, Ug=10 m/s, no-slip floor, no SGS). Run to steady state. Verify Ekman depth and surface-wind veer behavior against analytic expectations.
+
+================================================================================
+
+[2026-03-16T11:08:16.765178Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:08:16.940703Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:08:17.558765Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:08:17.565132Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:08:17.566878Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:08:17.568902Z] NODE: VISUALIZATION
+ACTION: skipped
+

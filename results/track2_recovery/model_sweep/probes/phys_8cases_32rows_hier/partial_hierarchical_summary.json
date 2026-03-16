@@ -1,0 +1,10 @@
+{
+  "strategy": "hierarchical",
+  "rows_completed": 32,
+  "rows_total": 32,
+  "weighted_score": 0.0,
+  "failed_rows": 6,
+  "elapsed_seconds": 5693.252,
+  "max_rate_limit_retries": 1,
+  "max_unavailable_attempts": 2
+}

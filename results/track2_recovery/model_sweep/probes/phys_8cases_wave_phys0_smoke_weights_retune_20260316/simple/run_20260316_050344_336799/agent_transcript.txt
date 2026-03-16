@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run the Taylor-Green Vortex in ERF on a 64^3 triply periodic domain at Re=1600. Initialize standard TGV velocity fields and run to t=20, tracking kinetic energy and enstrophy.
+
+================================================================================
+
+[2026-03-16T12:03:44.322578Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:03:44.334474Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:03:46.466097Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:03:46.476681Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:03:46.479082Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:03:46.480926Z] NODE: VISUALIZATION
+ACTION: skipped
+

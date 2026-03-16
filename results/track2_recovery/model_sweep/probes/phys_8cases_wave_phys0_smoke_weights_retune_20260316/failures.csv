@@ -1,0 +1,6 @@
+strategy,row_id,expected_case,expected_inputs
+simple,abl_neutral_wave_phys0,Exec/CanonicalFlows/Canonical_LES/Neutral_ABL,Exec/CanonicalFlows/Canonical_LES/Neutral_ABL/inputs_anelastic
+simple,taylor_green_vortex_wave_phys0,Exec/RegTests/TaylorGreenVortex,Exec/RegTests/TaylorGreenVortex/inputs_advdiff
+simple,isentropic_vortex_wave_phys0,Exec/RegTests/IsentropicVortex,Exec/RegTests/IsentropicVortex/inputs_advecting
+simple,scalar_adv_diff_wave_phys0,Exec/RegTests/ScalarAdvDiff,Exec/RegTests/ScalarAdvDiff/inputs_adv_diff_uniformU
+simple,bomex_shallow_cumulus_wave_phys0,Exec/CanonicalFlows/Bomex,Exec/CanonicalFlows/Bomex/input_Kessler

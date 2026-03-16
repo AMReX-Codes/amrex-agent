@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run ERF Couette (Re=100, H=1 m, 64 wall-normal cells, top plate U=1 m/s) and Poiseuille (same geometry, body force, Ucl=1 m/s) to steady state. Verify analytic profile agreement and wall shear.
+
+================================================================================
+
+[2026-03-16T12:14:50.204716Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:14:50.324902Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:14:51.110631Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:14:51.118239Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:14:51.120260Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:14:51.122831Z] NODE: VISUALIZATION
+ACTION: skipped
+

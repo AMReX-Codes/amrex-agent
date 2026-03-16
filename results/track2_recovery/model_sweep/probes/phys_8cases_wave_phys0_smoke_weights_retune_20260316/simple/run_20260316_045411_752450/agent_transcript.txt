@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run a 2D Straka-type cold density current in ERF on a 51.2 km x 6.4 km domain at 200 m isotropic resolution. Initialize a -15 K ellipsoidal cold bubble and run for 900 s.
+
+================================================================================
+
+[2026-03-16T11:54:11.736484Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:54:11.749672Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:54:12.756959Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:54:12.764779Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:54:12.766690Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:54:12.769342Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run ERF isentropic vortex at 64^2 and 128^2 with no diffusion/SGS/Coriolis to t=10. Verify L2 error trends and convergence order against the shifted analytic solution.
+
+================================================================================
+
+[2026-03-16T12:27:04.162643Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:27:04.180566Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:27:04.636493Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:27:04.640932Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:27:04.643678Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:27:04.644958Z] NODE: VISUALIZATION
+ACTION: skipped
+

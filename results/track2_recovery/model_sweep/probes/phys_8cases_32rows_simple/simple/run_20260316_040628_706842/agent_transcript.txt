@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Simulate the classic Ekman spiral in ERF: Coriolis at 45N, geostrophic wind Ug=10 m/s, constant eddy viscosity nu=0.1 m^2/s, no-slip lower wall, run to steady state.
+
+================================================================================
+
+[2026-03-16T11:06:28.580385Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:06:28.704288Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:06:29.762354Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:06:29.771223Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:06:29.773431Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:06:29.775627Z] NODE: VISUALIZATION
+ACTION: skipped
+

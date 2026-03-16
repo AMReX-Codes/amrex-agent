@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure Taylor-Green Vortex in ERF: 2pi x 2pi x 2pi triply periodic domain, 64^3 grid, Re=1600, nu=1/1600. Initialize with standard TGV velocity field. No SGS model, no Coriolis, no gravity. Use 3rd-order advection, CFL<=0.5. Run to t=20.
+
+================================================================================
+
+[2026-03-16T11:56:27.459722Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:56:27.465549Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:56:27.971145Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:56:27.976223Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:56:27.977495Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:56:27.978885Z] NODE: VISUALIZATION
+ACTION: skipped
+

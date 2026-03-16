@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure a 2D Straka density current in ERF: 51.2 km x 6.4 km, dx=dz=200 m. Initialize theta'=-15 K ellipsoid (xc=0, zc=3 km, rx=4 km, rz=2 km), base state theta0=300 K, p0=1e5 Pa. Use nu=kappa=75 m^2/s (explicit only, no SGS). Free-slip walls, periodic x. Use 3rd-order momentum advection, 5-wave acoustic sub-stepping, CFL<=0.9. Output theta' fields every 300 s.
+
+================================================================================
+
+[2026-03-16T11:04:57.437300Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:04:57.552736Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:04:58.438208Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:04:58.444850Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:04:58.446299Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:04:58.447794Z] NODE: VISUALIZATION
+ACTION: skipped
+

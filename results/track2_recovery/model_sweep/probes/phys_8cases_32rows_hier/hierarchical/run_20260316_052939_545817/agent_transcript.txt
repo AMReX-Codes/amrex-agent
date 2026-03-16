@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run scalar advection-diffusion in ERF: uniform wind u=1 m/s, Gaussian scalar blob (sigma=50 m) on a 1 km^2 periodic domain, scalar diffusivity kappa=0.01 m^2/s, run 1000 s.
+
+================================================================================
+
+[2026-03-16T12:29:39.535163Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:29:39.544270Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:29:40.126045Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:29:40.137008Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:29:40.139687Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:29:40.142830Z] NODE: VISUALIZATION
+ACTION: skipped
+

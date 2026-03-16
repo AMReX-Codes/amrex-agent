@@ -1,0 +1,126 @@
+{"reason": "error_token", "row_id": "abl_neutral_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "abl_neutral_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "abl_neutral_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "abl_neutral_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "abl_neutral_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "abl_neutral_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "abl_neutral_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "abl_neutral_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "abl_neutral_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "abl_neutral_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "abl_neutral_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "abl_neutral_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "density_current_straka_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "density_current_straka_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "density_current_straka_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "density_current_straka_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "density_current_straka_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "density_current_straka_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "density_current_straka_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "density_current_straka_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "density_current_straka_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "density_current_straka_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "density_current_straka_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "density_current_straka_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "ekman_spiral_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "ekman_spiral_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "ekman_spiral_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "ekman_spiral_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "ekman_spiral_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "ekman_spiral_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "ekman_spiral_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "ekman_spiral_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "ekman_spiral_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "ekman_spiral_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "ekman_spiral_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "ekman_spiral_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "taylor_green_vortex_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "taylor_green_vortex_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "taylor_green_vortex_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "taylor_green_vortex_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "taylor_green_vortex_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "taylor_green_vortex_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "taylor_green_vortex_wave_phys1", "reason": "llm_unavailable", "row_id": "taylor_green_vortex_wave_phys1", "row_index": "13", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "taylor_green_vortex_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "taylor_green_vortex_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "taylor_green_vortex_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "taylor_green_vortex_wave_phys1", "reason": "llm_unavailable", "row_id": "taylor_green_vortex_wave_phys1", "row_index": "13", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "taylor_green_vortex_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "taylor_green_vortex_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "taylor_green_vortex_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "taylor_green_vortex_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "taylor_green_vortex_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "taylor_green_vortex_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "couette_poiseuille_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "couette_poiseuille_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "couette_poiseuille_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "couette_poiseuille_wave_phys0", "reason": "llm_unavailable", "row_id": "couette_poiseuille_wave_phys0", "row_index": "16", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "couette_poiseuille_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "couette_poiseuille_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "couette_poiseuille_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "couette_poiseuille_wave_phys0", "reason": "llm_unavailable", "row_id": "couette_poiseuille_wave_phys0", "row_index": "16", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "couette_poiseuille_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "couette_poiseuille_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "couette_poiseuille_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "couette_poiseuille_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "couette_poiseuille_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "couette_poiseuille_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "couette_poiseuille_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "couette_poiseuille_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "couette_poiseuille_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "isentropic_vortex_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "isentropic_vortex_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "isentropic_vortex_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "isentropic_vortex_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "isentropic_vortex_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "isentropic_vortex_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "isentropic_vortex_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "isentropic_vortex_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "isentropic_vortex_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "isentropic_vortex_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "isentropic_vortex_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "isentropic_vortex_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "scalar_adv_diff_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "scalar_adv_diff_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "scalar_adv_diff_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "scalar_adv_diff_wave_phys0", "reason": "llm_unavailable", "row_id": "scalar_adv_diff_wave_phys0", "row_index": "24", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "scalar_adv_diff_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "scalar_adv_diff_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "scalar_adv_diff_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "scalar_adv_diff_wave_phys0", "reason": "llm_unavailable", "row_id": "scalar_adv_diff_wave_phys0", "row_index": "24", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "scalar_adv_diff_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "scalar_adv_diff_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "scalar_adv_diff_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "scalar_adv_diff_wave_phys1", "reason": "llm_unavailable", "row_id": "scalar_adv_diff_wave_phys1", "row_index": "25", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "scalar_adv_diff_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "scalar_adv_diff_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "scalar_adv_diff_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "scalar_adv_diff_wave_phys1", "reason": "llm_unavailable", "row_id": "scalar_adv_diff_wave_phys1", "row_index": "25", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "scalar_adv_diff_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "scalar_adv_diff_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "scalar_adv_diff_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "scalar_adv_diff_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "scalar_adv_diff_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "scalar_adv_diff_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "scalar_adv_diff_wave_phys3", "reason": "llm_unavailable", "row_id": "scalar_adv_diff_wave_phys3", "row_index": "27", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "scalar_adv_diff_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "scalar_adv_diff_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "scalar_adv_diff_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "scalar_adv_diff_wave_phys3", "reason": "llm_unavailable", "row_id": "scalar_adv_diff_wave_phys3", "row_index": "27", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "bomex_shallow_cumulus_wave_phys0", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "bomex_shallow_cumulus_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "bomex_shallow_cumulus_wave_phys0", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "bomex_shallow_cumulus_wave_phys1", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "bomex_shallow_cumulus_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "bomex_shallow_cumulus_wave_phys1", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "bomex_shallow_cumulus_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "bomex_shallow_cumulus_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "bomex_shallow_cumulus_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "1", "prompt_id": "bomex_shallow_cumulus_wave_phys2", "reason": "llm_unavailable", "row_id": "bomex_shallow_cumulus_wave_phys2", "row_index": "30", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "bomex_shallow_cumulus_wave_phys2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "bomex_shallow_cumulus_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "bomex_shallow_cumulus_wave_phys2", "severity": "warning", "strategy": "hierarchical"}
+{"attempt": "2", "prompt_id": "bomex_shallow_cumulus_wave_phys2", "reason": "llm_unavailable", "row_id": "bomex_shallow_cumulus_wave_phys2", "row_index": "30", "severity": "error", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "bomex_shallow_cumulus_wave_phys3", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "bomex_shallow_cumulus_wave_phys3", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "bomex_shallow_cumulus_wave_phys3", "severity": "warning", "strategy": "hierarchical"}

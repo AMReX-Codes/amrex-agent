@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Run laminar Couette flow in ERF: parallel plates H=1 m apart, top plate at U=1 m/s, Re=100, periodic x/y, run to steady state and check linear velocity profile.
+
+================================================================================
+
+[2026-03-16T12:07:33.369007Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:07:33.377341Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:07:34.071094Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:07:34.075509Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:07:34.076588Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:07:34.078053Z] NODE: VISUALIZATION
+ACTION: skipped
+

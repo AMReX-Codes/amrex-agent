@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure scalar advection-diffusion in ERF: 2D periodic domain 1 km x 1 km, 128x128 grid, Gaussian scalar pulse (peak=1, sigma=50 m), uniform wind u=1 m/s, v=0, scalar diffusivity kappa=0.01 m^2/s. Disable SGS, Coriolis, and moisture.
+
+================================================================================
+
+[2026-03-16T12:32:06.203171Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:32:06.214637Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:32:06.689286Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:32:06.695943Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:32:06.697840Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:32:06.699742Z] NODE: VISUALIZATION
+ACTION: skipped
+

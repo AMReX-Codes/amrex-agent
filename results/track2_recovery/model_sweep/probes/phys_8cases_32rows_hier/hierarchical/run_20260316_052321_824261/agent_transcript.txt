@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure isentropic vortex in ERF: [-5,5]^2 periodic domain, 64^2 and 128^2 grids, gamma=1.4, eps=5, mean flow (u_inf,v_inf)=(1,1). No diffusion, no SGS, no Coriolis, no gravity. Run to t=10 and record L2 errors in rho, u, v, p.
+
+================================================================================
+
+[2026-03-16T12:23:21.810053Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:23:21.821734Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:23:22.450642Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:23:22.454116Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:23:22.456813Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:23:22.458441Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure Couette flow in ERF: H=1 m, 32x16x64 grid, Re=100, nu=0.01 m^2/s, top plate U=1 m/s, bottom no-slip, periodic x/y. Disable Coriolis, buoyancy, and SGS. Also run Poiseuille variant with the same grid and body force. Output final u(z) profiles.
+
+================================================================================
+
+[2026-03-16T12:13:35.135104Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:13:35.250765Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:13:35.715938Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:13:35.722182Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:13:35.723664Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:13:35.725420Z] NODE: VISUALIZATION
+ACTION: skipped
+

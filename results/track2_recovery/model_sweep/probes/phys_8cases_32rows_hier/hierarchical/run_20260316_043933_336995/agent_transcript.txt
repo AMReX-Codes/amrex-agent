@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Configure Straka density current in ERF (51.2 km x 6.4 km, 200 m isotropic, theta'=-15 K ellipsoid, nu=kappa=75 m^2/s, no SGS, free-slip walls, CFL<=0.9). Run 900 s, output theta' at t=300/600/900 s. Verify cold-front head at t=900 s is about 15.8 km from origin and no spurious negative density perturbations.
+
+================================================================================
+
+[2026-03-16T11:39:33.186264Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:39:33.332561Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:40:34.157471Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:40:34.166920Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:40:34.168695Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:40:34.170941Z] NODE: VISUALIZATION
+ACTION: skipped
+

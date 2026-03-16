@@ -1,0 +1,3 @@
+strategy,category,weighted_score
+simple,CanonicalFlows,0.75
+simple,RegTests,0.3125

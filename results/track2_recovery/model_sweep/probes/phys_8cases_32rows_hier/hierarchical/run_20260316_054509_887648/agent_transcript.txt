@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Set up a BOMEX shallow cumulus LES in ERF: 6.4x6.4x3 km domain at 100 m horizontal / 40 m vertical resolution, Siebesma 2003 sounding and surface fluxes, Kessler microphysics, run 6 hours.
+
+================================================================================
+
+[2026-03-16T12:45:09.754285Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T12:45:09.884463Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T12:45:10.373824Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T12:45:10.382930Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T12:45:10.384979Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T12:45:10.387427Z] NODE: VISUALIZATION
+ACTION: skipped
+

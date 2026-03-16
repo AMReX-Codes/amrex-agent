@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Set up a neutral ABL in ERF with MOST surface BCs (z0=0.1 m, neutral stability), Smagorinsky SGS (Cs=0.18), Coriolis forcing at latitude 45N, geostrophic wind Ug=10 m/s along x, and a 256x256x128 grid at 10 m isotropic resolution. Use a 2-second acoustic time step and run 6 simulated hours.
+
+================================================================================
+
+[2026-03-16T11:24:18.457478Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-03-16T11:24:18.467593Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-03-16T11:24:18.982806Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-03-16T11:24:18.986563Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-03-16T11:24:18.989274Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-03-16T11:24:18.990352Z] NODE: VISUALIZATION
+ACTION: skipped
+
