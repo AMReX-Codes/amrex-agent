@@ -12,7 +12,12 @@ Quick start:
 2. Set environment variable:
    ```bash
    export AMSC_I2_API_KEY=<your-key>
+   export AMSC_I2_BASE_URL=https://<your-amsc-i2-endpoint>/v1
    ```
+
+`amsc-i2` is implemented as an OpenAI-compatible path under the hood. You can
+also use `LITELLM_API_KEY` / `LITELLM_BASE_URL` instead of the `AMSC_I2_*`
+aliases.
 
 ## Usage
 
