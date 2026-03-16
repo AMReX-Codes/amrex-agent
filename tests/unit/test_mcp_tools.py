@@ -488,6 +488,16 @@ def test_get_sweep_status_missing_returns_error(tmp_path, mcp_server_module, mon
     assert "error" in result
 
 
+def test_get_sweep_status_rejects_pathlike_sweep_id(tmp_path, mcp_server_module, monkeypatch):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+    _write_sweep_metadata(tmp_path, "safe-sweep", "sess1", "running")
+
+    result = mcp_server_module.invoke_tool("get_sweep_status", {"sweep_id": "../safe-sweep"})
+
+    assert "error" in result
+    assert result["error"] == "Invalid sweep_id"
+
+
 def test_get_sweep_results_returns_error_when_running(tmp_path, mcp_server_module, monkeypatch):
     monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
     _write_sweep_metadata(tmp_path, "sweep-2", "sess1", "running")
@@ -514,6 +524,34 @@ def test_get_sweep_results_returns_summary_when_complete(tmp_path, mcp_server_mo
     assert result["sweep_id"] == "sweep-3"
     assert result["status"] == "complete"
     assert result["metric"] == 1.0
+
+
+def test_get_sweep_results_uses_requested_sweep_id_for_summary_path(
+    tmp_path, mcp_server_module, monkeypatch
+):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+    sweep_dir = _write_sweep_metadata(tmp_path, "sweep-4", "sess1", "complete")
+    (sweep_dir / "sweep_metadata.json").write_text(
+        (
+            "{"
+            "\"sweep_id\": \"other-sweep\", "
+            "\"session_id\": \"sess1\", "
+            "\"status\": \"complete\", "
+            "\"created_at\": \"2026-03-10T00:00:00Z\""
+            "}"
+        ),
+        encoding="utf-8",
+    )
+    (sweep_dir / "sweep_summary.json").write_text(
+        "{\"sweep_id\": \"sweep-4\", \"status\": \"complete\", \"metric\": 2.0}",
+        encoding="utf-8",
+    )
+
+    result = mcp_server_module.invoke_tool("get_sweep_results", {"sweep_id": "sweep-4"})
+
+    assert "error" not in result
+    assert result["sweep_id"] == "sweep-4"
+    assert result["metric"] == 2.0
 
 
 def test_list_sweeps_returns_all_in_session(tmp_path, mcp_server_module, monkeypatch):

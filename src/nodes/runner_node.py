@@ -13,6 +13,7 @@ from src.models import GraphState
 from src.services.run_superfacility import SuperfacilityRunner
 from src.services.run_superfacility_tools import stage_out_outputs
 from src.utils.gate import run_preconfirm_gate
+from src.utils.job_status import normalize_job_status
 
 logger = logging.getLogger(__name__)
 
@@ -337,43 +338,15 @@ def runner_node(state: GraphState) -> dict[str, Any]:
         }
 
         # Get actual job status from submit result
-        actual_status = submit_result.get("job_status", "completed")
-        if isinstance(actual_status, str):
-            status_upper = actual_status.upper()
-            status_map = {
-                "CANCELLED": "cancelled",
-                "PREEMPTED": "cancelled",
-                "TIMEOUT": "timeout",
-                "FAILED": "failed",
-                "NODE_FAIL": "failed",
-                "OUT_OF_MEMORY": "failed",
-                "BOOT_FAIL": "failed",
-                "DEADLINE": "failed",
-            }
-            if status_upper in status_map:
-                actual_status = status_map[status_upper]
+        actual_status = normalize_job_status(
+            submit_result.get("job_status", "completed"),
+            default="completed",
+        )
         if final_state:
-            state_str = str(final_state).upper()
-            status_map = {
-                "CANCELLED": "cancelled",
-                "PREEMPTED": "cancelled",
-                "TIMEOUT": "timeout",
-                "FAILED": "failed",
-                "NODE_FAIL": "failed",
-                "OUT_OF_MEMORY": "failed",
-                "BOOT_FAIL": "failed",
-                "DEADLINE": "failed",
-            }
-            completed_states = {"COMPLETED", "COMPLETING", "DONE", "SUCCESS"}
-            running_states = {"RUNNING", "PENDING", "CONFIGURING"}
-            if state_str in status_map:
-                actual_status = status_map[state_str]
-            elif state_str in completed_states:
-                actual_status = "completed"
-            elif state_str in running_states:
-                actual_status = "running"
-            else:
-                actual_status = state_str.lower()
+            actual_status = normalize_job_status(
+                final_state,
+                default=actual_status,
+            )
         exit_code = submit_result.get("exit_code", 0)
 
         workflow_history = state.get("workflow_history", [])

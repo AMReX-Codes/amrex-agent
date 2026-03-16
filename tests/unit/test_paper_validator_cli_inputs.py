@@ -104,9 +104,22 @@ def test_initialize_state_carries_paper_fields() -> None:
     assert state["paper_validator_enabled"] is True
 
 
+def test_initialize_state_generates_prompt_for_paper_only_mode() -> None:
+    state = initialize_state(
+        "",
+        _DummyConfig(),
+        paper_source="2401.12345",
+        paper_input_type="arxiv",
+        paper_validator_enabled=True,
+    )
+    assert state["prompt"]
+    assert "2401.12345" in state["prompt"]
+
+
 def test_route_after_paper_validator_respects_flag_and_source() -> None:
     assert _route_after_paper_validator({"paper_validator_enabled": True}) == "paper_validator_node"
     assert _route_after_paper_validator({"paper_source": "2401.12345"}) == "paper_validator_node"
+    assert _route_after_paper_validator({"paper_input_type": "arxiv"}) == "paper_validator_node"
     assert _route_after_paper_validator({}) == "input_writer_node"
 
 

@@ -104,6 +104,15 @@ def _is_valid_transition(previous: str, target: str) -> bool:
     return target in transitions[previous]
 
 
+def _is_archived_noop_update(previous_state: dict[str, Any], incoming_state: dict[str, Any]) -> bool:
+    for key, value in incoming_state.items():
+        if key not in previous_state:
+            return False
+        if previous_state.get(key) != value:
+            return False
+    return True
+
+
 def _resolve_lifecycle_state(
     previous_state: dict[str, Any] | None,
     incoming_state: dict[str, Any],
@@ -118,6 +127,8 @@ def _resolve_lifecycle_state(
 
     if previous_lifecycle == "archived":
         if requested_lifecycle and requested_lifecycle != "archived":
+            raise ValueError("Invalid lifecycle transition: archived sessions are immutable")
+        if not _is_archived_noop_update(previous_state or {}, incoming_state):
             raise ValueError("Invalid lifecycle transition: archived sessions are immutable")
         return "archived"
 

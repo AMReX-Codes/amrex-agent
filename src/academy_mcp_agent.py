@@ -15,6 +15,21 @@ class AMReXMCPAgent(Agent):
     """Expose MCP tool functions as Academy actions."""
 
     @staticmethod
+    def _derive_wrapper_status(result: dict[str, Any]) -> str:
+        """Map tool result shape to an envelope status that preserves failures."""
+        raw_status = result.get("status")
+        normalized_status = (
+            raw_status.strip().lower() if isinstance(raw_status, str) else None
+        )
+        if normalized_status in {"error", "failed", "failure"}:
+            return "error"
+        if "error" in result:
+            return "error"
+        if isinstance(raw_status, str) and raw_status.strip():
+            return raw_status
+        return "ok"
+
+    @staticmethod
     def _maybe_wrap_response_rationale(
         result: Any,
         include_response_rationale: bool,
@@ -24,9 +39,15 @@ class AMReXMCPAgent(Agent):
             return result
 
         if isinstance(result, dict):
-            has_error = bool(result.get("error"))
+            wrapper_status = AMReXMCPAgent._derive_wrapper_status(result)
+            has_error = wrapper_status == "error"
             if has_error:
-                response = f"error: {result.get('error')}"
+                explicit_error = result.get("error")
+                response = result.get("response")
+                if not response and explicit_error is not None:
+                    response = f"error: {explicit_error}"
+                if not response:
+                    response = result.get("status") or "error"
             else:
                 response = (
                     result.get("response")
@@ -38,7 +59,7 @@ class AMReXMCPAgent(Agent):
             rationale = result.get("rationale") or result.get("reasoning")
             wrapped: dict[str, Any] = {
                 "response": response,
-                "status": "error" if has_error else "ok",
+                "status": wrapper_status,
                 "data": result,
             }
             if rationale:
@@ -72,10 +93,13 @@ class AMReXMCPAgent(Agent):
         except Exception as exc:
             import traceback
 
-            return {
+            error_payload = {
                 "error": str(exc),
                 "traceback": traceback.format_exc(),
             }
+            return self._maybe_wrap_response_rationale(
+                error_payload, include_response_rationale
+            )
 
         return self._maybe_wrap_response_rationale(result, include_response_rationale)
 

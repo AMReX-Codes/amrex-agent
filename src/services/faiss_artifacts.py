@@ -66,6 +66,8 @@ def _validate_manifest_metadata(manifest: dict) -> None:
         raise RuntimeError("Invalid manifest: missing valid generated_at/timestamp")
 
     major = _parse_major_version(version)
+    if major is None:
+        raise RuntimeError("Invalid manifest: malformed version")
     embedding_model = manifest.get("embedding_model")
     if major is not None and major >= 2:
         if not isinstance(embedding_model, str) or not embedding_model.strip():
@@ -94,6 +96,8 @@ def _validate_manifest_embedding_compatibility(
     if manifest_embedding_model != expected_embedding_model:
         version = manifest.get("version")
         major = _parse_major_version(version) if isinstance(version, str) else None
+        if isinstance(version, str) and major is None:
+            raise RuntimeError("Invalid manifest: malformed version")
         message = (
             "FAISS manifest embedding_model '%s' does not match configured model '%s'."
             % (manifest_embedding_model, expected_embedding_model)

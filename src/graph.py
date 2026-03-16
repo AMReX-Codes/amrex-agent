@@ -996,7 +996,11 @@ def _paper_validator_enabled_from_config(config: Any, *, strict_true: bool = Fal
 
 
 def _paper_validator_enabled(state: dict[str, Any]) -> bool:
-    if state.get("paper_validator_enabled", False) or state.get("paper_source"):
+    if (
+        state.get("paper_validator_enabled", False)
+        or state.get("paper_source")
+        or state.get("paper_input_type")
+    ):
         return True
     return _paper_validator_enabled_from_config(state.get("config"))
 

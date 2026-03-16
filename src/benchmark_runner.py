@@ -16,6 +16,8 @@ from types import SimpleNamespace
 import yaml
 from jsonschema import Draft202012Validator
 
+from src.utils.job_status import normalize_job_status
+
 DEFAULT_BENCHMARK_SEED = 1729
 
 
@@ -1231,7 +1233,10 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             selected_case = None
             if result_data:
                 run_directory = result_data.get("run_directory")
-                job_status = result_data.get("job_status")
+                job_status = normalize_job_status(
+                    result_data.get("job_status"),
+                    default="unknown",
+                )
                 selected_case = result_data.get("selected_case")
                 analysis_report = result_data.get("analysis_report")
 
@@ -1247,7 +1252,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "model_id": model_id,
                 "prompt_id": prompt_id,
                 "prompt_excerpt": prompt["prompt"][:200],
-                "job_status": job_status or "unknown",
+                "job_status": normalize_job_status(job_status, default="unknown"),
                 "analysis_status": (analysis_report or {}).get("status"),
                 "analysis_performance": (analysis_report or {}).get("performance"),
                 "analysis_issues": (analysis_report or {}).get("issues"),

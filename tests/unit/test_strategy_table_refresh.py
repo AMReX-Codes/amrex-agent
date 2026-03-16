@@ -96,3 +96,38 @@ def test_error_taxonomy_accepts_valid_gate_reason_codes(tmp_path, monkeypatch) -
     record = json.loads(output_path.read_text(encoding="utf-8").splitlines()[0])
     assert record["error_taxonomy_stable"] is True
     assert record["error_reason_codes_unknown"] == []
+
+
+def test_success_rate_treats_legacy_success_statuses_as_success(tmp_path, monkeypatch) -> None:
+    metrics_path = tmp_path / "metrics.jsonl"
+    events = [
+        {
+            "type": "workflow_summary",
+            "context": {"model_id": "m1", "strategy": "simple"},
+            "data": {"job_status": "success", "tokens_total": 10},
+        },
+        {
+            "type": "workflow_summary",
+            "context": {"model_id": "m2", "strategy": "simple"},
+            "data": {"job_status": "ok", "tokens_total": 20},
+        },
+    ]
+    metrics_path.write_text("\n".join(json.dumps(event) for event in events), encoding="utf-8")
+
+    output_path = tmp_path / "raw_metrics.jsonl"
+    module = _load_aggregate_metrics_module()
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "aggregate_metrics.py",
+            "--input",
+            str(metrics_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+    module.main()
+
+    summary_rows = module._read_csv_rows(tmp_path / "summary.csv")
+    assert summary_rows[0]["success_runs"] == "2"
+    assert summary_rows[0]["success_rate"] == "1.0"

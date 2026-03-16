@@ -94,6 +94,7 @@ def test_is_paper_validator_enabled_by_state_and_config() -> None:
 
     assert _is_paper_validator_enabled({"paper_validator_enabled": True}) is True
     assert _is_paper_validator_enabled({"paper_validator_enabled": False}) is False
+    assert _is_paper_validator_enabled({"paper_input_type": "arxiv"}) is True
     assert _is_paper_validator_enabled({"config": ConfigEnabled()}) is True
     assert _is_paper_validator_enabled({}) is False
 
