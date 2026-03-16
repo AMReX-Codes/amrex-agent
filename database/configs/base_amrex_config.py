@@ -49,6 +49,15 @@ class BaseAMReXConfig:
         "GridConsistency",      # AMReX grid constraints
         "TimestepBounds",       # Detect implausible max_dt for timesteps
     ]
+    reviewer_reason_codes: ClassVar[list[str]] = [
+        "intent_missing",
+        "solver_mismatch",
+        "baseline_path_mismatch",
+        "domain_conflict",
+        "schema_unresolved",
+        "resource_conflict",
+        "rate_limit_pressure",
+    ]
 
     code_name: str = "amrex_base"
     """Code identifier (e.g., 'PeleC', 'ERF', 'WarpX')"""

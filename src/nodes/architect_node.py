@@ -22,6 +22,96 @@ from src.utils.gate import run_preconfirm_gate
 logger = logging.getLogger(__name__)
 
 
+def _extract_reviewer_guidance(state: GraphState, workflow_history: list[dict[str, Any]]) -> dict[str, Any]:
+    guidance = state.get("reviewer_guidance")
+    if isinstance(guidance, dict):
+        return guidance
+    reviewer_entries = [entry for entry in workflow_history if entry.get("node") == "reviewer"]
+    if reviewer_entries:
+        details = reviewer_entries[-1].get("details", {})
+        embedded = details.get("reviewer_guidance")
+        if isinstance(embedded, dict):
+            return embedded
+    return {}
+
+
+def _case_path_from_candidate(candidate: dict[str, Any]) -> str:
+    if not isinstance(candidate, dict):
+        return ""
+    case = candidate.get("case")
+    if isinstance(case, str) and case.strip():
+        return case.strip()
+    metadata = candidate.get("metadata", {})
+    if isinstance(metadata, dict):
+        for key in ("repo_path", "path", "local_path"):
+            value = metadata.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return ""
+
+
+def _apply_reviewer_constraints_to_plan(plan_result, reviewer_guidance: dict[str, Any]) -> tuple[Any, list[str]]:
+    warnings: list[str] = []
+    if not isinstance(reviewer_guidance, dict):
+        return plan_result, warnings
+
+    excluded_cases = {
+        str(case).strip()
+        for case in reviewer_guidance.get("excluded_cases", [])
+        if str(case).strip()
+    }
+    forbidden_patterns = [
+        str(pattern).strip()
+        for pattern in reviewer_guidance.get("forbidden_path_patterns", [])
+        if str(pattern).strip()
+    ]
+    preferred_patterns = [
+        str(pattern).strip()
+        for pattern in reviewer_guidance.get("preferred_path_patterns", [])
+        if str(pattern).strip()
+    ]
+
+    selected_case = str(getattr(plan_result, "selected_case", "") or "")
+    selected_solver = str(getattr(plan_result, "selected_solver", "") or "")
+    required_solver = reviewer_guidance.get("required_solver")
+    if isinstance(required_solver, str) and required_solver.strip():
+        if selected_solver and selected_solver != required_solver:
+            warnings.append(
+                f"required_solver='{required_solver}' not met (selected_solver='{selected_solver}')"
+            )
+
+    def _is_forbidden(case_path: str) -> bool:
+        if not case_path:
+            return False
+        if case_path in excluded_cases:
+            return True
+        return any(pattern in case_path for pattern in forbidden_patterns)
+
+    if _is_forbidden(selected_case):
+        replacement = None
+        for candidate in list(getattr(plan_result, "case_candidates", []) or []):
+            candidate_case = _case_path_from_candidate(candidate)
+            if not candidate_case or _is_forbidden(candidate_case):
+                continue
+            if preferred_patterns and not any(pattern in candidate_case for pattern in preferred_patterns):
+                continue
+            replacement = candidate_case
+            break
+        if replacement is None:
+            for candidate in list(getattr(plan_result, "case_candidates", []) or []):
+                candidate_case = _case_path_from_candidate(candidate)
+                if candidate_case and not _is_forbidden(candidate_case):
+                    replacement = candidate_case
+                    break
+        if replacement:
+            warnings.append(f"selected_case switched by reviewer guidance: {selected_case} -> {replacement}")
+            plan_result.selected_case = replacement
+        else:
+            warnings.append("selected_case violates reviewer guidance and no valid alternative candidate was found")
+
+    return plan_result, warnings
+
+
 def architect_node(state: GraphState) -> dict[str, Any]:
     """
     Orchestrate simulation planning for the workflow graph.
@@ -95,14 +185,13 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     # COMPONENT 9c: FEEDBACK PREPARATION
     # ========================================
 
+    workflow_history_temp = state.get("workflow_history", [])
+    reviewer_guidance = _extract_reviewer_guidance(state, workflow_history_temp)
     previous_feedback: dict[str, Any] | None = None
     parameter_resolution_feedback: dict[str, Any] | None = None  # Initialize for both modes
 
     if mode == "retry":
         logger.debug("Retry mode detected - extracting feedback")
-
-        # Extract feedback from workflow_history (canonical source)
-        workflow_history_temp = state.get("workflow_history", [])
 
         # Get reviewer entries for schema params
         reviewer_entries = [e for e in workflow_history_temp if e.get("node") == "reviewer"]
@@ -244,8 +333,13 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     # Optional solver hint
     selected_solvers = state.get("selected_solvers")
     solver_hint = None
+    required_solver = reviewer_guidance.get("required_solver") if isinstance(reviewer_guidance, dict) else None
+    if isinstance(required_solver, str) and required_solver.strip():
+        solver_hint = required_solver.strip()
+        logger.debug(f"Using reviewer-required solver: {solver_hint}")
     if selected_solvers:
-        solver_hint = selected_solvers[0][0] if selected_solvers else None
+        if solver_hint is None:
+            solver_hint = selected_solvers[0][0] if selected_solvers else None
         logger.debug(f"Using solver hint: {solver_hint}")
 
     # ========================================
@@ -276,8 +370,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     # ========================================
 
     # Accumulate excluded cases across retries
-    excluded_cases = state.get("excluded_cases", [])
-    excluded_inputs_files = state.get("excluded_inputs_files", [])
+    excluded_cases = list(state.get("excluded_cases", []))
+    excluded_inputs_files = list(state.get("excluded_inputs_files", []))
 
     if mode == "retry" and previous_feedback:
         rejected_case = previous_feedback.get("rejected_baseline")
@@ -296,8 +390,18 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             if rejected_case not in excluded_cases:
                 excluded_cases.append(rejected_case)
             logger.debug(f"Retry guidance suggests switching baseline: {rejected_case}")
+    if isinstance(reviewer_guidance, dict):
+        for case in reviewer_guidance.get("excluded_cases", []) or []:
+            case_text = str(case).strip()
+            if case_text and case_text not in excluded_cases:
+                excluded_cases.append(case_text)
 
     logger.debug(f"Total exclusions: {len(excluded_cases)} cases, {len(excluded_inputs_files)} inputs files")
+    if isinstance(reviewer_guidance, dict):
+        if parameter_resolution_feedback is None:
+            parameter_resolution_feedback = {}
+        if reviewer_guidance.get("schema_escalation_required") is True:
+            parameter_resolution_feedback["schema_escalation_required"] = True
 
     embed_counts_before = {
         "total": 0,
@@ -320,8 +424,14 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 excluded_cases=excluded_cases,
                 excluded_inputs_files=excluded_inputs_files,
                 parameter_resolution_feedback=parameter_resolution_feedback,  # NEW: pass to service
+                forced_solver=solver_hint,
+                reviewer_guidance=reviewer_guidance,
             )
         logger.debug(f"[DATA TRANSFER] Called architect service with feedback={parameter_resolution_feedback is not None}")
+        plan_result, guidance_warnings = _apply_reviewer_constraints_to_plan(plan_result, reviewer_guidance)
+        if guidance_warnings:
+            logger.warning("Reviewer guidance adjustments: %s", "; ".join(guidance_warnings))
+            plan_result.reasoning = f"{plan_result.reasoning}\nReviewer guidance: {'; '.join(guidance_warnings)}"
 
         logger.info(f"Plan created: {plan_result.selected_case}")
 
@@ -456,6 +566,8 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             "modifications": current_mods,  # Full list, NOT count
             "reasoning": current_reasoning,  # Full text, NOT snippet
             "baseline": baseline,            # Full metadata [FIX #1]
+            "case_candidates": plan_result.case_candidates or [],
+            "baseline_evidence_citations": getattr(plan_result, "baseline_evidence_citations", []) or [],
             # Execution metadata for comparative testing
             "indexing_strategy": indexing_strategy,
             "indexing_calls_count": indexing_calls,
@@ -471,6 +583,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             "level2_override_confidence": level2_override_confidence,
             # Parameter resolution context (if applicable)
             "parameter_resolution_applied": parameter_resolution_feedback is not None,
+            "reviewer_guidance": reviewer_guidance,
             "remapped_parameters": (
                 [p[0] for p in parameter_resolution_feedback.get("unresolved_parameters", [])]
                 if parameter_resolution_feedback else []
@@ -534,6 +647,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         "reasoning": current_reasoning, # For visualization
         "case_candidates": plan_result.case_candidates or [],  # For visualization
         "baseline_confidence": plan_result.baseline_confidence,  # For visualization
+        "reviewer_guidance": reviewer_guidance,
 
         # === STATE RESET ===
         "errors_active": [],            # Clear errors from previous iteration

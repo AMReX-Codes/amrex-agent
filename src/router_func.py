@@ -149,6 +149,9 @@ def route_after_reviewer(state: GraphState) -> str:
     if mode == "terminal":
         logger.warning("[ROUTE] Reviewer → END (Terminal mode)")
         return END
+    if mode == "clarification":
+        logger.debug("[ROUTE] Reviewer → Clarification (intent gap)")
+        return "clarification"
     if mode == "proceed":
         logger.debug("[ROUTE] Reviewer → Input Writer (Approved)")
         return "input_writer"

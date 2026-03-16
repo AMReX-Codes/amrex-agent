@@ -38,9 +38,16 @@ def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) 
     assert (run_dir / "manifest.json").exists()
     assert (run_dir / "benchmark_runs.jsonl").exists()
     assert (run_dir / "configs" / "m1.json").exists()
+    assert not (run_dir / "run_manifest.json").exists()
 
     prompt_context = run_dir / "runs" / "m1" / "p1" / "benchmark_context.json"
     assert prompt_context.exists()
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    assert "audit" in manifest
+    assert "benchmark_config_sha256" in manifest["audit"]
+    assert "git" in manifest["audit"]
+    assert "faiss_provenance" in manifest["audit"]
+    assert manifest["audit"]["artifacts"]["benchmark_runs"] == "benchmark_runs.jsonl"
 
     record = json.loads((run_dir / "benchmark_runs.jsonl").read_text().splitlines()[0])
     assert record["model_id"] == "m1"
@@ -88,6 +95,34 @@ def test_run_model_benchmark_sanitizes_replay_manifest_command_in_privacy_mode(
     assert replay_manifest["runs"]
     assert replay_manifest["runs"][0]["command"] == "[REDACTED]"
     assert "TOP_SECRET_PROMPT" not in json.dumps(replay_manifest)
+
+
+def test_run_model_benchmark_embeds_audit_into_manifest_when_enabled(tmp_path, monkeypatch) -> None:
+    def fake_run(*_args, **_kwargs):
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"job_status": "ok"}),
+            stderr="",
+        )
+
+    monkeypatch.setattr("src.benchmark_runner.subprocess.run", fake_run)
+
+    config = {
+        "prompts": [{"id": "p1", "prompt": "Hello"}],
+        "models": [{"id": "m1", "overrides": {"llm_provider": "cborg", "llm_model": "x"}}],
+        "run_args": {"dry_run": True, "benchmark_manifest_enabled": True},
+    }
+    config_path = tmp_path / "bench_manifest_embed.json"
+    config_path.write_text(json.dumps(config))
+
+    run_model_benchmark(config_path, tmp_path, run_name="bench_manifest_embed")
+    run_dir = tmp_path / "bench_manifest_embed"
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+
+    assert "audit" in manifest
+    assert manifest["audit"]["artifacts"]["manifest"] == "manifest.json"
+    assert manifest["audit"]["artifacts"]["uc_summary_traceability"] == "uc_summary_traceability.json"
+    assert not (run_dir / "run_manifest.json").exists()
 
 
 def test_build_command_maps_optional_and_boolean_run_args(tmp_path):

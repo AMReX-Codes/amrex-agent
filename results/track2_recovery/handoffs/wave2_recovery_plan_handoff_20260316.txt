@@ -133,3 +133,54 @@ Primary evidence:
 3. Forward adaptation (not rollback) for schema policy.
 4. Clarification and reviewer reflexive guidance remain separate subsystems by design.
 5. Solver-specific semantics stay in *_config.py; policy framework lives in base config.
+
+## Implementation Status Snapshot (Post-Edit, Pre-Rerun)
+This section records what is implemented in code and what remains before wave closure.
+
+### Implemented in code
+1. Reviewer taxonomy + structured reflexive guidance contract added:
+- reason codes, required_solver, forbidden/preferred path patterns, excluded_cases, schema_escalation_required.
+2. Reviewer-to-architect constrained retry path integrated:
+- reviewer emits guidance;
+- architect consumes guidance and applies constrained candidate reselection.
+3. Clarification routing behavior tightened in runtime path:
+- clarification route on intent gaps via reviewer mode + router wiring in create_amrex_agent_graph path.
+4. Schema escalation policy controls added and connected:
+- lightweight-first policy with reviewer-gated escalation support in architect modification extraction fallback logic.
+5. Auditability metadata integrated into existing benchmark artifacts:
+- benchmark runner manifest includes audit block (checksums/git/faiss/timestamps);
+- ERF compare summary includes audit block;
+- hierarchical per-row candidate top-N embedded in results rows for hierarchical strategy.
+6. Unit tests added/updated for regression safety on these interfaces.
+
+### Explicit deviation from original artifact shape
+1. Original plan requested dedicated files:
+- run_manifest.json
+- hierarchical_candidates.json
+2. Current implementation keeps default artifact surface compact by embedding equivalent data into existing files:
+- benchmark runner: manifest.json[audit]
+- ERF compare: summary.json[audit], results.jsonl[hierarchical candidate fields]
+3. This preserves audit/replay intent while avoiding additional default file proliferation.
+
+### Not yet complete (carry-forward tasks)
+1. Final post-fix handoff artifact generation:
+- create a new follow-on handoff with full chronology + final decisions after reruns.
+2. Full integration test plan items:
+- reviewer-fail -> architect-replan -> reviewer-approve loop tests,
+- clarification-only-on-intent integration checks,
+- flags-off regression integration guard set.
+3. Empirical acceptance closure via fresh benchmark runs:
+- holdout 8-row first, then 32-row comparisons,
+- collect evidence for correctness recovery and schema-heavy pass frequency behavior.
+
+### Next-session restart checklist
+1. Use this handoff section as the source-of-truth delta between plan and current implementation.
+2. Run holdout-first validation in clean terminal (operator-managed):
+- 8-row holdout, then 32-row.
+3. Map outputs to acceptance criteria one-by-one:
+- reviewer guidance quality,
+- clarification routing correctness,
+- schema escalation behavior under pressure,
+- hierarchical correctness improvements,
+- audit/replay completeness in existing artifacts.
+4. Generate final follow-on handoff only after metrics evidence is collected.

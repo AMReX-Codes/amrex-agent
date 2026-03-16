@@ -761,6 +761,38 @@ class AMReXAgentConfig(BaseModel):
         default=False,
         description="Enable clarification subgraph decision checks before input writing."
     )
+    clarification_route_on_intent_missing_only: bool = Field(
+        default=True,
+        description="When true, reviewer routes to clarification only for intent_missing taxonomy."
+    )
+    reviewer_reflexive_guidance_enabled: bool = Field(
+        default=True,
+        description="Enable structured reviewer guidance payloads for architect retries."
+    )
+    reviewer_reason_codes: List[str] = Field(
+        default_factory=lambda: [
+            "intent_missing",
+            "solver_mismatch",
+            "baseline_path_mismatch",
+            "domain_conflict",
+            "schema_unresolved",
+            "resource_conflict",
+            "rate_limit_pressure",
+        ],
+        description="Allowed reviewer taxonomy reason codes for structured replans."
+    )
+    schema_escalation_policy: Literal["lightweight_first", "always_schema", "never_schema"] = Field(
+        default="lightweight_first",
+        description="Schema escalation policy for LLM modification passes."
+    )
+    reviewer_gated_schema_escalation_enabled: bool = Field(
+        default=True,
+        description="Require reviewer guidance to escalate to schema-heavy pass when policy is lightweight_first."
+    )
+    benchmark_manifest_enabled: bool = Field(
+        default=True,
+        description="Emit benchmark run_manifest.json and candidate artifacts when available."
+    )
 
     llm_gate_strategy: Literal[
         "off",

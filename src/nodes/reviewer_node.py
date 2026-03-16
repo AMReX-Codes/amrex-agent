@@ -364,6 +364,14 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     validation_started_at = time.perf_counter()
     validation_result = orchestrator.validate_plan(plan)
     validator_latency_ms = round((time.perf_counter() - validation_started_at) * 1000.0, 3)
+    reviewer_guidance = {
+        "required_solver": getattr(validation_result, "required_solver", None),
+        "forbidden_path_patterns": getattr(validation_result, "forbidden_path_patterns", []) or [],
+        "preferred_path_patterns": getattr(validation_result, "preferred_path_patterns", []) or [],
+        "excluded_cases": getattr(validation_result, "excluded_cases", []) or [],
+        "schema_escalation_required": bool(getattr(validation_result, "schema_escalation_required", False)),
+        "replan_reason_codes": getattr(validation_result, "replan_reason_codes", []) or [],
+    }
 
     # Convert ValidationResult to structured format
     approved = validation_result.mode == "proceed"
@@ -574,6 +582,13 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     if schema_missing:
         logger.error("Schema missing - terminating for manual schema build")
         next_mode = "terminal"
+    elif (
+        "intent_missing" in (getattr(validation_result, "replan_reason_codes", []) or [])
+        and getattr(config, "clarification_route_on_intent_missing_only", False)
+        and getattr(config, "enable_clarification_subgraph", False)
+    ):
+        logger.info("Intent gap detected - routing to clarification")
+        next_mode = "clarification"
     elif approved:
         logger.info("Plan approved - proceeding to execution")
         next_mode = "proceed"
@@ -839,6 +854,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             "suggested_fixes": [v.suggested_fix for v in validation_result.violations if v.suggested_fix],
             "available_schema_params": validation_result.available_schema_params,
             "retry_guidance": retry_guidance,
+            "reviewer_guidance": reviewer_guidance,
             "baseline_dir_rejected": baseline_dir_rejected,
             "plan_rejected_baseline": rejected_baseline,
             "plan_rejected_inputs_file": rejected_inputs,
@@ -879,8 +895,10 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         "review_analysis": {
             "mode": validation_result.mode,
             "violations": [v.__dict__ for v in validation_result.violations],
-            "summary": validation_result.summary
+            "summary": validation_result.summary,
+            "reviewer_guidance": reviewer_guidance,
         },
+        "reviewer_guidance": reviewer_guidance,
         "retry_guidance": retry_guidance,
         "errors_active": errors_current,
         "errors_found": errors_all_found,

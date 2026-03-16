@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
+import os
 import random
 import re
 import subprocess
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -273,6 +276,78 @@ def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     temp_path.replace(path)
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _git_provenance(repo_root: Path) -> dict[str, Any]:
+    sha = None
+    dirty = None
+    try:
+        sha = subprocess.check_output(
+            ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+            text=True,
+        ).strip()
+    except Exception:
+        sha = None
+    try:
+        status = subprocess.check_output(
+            ["git", "-C", str(repo_root), "status", "--porcelain"],
+            text=True,
+        )
+        dirty = bool(status.strip())
+    except Exception:
+        dirty = None
+    return {"sha": sha, "dirty": dirty}
+
+
+def _faiss_provenance_digest(config_path: Path | None) -> dict[str, Any]:
+    if config_path is None or not config_path.exists():
+        return {"path": None, "digest": None}
+    try:
+        payload = json.loads(config_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"path": None, "digest": None}
+    faiss_path = payload.get("faiss_db_path")
+    if not faiss_path:
+        return {"path": None, "digest": None}
+    root = Path(str(faiss_path))
+    if not root.exists():
+        return {"path": str(root), "digest": None}
+    files = sorted(p for p in root.rglob("*") if p.is_file())
+    digest = hashlib.sha256()
+    for file_path in files[:1000]:
+        rel = str(file_path.relative_to(root))
+        stat = file_path.stat()
+        digest.update(rel.encode("utf-8"))
+        digest.update(str(stat.st_size).encode("utf-8"))
+        digest.update(str(int(stat.st_mtime)).encode("utf-8"))
+    return {"path": str(root), "digest": digest.hexdigest(), "file_count_sampled": min(len(files), 1000)}
+
+
+def _extract_hierarchical_candidates(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates = payload.get("case_candidates")
+    if isinstance(candidates, list) and candidates:
+        return [item for item in candidates if isinstance(item, dict)]
+    history = payload.get("workflow_history", [])
+    if not isinstance(history, list):
+        return []
+    for entry in reversed(history):
+        if not isinstance(entry, dict) or entry.get("node") != "architect":
+            continue
+        details = entry.get("details", {})
+        if not isinstance(details, dict):
+            continue
+        raw = details.get("case_candidates")
+        if isinstance(raw, list):
+            return [item for item in raw if isinstance(item, dict)]
+    return []
+
+
 def _run_strategy(
     rows: list[dict[str, Any]],
     strategy: str,
@@ -296,6 +371,7 @@ def _run_strategy(
     console_rows: list[dict[str, Any]] = []
     events: list[dict[str, str]] = []
     explainability_rows: list[dict[str, Any]] = []
+    hierarchical_candidates: list[dict[str, Any]] = []
     failed_rows = 0
     failed_sentinel = "__FAILED_ROW__"
     strategy_start = time.time()
@@ -346,6 +422,17 @@ def _run_strategy(
                 flush_prints=flush_prints,
             )
             console_rows.append({"row_id": row["row_id"], "strategy": strategy, "row_index": row_idx, "attempt": attempt, **console})
+            if strategy == "hierarchical":
+                candidates = _extract_hierarchical_candidates(payload)
+                hierarchical_candidates.append(
+                    {
+                        "row_id": row["row_id"],
+                        "row_index": row_idx,
+                        "attempt": attempt,
+                        "selected_case": extract_selected_case(payload),
+                        "candidates_top_n": candidates[:10],
+                    }
+                )
             row_events = _scan_console_events(console["stdout_tail"], console["stderr_tail"], row_id=row["row_id"], strategy=strategy)
             events.extend(row_events)
             if console["returncode"] != 0 or console["parse_error"] or not console["run_directory"]:
@@ -437,6 +524,7 @@ def _run_strategy(
         "events": events,
         "explainability_rows": explainability_rows,
         "failed_rows": failed_rows,
+        "hierarchical_candidates": hierarchical_candidates,
     }
 
 
@@ -461,6 +549,7 @@ def main() -> int:
     parser.add_argument("--flush-prints", action="store_true", help="Force flush progress prints.")
     parser.add_argument("--no-flush-prints", action="store_true", help="Disable force flush progress prints.")
     args = parser.parse_args()
+    started_at = datetime.now(timezone.utc).isoformat()
     checkpoint_every_row = not args.no_checkpoint_every_row
     flush_prints = not args.no_flush_prints
     if args.flush_prints:
@@ -559,8 +648,60 @@ def main() -> int:
     summary["checkpoint_every_row"] = checkpoint_every_row
     summary["checkpoint_prefix"] = args.checkpoint_prefix
 
+    hierarchical_candidates_rows: list[dict[str, Any]] = []
+    if "hierarchical" in runs_by_strategy:
+        hierarchical_candidates_rows = runs_by_strategy["hierarchical"].get("hierarchical_candidates", [])
+    hierarchical_candidates_by_row = {entry.get("row_id"): entry for entry in hierarchical_candidates_rows}
+    enriched_results_rows: list[dict[str, Any]] = []
+    for row in results_rows:
+        if row.get("strategy") == "hierarchical":
+            candidate_row = hierarchical_candidates_by_row.get(row.get("row_id"), {})
+            enriched_results_rows.append(
+                {
+                    **row,
+                    "hierarchical_selected_case": candidate_row.get("selected_case", ""),
+                    "hierarchical_candidates_top_n": candidate_row.get("candidates_top_n", []),
+                }
+            )
+        else:
+            enriched_results_rows.append(row)
+
+    repo_root = Path(__file__).resolve().parents[2]
+    prompt_checksum = _sha256_file(args.prompt_matrix) if args.prompt_matrix.exists() else None
+    config_checksum = _sha256_file(args.agent_config) if args.agent_config and args.agent_config.exists() else None
+    summary["audit"] = {
+        "started_at": started_at,
+        "finished_at": datetime.now(timezone.utc).isoformat(),
+        "cli": {
+            "argv": sys.argv,
+            "cwd": os.getcwd(),
+        },
+        "inputs": {
+            "prompt_matrix": str(args.prompt_matrix),
+            "prompt_matrix_sha256": prompt_checksum,
+            "agent_config": str(args.agent_config) if args.agent_config else None,
+            "agent_config_sha256": config_checksum,
+        },
+        "git": _git_provenance(repo_root),
+        "faiss_provenance": _faiss_provenance_digest(args.agent_config),
+        "artifacts": {
+            "summary": "summary.json",
+            "results": "results.jsonl",
+            "category_report": "category_report.csv",
+            "failures": "failures.csv",
+            "console_logs": "console_logs.jsonl",
+            "catastrophic_events": "catastrophic_events.jsonl",
+            "explainability_calls": "explainability_calls.jsonl",
+            "explainability_failures": "explainability_failures.csv",
+        },
+        "hierarchical_candidates": {
+            "embedded_in": "results.jsonl",
+            "rows_with_candidates": len(hierarchical_candidates_rows),
+        },
+    }
+
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "results.jsonl").write_text("\n".join(json.dumps(row, sort_keys=True) for row in results_rows) + "\n", encoding="utf-8")
+    (out_dir / "results.jsonl").write_text("\n".join(json.dumps(row, sort_keys=True) for row in enriched_results_rows) + "\n", encoding="utf-8")
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     (out_dir / "console_logs.jsonl").write_text("\n".join(json.dumps(row, sort_keys=True) for row in console_rows) + "\n", encoding="utf-8")
     (out_dir / "catastrophic_events.jsonl").write_text("\n".join(json.dumps(row, sort_keys=True) for row in events) + "\n", encoding="utf-8")

@@ -1494,12 +1494,14 @@ class ArchitectService:
                 excluded_cases = kwargs.get('excluded_cases', [])
                 excluded_inputs_files = kwargs.get('excluded_inputs_files', [])
                 parameter_resolution_feedback = kwargs.get('parameter_resolution_feedback')
+                forced_solver = kwargs.get("forced_solver")
 
                 plan = self.create_plan_rag(
                     user_prompt=user_prompt,
                     excluded_cases=excluded_cases,
                     excluded_inputs_files=excluded_inputs_files,
-                    parameter_resolution_feedback=parameter_resolution_feedback
+                    parameter_resolution_feedback=parameter_resolution_feedback,
+                    forced_solver=forced_solver,
                 )
                 logger.debug("Hierarchical indexing succeeded")
                 plan.baseline = self._normalize_baseline_metadata(
@@ -2519,6 +2521,7 @@ class ArchitectService:
         excluded_cases: list[str] = None,
         excluded_inputs_files: list[str] = None,
         parameter_resolution_feedback: dict[str, Any] = None,
+        forced_solver: str | None = None,
     ) -> SimulationPlan:
         """
         Architect Service: Orchestration Logic: RAG-based plan creation using Architect Service: Solver Selection / Context Retrieval / Baseline Selection / Modification Planning.
@@ -2543,6 +2546,10 @@ class ArchitectService:
         """
         # 1. Select Solver (Architect Service: Solver Selection)
         solver_config, solver_confidence = self.select_solver(user_prompt)
+        if forced_solver and forced_solver in self.code_configs:
+            solver_config = self.code_configs[forced_solver]
+            solver_confidence = 1.0
+            logger.info("[RAG] Forcing solver to reviewer-required value: %s", forced_solver)
         if not solver_config:
             raise ValueError("No suitable solver found")
 
@@ -2678,7 +2685,8 @@ class ArchitectService:
         knowledge_limit: int = 3,
         excluded_cases: list = None,
         excluded_inputs_files: list = None,
-        parameter_resolution_feedback: dict[str, Any] | None = None
+        parameter_resolution_feedback: dict[str, Any] | None = None,
+        forced_solver: str | None = None,
     ) -> SimulationPlan:
         """
         Create complete simulation plan from prompt.
@@ -2714,6 +2722,9 @@ class ArchitectService:
 
         # Extract structured requirements from prompt
         requirements = self._extract_requirements(user_prompt)
+        if forced_solver and forced_solver in self.code_configs:
+            requirements["solver"] = forced_solver
+            requirements["solver_source"] = "reviewer_guidance"
         logger.debug(f"Requirements: {requirements}\n")
 
         # Gather domain knowledge from KB
@@ -2983,6 +2994,11 @@ class ArchitectService:
             tier1_params: list[str],
             tier2_params: list[str],
         ) -> bool:
+            policy = str(getattr(self.config, "schema_escalation_policy", "lightweight_first")).strip().lower()
+            if policy == "never_schema":
+                return False
+            if policy == "always_schema":
+                return True
             if not merged_mods:
                 return True
             mods_set = {param for param, _ in merged_mods}
@@ -2992,6 +3008,18 @@ class ArchitectService:
                     return True
             if len(prompt_text.split()) > 50 and len(merged_mods) < 3:
                 return True
+            return False
+
+        def _schema_escalation_allowed() -> bool:
+            policy = str(getattr(self.config, "schema_escalation_policy", "lightweight_first")).strip().lower()
+            if policy == "never_schema":
+                return False
+            if policy == "always_schema":
+                return True
+            if not bool(getattr(self.config, "reviewer_gated_schema_escalation_enabled", False)):
+                return True
+            if parameter_resolution_feedback:
+                return bool(parameter_resolution_feedback.get("schema_escalation_required", False))
             return False
 
         # Build parameter guidance chunks with tiered fallback for context limits
@@ -3079,7 +3107,7 @@ The following parameters were NOT recognized in a previous attempt:
             merged_mods = merged_pass.get("modifications", [])
 
             used_schema_fallback = False
-            if _needs_schema_fallback(
+            if _schema_escalation_allowed() and _needs_schema_fallback(
                 merged_mods,
                 case_description,
                 tier1_params,

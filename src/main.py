@@ -31,6 +31,8 @@ from src.nodes import (
     runner_node,
     visualization_node,  # Phase 4
 )
+from src.nodes.clarification_handler_node import clarification_handler_node
+from src.nodes.clarification_node import clarification_node
 from src.router_func import (
     route_after_analysis,  # Phase 4
     route_after_reviewer,
@@ -1092,6 +1094,18 @@ def main(args: list[str] | None = None) -> None:
 
 logger = logging.getLogger(__name__)
 
+
+def _route_after_clarification(state: dict[str, Any]) -> str:
+    if state.get("clarification_needed", False):
+        return "clarification_handler"
+    return "input_writer"
+
+
+def _route_after_clarification_handler(state: dict[str, Any]) -> str:
+    if state.get("clarification_needed", False):
+        return "clarification"
+    return "input_writer"
+
 def initialize_state(
     user_requirement: str,
     config: AMReXAgentConfig,
@@ -1175,6 +1189,8 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     workflow.add_node("architect", architect_node)
     workflow.add_node("reviewer", reviewer_node)
     workflow.add_node("input_writer", input_writer_node)
+    workflow.add_node("clarification", clarification_node)
+    workflow.add_node("clarification_handler", clarification_handler_node)
     workflow.add_node("runner", runner_node)
     workflow.add_node("analysis", analysis_node)
     workflow.add_node("visualization", visualization_node)
@@ -1199,8 +1215,26 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
         {
             "input_writer": "input_writer",  # Proceed (validation passed)
             "architect": "architect",         # Retry (validation failed, attempts remain)
+            "clarification": "clarification", # Clarification route for intent gaps
             END: END                          # Fail (max retries or critical error)
         }
+    )
+
+    workflow.add_conditional_edges(
+        "clarification",
+        _route_after_clarification,
+        {
+            "clarification_handler": "clarification_handler",
+            "input_writer": "input_writer",
+        },
+    )
+    workflow.add_conditional_edges(
+        "clarification_handler",
+        _route_after_clarification_handler,
+        {
+            "clarification": "clarification",
+            "input_writer": "input_writer",
+        },
     )
 
     # 4. Linear execution path

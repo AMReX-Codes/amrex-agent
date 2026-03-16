@@ -97,6 +97,57 @@ def _load_data(path: Path) -> dict[str, Any]:
     raise ValueError(f"Unsupported config type: {path}")
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _git_provenance(repo_root: Path) -> dict[str, Any]:
+    sha = None
+    dirty = None
+    try:
+        sha = subprocess.check_output(["git", "-C", str(repo_root), "rev-parse", "HEAD"], text=True).strip()
+    except Exception:
+        sha = None
+    try:
+        status = subprocess.check_output(["git", "-C", str(repo_root), "status", "--porcelain"], text=True)
+        dirty = bool(status.strip())
+    except Exception:
+        dirty = None
+    return {"sha": sha, "dirty": dirty}
+
+
+def _faiss_provenance_digest(config_payload: dict[str, Any]) -> dict[str, Any]:
+    # Search model overrides first, then top-level run args.
+    model_entries = config_payload.get("models") or []
+    for entry in model_entries:
+        overrides = (entry or {}).get("overrides") or {}
+        faiss_path = overrides.get("faiss_db_path")
+        if faiss_path:
+            break
+    else:
+        faiss_path = (config_payload.get("run_args") or {}).get("faiss_db_path")
+    if not faiss_path:
+        return {"path": None, "digest": None}
+
+    root = Path(str(faiss_path))
+    if not root.exists():
+        return {"path": str(root), "digest": None}
+
+    files = sorted(p for p in root.rglob("*") if p.is_file())
+    digest = hashlib.sha256()
+    for file_path in files[:1000]:
+        rel = str(file_path.relative_to(root))
+        stat = file_path.stat()
+        digest.update(rel.encode("utf-8"))
+        digest.update(str(stat.st_size).encode("utf-8"))
+        digest.update(str(int(stat.st_mtime)).encode("utf-8"))
+    return {"path": str(root), "digest": digest.hexdigest(), "file_count_sampled": min(len(files), 1000)}
+
+
 # ===== Case suite runner =====
 
 def validate_case_files(schema_path: Path, cases_dir: Path) -> list[str]:
@@ -1054,6 +1105,7 @@ def _deterministic_env_overrides(controls: dict[str, Any]) -> dict[str, str]:
 
 def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | None) -> dict[str, Any]:
     bench_config = _load_data(config_path)
+    run_started_at = datetime.now(timezone.utc).isoformat()
 
     prompts_raw = bench_config.get("prompts") or []
     if not prompts_raw:
@@ -1191,7 +1243,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 }
             )
 
-            started_at = datetime.now().isoformat()
+            prompt_started_at = datetime.now().isoformat()
             start_time = time.time()
             result_data: dict[str, Any] | None = None
             error = None
@@ -1253,7 +1305,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "analysis_issues": (analysis_report or {}).get("issues"),
                 "run_directory": run_directory,
                 "selected_case": selected_case,
-                "started_at": started_at,
+                "started_at": prompt_started_at,
                 "ended_at": ended_at,
                 "duration_seconds": duration,
                 "exit_code": exit_code,
@@ -1301,6 +1353,27 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
 
                 per_run_payload = sanitize_payload(per_run_payload, config=privacy_config)
             per_run.write_text(json.dumps(per_run_payload, indent=2, default=str))
+
+    if bool(run_args.get("benchmark_manifest_enabled", True)):
+        repo_root = Path(__file__).resolve().parents[1]
+        manifest["audit"] = {
+            "started_at": run_started_at,
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "benchmark_config_sha256": _sha256_file(config_path),
+            "git": _git_provenance(repo_root),
+            "faiss_provenance": _faiss_provenance_digest(bench_config),
+            "determinism": {
+                "seed": determinism_controls["seed"],
+                "replay_fingerprint": determinism_controls["replay_fingerprint"],
+            },
+            "artifacts": {
+                "manifest": "manifest.json",
+                "replay_manifest": "replay_manifest.json",
+                "benchmark_runs": "benchmark_runs.jsonl",
+                "claim_evidence_coverage": "claim_evidence_coverage_matrix.json",
+                "uc_summary_traceability": "uc_summary_traceability.json",
+            },
+        }
 
     if privacy_config is not None:
         from src.utils.privacy import sanitize_payload
