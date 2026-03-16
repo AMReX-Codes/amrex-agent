@@ -40,6 +40,34 @@ def _resolve_erf_repo() -> Path | None:
     return None
 
 
+def _resolve_pelec_repo() -> Path | None:
+    env_path = os.getenv("PELEC_REPO_PATH")
+    if env_path:
+        candidate = Path(env_path)
+        return candidate if candidate.exists() else None
+    candidate = REPO_ROOT.parent / "PeleC"
+    if candidate.exists():
+        return candidate
+    candidate = REPO_ROOT / "PeleC"
+    if candidate.exists():
+        return candidate
+    return None
+
+
+def _resolve_remora_repo() -> Path | None:
+    env_path = os.getenv("REMORA_REPO_PATH")
+    if env_path:
+        candidate = Path(env_path)
+        return candidate if candidate.exists() else None
+    candidate = REPO_ROOT.parent / "REMORA"
+    if candidate.exists():
+        return candidate
+    candidate = REPO_ROOT / "REMORA"
+    if candidate.exists():
+        return candidate
+    return None
+
+
 def _find_run_directory(output_dir: Path) -> Path | None:
     run_dirs = sorted(output_dir.glob("run_*"))
     if run_dirs:
@@ -56,6 +84,154 @@ def _find_workflow_history(output_dir: Path, run_dir: Path | None) -> Path | Non
     if candidates:
         return candidates[-1]
     return None
+
+
+def _extract_required_value(required_assignments: dict[str, object], keys: list[str]) -> str | None:
+    if not isinstance(required_assignments, dict):
+        return None
+    key_set = {k.strip().lower() for k in keys}
+    for key, value in required_assignments.items():
+        if str(key).strip().lower() in key_set:
+            return str(value)
+    return None
+
+
+def _assert_two_phase_solver_contract(
+    *,
+    workflow_history: list[dict],
+    workflow_path: Path,
+    result: subprocess.CompletedProcess[str],
+    parameter_keys: list[str],
+) -> None:
+    runner_indices = [i for i, e in enumerate(workflow_history) if e.get("node") == "runner"]
+    assert len(runner_indices) >= 2, (
+        "Expected at least two runner executions (initial run + repaired rerun).\n"
+        f"workflow_path={workflow_path}\n"
+        f"returncode={result.returncode}\n"
+        f"runner_indices={runner_indices}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    postexec_reviewer_indices = [
+        i
+        for i, e in enumerate(workflow_history)
+        if e.get("node") == "reviewer"
+        and e.get("details", {}).get("review_context") == "post_execution"
+    ]
+    assert postexec_reviewer_indices, (
+        "Expected post-exec reviewer diagnosis before rerun.\n"
+        f"workflow_path={workflow_path}\n"
+    )
+
+    has_postexec_between_runs = any(
+        any(first < r < second for r in postexec_reviewer_indices)
+        for first, second in zip(runner_indices, runner_indices[1:])
+    )
+    assert has_postexec_between_runs, (
+        "Expected a post-exec reviewer diagnosis between runner attempts.\n"
+        f"workflow_path={workflow_path}\n"
+        f"runner_indices={runner_indices}\n"
+        f"postexec_reviewer_indices={postexec_reviewer_indices}\n"
+    )
+
+    intent_retry_indices = [
+        i
+        for i, e in enumerate(workflow_history)
+        if e.get("node") == "reviewer" and e.get("action") == "intent_coverage_retry"
+    ]
+    assert intent_retry_indices, (
+        "Expected pre-execution intent coverage retry before first execution.\n"
+        f"workflow_path={workflow_path}\n"
+    )
+
+    first_runner_idx = runner_indices[0]
+    intent_values = []
+    for idx in intent_retry_indices:
+        if idx >= first_runner_idx:
+            continue
+        required = workflow_history[idx].get("details", {}).get("required_assignments", {}) or {}
+        matched = _extract_required_value(required, parameter_keys)
+        if matched is not None:
+            intent_values.append(matched)
+    assert intent_values, (
+        "Expected intent coverage to require target parameter prior to first runner attempt.\n"
+        f"workflow_path={workflow_path}\n"
+        f"intent_retry_indices={intent_retry_indices}\n"
+        f"parameter_keys={parameter_keys}\n"
+    )
+    intent_value = intent_values[-1]
+
+    postexec_values = []
+    for idx in postexec_reviewer_indices:
+        details = workflow_history[idx].get("details", {}) or {}
+        repair_feedback = details.get("postexec_repair_feedback", {}) or {}
+        required = repair_feedback.get("required_assignments", {}) or {}
+        matched = _extract_required_value(required, parameter_keys)
+        if matched is not None:
+            postexec_values.append(matched)
+    assert postexec_values, (
+        "Expected post-exec reviewer feedback to provide repaired target parameter.\n"
+        f"workflow_path={workflow_path}\n"
+        f"parameter_keys={parameter_keys}\n"
+    )
+    postexec_value = postexec_values[-1]
+    assert postexec_value != intent_value, (
+        "Expected post-exec repair assignment to differ from pre-exec intent assignment.\n"
+        f"workflow_path={workflow_path}\n"
+        f"intent_value={intent_value}\n"
+        f"postexec_value={postexec_value}\n"
+    )
+
+    architect_entries = [
+        (i, e)
+        for i, e in enumerate(workflow_history)
+        if e.get("node") == "architect"
+    ]
+    assert architect_entries, f"No architect entries found. workflow_path={workflow_path}"
+
+    key_set = {k.strip().lower() for k in parameter_keys}
+
+    def _mods_contain_value(entry: dict, expected: str) -> bool:
+        mods = entry.get("details", {}).get("modifications", []) or []
+        for item in mods:
+            if not isinstance(item, (list, tuple)) or len(item) < 2:
+                continue
+            key = str(item[0]).strip().lower()
+            value = str(item[1])
+            if key in key_set and value == expected:
+                return True
+        return False
+
+    assert any(
+        idx < first_runner_idx and _mods_contain_value(entry, intent_value)
+        for idx, entry in architect_entries
+    ), (
+        "Expected architect plan before first run to contain intent-enforced assignment.\n"
+        f"workflow_path={workflow_path}\n"
+        f"intent_value={intent_value}\n"
+    )
+    assert any(
+        any(post_idx < idx for post_idx in postexec_reviewer_indices)
+        and _mods_contain_value(entry, postexec_value)
+        for idx, entry in architect_entries
+    ), (
+        "Expected architect plan after post-exec review to contain repaired assignment.\n"
+        f"workflow_path={workflow_path}\n"
+        f"postexec_value={postexec_value}\n"
+    )
+
+    analysis_entries = [e for e in workflow_history if e.get("node") == "analysis"]
+    assert analysis_entries, f"No analysis entries found. workflow_path={workflow_path}"
+    final_analysis_status = analysis_entries[-1].get("details", {}).get("status")
+    assert final_analysis_status == "success", (
+        "Expected repaired rerun to end with successful analysis.\n"
+        f"workflow_path={workflow_path}\n"
+        f"final_analysis_status={final_analysis_status}\n"
+        f"returncode={result.returncode}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
 
 
 @pytest.mark.e2e
@@ -479,128 +655,129 @@ def test_cli_full_mode_postexec_repair_rerun_converges(tmp_path: Path) -> None:
 
     workflow_history = json.loads(workflow_path.read_text(encoding="utf-8"))
     assert isinstance(workflow_history, list) and workflow_history
+    _assert_two_phase_solver_contract(
+        workflow_history=workflow_history,
+        workflow_path=workflow_path,
+        result=result,
+        parameter_keys=["erf.fixed_dt", "fixed_dt", "dt"],
+    )
 
-    runner_indices = [i for i, e in enumerate(workflow_history) if e.get("node") == "runner"]
-    assert len(runner_indices) >= 2, (
-        "Expected at least two runner executions (initial run + repaired rerun).\n"
-        f"workflow_path={workflow_path}\n"
-        f"returncode={result.returncode}\n"
-        f"runner_indices={runner_indices}\n"
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.use_real_services
+@pytest.mark.requires_solver("PeleC")
+@pytest.mark.requires_repos("PeleC")
+@pytest.mark.requires_schema("PeleC")
+@pytest.mark.requires_indices("faiss")
+def test_cli_full_mode_postexec_repair_rerun_converges_pelec(tmp_path: Path) -> None:
+    if os.getenv("AMREX_AGENT_RUN_SLOW_E2E", "").lower() not in {"1", "true", "yes"}:
+        pytest.skip("Set AMREX_AGENT_RUN_SLOW_E2E=1 to run slow full-mode E2E")
+    if os.getenv("AMREX_AGENT_RUN_MULTI_SOLVER_E2E", "").lower() not in {"1", "true", "yes"}:
+        pytest.skip("Set AMREX_AGENT_RUN_MULTI_SOLVER_E2E=1 to run multi-solver post-exec E2E")
+
+    repo_path = _resolve_pelec_repo()
+    if not repo_path:
+        pytest.skip("PeleC repo not available")
+    baseline_dir = repo_path / "Exec" / "RegTests" / "PMF"
+    if not baseline_dir.exists():
+        pytest.skip("PeleC PMF baseline not available")
+
+    output_dir = tmp_path / "runs_full_mode_repair_converges_pelec"
+    cmd = [
+        sys.executable,
+        "./amrex_agent.py",
+        "--prompt",
+        "Configure PeleC PMF and run only 10 coarse timesteps (max_step = 10). Set amr.cfl = 0.9.",
+        "--output-dir",
+        str(output_dir),
+        "--indexing-strategy",
+        "simple",
+        "--baseline-override",
+        "PeleC/Exec/RegTests/PMF",
+        "--run-mode",
+        "full",
+        "--max-iterations",
+        "6",
+        "--save-workflow",
+    ]
+    env = os.environ.copy()
+    env["PELEC_REPO_PATH"] = str(repo_path)
+
+    result = _run_cli(cmd, env, timeout_seconds=600)
+    run_dir = _find_run_directory(output_dir)
+    workflow_path = _find_workflow_history(output_dir, run_dir)
+    assert workflow_path is not None and workflow_path.exists(), (
+        "workflow_history.json missing for PeleC post-exec rerun convergence test.\n"
+        f"run_dir={run_dir}\n"
         f"stdout:\n{result.stdout}\n"
         f"stderr:\n{result.stderr}"
     )
+    workflow_history = json.loads(workflow_path.read_text(encoding="utf-8"))
+    assert isinstance(workflow_history, list) and workflow_history
+    _assert_two_phase_solver_contract(
+        workflow_history=workflow_history,
+        workflow_path=workflow_path,
+        result=result,
+        parameter_keys=["amr.cfl", "pelec.cfl", "cfl"],
+    )
 
-    postexec_reviewer_indices = [
-        i
-        for i, e in enumerate(workflow_history)
-        if e.get("node") == "reviewer"
-        and e.get("details", {}).get("review_context") == "post_execution"
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.use_real_services
+@pytest.mark.requires_solver("REMORA")
+@pytest.mark.requires_repos("REMORA")
+@pytest.mark.requires_schema("REMORA")
+@pytest.mark.requires_indices("faiss")
+def test_cli_full_mode_postexec_repair_rerun_converges_remora(tmp_path: Path) -> None:
+    if os.getenv("AMREX_AGENT_RUN_SLOW_E2E", "").lower() not in {"1", "true", "yes"}:
+        pytest.skip("Set AMREX_AGENT_RUN_SLOW_E2E=1 to run slow full-mode E2E")
+    if os.getenv("AMREX_AGENT_RUN_MULTI_SOLVER_E2E", "").lower() not in {"1", "true", "yes"}:
+        pytest.skip("Set AMREX_AGENT_RUN_MULTI_SOLVER_E2E=1 to run multi-solver post-exec E2E")
+
+    repo_path = _resolve_remora_repo()
+    if not repo_path:
+        pytest.skip("REMORA repo not available")
+    baseline_dir = repo_path / "Exec" / "Channel_Test"
+    if not baseline_dir.exists():
+        pytest.skip("REMORA Channel_Test baseline not available")
+
+    output_dir = tmp_path / "runs_full_mode_repair_converges_remora"
+    cmd = [
+        sys.executable,
+        "./amrex_agent.py",
+        "--prompt",
+        "Configure REMORA Channel_Test and run only 10 coarse timesteps (max_step = 10). Set remora.fixed_dt = 30.",
+        "--output-dir",
+        str(output_dir),
+        "--indexing-strategy",
+        "simple",
+        "--baseline-override",
+        "REMORA/Exec/Channel_Test",
+        "--run-mode",
+        "full",
+        "--max-iterations",
+        "6",
+        "--save-workflow",
     ]
-    assert postexec_reviewer_indices, (
-        "Expected post-exec reviewer diagnosis before rerun.\n"
-        f"workflow_path={workflow_path}\n"
-    )
+    env = os.environ.copy()
+    env["REMORA_REPO_PATH"] = str(repo_path)
 
-    has_postexec_between_runs = any(
-        any(first < r < second for r in postexec_reviewer_indices)
-        for first, second in zip(runner_indices, runner_indices[1:])
-    )
-    assert has_postexec_between_runs, (
-        "Expected a post-exec reviewer diagnosis between runner attempts.\n"
-        f"workflow_path={workflow_path}\n"
-        f"runner_indices={runner_indices}\n"
-        f"postexec_reviewer_indices={postexec_reviewer_indices}\n"
-    )
-
-    # Require explicit two-phase repair behavior in the same run:
-    # 1) pre-exec intent coverage enforces dt=20
-    # 2) post-exec repair changes that assignment before rerun
-    intent_retry_indices = [
-        i
-        for i, e in enumerate(workflow_history)
-        if e.get("node") == "reviewer" and e.get("action") == "intent_coverage_retry"
-    ]
-    assert intent_retry_indices, (
-        "Expected pre-execution intent coverage retry before first execution.\n"
-        f"workflow_path={workflow_path}\n"
-    )
-
-    first_runner_idx = runner_indices[0]
-    intent_dt_values = []
-    for idx in intent_retry_indices:
-        if idx >= first_runner_idx:
-            continue
-        required = workflow_history[idx].get("details", {}).get("required_assignments", {}) or {}
-        if "erf.fixed_dt" in required:
-            intent_dt_values.append(str(required["erf.fixed_dt"]))
-    assert intent_dt_values, (
-        "Expected intent coverage to require erf.fixed_dt prior to first runner attempt.\n"
-        f"workflow_path={workflow_path}\n"
-        f"intent_retry_indices={intent_retry_indices}\n"
-    )
-    intent_dt_value = intent_dt_values[-1]
-
-    postexec_dt_values = []
-    for idx in postexec_reviewer_indices:
-        details = workflow_history[idx].get("details", {}) or {}
-        repair_feedback = details.get("postexec_repair_feedback", {}) or {}
-        required = repair_feedback.get("required_assignments", {}) or {}
-        if "erf.fixed_dt" in required:
-            postexec_dt_values.append(str(required["erf.fixed_dt"]))
-    assert postexec_dt_values, (
-        "Expected post-exec reviewer feedback to provide erf.fixed_dt repair assignment.\n"
-        f"workflow_path={workflow_path}\n"
-    )
-    postexec_dt_value = postexec_dt_values[-1]
-    assert postexec_dt_value != intent_dt_value, (
-        "Expected post-exec repair assignment to differ from pre-exec intent assignment.\n"
-        f"workflow_path={workflow_path}\n"
-        f"intent_dt_value={intent_dt_value}\n"
-        f"postexec_dt_value={postexec_dt_value}\n"
-    )
-
-    architect_entries = [
-        (i, e)
-        for i, e in enumerate(workflow_history)
-        if e.get("node") == "architect"
-    ]
-    assert architect_entries, f"No architect entries found. workflow_path={workflow_path}"
-
-    has_architect_intent_dt_before_first_run = False
-    has_architect_postexec_dt_after_postexec = False
-    for idx, entry in architect_entries:
-        mods = entry.get("details", {}).get("modifications", []) or []
-        dt_values = [
-            str(item[1])
-            for item in mods
-            if isinstance(item, (list, tuple)) and len(item) >= 2 and str(item[0]) == "erf.fixed_dt"
-        ]
-        if not dt_values:
-            continue
-        if idx < first_runner_idx and intent_dt_value in dt_values:
-            has_architect_intent_dt_before_first_run = True
-        if any(post_idx < idx for post_idx in postexec_reviewer_indices) and postexec_dt_value in dt_values:
-            has_architect_postexec_dt_after_postexec = True
-
-    assert has_architect_intent_dt_before_first_run, (
-        "Expected architect plan before first run to contain intent-enforced erf.fixed_dt assignment.\n"
-        f"workflow_path={workflow_path}\n"
-        f"intent_dt_value={intent_dt_value}\n"
-    )
-    assert has_architect_postexec_dt_after_postexec, (
-        "Expected architect plan after post-exec review to contain repaired erf.fixed_dt assignment.\n"
-        f"workflow_path={workflow_path}\n"
-        f"postexec_dt_value={postexec_dt_value}\n"
-    )
-
-    analysis_entries = [e for e in workflow_history if e.get("node") == "analysis"]
-    assert analysis_entries, f"No analysis entries found. workflow_path={workflow_path}"
-    final_analysis_status = analysis_entries[-1].get("details", {}).get("status")
-    assert final_analysis_status == "success", (
-        "Expected repaired rerun to end with successful analysis.\n"
-        f"workflow_path={workflow_path}\n"
-        f"final_analysis_status={final_analysis_status}\n"
-        f"returncode={result.returncode}\n"
+    result = _run_cli(cmd, env, timeout_seconds=600)
+    run_dir = _find_run_directory(output_dir)
+    workflow_path = _find_workflow_history(output_dir, run_dir)
+    assert workflow_path is not None and workflow_path.exists(), (
+        "workflow_history.json missing for REMORA post-exec rerun convergence test.\n"
+        f"run_dir={run_dir}\n"
         f"stdout:\n{result.stdout}\n"
         f"stderr:\n{result.stderr}"
+    )
+    workflow_history = json.loads(workflow_path.read_text(encoding="utf-8"))
+    assert isinstance(workflow_history, list) and workflow_history
+    _assert_two_phase_solver_contract(
+        workflow_history=workflow_history,
+        workflow_path=workflow_path,
+        result=result,
+        parameter_keys=["remora.fixed_dt", "fixed_dt", "dt"],
     )
