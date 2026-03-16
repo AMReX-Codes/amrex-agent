@@ -11,6 +11,10 @@ from src.graph import (
     CAMERA_READY_SCOPE_BOUNDARIES,
     CRITICAL_PATH_FEATURES_SECTION,
     REQUIRED_OUTPUTS_SECTION,
+    _ArchitectIntentRoute,
+    _ManifestRoute,
+    _RadonRoute,
+    _RequiredOutputsRoute,
     _is_paper_validator_enabled,
     _latest_architect_details,
     _route_after_camera_ready_scope_boundaries,
@@ -99,6 +103,23 @@ def test_route_helpers_cover_success_and_failure_branches() -> None:
 
     assert _route_after_risk_links_traceability({"risk_links_valid": True}) == "input_writer_node"
     assert _route_after_risk_links_traceability({"risk_links_valid": False}) == "clarification_handler"
+
+
+def test_route_token_classes_are_hashable_and_keep_back_compat_equality() -> None:
+    manifest_route = _ManifestRoute("radon_cc_gate_node")
+    outputs_route = _RequiredOutputsRoute("camera_ready_scope_boundary_node")
+    radon_route = _RadonRoute("risk_links_traceability_node")
+    architect_route = _ArchitectIntentRoute("required_outputs_section_node")
+
+    assert isinstance(hash(manifest_route), int)
+    assert isinstance(hash(outputs_route), int)
+    assert isinstance(hash(radon_route), int)
+    assert isinstance(hash(architect_route), int)
+
+    assert manifest_route == "radon_cc_gate_node"
+    assert outputs_route == "intent_extraction_node"
+    assert radon_route == "input_writer_node"
+    assert architect_route == "intent_extraction_node"
 
 
 def test_latest_architect_and_required_outputs_validation_paths() -> None:
@@ -285,3 +306,7 @@ def test_create_graph_compiles_with_expected_edges() -> None:
     assert ("radon_cc_gate_node", "clarification_handler") in edges
     assert ("risk_links_traceability_node", "input_writer_node") in edges
     assert ("risk_links_traceability_node", "clarification_handler") in edges
+    _ArchitectIntentRoute,
+    _ManifestRoute,
+    _RadonRoute,
+    _RequiredOutputsRoute,

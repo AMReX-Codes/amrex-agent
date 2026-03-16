@@ -132,6 +132,8 @@ STABLE_ERROR_REASON_CODES = frozenset(
 class _ManifestRoute(str):
     """Back-compat route token for tests asserting historical routing values."""
 
+    __hash__ = str.__hash__
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "input_writer_node":
             return True
@@ -140,6 +142,8 @@ class _ManifestRoute(str):
 
 class _RequiredOutputsRoute(str):
     """Back-compat route token for historical direct-intent assertions."""
+
+    __hash__ = str.__hash__
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "intent_extraction_node":
@@ -150,6 +154,8 @@ class _RequiredOutputsRoute(str):
 class _RadonRoute(str):
     """Back-compat route token for historical direct-input-writer assertions."""
 
+    __hash__ = str.__hash__
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "input_writer_node":
             return True
@@ -158,6 +164,8 @@ class _RadonRoute(str):
 
 class _ArchitectIntentRoute(str):
     """Route through required-outputs while comparing equal to legacy intent route."""
+
+    __hash__ = str.__hash__
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "intent_extraction_node":

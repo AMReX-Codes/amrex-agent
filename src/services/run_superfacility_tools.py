@@ -1588,8 +1588,14 @@ def monitor_job(
                 if state not in ["RUNNING", "PENDING"]:
                     return state
 
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(
+                "Job poll method=%s job_id=%s outcome=exception error=%s latency_ms=%.3f",
+                method,
+                job_id,
+                exc,
+                (time.perf_counter() - poll_start) * 1000.0,
+            )
 
         time.sleep(poll_interval)
 
