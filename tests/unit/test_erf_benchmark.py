@@ -34,6 +34,31 @@ def test_build_prompt_matrix_rows_is_deterministic() -> None:
     assert rows_a[-1]["wave_id"] == "wave2"
 
 
+def test_build_prompt_matrix_rows_with_physics_waves_uses_catalog_metadata() -> None:
+    paths = [Path("Exec/CanonicalFlows/SquallLine_2D/inputs_ml")]
+    catalog = {
+        ("Exec/CanonicalFlows/SquallLine_2D", "inputs_ml"): {
+            "case_name": "SquallLine_2D",
+            "description": "2D squall line benchmark with moist dynamics.",
+            "physics": ["moist", "atmosphere", "convection"],
+            "difficulty_tier": "hard",
+            "prompt_length_band": "long",
+            "concept_density": "high",
+            "specialized_knowledge": True,
+            "novelty_tier": "config-extension",
+        }
+    }
+    rows = build_prompt_matrix_rows(
+        paths,
+        wave_ids=("wave_phys0", "wave_phys1", "wave_phys2", "wave_phys3"),
+        case_catalog=catalog,
+    )
+    assert [row["wave_id"] for row in rows] == ["wave_phys0", "wave_phys1", "wave_phys2", "wave_phys3"]
+    assert rows[-1]["difficulty_tier"] == "hard"
+    assert rows[-1]["concept_density"] == "high"
+    assert "Prompt complexity target: long." in rows[-1]["prompt_text"]
+
+
 def test_build_splits_reproducible_and_disjoint() -> None:
     row_ids = [f"r{i:03d}" for i in range(20)]
     split_a = build_splits(row_ids, seed=7, holdout_ratio=0.2, paraphrase_ratio=0.3)

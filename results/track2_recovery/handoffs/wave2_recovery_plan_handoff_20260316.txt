@@ -1,0 +1,135 @@
+# Wave 2 Recovery Plan: Reviewer-Reflexive Routing, Clarification Integration, Auditability, and Full Chronology
+
+## Summary
+This plan treats the latest 32-row runs as authoritative pre-fix evidence and implements a general correction loop:
+1. clarification only for true intent gaps,
+2. stronger reviewer-to-architect reflexive correction for correctness failures,
+3. reviewer-gated schema escalation to reduce 429 pressure,
+4. reproducible audit artifacts,
+5. a full chronology (artifacts + operator issues) embedded in the handoff.
+
+Primary evidence:
+- Hierarchical 32-row final: 0.0, 32/32 misses, 6 failed rows.
+- Simple 32-row baseline: 0.53125.
+- Simple retune 8-row smoke: 0.375 vs prior wave_phys0 0.5.
+
+## Authoritative Evidence Set
+1. phys_8cases_32rows_hier (/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/results/track2_recovery/model_sweep/probes/phys_8cases_32rows_hier)
+2. phys_8cases_32rows_simple (/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/results/track2_recovery/model_sweep/probes/phys_8cases_32rows_simple)
+3. phys_8cases_wave_phys0_smoke_weights_retune_20260316 (/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/results/track2_recovery/model_sweep/probes/phys_8cases_wave_phys0_smoke_weights_retune_20260316)
+
+## Full Chronology (Artifacts + Operator Issues)
+
+### 1. Wave 1 large-run context (historical signal)
+1. Early batched restart showed hierarchical wrong-solver drift and gate-stop behavior (hier_non_erf_rows nonzero, gate fail-stop), while simple remained nonzero.
+2. Key historical record: wave1_benchmark_handoff.txt (/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/results/track2_recovery/wave1_benchmark_handoff.txt).
+3. Causal implication then: hierarchical needed routing/candidate correctness controls, not just retry tuning.
+
+### 2. Interventions introduced between waves
+1. Benchmark runner gained artifact-preservation/checkpoint capability and better progress handling.
+2. Retry controls (max_rate_limit_retries, max_unavailable_attempts) and batched restart protocol were adopted.
+3. Handoffs documented split hypotheses:
+- hierarchical pathology: hierarchical_pathology_handoff_20260316.txt (/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/results/track2_recovery/handoffs/hierarchical_pathology_handoff_20260316.txt)
+- simple weight-retune track: weights_retune_handoff_20260316.txt (/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/results/track2_recovery/handoffs/weights_retune_handoff_20260316.txt)
+
+### 3. Current-wave core probes (final measured outcomes)
+1. Simple 32-row baseline (phys_8cases_32rows_simple): 0.53125.
+2. Hierarchical 32-row final (phys_8cases_32rows_hier): 0.0, failed_rows=6, 32/32 misses.
+3. Simple retune 8-row smoke (phys_8cases_wave_phys0_smoke_weights_retune_20260316): 0.375 (regression from prior wave_phys0 0.5).
+4. Wave_phys0 row-level delta on retune:
+- regressions: abl_neutral, scalar_adv_diff
+- improvement: couette_poiseuille
+
+### 4. Operator/environment issues that materially affected interpretation
+1. High 429 concentration and occasional llm_unavailable attempts occurred during runs.
+2. Console warning/error counters were mostly token-derived severity events and not equivalent to hard run crashes.
+3. Session interruption/context issues (foreground/background codex process handling and /tmp command-context quirks) were observed but did not invalidate final artifact files.
+4. Conclusion: rate-limit pressure is real and should be mitigated, but does not explain away hierarchical correctness collapse.
+
+### 5. What is proven vs not proven
+1. Proven:
+- hierarchical failure is systemic (not random),
+- simple retune profile regressed on smoke.
+
+2. Not proven:
+- that any weight-only profile can recover hierarchical without correctness/routing code fixes,
+- that schema-heavy pass frequency is always necessary for good outcomes under load.
+
+### 6. Decision log (locked for this wave)
+1. Freeze retune config as negative evidence (no more pre-fix budget on that profile).
+2. Stop additional pre-fix benchmark expansion.
+3. Move to code-level fixes, then evaluate on holdout-first protocol.
+
+## Implementation Plan
+
+### 1. Reviewer failure taxonomy + structured reflexive guidance
+1. Add generic reason codes in base config: intent_missing, solver_mismatch, baseline_path_mismatch, domain_conflict, schema_unresolved, resource_conflict, rate_limit_pressure.
+2. Extend reviewer result payload with constraints:
+   required_solver, forbidden_path_patterns, preferred_path_patterns, excluded_cases, schema_escalation_required, replan_reason_codes.
+3. Architect consumes this payload before reselection/replan.
+
+### 2. Clarification vs correctness retry routing
+1. Clarification only when taxonomy includes intent_missing.
+2. All correctness failures route reviewer -> architect retry with constraints.
+3. Implement in current runtime graph path (create_amrex_agent_graph) via router changes; no immediate graph-builder migration required.
+
+### 3. Reviewer-gated schema escalation (429 mitigation)
+1. Default policy: lightweight prompt/heuristic parameter pass first.
+2. Full schema-heavy pass only when reviewer flags necessity (schema_escalation_required=true) or unresolved/unsafe parameters persist.
+3. Forward adaptation of existing logic (no rollback): reuse _needs_schema_fallback decision space and current input-writer schema handling.
+
+### 4. General guardrails + solver-config overrides
+1. Keep policy defaults in base config.
+2. Keep solver-specific metadata in *_config.py.
+3. Reviewer checks solver/path/intent consistency generically, then emits constraints.
+
+### 5. Auditability hardening
+1. Add run_manifest.json in each probe root: CLI, checksums (prompt/config), git SHA/dirty, FAISS provenance digest, timestamps.
+2. Add per-row hierarchical_candidates.json top-N artifact with ranking breakdown.
+3. Keep compact workflow history pointer to detailed artifacts.
+
+### 6. Final handoff artifact generation
+1. Produce a new handoff file containing the chronology above plus implementation tasks, acceptance criteria, and rollout decisions.
+2. Explicitly include "why 100-row-era context still matters" and "why extra pre-fix runs were not expanded."
+
+## Public API / Interface Changes
+1. ValidationResult gains structured guidance fields.
+2. Reviewer node state adds taxonomy and schema-escalation signals.
+3. Architect accepts reviewer-guidance contract for constrained replans.
+4. New config flags:
+   reviewer_reflexive_guidance_enabled, clarification_route_on_intent_missing_only, schema_escalation_policy, reviewer_gated_schema_escalation_enabled, benchmark_manifest_enabled.
+
+## Test Plan
+
+### Unit
+1. Taxonomy classification correctness.
+2. Router behavior for intent_missing vs non-intent failures.
+3. Architect honor of reviewer constraints.
+4. Schema escalation gating logic.
+5. Manifest/artifact integrity checks.
+
+### Integration
+1. Reviewer-fail -> architect-replan -> reviewer-approve loop.
+2. Clarification path only on intent-missing.
+3. Benchmark outputs include manifest + per-row candidate artifacts.
+4. Flags-off regression guard for existing behavior.
+
+## Acceptance Criteria
+1. Reviewer emits actionable structured guidance and improves replan correctness.
+2. Clarification is only used for intent gaps.
+3. Schema-heavy pass frequency drops under load without safety regression.
+4. Hierarchical no longer silently accepts cross-solver/off-intent baselines in benchmark mode.
+5. Each benchmark run is auditable/replayable from manifest + artifacts.
+6. Final handoff includes the full chronology and explicit decisions.
+
+## Rollout
+1. Enable behind flags in benchmark mode first.
+2. Post-fix run sequence: holdout 8-row first, then 32-row comparisons.
+3. Promote defaults only after measurable improvement and stable taxonomy behavior.
+
+## Assumptions and Defaults
+1. Latest 32-row probes are authoritative for wave-level signal.
+2. 8-row retune smoke is supporting regression evidence.
+3. Forward adaptation (not rollback) for schema policy.
+4. Clarification and reviewer reflexive guidance remain separate subsystems by design.
+5. Solver-specific semantics stay in *_config.py; policy framework lives in base config.

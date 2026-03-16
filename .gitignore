@@ -374,3 +374,9 @@ Thumbs.db
 # Project: PRD working docs (local-only)
 # ============================================================================
 docs/PRD/*.md
+
+# ============================================================================
+# Project: Benchmark Dry-Run Artifacts
+# ============================================================================
+benchmark/erf_llm_compare/dryrun_3row.jsonl
+results/

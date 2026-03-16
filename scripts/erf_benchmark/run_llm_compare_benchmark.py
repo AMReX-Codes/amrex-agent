@@ -182,6 +182,8 @@ def _run_one(
     save_workflow: bool = False,
     save_transcript: bool = False,
     save_log: bool = False,
+    max_rate_limit_retries: int = 1,
+    flush_prints: bool = True,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any] | None, dict[str, Any]]:
     cmd = [
         "python", "amrex_agent.py",
@@ -206,7 +208,6 @@ def _run_one(
     completed: subprocess.CompletedProcess[str] | None = None
     retry_delay = 2.0
     rate_limit_retries = 0
-    max_rate_limit_retries = 5
     while True:
         completed = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if rate_limit_retries >= max_rate_limit_retries:
@@ -214,7 +215,10 @@ def _run_one(
         if not _is_rate_limited_response(completed.stdout, completed.stderr):
             break
         rate_limit_retries += 1
-        print(f"[{strategy}] retrying after 429/rate-limit response; retry={rate_limit_retries} wait={retry_delay:.2f}s")
+        print(
+            f"[{strategy}] retrying after 429/rate-limit response; retry={rate_limit_retries} wait={retry_delay:.2f}s",
+            flush=flush_prints,
+        )
         time.sleep(retry_delay)
         retry_delay = min(60.0, (retry_delay * 2.0) + random.uniform(0.0, 1.0))
 
@@ -254,6 +258,21 @@ def _write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) ->
         writer.writerows(rows)
 
 
+def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = "\n".join(json.dumps(row, sort_keys=True) for row in rows)
+    if text:
+        text += "\n"
+    path.write_text(text, encoding="utf-8")
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(path.suffix + ".tmp")
+    temp_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temp_path.replace(path)
+
+
 def _run_strategy(
     rows: list[dict[str, Any]],
     strategy: str,
@@ -265,6 +284,12 @@ def _run_strategy(
     save_workflow: bool = False,
     save_transcript: bool = False,
     save_log: bool = False,
+    max_rate_limit_retries: int = 1,
+    max_unavailable_attempts: int = 1,
+    checkpoint_root: Path | None = None,
+    checkpoint_prefix: str = "partial",
+    checkpoint_every_row: bool = True,
+    flush_prints: bool = True,
 ) -> dict[str, Any]:
     predictions: dict[str, dict[str, str]] = {}
     evidences: list[dict[str, Any]] = []
@@ -273,7 +298,36 @@ def _run_strategy(
     explainability_rows: list[dict[str, Any]] = []
     failed_rows = 0
     failed_sentinel = "__FAILED_ROW__"
-    max_unavailable_attempts = 3
+    strategy_start = time.time()
+
+    def _checkpoint() -> None:
+        if checkpoint_root is None:
+            return
+        completed_rows = [row for row in rows if row["row_id"] in predictions]
+        partial_scored = (
+            score_rows(completed_rows, predictions)
+            if completed_rows
+            else {"rows": [], "weighted_score": 0.0}
+        )
+        prefix = f"{checkpoint_prefix}_{strategy}"
+        _write_jsonl(checkpoint_root / f"{prefix}_results.jsonl", partial_scored["rows"])
+        _write_jsonl(checkpoint_root / f"{prefix}_console_logs.jsonl", console_rows)
+        _write_jsonl(checkpoint_root / f"{prefix}_catastrophic_events.jsonl", events)
+        _write_jsonl(checkpoint_root / f"{prefix}_explainability_calls.jsonl", explainability_rows)
+        _write_json_atomic(
+            checkpoint_root / f"{prefix}_summary.json",
+            {
+                "strategy": strategy,
+                "rows_completed": len(completed_rows),
+                "rows_total": len(rows),
+                "weighted_score": partial_scored["weighted_score"],
+                "failed_rows": failed_rows,
+                "elapsed_seconds": round(time.time() - strategy_start, 3),
+                "max_rate_limit_retries": max_rate_limit_retries,
+                "max_unavailable_attempts": max_unavailable_attempts,
+            },
+        )
+
     for row_idx, row in enumerate(rows):
         attempt = 0
         while True:
@@ -288,6 +342,8 @@ def _run_strategy(
                 save_workflow=save_workflow,
                 save_transcript=save_transcript,
                 save_log=save_log,
+                max_rate_limit_retries=max_rate_limit_retries,
+                flush_prints=flush_prints,
             )
             console_rows.append({"row_id": row["row_id"], "strategy": strategy, "row_index": row_idx, "attempt": attempt, **console})
             row_events = _scan_console_events(console["stdout_tail"], console["stderr_tail"], row_id=row["row_id"], strategy=strategy)
@@ -314,7 +370,11 @@ def _run_strategy(
                         "attempt": str(attempt),
                     }
                 )
-                print(f"[{strategy}] llm_unavailable row_index={row_idx} prompt_id={prompt_id} attempt={attempt}/{max_unavailable_attempts}")
+                print(
+                    f"[{strategy}] llm_unavailable row_index={row_idx} prompt_id={prompt_id} "
+                    f"attempt={attempt}/{max_unavailable_attempts}",
+                    flush=flush_prints,
+                )
                 if attempt < max_unavailable_attempts:
                     continue
                 failed_rows += 1
@@ -359,8 +419,16 @@ def _run_strategy(
                 )
             )
             break
-        print(f"[{strategy}] row={row['row_id']} warnings={sum(1 for e in events if e['severity']=='warning')} errors={sum(1 for e in events if e['severity']!='warning')}")
+        print(
+            f"[{strategy}] row={row['row_id']} warnings={sum(1 for e in events if e['severity']=='warning')} "
+            f"errors={sum(1 for e in events if e['severity']!='warning')}",
+            flush=flush_prints,
+        )
+        if checkpoint_every_row:
+            _checkpoint()
     scored = score_rows(rows, predictions)
+    if checkpoint_every_row:
+        _checkpoint()
     return {
         "strategy": strategy,
         "scored": scored,
@@ -386,7 +454,17 @@ def main() -> int:
     parser.add_argument("--save-workflow", action="store_true", help="Forward --save-workflow to amrex_agent runs.")
     parser.add_argument("--save-transcript", action="store_true", help="Forward --save-transcript to amrex_agent runs.")
     parser.add_argument("--save-log", action="store_true", help="Forward --save-log to amrex_agent runs.")
+    parser.add_argument("--max-rate-limit-retries", type=int, default=1, help="Max retries for 429/rate-limit responses.")
+    parser.add_argument("--max-unavailable-attempts", type=int, default=1, help="Max attempts when llm_unavailable is detected.")
+    parser.add_argument("--checkpoint-prefix", type=str, default="partial", help="Prefix for incremental checkpoint files.")
+    parser.add_argument("--no-checkpoint-every-row", action="store_true", help="Disable per-row checkpoint writes.")
+    parser.add_argument("--flush-prints", action="store_true", help="Force flush progress prints.")
+    parser.add_argument("--no-flush-prints", action="store_true", help="Disable force flush progress prints.")
     args = parser.parse_args()
+    checkpoint_every_row = not args.no_checkpoint_every_row
+    flush_prints = not args.no_flush_prints
+    if args.flush_prints:
+        flush_prints = True
 
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     out_dir = args.out_dir or Path(f"benchmark/erf_llm_compare/runs/{run_id}_benchmark")
@@ -420,6 +498,12 @@ def main() -> int:
             save_workflow=args.save_workflow,
             save_transcript=args.save_transcript,
             save_log=args.save_log,
+            max_rate_limit_retries=max(0, args.max_rate_limit_retries),
+            max_unavailable_attempts=max(1, args.max_unavailable_attempts),
+            checkpoint_root=out_dir,
+            checkpoint_prefix=args.checkpoint_prefix,
+            checkpoint_every_row=checkpoint_every_row,
+            flush_prints=flush_prints,
         )
         for strategy in selected_strategies
     ]
@@ -470,6 +554,10 @@ def main() -> int:
     # The 20-row non_erf_sanity.jsonl file exists and is reserved for that pass.
     summary["non_erf_sanity_weighted_score"] = summary["holdout_weighted_score"]
     summary.update(summarize_explainability(explainability_rows, threshold=args.explainability_threshold))
+    summary["max_rate_limit_retries"] = max(0, args.max_rate_limit_retries)
+    summary["max_unavailable_attempts"] = max(1, args.max_unavailable_attempts)
+    summary["checkpoint_every_row"] = checkpoint_every_row
+    summary["checkpoint_prefix"] = args.checkpoint_prefix
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "results.jsonl").write_text("\n".join(json.dumps(row, sort_keys=True) for row in results_rows) + "\n", encoding="utf-8")
