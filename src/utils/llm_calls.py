@@ -83,13 +83,16 @@ def call_llm(
                 base_client = unwrap_llm_client(client)
                 instr_client = instructor.from_openai(base_client)
                 instr_client = wrap_llm_client(instr_client, config or {})
-                return instr_client.chat.completions.create(
-                    model=spec.model,
-                    response_model=spec.response_model,
-                    messages=spec.messages,
-                    temperature=spec.temperature,
-                    max_retries=spec.max_retries,
-                )
+                create_kwargs: dict[str, Any] = {
+                    "model": spec.model,
+                    "response_model": spec.response_model,
+                    "messages": spec.messages,
+                    "temperature": spec.temperature,
+                }
+                # Instructor/tenacity expects an int or Retrying object; avoid passing None.
+                if spec.max_retries is not None:
+                    create_kwargs["max_retries"] = spec.max_retries
+                return instr_client.chat.completions.create(**create_kwargs)
             except (ImportError, ModuleNotFoundError):
                 pass
 
