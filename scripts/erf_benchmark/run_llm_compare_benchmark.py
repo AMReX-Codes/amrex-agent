@@ -140,20 +140,58 @@ def _extract_json_payload(text: str) -> dict[str, Any]:
         pass
 
     decoder = json.JSONDecoder()
-    # Walk forward and retain the last valid object found.
-    last_obj: dict[str, Any] | None = None
+    candidates: list[tuple[int, dict[str, Any]]] = []
     for idx, ch in enumerate(content):
         if ch != "{":
             continue
         try:
-            obj, _end = decoder.raw_decode(content[idx:])
+            obj, end = decoder.raw_decode(content[idx:])
         except json.JSONDecodeError:
             continue
         if isinstance(obj, dict):
-            last_obj = obj
-    if last_obj is None:
+            candidates.append((end, obj))
+    if not candidates:
         raise json.JSONDecodeError("No JSON object found in stdout", content, 0)
-    return last_obj
+
+    def _score(candidate: dict[str, Any], parsed_len: int) -> tuple[int, int]:
+        key_bonus = 0
+        for key, weight in (
+            ("workflow_history", 8),
+            ("run_directory", 6),
+            ("run_dir", 6),
+            ("selected_case", 4),
+            ("modifications", 3),
+            ("metrics", 2),
+            ("history", 1),
+        ):
+            if key in candidate:
+                key_bonus += weight
+        return key_bonus, parsed_len
+
+    best = max(candidates, key=lambda item: _score(item[1], item[0]))
+    return best[1]
+
+
+def _infer_run_directory(payload: dict[str, Any], stdout: str, stderr: str) -> str:
+    for key in ("run_directory", "run_dir", "output_dir"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+
+    output_text = "\n".join([stdout or "", stderr or ""])
+    patterns = [
+        r"Workflow history saved to\s+(\S+/workflow_history(?:_[0-9_]+)?\.json)",
+        r"Files written to:\s*(\S+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, output_text)
+        if not match:
+            continue
+        path = match.group(1)
+        if path.endswith(".json"):
+            return str(Path(path).parent)
+        return path
+    return ""
 
 
 def _scan_console_events(stdout: str, stderr: str, *, row_id: str, strategy: str) -> list[dict[str, str]]:
@@ -232,7 +270,8 @@ def _run_one(
         payload = _extract_json_payload(completed.stdout) if completed.stdout.strip() else {}
     except json.JSONDecodeError as exc:
         parse_error = str(exc)
-    run_dir = Path(payload.get("run_directory", "")) if payload.get("run_directory") else None
+    run_dir_text = _infer_run_directory(payload, completed.stdout, completed.stderr)
+    run_dir = Path(run_dir_text) if run_dir_text else None
     metrics = _load_jsonl(run_dir / "metrics.jsonl") if run_dir and (run_dir / "metrics.jsonl").exists() else []
     summary = next((e.get("data") for e in metrics if e.get("type") == "workflow_summary"), None)
     console = {
@@ -436,7 +475,7 @@ def _run_strategy(
                 )
             row_events = _scan_console_events(console["stdout_tail"], console["stderr_tail"], row_id=row["row_id"], strategy=strategy)
             events.extend(row_events)
-            if console["returncode"] != 0 or console["parse_error"] or not console["run_directory"]:
+            if console["returncode"] != 0 or console["parse_error"]:
                 events.append({"row_id": row["row_id"], "strategy": strategy, "severity": "catastrophic", "reason": "cli_execution_failure"})
                 if not continue_on_catastrophic:
                     raise RuntimeError(f"Abort: catastrophic execution failure (strategy={strategy}, row_id={row['row_id']})")
