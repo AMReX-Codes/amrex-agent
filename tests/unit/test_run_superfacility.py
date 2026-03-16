@@ -339,6 +339,21 @@ def test_monitor_proxies_to_monitor_job(tmp_path, monkeypatch):
     assert runner.monitor("job123", method="api") == "COMPLETED"
 
 
+def test_monitor_scales_max_polls_from_walltime(tmp_path, monkeypatch):
+    captured = {}
+
+    def _fake_monitor_job(**kwargs):
+        captured.update(kwargs)
+        return "COMPLETED"
+
+    monkeypatch.setattr("src.services.run_superfacility.monitor_job", _fake_monitor_job)
+    config = SimpleNamespace(default_solver="PeleC", output_dir=tmp_path, superfacility_account="acct")
+    runner = SuperfacilityRunner(config)
+
+    assert runner.monitor("job123", method="api", poll_interval=10, max_polls=30, walltime="01:00:00") == "COMPLETED"
+    assert captured["max_polls"] > 30
+
+
 def test_find_or_compile_returns_existing_exe_without_compile(tmp_path):
     case_dir = tmp_path / "case"
     case_dir.mkdir()
@@ -548,6 +563,32 @@ def test_run_simulation_combines_setup_submit_and_monitor(tmp_path, monkeypatch)
     result = runner.run_simulation(case_dir=tmp_path / "case", monitor_job_flag=True)
     assert result["job_id"] == "42"
     assert result["final_state"] == "COMPLETED"
+
+
+def test_run_simulation_passes_walltime_to_monitor(tmp_path, monkeypatch):
+    config = SimpleNamespace(default_solver="PeleC", output_dir=tmp_path, superfacility_account="acct")
+    runner = SuperfacilityRunner(config)
+    monitor_calls = []
+
+    monkeypatch.setattr(
+        runner,
+        "setup_job",
+        lambda **kwargs: {"run_dir": str(tmp_path / "run"), "files": {}, "inputs": "inputs", "executable": "x.ex"},
+    )
+    monkeypatch.setattr(
+        runner,
+        "submit",
+        lambda **kwargs: {"job_id": "42", "method": "api", "job_status": "queued"},
+    )
+    monkeypatch.setattr(
+        runner,
+        "monitor",
+        lambda **kwargs: monitor_calls.append(kwargs) or "COMPLETED",
+    )
+
+    result = runner.run_simulation(case_dir=tmp_path / "case", monitor_job_flag=True, walltime="00:42:00")
+    assert result["final_state"] == "COMPLETED"
+    assert monitor_calls and monitor_calls[0]["walltime"] == "00:42:00"
 
 
 def test_run_simulation_requires_default_solver_when_base_name_missing(tmp_path):

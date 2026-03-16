@@ -1511,7 +1511,7 @@ class _LLMRetryCompletions:
                 return response
             except Exception as exc:
                 status_code = _get_http_status(exc)
-                retryable = status_code in self._retryable_statuses
+                retryable = _is_retryable_exception(exc, self._retryable_statuses)
                 if not retryable:
                     raise
                 saw_transient_failure = True
@@ -1537,6 +1537,40 @@ class _LLMRetryCompletions:
                     exc,
                 )
                 time.sleep(delay)
+
+
+def _is_retryable_exception(error: Exception, retryable_statuses: set[int]) -> bool:
+    status_code = _get_http_status(error)
+    if status_code in retryable_statuses:
+        return True
+
+    if getattr(error, "should_retry", False):
+        return True
+
+    if isinstance(error, (TimeoutError, ConnectionError)):
+        return True
+
+    err_name = error.__class__.__name__.lower()
+    if "timeout" in err_name or "connection" in err_name:
+        return True
+
+    cause = getattr(error, "__cause__", None)
+    if isinstance(cause, (TimeoutError, ConnectionError)):
+        return True
+
+    text = str(error).lower()
+    transient_hints = (
+        "timeout",
+        "timed out",
+        "connection error",
+        "connection reset",
+        "connection aborted",
+        "temporarily unavailable",
+        "service unavailable",
+        "too many requests",
+        "rate limit",
+    )
+    return any(hint in text for hint in transient_hints)
 
 
 def _get_http_status(error: Exception) -> int | None:

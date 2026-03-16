@@ -6,6 +6,7 @@ This is ONE way to run - alternatives: run_local.py, run_container.py.
 """
 
 import logging
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,35 @@ from src.services.run_superfacility_tools import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _walltime_to_seconds(walltime: str | None) -> int | None:
+    if not walltime:
+        return None
+    parts = str(walltime).split(":")
+    if len(parts) != 3:
+        return None
+    try:
+        hours, minutes, seconds = [int(value) for value in parts]
+    except ValueError:
+        return None
+    return max(0, hours) * 3600 + max(0, minutes) * 60 + max(0, seconds)
+
+
+def _monitor_max_polls_for_walltime(
+    walltime: str | None,
+    poll_interval: int,
+    default_max_polls: int,
+) -> int:
+    if poll_interval <= 0:
+        return default_max_polls
+    walltime_seconds = _walltime_to_seconds(walltime)
+    if walltime_seconds is None:
+        return default_max_polls
+    grace_polls = 6
+    required = int(math.ceil(walltime_seconds / poll_interval)) + grace_polls
+    return max(default_max_polls, required)
+
 
 class SuperfacilityRunner:
     """Execute AMReX codes on NERSC via Superfacility API.
@@ -670,7 +700,8 @@ class SuperfacilityRunner:
                 job_id: str,
                 method: str = 'sbatch',
                 poll_interval: int = 10,
-                max_polls: int = 30) -> str:
+                max_polls: int = 30,
+                walltime: str | None = None) -> str:
         """
         Monitor job until completion or timeout.
 
@@ -686,6 +717,8 @@ class SuperfacilityRunner:
             Seconds between checks.
         max_polls : int, optional
             Maximum number of checks.
+        walltime : str or None, optional
+            HH:MM:SS requested walltime used to scale max polls.
 
         Returns
         -------
@@ -693,12 +726,17 @@ class SuperfacilityRunner:
             Final job state.
         """
         logger.debug(f"\n[INFO] Monitoring job {job_id} (method: {method})...")
+        resolved_max_polls = _monitor_max_polls_for_walltime(
+            walltime=walltime,
+            poll_interval=poll_interval,
+            default_max_polls=max_polls,
+        )
 
         state = monitor_job(
             job_id=job_id,
             method=method,
             poll_interval=poll_interval,
-            max_polls=max_polls,
+            max_polls=resolved_max_polls,
             config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 
@@ -763,7 +801,8 @@ class SuperfacilityRunner:
         if monitor_job_flag:
             final_state = self.monitor(
                 job_id=job_result['job_id'],
-                method=job_result['method']
+                method=job_result['method'],
+                walltime=walltime,
             )
             job_result['final_state'] = final_state
 
