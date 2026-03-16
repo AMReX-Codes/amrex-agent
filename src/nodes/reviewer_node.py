@@ -14,11 +14,102 @@ from src.models import GraphState
 from src.models.state_transitions import (
     skip_review,
 )
+from src.services.intent_coverage_audit import IntentCoverageAuditService
 from src.services.reviewer import ReviewerOrchestrator
 from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
 _ERROR_TAXONOMY_VERSION = "v1"
+
+
+def _default_postexec_feasibility_payload(analysis_report: dict[str, Any] | None) -> dict[str, Any]:
+    report = analysis_report if isinstance(analysis_report, dict) else {}
+    status = str(report.get("status") or "unknown")
+    issues = report.get("issues") or []
+    diagnosis = f"Post-execution analysis status={status}"
+    if isinstance(issues, list) and issues:
+        diagnosis = f"{diagnosis}; issues: {', '.join(str(i) for i in issues[:3])}"
+    return {
+        "feasible": False,
+        "intent_consistent": False,
+        "diagnosis": diagnosis,
+        "guidance": {},
+    }
+
+
+def _run_postexec_feasibility_review_llm(
+    state: GraphState,
+    plan: dict[str, Any],
+    analysis_report: dict[str, Any] | None,
+    config: Any,
+) -> dict[str, Any]:
+    payload = _default_postexec_feasibility_payload(analysis_report)
+    if getattr(config, "reviewer_feasibility_llm_enabled", True) is not True:
+        return payload
+
+    user_prompt = (
+        state.get("prompt")
+        or state.get("user_requirement")
+        or state.get("user_prompt")
+        or ""
+    )
+    if not isinstance(user_prompt, str) or not user_prompt.strip():
+        payload["diagnosis"] = "feasibility_assessment_unavailable: missing_user_prompt"
+        return payload
+
+    plan_summary = {
+        "selected_case": plan.get("selected_case"),
+        "selected_solver": (plan.get("baseline") or {}).get("code_name") or (plan.get("baseline") or {}).get("code"),
+        "modifications": plan.get("modifications", []),
+    }
+    analysis = analysis_report if isinstance(analysis_report, dict) else {}
+
+    prompt = (
+        "You are a reviewer for AMReX simulation planning.\n"
+        "Assess whether the current plan remains feasible and intent-consistent after execution diagnostics.\n"
+        "Return JSON with keys: feasible (bool), intent_consistent (bool), diagnosis (string), guidance (object).\n\n"
+        f"USER_PROMPT:\n{user_prompt}\n\n"
+        f"PLAN_SUMMARY:\n{plan_summary}\n\n"
+        f"ANALYSIS_DIAGNOSIS:\n{analysis}\n"
+    )
+
+    try:
+        from pydantic import BaseModel, Field
+
+        from src.config import get_llm_client
+        from src.utils.llm_calls import LLMCallSpec, call_llm
+
+        class FeasibilityReview(BaseModel):
+            feasible: bool
+            intent_consistent: bool
+            diagnosis: str
+            guidance: dict[str, Any] = Field(default_factory=dict)
+
+        llm_client = get_llm_client(config)
+        spec = LLMCallSpec(
+            model=config.llm_model,
+            response_model=FeasibilityReview,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_retries=2,
+            purpose="reviewer_feasibility",
+            template_name="reviewer_feasibility",
+            template_source="reviewer.post_execution",
+        )
+        result = call_llm(llm_client, spec, config=config)
+        if hasattr(result, "feasible"):
+            guidance = result.guidance if isinstance(result.guidance, dict) else {}
+            return {
+                "feasible": bool(result.feasible),
+                "intent_consistent": bool(result.intent_consistent),
+                "diagnosis": str(result.diagnosis or ""),
+                "guidance": guidance,
+            }
+    except Exception as exc:
+        logger.debug(f"Post-exec feasibility LLM unavailable: {exc}")
+
+    payload["diagnosis"] = "feasibility_assessment_unavailable"
+    return payload
 
 
 def _normalize_error_taxonomy(payload: dict[str, Any]) -> dict[str, Any]:
@@ -138,6 +229,200 @@ def _load_baseline_inputs_content(plan: dict[str, Any]) -> dict[str, Any]:
         return {}
 
 
+def _resolve_schema_backed_intent_assignments(
+    *,
+    unresolved_requests: list[tuple[str, Any]],
+    available_schema_params: list[str],
+    plan: dict[str, Any],
+    config: Any,
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]], dict[str, Any]]:
+    """Map unresolved prompt assignments to schema-backed params when possible."""
+    required_assignments: dict[str, Any] = {}
+    meta: dict[str, dict[str, Any]] = {}
+    available_set = set(available_schema_params or [])
+    remap_mapping: dict[str, str] = {}
+    suggested_params: dict[str, Any] = {}
+    baseline_param_keys: set[str] = set()
+
+    if not unresolved_requests:
+        return required_assignments, meta, {"remap_mapping": remap_mapping, "suggested_params": suggested_params}
+
+    def _infer_value_kind(value: Any) -> str:
+        text = str(value).strip().lower()
+        if text in {"1", "0", "true", "false", "yes", "no", "on", "off"}:
+            return "bool"
+        try:
+            float(text)
+            return "number"
+        except Exception:
+            return "text"
+
+    def _is_bool_like_key(candidate_key: str) -> bool:
+        key = str(candidate_key or "").strip().lower().replace(".", "_")
+        bool_tokens = {
+            "on",
+            "off",
+            "enable",
+            "enabled",
+            "disable",
+            "disabled",
+            "use",
+            "force",
+            "compute",
+            "regrid",
+            "restart",
+            "checkpoint",
+            "plotfile",
+            "insitu",
+            "do",
+            "is",
+        }
+        parts = [t for t in key.split("_") if t]
+        return any(token in bool_tokens for token in parts)
+
+    def _score_candidate(requested_key: str, candidate_key: str) -> int:
+        req_norm = str(requested_key or "").strip().lower().replace("-", "_")
+        cand_norm = str(candidate_key or "").strip().lower().replace("-", "_")
+        if not req_norm or not cand_norm:
+            return 0
+        req_tokens = [t for t in req_norm.replace(".", "_").split("_") if t]
+        cand_tokens = [t for t in cand_norm.replace(".", "_").split("_") if t]
+        score = 0
+        if cand_norm == req_norm:
+            score += 100
+        if cand_norm.endswith(f".{req_norm}") or cand_norm.endswith(f"_{req_norm}"):
+            score += 60
+        if req_norm in cand_tokens:
+            score += 50
+        overlap = sum(1 for t in req_tokens if t in cand_tokens)
+        score += overlap * 15
+        if req_norm in cand_norm:
+            score += 5
+        if candidate_key in baseline_param_keys:
+            score += 40
+        return score
+
+    def _collect_baseline_param_keys(plan_payload: dict[str, Any]) -> set[str]:
+        result: set[str] = set()
+        inputs_content = _load_baseline_inputs_content(plan_payload)
+        if not isinstance(inputs_content, dict):
+            return result
+        for key, value in inputs_content.items():
+            if isinstance(value, dict):
+                for subkey in value.keys():
+                    result.add(f"{key}.{subkey}")
+            else:
+                result.add(str(key))
+        return result
+
+    baseline_param_keys = _collect_baseline_param_keys(plan)
+
+    # Direct schema-key matches are immediately schema-verified.
+    for req_param, req_value in unresolved_requests:
+        key = str(req_param)
+        if key in available_set:
+            required_assignments[key] = req_value
+            meta[key] = {
+                "schema_verified": True,
+                "source": "intent_coverage",
+                "alias_from": key,
+                "match_method": "direct_schema_key",
+            }
+
+    unresolved_for_mapping = [
+        (str(p), v)
+        for p, v in unresolved_requests
+        if str(p) not in required_assignments
+    ]
+    if not unresolved_for_mapping:
+        return required_assignments, meta, {"remap_mapping": remap_mapping, "suggested_params": suggested_params}
+
+    solver_name = None
+    baseline = plan.get("baseline", {})
+    if isinstance(baseline, dict):
+        solver_name = baseline.get("code_name") or baseline.get("code")
+    if not solver_name:
+        return required_assignments, meta, {"remap_mapping": remap_mapping, "suggested_params": suggested_params}
+
+    try:
+        from database.configs import discover_code_configs
+
+        from src.services.config_model_factory import ConfigModelFactory
+        code_registry = {c.code_name: c for c in discover_code_configs()}
+        solver_config = code_registry.get(solver_name)
+        if not solver_config:
+            return required_assignments, meta, {"remap_mapping": remap_mapping, "suggested_params": suggested_params}
+        schema_path = ConfigModelFactory.resolve_schema_path(
+            solver_config,
+            config.amrex_agent_root / "database/schemas",
+            Path(config.repositories.get(solver_name, "."))
+        )
+        feedback = ConfigModelFactory.build_parameter_resolution_feedback(
+            unresolved_params=unresolved_for_mapping,
+            config_service=None,
+            solver_config=solver_config,
+            schema_path=schema_path,
+            build_config=plan.get("build_config", {}),
+            available_schema_params=available_schema_params,
+        )
+        remap_mapping = feedback.get("remap_mapping", {}) or {}
+        suggested_params = feedback.get("suggested_params", {}) or {}
+        feedback_available = feedback.get("available_schema_params", []) or []
+        if feedback_available:
+            available_set.update(str(k) for k in feedback_available if isinstance(k, str))
+    except Exception as exc:
+        logger.debug(f"[Reviewer] intent schema canonicalization failed: {exc}")
+        return required_assignments, meta, {"remap_mapping": remap_mapping, "suggested_params": suggested_params}
+
+    # Generic schema-backed fallback: choose best-scoring schema key when remap is absent/weak.
+    if available_set:
+        for req_param, req_value in unresolved_for_mapping:
+            current = remap_mapping.get(req_param)
+            current_score = _score_candidate(req_param, current) if isinstance(current, str) else 0
+            best_key = current if isinstance(current, str) else None
+            best_score = current_score
+            value_kind = _infer_value_kind(req_value)
+
+            candidates = suggested_params.get(req_param, [])
+            if isinstance(candidates, list):
+                for candidate in candidates:
+                    if not isinstance(candidate, str):
+                        continue
+                    if candidate not in available_set:
+                        continue
+                    if value_kind == "number" and _is_bool_like_key(candidate):
+                        continue
+                    cand_score = _score_candidate(req_param, candidate)
+                    if cand_score > best_score:
+                        best_score = cand_score
+                        best_key = candidate
+
+            if best_score <= 0:
+                for candidate in available_set:
+                    if value_kind == "number" and _is_bool_like_key(candidate):
+                        continue
+                    cand_score = _score_candidate(req_param, candidate)
+                    if cand_score > best_score:
+                        best_score = cand_score
+                        best_key = candidate
+
+            if isinstance(best_key, str) and best_key in available_set and best_score > 0:
+                remap_mapping[req_param] = best_key
+
+    for req_param, req_value in unresolved_for_mapping:
+        canonical = remap_mapping.get(req_param)
+        if isinstance(canonical, str) and canonical in available_set:
+            required_assignments[canonical] = req_value
+            meta[canonical] = {
+                "schema_verified": True,
+                "source": "intent_coverage",
+                "alias_from": req_param,
+                "match_method": "remap_mapping",
+            }
+
+    return required_assignments, meta, {"remap_mapping": remap_mapping, "suggested_params": suggested_params}
+
+
 def reviewer_node(state: GraphState) -> dict[str, Any]:
     """
     Validate the architect plan before execution.
@@ -160,6 +445,14 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
 
     config = state["config"]
     iteration = state.get("iteration", 0)
+    analysis_status = (state.get("analysis_report") or {}).get("status")
+    explicit_review_context = state.get("review_context")
+    if explicit_review_context in {"pre_execution", "post_execution"}:
+        review_context = explicit_review_context
+    elif analysis_status in {"failed", "unstable"}:
+        review_context = "post_execution"
+    else:
+        review_context = "pre_execution"
 
     workflow_history = state.get("workflow_history", [])
     architect_entry = next(
@@ -364,7 +657,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     validation_started_at = time.perf_counter()
     validation_result = orchestrator.validate_plan(plan)
     validator_latency_ms = round((time.perf_counter() - validation_started_at) * 1000.0, 3)
-    reviewer_guidance = {
+    reviewer_guidance: dict[str, Any] = {
         "required_solver": getattr(validation_result, "required_solver", None),
         "forbidden_path_patterns": getattr(validation_result, "forbidden_path_patterns", []) or [],
         "preferred_path_patterns": getattr(validation_result, "preferred_path_patterns", []) or [],
@@ -551,6 +844,125 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                     "workflow_history": workflow_history + [history_entry]
                 }
 
+    # ========================================
+    # INTENT COVERAGE CHECK (explicit prompt assignments)
+    # ========================================
+    # Mirror schema-resolution retry flow, but with a simpler contract:
+    # explicit user-assigned params (e.g., "dt = 20") must appear in plan modifications.
+    if review_context == "pre_execution" and getattr(config, "reviewer_intent_coverage_enabled", True):
+        prompt_text = (
+            state.get("prompt")
+            or state.get("user_requirement")
+            or state.get("user_prompt")
+            or ""
+        )
+        intent_feedback = IntentCoverageAuditService(config).audit(prompt=prompt_text, plan=plan)
+        requires_intent_resolution = bool(intent_feedback.get("requires_intent_resolution", False))
+        unresolved_requests = intent_feedback.get("unresolved_requests", [])
+        if requires_intent_resolution and unresolved_requests:
+            unresolved_request_names = [str(entry[0]) for entry in unresolved_requests if entry]
+            required_assignments, required_assignments_meta, schema_hint = _resolve_schema_backed_intent_assignments(
+                unresolved_requests=unresolved_requests,
+                available_schema_params=validation_result.available_schema_params,
+                plan=plan,
+                config=config,
+            )
+            remap_mapping = schema_hint.get("remap_mapping", {}) if isinstance(schema_hint, dict) else {}
+            suggested_params = schema_hint.get("suggested_params", {}) if isinstance(schema_hint, dict) else {}
+            if retry_count >= max_retries:
+                taxonomy = _build_final_error_taxonomy(
+                    category="intent_coverage_max_retries",
+                    reason="max_retries_exceeded_intent_coverage",
+                    retry_count=retry_count,
+                    max_retries=max_retries,
+                    unresolved_parameters=unresolved_requests,
+                )
+                history_entry = {
+                    "node": "reviewer",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "action": "intent_coverage_max_retries",
+                    "iteration": iteration,
+                    "details": {
+                        "status": "terminal",
+                        "reason": "max_retries_exceeded_intent_coverage",
+                        "unresolved_requests": unresolved_requests,
+                        "resolution_guidance": intent_feedback.get("resolution_guidance", ""),
+                        "suggested_modifications": intent_feedback.get("suggested_modifications", {}),
+                        "required_assignments": required_assignments,
+                        "required_assignments_meta": required_assignments_meta,
+                        "remap_mapping": remap_mapping,
+                        "suggested_params": suggested_params,
+                        "schema_verified_count": sum(
+                            1 for info in required_assignments_meta.values()
+                            if isinstance(info, dict) and info.get("schema_verified") is True
+                        ),
+                        "retry_count": retry_count,
+                        "max_retries": max_retries,
+                        "final_error_taxonomy": taxonomy,
+                    },
+                }
+                return {
+                    "mode": "terminal",
+                    "error": (
+                        "Intent coverage unresolved after max retries: "
+                        f"{unresolved_request_names}"
+                    ),
+                    "errors_active": [
+                        f"Intent request missing from plan: {name}"
+                        for name in unresolved_request_names
+                    ],
+                    "workflow_history": workflow_history + [history_entry],
+                    "reviewer_failure_category": taxonomy["category"],
+                    "final_error_taxonomy": taxonomy,
+                }
+
+            history_entry = {
+                "node": "reviewer",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "action": "intent_coverage_retry",
+                "iteration": iteration,
+                "details": {
+                    "status": "retry",
+                    "reason": "intent_missing",
+                    "unresolved_requests": unresolved_requests,
+                    "resolution_guidance": intent_feedback.get("resolution_guidance", ""),
+                    "suggested_modifications": intent_feedback.get("suggested_modifications", {}),
+                    "required_assignments": required_assignments,
+                    "required_assignments_meta": required_assignments_meta,
+                    "remap_mapping": remap_mapping,
+                    "suggested_params": suggested_params,
+                    "schema_verified_count": sum(
+                        1 for info in required_assignments_meta.values()
+                        if isinstance(info, dict) and info.get("schema_verified") is True
+                    ),
+                    "retry_count": retry_count + 1,
+                },
+            }
+            return {
+                "mode": "retry",
+                "retry_count": retry_count + 1,
+                "iteration": iteration,
+                "intent_coverage_feedback": {
+                    "unresolved_requests": unresolved_requests,
+                    "resolution_guidance": intent_feedback.get("resolution_guidance", ""),
+                    "suggested_modifications": intent_feedback.get("suggested_modifications", {}),
+                    "required_assignments": required_assignments,
+                    "required_assignments_meta": required_assignments_meta,
+                    "remap_mapping": remap_mapping,
+                    "suggested_params": suggested_params,
+                    "schema_verified_count": sum(
+                        1 for info in required_assignments_meta.values()
+                        if isinstance(info, dict) and info.get("schema_verified") is True
+                    ),
+                    "reason_code": intent_feedback.get("reason_code", "intent_missing"),
+                },
+                "errors_active": [
+                    f"Intent request missing from plan: {name}"
+                    for name in unresolved_request_names
+                ],
+                "workflow_history": workflow_history + [history_entry],
+            }
+
     if not errors_current and not schema_missing and not solver_unknown:
         approved = True
 
@@ -582,6 +994,18 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     if schema_missing:
         logger.error("Schema missing - terminating for manual schema build")
         next_mode = "terminal"
+    elif review_context == "post_execution" and analysis_status in {"failed", "unstable"}:
+        if retry_count >= max_retries:
+            logger.error(f"Max retries ({max_retries}) exceeded during post-execution diagnosis - terminating")
+            next_mode = "terminal"
+        else:
+            logger.warning(
+                "Post-execution analysis failed (%s) - routing to architect retry %s/%s",
+                analysis_status,
+                retry_count + 1,
+                max_retries,
+            )
+            next_mode = "retry"
     elif (
         "intent_missing" in (getattr(validation_result, "replan_reason_codes", []) or [])
         and getattr(config, "clarification_route_on_intent_missing_only", False)
@@ -795,6 +1219,39 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         except Exception as exc:
             logger.debug(f"Retry guidance LLM unavailable: {exc}")
 
+    feasibility_payload = None
+    if review_context == "post_execution" and analysis_status in {"failed", "unstable"}:
+        feasibility_payload = _run_postexec_feasibility_review_llm(
+            state=state,
+            plan=plan,
+            analysis_report=state.get("analysis_report") or {},
+            config=config,
+        )
+        reviewer_guidance.update(
+            {
+                "feasible": bool(feasibility_payload.get("feasible", False)),
+                "intent_consistent": bool(feasibility_payload.get("intent_consistent", False)),
+                "diagnosis": str(feasibility_payload.get("diagnosis", "")),
+                "guidance": (
+                    feasibility_payload.get("guidance")
+                    if isinstance(feasibility_payload.get("guidance"), dict)
+                    else {}
+                ),
+            }
+        )
+        guidance_payload = reviewer_guidance.get("guidance")
+        if isinstance(guidance_payload, dict):
+            for key in (
+                "required_solver",
+                "forbidden_path_patterns",
+                "preferred_path_patterns",
+                "excluded_cases",
+                "schema_escalation_required",
+                "replan_reason_codes",
+            ):
+                if key in guidance_payload and guidance_payload.get(key) is not None:
+                    reviewer_guidance[key] = guidance_payload[key]
+
     # ========================================
     # WORKFLOW HISTORY ENTRY (CANONICAL PATH)
     # ========================================
@@ -855,6 +1312,10 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             "available_schema_params": validation_result.available_schema_params,
             "retry_guidance": retry_guidance,
             "reviewer_guidance": reviewer_guidance,
+            "review_context": review_context,
+            "review_origin": state.get("review_origin") or (
+                "analysis_diagnosis" if review_context == "post_execution" else "architect_validation"
+            ),
             "baseline_dir_rejected": baseline_dir_rejected,
             "plan_rejected_baseline": rejected_baseline,
             "plan_rejected_inputs_file": rejected_inputs,
@@ -899,6 +1360,10 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             "reviewer_guidance": reviewer_guidance,
         },
         "reviewer_guidance": reviewer_guidance,
+        "review_context": review_context,
+        "review_origin": state.get("review_origin") or (
+            "analysis_diagnosis" if review_context == "post_execution" else "architect_validation"
+        ),
         "retry_guidance": retry_guidance,
         "errors_active": errors_current,
         "errors_found": errors_all_found,

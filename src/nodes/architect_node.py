@@ -189,6 +189,7 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     reviewer_guidance = _extract_reviewer_guidance(state, workflow_history_temp)
     previous_feedback: dict[str, Any] | None = None
     parameter_resolution_feedback: dict[str, Any] | None = None  # Initialize for both modes
+    intent_coverage_feedback: dict[str, Any] | None = None
 
     if mode == "retry":
         logger.debug("Retry mode detected - extracting feedback")
@@ -274,6 +275,38 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                         f"({len(unresolved)} unresolved)"
                     )
 
+        if isinstance(state.get("intent_coverage_feedback"), dict):
+            intent_coverage_feedback = state.get("intent_coverage_feedback")
+        if intent_coverage_feedback is None and reviewer_entries:
+            last_reviewer = reviewer_entries[-1]
+            details = last_reviewer.get("details", {})
+            if details.get("reason") == "intent_missing":
+                intent_coverage_feedback = {
+                    "unresolved_requests": details.get("unresolved_requests", []),
+                    "resolution_guidance": details.get("resolution_guidance", ""),
+                    "suggested_modifications": details.get("suggested_modifications", {}),
+                    "required_assignments": details.get("required_assignments", {}),
+                    "required_assignments_meta": details.get("required_assignments_meta", {}),
+                    "remap_mapping": details.get("remap_mapping", {}),
+                    "suggested_params": details.get("suggested_params", {}),
+                    "reason_code": "intent_missing",
+                }
+        if intent_coverage_feedback:
+            if parameter_resolution_feedback is None:
+                parameter_resolution_feedback = {}
+            unresolved = intent_coverage_feedback.get("unresolved_requests", [])
+            required_assignments = intent_coverage_feedback.get("required_assignments", {})
+            required_assignments_meta = intent_coverage_feedback.get("required_assignments_meta", {})
+            suggested_params = intent_coverage_feedback.get("suggested_params", {})
+            if unresolved:
+                parameter_resolution_feedback["unresolved_parameters"] = unresolved
+            if isinstance(required_assignments, dict) and required_assignments:
+                parameter_resolution_feedback["required_assignments"] = dict(required_assignments)
+            if isinstance(required_assignments_meta, dict) and required_assignments_meta:
+                parameter_resolution_feedback["required_assignments_meta"] = dict(required_assignments_meta)
+            if isinstance(suggested_params, dict) and suggested_params:
+                parameter_resolution_feedback["suggested_params"] = dict(suggested_params)
+
         # ----------------------------------------
         # 9c-i: STANDARD ERROR FEEDBACK (from reviewer)
         # ----------------------------------------
@@ -323,9 +356,45 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                         }
                         logger.debug(f"[DATA TRANSFER] Built parameter_resolution_feedback from {len(unresolved)} schema errors")
                         logger.debug(f"Built parameter_resolution_feedback from {len(unresolved)} schema errors")
+            if intent_coverage_feedback:
+                unresolved = intent_coverage_feedback.get("unresolved_requests", [])
+                required_assignments = intent_coverage_feedback.get("required_assignments", {})
+                required_assignments_meta = intent_coverage_feedback.get("required_assignments_meta", {})
+                intent_errors = [
+                    f"{name} not specified"
+                    for name, _value in unresolved
+                    if name
+                ]
+                if isinstance(required_assignments, dict) and required_assignments:
+                    previous_feedback["required_assignments"] = dict(required_assignments)
+                if isinstance(required_assignments_meta, dict) and required_assignments_meta:
+                    previous_feedback["required_assignments_meta"] = dict(required_assignments_meta)
+                if intent_errors:
+                    previous_feedback["errors"] = previous_feedback.get("errors", []) + intent_errors
 
         else:
-            if not parameter_resolution_feedback:
+            if intent_coverage_feedback:
+                unresolved = intent_coverage_feedback.get("unresolved_requests", [])
+                required_assignments = intent_coverage_feedback.get("required_assignments", {})
+                required_assignments_meta = intent_coverage_feedback.get("required_assignments_meta", {})
+                previous_feedback = {
+                    "errors": [
+                        f"{name} not specified"
+                        for name, _value in unresolved
+                        if name
+                    ],
+                    "rejected_baseline": rejected_case,
+                    "rejected_inputs_file": rejected_inputs,
+                    "retry_guidance": retry_guidance,
+                    "retry_count": retry_count,
+                    "required_assignments": dict(required_assignments) if isinstance(required_assignments, dict) else {},
+                    "required_assignments_meta": (
+                        dict(required_assignments_meta)
+                        if isinstance(required_assignments_meta, dict)
+                        else {}
+                    ),
+                }
+            elif not parameter_resolution_feedback:
                 logger.warning("Retry mode but no errors_active or parameter_resolution_feedback in state")
     else:
         logger.debug(f"Mode: {mode} (initial planning)")
@@ -648,6 +717,9 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         "case_candidates": plan_result.case_candidates or [],  # For visualization
         "baseline_confidence": plan_result.baseline_confidence,  # For visualization
         "reviewer_guidance": reviewer_guidance,
+        "review_context": "pre_execution",
+        "review_origin": "architect_validation",
+        "analysis_report": {},
 
         # === STATE RESET ===
         "errors_active": [],            # Clear errors from previous iteration

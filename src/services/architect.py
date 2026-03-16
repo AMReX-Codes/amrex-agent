@@ -2074,6 +2074,18 @@ class ArchitectService:
                 if param not in merged:
                     merged[param] = value
             modifications = list(merged.items())
+        required_assignments = {}
+        if isinstance(parameter_resolution_feedback, dict):
+            required_assignments = parameter_resolution_feedback.get("required_assignments", {}) or {}
+        required_assignments_meta = {}
+        if isinstance(parameter_resolution_feedback, dict):
+            required_assignments_meta = parameter_resolution_feedback.get("required_assignments_meta", {}) or {}
+        if required_assignments:
+            modifications = self._apply_required_assignments(
+                modifications,
+                required_assignments,
+                required_assignments_meta=required_assignments_meta,
+            )
 
         logger.debug(f"[Override] Extracted {len(modifications)} modifications")
 
@@ -2091,6 +2103,62 @@ class ArchitectService:
             user_prompt=user_prompt,
             knowledge=knowledge
         )
+
+    @staticmethod
+    def _normalize_param_key(name: str) -> str:
+        key = str(name or "").strip().lower().replace("-", "_")
+        while "__" in key:
+            key = key.replace("__", "_")
+        return key
+
+    @classmethod
+    def _param_keys_match(cls, left: str, right: str) -> bool:
+        left_norm = cls._normalize_param_key(left)
+        right_norm = cls._normalize_param_key(right)
+        if left_norm == right_norm:
+            return True
+        if right_norm.endswith(f".{left_norm}") or right_norm.endswith(f"_{left_norm}"):
+            return True
+        if left_norm.endswith(f".{right_norm}") or left_norm.endswith(f"_{right_norm}"):
+            return True
+        if left_norm == "dt":
+            return "dt" in re.split(r"[._]", right_norm)
+        if right_norm == "dt":
+            return "dt" in re.split(r"[._]", left_norm)
+        return False
+
+    @classmethod
+    def _apply_required_assignments(
+        cls,
+        modifications: list[tuple[str, Any]] | list[list[Any]],
+        required_assignments: dict[str, Any],
+        required_assignments_meta: dict[str, Any] | None = None,
+    ) -> list[tuple[str, Any]]:
+        merged_mods: list[tuple[str, Any]] = []
+        for item in modifications or []:
+            if isinstance(item, (list, tuple)) and len(item) >= 2:
+                merged_mods.append((str(item[0]), item[1]))
+
+        meta_map = required_assignments_meta if isinstance(required_assignments_meta, dict) else {}
+        for required_param, required_value in (required_assignments or {}).items():
+            if not required_param:
+                continue
+            key = str(required_param)
+            if key in meta_map:
+                meta = meta_map.get(key, {})
+                if not isinstance(meta, dict) or meta.get("schema_verified") is not True:
+                    continue
+            matched_index = None
+            for idx, (param, _value) in enumerate(merged_mods):
+                if cls._param_keys_match(str(required_param), str(param)):
+                    matched_index = idx
+                    break
+            if matched_index is None:
+                merged_mods.append((str(required_param), required_value))
+            else:
+                merged_mods[matched_index] = (merged_mods[matched_index][0], required_value)
+
+        return merged_mods
 
     def _calculate_diff(self, base: dict, target: dict) -> list:
         """
@@ -2687,6 +2755,7 @@ class ArchitectService:
         excluded_inputs_files: list = None,
         parameter_resolution_feedback: dict[str, Any] | None = None,
         forced_solver: str | None = None,
+        reviewer_guidance: dict[str, Any] | None = None,
     ) -> SimulationPlan:
         """
         Create complete simulation plan from prompt.
@@ -2711,6 +2780,8 @@ class ArchitectService:
             Input files to exclude.
         parameter_resolution_feedback : dict or None, optional
             Feedback from input_writer for parameter remapping.
+        reviewer_guidance : dict or None, optional
+            Structured guidance from reviewer retries (required solver, exclusions).
 
         Returns
         -------
@@ -2720,8 +2791,30 @@ class ArchitectService:
         logger.debug("\n=== Creating Simulation Plan ===\n")
         logger.debug(f"Prompt: {user_prompt}\n")
 
+        structured_guidance = {}
+        diagnosis_note = None
+        if isinstance(reviewer_guidance, dict):
+            inner_guidance = reviewer_guidance.get("guidance")
+            structured_guidance = inner_guidance if isinstance(inner_guidance, dict) else {}
+            diagnosis = reviewer_guidance.get("diagnosis")
+            if isinstance(diagnosis, str) and diagnosis.strip():
+                diagnosis_note = diagnosis.strip()
+
         # Extract structured requirements from prompt
         requirements = self._extract_requirements(user_prompt)
+        if (
+            not forced_solver
+            and isinstance(reviewer_guidance, dict)
+            and isinstance(reviewer_guidance.get("required_solver"), str)
+            and reviewer_guidance.get("required_solver") in self.code_configs
+        ):
+            forced_solver = reviewer_guidance.get("required_solver")
+        if (
+            not forced_solver
+            and isinstance(structured_guidance.get("required_solver"), str)
+            and structured_guidance.get("required_solver") in self.code_configs
+        ):
+            forced_solver = structured_guidance.get("required_solver")
         if forced_solver and forced_solver in self.code_configs:
             requirements["solver"] = forced_solver
             requirements["solver_source"] = "reviewer_guidance"
@@ -2799,6 +2892,22 @@ class ArchitectService:
                 user_prompt
             )
             modifications.extend(fixes)
+        required_assignments: dict[str, Any] = {}
+        if isinstance(parameter_resolution_feedback, dict):
+            required_assignments.update(parameter_resolution_feedback.get("required_assignments", {}) or {})
+        if isinstance(previous_feedback, dict):
+            required_assignments.update(previous_feedback.get("required_assignments", {}) or {})
+        required_assignments_meta: dict[str, Any] = {}
+        if isinstance(parameter_resolution_feedback, dict):
+            required_assignments_meta.update(parameter_resolution_feedback.get("required_assignments_meta", {}) or {})
+        if isinstance(previous_feedback, dict):
+            required_assignments_meta.update(previous_feedback.get("required_assignments_meta", {}) or {})
+        if required_assignments:
+            modifications = self._apply_required_assignments(
+                modifications,
+                required_assignments,
+                required_assignments_meta=required_assignments_meta,
+            )
 
         # Plan visualization
         visualization = self._plan_visualization(requirements, baseline)
@@ -2820,6 +2929,8 @@ class ArchitectService:
         logger.debug(f"\n[PASS] Plan created with {len(plan.modifications)} modifications")
         # logger.debug(f"\n[PASS] Plan created with {len(modifications)} modifications, {len(visualization['plots'])} plots, {len(analysis['checks'])} checks")
         logger.debug(f"       Overall confidence: {plan.get_overall_confidence():.2%}\n")
+        if diagnosis_note:
+            plan.reasoning = f"{plan.reasoning}\nReviewer feasibility diagnosis: {diagnosis_note}"
 
         return plan
 
