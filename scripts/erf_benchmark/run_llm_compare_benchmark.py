@@ -365,6 +365,7 @@ def _run_strategy(
     checkpoint_prefix: str = "partial",
     checkpoint_every_row: bool = True,
     flush_prints: bool = True,
+    continue_on_catastrophic: bool = False,
 ) -> dict[str, Any]:
     predictions: dict[str, dict[str, str]] = {}
     evidences: list[dict[str, Any]] = []
@@ -437,7 +438,24 @@ def _run_strategy(
             events.extend(row_events)
             if console["returncode"] != 0 or console["parse_error"] or not console["run_directory"]:
                 events.append({"row_id": row["row_id"], "strategy": strategy, "severity": "catastrophic", "reason": "cli_execution_failure"})
-                raise RuntimeError(f"Abort: catastrophic execution failure (strategy={strategy}, row_id={row['row_id']})")
+                if not continue_on_catastrophic:
+                    raise RuntimeError(f"Abort: catastrophic execution failure (strategy={strategy}, row_id={row['row_id']})")
+                failed_rows += 1
+                predictions[row["row_id"]] = {"selected_case": failed_sentinel, "selected_inputs": failed_sentinel}
+                evidences.append(
+                    {
+                        "row_id": row["row_id"],
+                        "strategy": strategy,
+                        "warning": "catastrophic_execution_failure",
+                        "attempt": attempt,
+                        "run_directory": console.get("run_directory"),
+                    }
+                )
+                print(
+                    f"[{strategy}] catastrophic row={row['row_id']} -> marking failed sentinel and continuing",
+                    flush=flush_prints,
+                )
+                break
             unavailable = detect_llm_unavailable(
                 metrics,
                 summary,
@@ -548,6 +566,11 @@ def main() -> int:
     parser.add_argument("--no-checkpoint-every-row", action="store_true", help="Disable per-row checkpoint writes.")
     parser.add_argument("--flush-prints", action="store_true", help="Force flush progress prints.")
     parser.add_argument("--no-flush-prints", action="store_true", help="Disable force flush progress prints.")
+    parser.add_argument(
+        "--continue-on-catastrophic",
+        action="store_true",
+        help="Do not abort on catastrophic row failures; mark sentinel failure and continue.",
+    )
     args = parser.parse_args()
     started_at = datetime.now(timezone.utc).isoformat()
     checkpoint_every_row = not args.no_checkpoint_every_row
@@ -593,6 +616,7 @@ def main() -> int:
             checkpoint_prefix=args.checkpoint_prefix,
             checkpoint_every_row=checkpoint_every_row,
             flush_prints=flush_prints,
+            continue_on_catastrophic=args.continue_on_catastrophic,
         )
         for strategy in selected_strategies
     ]
@@ -647,6 +671,7 @@ def main() -> int:
     summary["max_unavailable_attempts"] = max(1, args.max_unavailable_attempts)
     summary["checkpoint_every_row"] = checkpoint_every_row
     summary["checkpoint_prefix"] = args.checkpoint_prefix
+    summary["continue_on_catastrophic"] = bool(args.continue_on_catastrophic)
 
     hierarchical_candidates_rows: list[dict[str, Any]] = []
     if "hierarchical" in runs_by_strategy:
