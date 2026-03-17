@@ -222,7 +222,7 @@
       },
       "top_findings": [
         "[DONE] [P1] Non-interactive clarification path no longer flags unresolved prompt when AI filled all missing required fields",
-        "[P2] clarification_questions contract drift: node now emits dicts, state schema still declares strings",
+        "[DONE] [P2] clarification_questions contract aligned: GraphState now declares list[dict] payloads",
         "[P2] Sweep polling can stall for up to 1 hour on unknown/unmappable statuses"
       ],
       "top_failing_tests": [
