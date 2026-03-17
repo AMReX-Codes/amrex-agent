@@ -889,3 +889,211 @@ def test_cli_benchmark_wave_phys_row_avoids_preexec_retry_exhaustion(tmp_path: P
         f"stdout:\n{result.stdout}\n"
         f"stderr:\n{result.stderr}"
     )
+
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.use_real_services
+@pytest.mark.requires_solver("ERF")
+@pytest.mark.requires_repos("ERF")
+@pytest.mark.requires_schema("ERF")
+@pytest.mark.requires_indices("faiss")
+def test_cli_benchmark_wave_phys1_hierarchical_reaches_input_writer(tmp_path: Path) -> None:
+    """
+    RED reproducer for core hierarchical quality/routing issue.
+    This benchmark-style row should make it past pre-exec review into input_writer.
+    """
+    repo_path = _resolve_erf_repo()
+    if not repo_path:
+        pytest.skip("ERF repo not available")
+
+    row_id = "abl_neutral_wave_phys2"
+    prompt_text = (
+        "Configure ERF for the Exec/CanonicalFlows/Canonical_LES/Neutral_ABL scenario "
+        "and choose inputs_anelastic as baseline inputs."
+    )
+    expected_case = "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+    expected_inputs_suffix = "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL/inputs_anelastic"
+    cfg_path = REPO_ROOT / "results/track2_recovery/model_sweep/configs/lbl__llama4-scout_tuned_weights_retune_20260316.yaml"
+    if not cfg_path.exists():
+        pytest.skip(f"Benchmark config missing: {cfg_path}")
+
+    output_dir = tmp_path / "runs_benchmark_row_hierarchical_repro"
+    cmd = [
+        sys.executable,
+        "./amrex_agent.py",
+        "--prompt",
+        prompt_text,
+        "--output-dir",
+        str(output_dir),
+        "--indexing-strategy",
+        "hierarchical",
+        "--inputs-file-strategy",
+        "llm_compare",
+        "--run-mode",
+        "dry",
+        "--config",
+        str(cfg_path),
+        "--max-iterations",
+        "3",
+        "--save-workflow",
+    ]
+
+    env = os.environ.copy()
+    env["ERF_REPO_PATH"] = str(repo_path)
+
+    result = _run_cli(cmd, env, timeout_seconds=300)
+    run_dir = _find_run_directory(output_dir)
+    workflow_path = _find_workflow_history(output_dir, run_dir)
+    assert workflow_path is not None and workflow_path.exists(), (
+        "workflow_history missing for hierarchical benchmark-row reproducer.\n"
+        f"row_id={row_id}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    workflow_history = json.loads(workflow_path.read_text(encoding="utf-8"))
+    assert isinstance(workflow_history, list) and workflow_history
+
+    has_input_writer = any(e.get("node") == "input_writer" for e in workflow_history)
+    assert has_input_writer, (
+        "Expected hierarchical benchmark-row run to reach input_writer (pre-exec review should converge).\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+        f"returncode={result.returncode}\n"
+        f"nodes={[e.get('node') for e in workflow_history]}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    architect_entries = [e for e in workflow_history if e.get("node") == "architect"]
+    assert architect_entries, (
+        "Expected at least one architect entry in benchmark-row reproducer.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+    )
+    selected_case = architect_entries[-1].get("details", {}).get("selected_case")
+    assert selected_case == expected_case, (
+        "Hierarchical benchmark-row selected incorrect case.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+        f"expected_case={expected_case}\n"
+        f"selected_case={selected_case}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    input_writer_entries = [e for e in workflow_history if e.get("node") == "input_writer"]
+    assert input_writer_entries, (
+        "Expected input_writer entry in benchmark-row reproducer.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+    )
+    selected_inputs = input_writer_entries[-1].get("details", {}).get("inputs_file_selected", "")
+    selected_inputs_text = str(selected_inputs)
+    assert selected_inputs_text.endswith(expected_inputs_suffix), (
+        "Hierarchical benchmark-row selected incorrect inputs file.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+        f"expected_inputs_suffix={expected_inputs_suffix}\n"
+        f"selected_inputs={selected_inputs_text}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.use_real_services
+@pytest.mark.requires_solver("ERF")
+@pytest.mark.requires_repos("ERF")
+@pytest.mark.requires_schema("ERF")
+@pytest.mark.requires_indices("faiss")
+def test_cli_benchmark_wave_phys2_simple_selects_expected_case(tmp_path: Path) -> None:
+    """Companion control: simple strategy should also honor explicit benchmark row case anchor."""
+    repo_path = _resolve_erf_repo()
+    if not repo_path:
+        pytest.skip("ERF repo not available")
+
+    row_id = "abl_neutral_wave_phys2"
+    prompt_text = (
+        "Configure ERF for the Exec/CanonicalFlows/Canonical_LES/Neutral_ABL scenario "
+        "and choose inputs_anelastic as baseline inputs."
+    )
+    expected_case = "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+    expected_inputs_suffix = "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL/inputs_anelastic"
+    cfg_path = REPO_ROOT / "results/track2_recovery/model_sweep/configs/lbl__llama4-scout_tuned_weights_retune_20260316.yaml"
+    if not cfg_path.exists():
+        pytest.skip(f"Benchmark config missing: {cfg_path}")
+
+    output_dir = tmp_path / "runs_benchmark_row_simple_repro"
+    cmd = [
+        sys.executable,
+        "./amrex_agent.py",
+        "--prompt",
+        prompt_text,
+        "--output-dir",
+        str(output_dir),
+        "--indexing-strategy",
+        "simple",
+        "--inputs-file-strategy",
+        "llm_compare",
+        "--run-mode",
+        "dry",
+        "--config",
+        str(cfg_path),
+        "--max-iterations",
+        "3",
+        "--save-workflow",
+    ]
+
+    env = os.environ.copy()
+    env["ERF_REPO_PATH"] = str(repo_path)
+
+    result = _run_cli(cmd, env, timeout_seconds=300)
+    run_dir = _find_run_directory(output_dir)
+    workflow_path = _find_workflow_history(output_dir, run_dir)
+    assert workflow_path is not None and workflow_path.exists(), (
+        "workflow_history missing for simple benchmark-row reproducer.\n"
+        f"row_id={row_id}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    workflow_history = json.loads(workflow_path.read_text(encoding="utf-8"))
+    assert isinstance(workflow_history, list) and workflow_history
+
+    architect_entries = [e for e in workflow_history if e.get("node") == "architect"]
+    assert architect_entries, (
+        "Expected at least one architect entry in simple benchmark-row reproducer.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+    )
+    selected_case = architect_entries[-1].get("details", {}).get("selected_case")
+    assert selected_case == expected_case, (
+        "Simple benchmark-row selected incorrect case.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+        f"expected_case={expected_case}\n"
+        f"selected_case={selected_case}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    input_writer_entries = [e for e in workflow_history if e.get("node") == "input_writer"]
+    assert input_writer_entries, (
+        "Expected input_writer entry in simple benchmark-row reproducer.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+    )
+    selected_inputs = input_writer_entries[-1].get("details", {}).get("inputs_file_selected", "")
+    selected_inputs_text = str(selected_inputs)
+    assert selected_inputs_text.endswith(expected_inputs_suffix), (
+        "Simple benchmark-row selected incorrect inputs file.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+        f"expected_inputs_suffix={expected_inputs_suffix}\n"
+        f"selected_inputs={selected_inputs_text}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
