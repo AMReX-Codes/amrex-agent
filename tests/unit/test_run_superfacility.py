@@ -136,6 +136,36 @@ def test_erf_finds_executable_in_derived_central_build_dir(tmp_path):
     assert Path(exe_path) == central_exe
 
 
+def test_erf_fallback_prefers_case_group_over_configured_regtests(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "ABL" / "Scaling" / "Perlmutter"
+    case_dir.mkdir(parents=True)
+
+    regtests_dir = repo_root / "Exec" / "RegTests"
+    regtests_dir.mkdir(parents=True)
+    regtests_exe = regtests_dir / "ERF3d.gnu.TEST.MPI.CUDA.ex"
+    regtests_exe.write_text("regtests")
+
+    abl_dir = repo_root / "Exec" / "ABL"
+    abl_dir.mkdir(parents=True, exist_ok=True)
+    abl_exe = abl_dir / "ERF3d.gnu.TEST.MPI.CUDA.ex"
+    abl_exe.write_text("abl")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        erf_executable_path=None,
+        erf_repo_path=repo_root,
+        erf_central_build_dir=regtests_dir,
+    )
+    runner = SuperfacilityRunner(config)
+
+    exe, checked = runner._resolve_erf_executable_fallbacks(case_dir=case_dir, require_mpi=True, require_cuda=True)
+    assert exe == abl_exe
+    assert checked[1] == abl_dir
+
+
 def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):
     case_dir = tmp_path / "case"
     case_dir.mkdir()

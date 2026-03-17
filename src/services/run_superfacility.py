@@ -219,11 +219,6 @@ class SuperfacilityRunner:
 
     def _derive_erf_central_build_dir(self, case_dir: Path) -> Path | None:
         """Derive ERF central build directory (Exec/<group>) from a case path."""
-        configured = getattr(self.config, "erf_central_build_dir", None)
-        if configured:
-            configured_path = Path(os.path.expandvars(str(configured))).expanduser()
-            return configured_path
-
         case_path = Path(case_dir).resolve()
 
         repo_root = getattr(self.config, "erf_repo_path", None)
@@ -250,13 +245,37 @@ class SuperfacilityRunner:
             return None
         return repo_path / "Exec" / relative_case.parts[1]
 
+    def _configured_erf_central_build_dir(self) -> Path | None:
+        configured = getattr(self.config, "erf_central_build_dir", None)
+        if not configured:
+            return None
+        return Path(os.path.expandvars(str(configured))).expanduser()
+
+    def _erf_central_build_candidates(self, case_dir: Path) -> list[Path]:
+        """Return ordered central-build candidates (case-derived first)."""
+        candidates: list[Path] = []
+        derived = self._derive_erf_central_build_dir(case_dir)
+        if derived:
+            candidates.append(derived)
+        configured = self._configured_erf_central_build_dir()
+        if configured:
+            candidates.append(configured)
+
+        unique: list[Path] = []
+        seen: set[str] = set()
+        for candidate in candidates:
+            key = str(Path(candidate).resolve())
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(Path(candidate))
+        return unique
+
     def _compile_targets(self, case_dir: Path) -> list[Path]:
         """Return ordered compile targets for the selected solver."""
         targets: list[Path] = []
         if self._is_erf_context(case_dir):
-            central_build_dir = self._derive_erf_central_build_dir(case_dir)
-            if central_build_dir:
-                targets.append(central_build_dir)
+            targets.extend(self._erf_central_build_candidates(case_dir))
         targets.append(case_dir)
 
         unique_targets: list[Path] = []
@@ -291,8 +310,9 @@ class SuperfacilityRunner:
             if configured_path.is_file():
                 return configured_path, checked_paths
 
-        central_build_dir = self._derive_erf_central_build_dir(Path(case_dir))
-        if central_build_dir and central_build_dir not in checked_paths:
+        for central_build_dir in self._erf_central_build_candidates(Path(case_dir)):
+            if central_build_dir in checked_paths:
+                continue
             checked_paths.append(central_build_dir)
             exe = self._find_exe_in_dir(central_build_dir, require_mpi, require_cuda)
             if exe:

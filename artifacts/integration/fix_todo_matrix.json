@@ -595,9 +595,9 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P1] ERF central build fallback now hardwires to ERF/Exec/RegTests, which can compile/select the wrong executable for non-RegTests cases",
+        "[DONE] [P1] ERF central build fallback now prioritizes case-derived Exec/<group> over default RegTests fallback",
         "[P2] Visualization config normalization drops plot options and plot types from architect output",
-        "[P1] ERF central build fallback now hardwires to ERF/Exec/RegTests, which can compile/select the wrong executable for non-RegTests cases"
+        "[DONE] [P1] ERF central build fallback now prioritizes case-derived Exec/<group> over default RegTests fallback"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
