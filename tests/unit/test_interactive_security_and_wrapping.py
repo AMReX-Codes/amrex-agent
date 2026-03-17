@@ -125,7 +125,8 @@ def test_mcp_server_ignores_untrusted_caller_action(monkeypatch):
     )
 
     assert result == {"ok": True}
-    assert captured["arguments"]["caller_action"] == "amrex_demo_agent"
+    assert "caller_action" not in captured["arguments"]
+    assert captured["arguments"]["foo"] == "bar"
     assert captured["kwargs"]["caller_action"] is None
 
 
@@ -166,6 +167,19 @@ def test_academy_wrapper_does_not_force_ok_for_non_success_status(monkeypatch):
     assert wrapped["status"] == "error"
     assert wrapped["response"] == "failed"
     assert wrapped["data"]["reason"] == "rate_limited"
+
+
+def test_academy_wrapper_preserves_non_success_non_error_status(monkeypatch):
+    _install_stub_academy(monkeypatch)
+
+    module = importlib.import_module("src.academy_mcp_agent")
+    wrapped = module.AMReXMCPAgent._maybe_wrap_response_rationale(
+        {"status": "skipped", "reason": "already_exists"},
+        include_response_rationale=True,
+    )
+    assert wrapped["status"] == "skipped"
+    assert wrapped["response"] == "skipped"
+    assert wrapped["data"]["reason"] == "already_exists"
 
 
 def test_academy_call_tool_wraps_exception_when_requested(monkeypatch):

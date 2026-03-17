@@ -120,19 +120,20 @@ async def list_tools():
 
 
 @app.call_tool()
-async def call_tool(name: str, arguments: dict) -> Any:
+async def call_tool(name: str, arguments: dict | None) -> Any:
     """Handle tool calls from MCP client."""
     try:
         session_id = None
-        context = dict(arguments)
+        context = dict(arguments or {})
         if "session_id" in context:
             session_id = str(context.get("session_id") or uuid.uuid4())
             context.pop("session_id", None)
+        # Do not accept caller_action from untrusted MCP payloads.
+        context.pop("caller_action", None)
         async with _TOOL_CALL_SEMAPHORE:
             kwargs = {
                 "session_id": session_id,
                 "surface": "mcp",
-                # Do not accept caller_action from untrusted MCP payloads.
                 "caller_action": None,
             }
             if _invoke_tool_inline(invoke_tool):

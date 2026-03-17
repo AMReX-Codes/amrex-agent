@@ -123,9 +123,9 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P2] include_response_rationale now reports \"status\": \"ok\" even when tool result status is non-success",
-        "[P2] Untrusted caller_action is still propagated/persisted despite explicit \u201cdo not accept\u201d comment",
-        "[P2] include_response_rationale now reports \"status\": \"ok\" even when tool result status is non-success"
+        "[DONE] [P2] include_response_rationale wrapper preserves non-success tool status values (no forced ok)",
+        "[DONE] [P2] Untrusted caller_action is stripped from MCP payload before dispatch/persistence",
+        "[DONE] [P2] include_response_rationale wrapper preserves non-success tool status values (no forced ok)"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
