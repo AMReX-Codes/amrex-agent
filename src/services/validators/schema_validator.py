@@ -85,7 +85,8 @@ class SchemaSyntaxValidator:
             schema_path = ConfigModelFactory.resolve_schema_path(
                 solver_config_class,
                 self.config.amrex_agent_root / "database/schemas",
-                Path(self.config.repositories.get(solver_name, "."))
+                Path(self.config.repositories.get(solver_name, ".")),
+                runtime_config=self.config,
             )
             with open(schema_path) as f:
                 schema_data = json.load(f)

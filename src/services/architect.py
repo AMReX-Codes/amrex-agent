@@ -179,6 +179,7 @@ class ArchitectService:
                 solver_config,
                 self.config.amrex_agent_root / "database/schemas",
                 self.config.amrex_agent_root,
+                runtime_config=self.config,
             )
             schema = ConfigModelFactory.load_schema(schema_path)
         except Exception as exc:
@@ -192,6 +193,7 @@ class ArchitectService:
                 solver_config,
                 self.config.amrex_agent_root / "database/schemas",
                 self.config.amrex_agent_root,
+                runtime_config=self.config,
             )
             schema = ConfigModelFactory.load_schema(schema_path)
             if isinstance(schema, dict) and "parameters" in schema:
@@ -3612,6 +3614,7 @@ CRITICAL: Use exact names only."""
                 solver_config,
                 schema_dir,
                 Path(repo_root or "."),
+                runtime_config=self.config,
             )
             schema = ConfigModelFactory.load_schema(schema_path)
             if isinstance(schema, dict) and "parameters" in schema:

@@ -94,6 +94,27 @@ class TestSchemaAwareHandler:
         assert record["resolved_value"] == "0.02"
         assert updates["resolved_config"]["stop_time"] == "0.02"
 
+    def test_human_response_takes_precedence_when_both_present(self):
+        """
+        Given: pending clarification record and both
+               user_response + ai_agent_response are set
+        When:  clarification_handler_node runs
+        Then:  human response is used as resolved value
+               and answered_by='human'
+        """
+        state = _base_state(
+            clarification_history=[_pending_record("stop_time")],
+            user_response="0.03",
+            ai_agent_response="0.02",
+        )
+
+        updates = clarification_handler_node(state)
+        record = updates["clarification_history"][0]
+
+        assert record["answered_by"] == "human"
+        assert record["resolved_value"] == "0.03"
+        assert updates["resolved_config"]["stop_time"] == "0.03"
+
     def test_level_4_response_updates_plot_vars(self):
         """
         Given: pending record with decision_level=4

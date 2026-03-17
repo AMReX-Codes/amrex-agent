@@ -508,6 +508,7 @@ class InputWriterService:
                     solver_config,
                     schema_dir,
                     repo_path,
+                    runtime_config=self.config,
                 )
                 logger.debug(f"Loading schema from: {schema_path}")
 

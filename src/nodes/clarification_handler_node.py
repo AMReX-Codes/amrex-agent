@@ -148,10 +148,11 @@ def _route_after_clarification(state: dict[str, Any]) -> str:
 
 
 def _pick_response(user_response: Any, ai_agent_response: Any) -> tuple[str | None, str]:
-    if _has_text(ai_agent_response):
-        return str(ai_agent_response).strip(), "ai_agent"
+    # Prefer explicit human feedback when both sources are present.
     if _has_text(user_response):
         return str(user_response).strip(), "human"
+    if _has_text(ai_agent_response):
+        return str(ai_agent_response).strip(), "ai_agent"
     return None, "human"
 
 

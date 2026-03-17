@@ -438,7 +438,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 schema_path = ConfigModelFactory.resolve_schema_path(
                     solver_config,
                     config.amrex_agent_root / "database/schemas",
-                    Path(config.repositories.get(solver_name, "."))
+                    Path(config.repositories.get(solver_name, ".")),
+                    runtime_config=config,
                 )
                 feedback = ConfigModelFactory.build_parameter_resolution_feedback(
                     unresolved_params=unresolved,
