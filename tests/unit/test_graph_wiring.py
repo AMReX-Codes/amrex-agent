@@ -247,6 +247,16 @@ class TestIntentClarificationWiring:
         graph_def = compiled_app.get_graph()
         assert "clarification_node" in graph_def.nodes
 
+    def test_clarification_handler_wired_to_schema_aware_node(self, graph_builder):
+        """
+        Given: graph builder internals
+        When:  inspecting clarification_handler runnable binding
+        Then:  it points to src.nodes.clarification_handler_node implementation
+        """
+        node_spec = graph_builder.nodes["clarification_handler"]
+        assert node_spec.runnable.func.__module__ == "src.nodes.clarification_handler_node"
+        assert node_spec.runnable.func.__name__ == "clarification_handler_node"
+
     def test_intent_extraction_runs_before_input_writer(self, compiled_app):
         """
         Given: graph execution order

@@ -13,6 +13,9 @@ from langgraph.graph import END, START, StateGraph
 from src.models import GraphState
 from src.models.paper_validation_manifest import PaperValidationManifest
 from src.nodes.architect_node import architect_node
+from src.nodes.clarification_handler_node import (
+    clarification_handler_node as schema_clarification_handler_node,
+)
 from src.nodes.clarification_node import clarification_node
 from src.nodes.input_writer_node import input_writer_node
 from src.nodes.intent_extraction_node import intent_extraction_node
@@ -2217,7 +2220,7 @@ def create_graph() -> StateGraph:
     graph.add_node("risk_links_traceability_node", risk_links_traceability_node)
     graph.add_node("intent_extraction_node", intent_extraction_node)
     graph.add_node("clarification_node", clarification_node)
-    graph.add_node("clarification_handler", clarification_handler_node)
+    graph.add_node("clarification_handler", schema_clarification_handler_node)
     graph.add_node("sweep_execution_handler", sweep_execution_handler_node)
     graph.add_node("session_dependency_handler", session_dependency_handler_node)
     graph.add_node("level4_depth_guidance_handler", level4_depth_guidance_handler_node)

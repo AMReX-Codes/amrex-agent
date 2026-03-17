@@ -255,7 +255,7 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P1] New clarification handler is not wired into runtime graph",
+        "[DONE] [P1] Clarification handler is now wired into runtime graph",
         "[P2] database_mismatch_policy + staleness checker appear to be dead code (no integration path)",
         "[P2] Clarification handler prioritizes AI response over human response when both are present"
       ],
