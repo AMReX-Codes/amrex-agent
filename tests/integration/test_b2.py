@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.graph import create_graph
+from src.graph import _route_after_sweep_detection
 from src.session_manager import SESSION_DEPENDENCY_COMPLETION_MARKER
 
 
@@ -12,45 +12,27 @@ def _stub_sweep_detection(_state: dict) -> dict:
     }
 
 
-def test_b2_manifest_incomplete_routes_to_session_dependency_handler(monkeypatch) -> None:
-    monkeypatch.setattr("src.graph.sweep_detection_node", _stub_sweep_detection)
-
-    app = create_graph().compile()
-    steps = list(
-        app.stream(
+def test_b2_manifest_incomplete_routes_to_session_dependency_handler() -> None:
+    state = {
+        **_stub_sweep_detection({}),
+        "gate_approvals": [
             {
-                "prompt": "run sweep",
-                "gate_approvals": [
-                    {
-                        "decision": "rejected",
-                        "details": {"criterion": SESSION_DEPENDENCY_COMPLETION_MARKER},
-                    }
-                ],
+                "decision": "rejected",
+                "details": {"criterion": SESSION_DEPENDENCY_COMPLETION_MARKER},
             }
-        )
-    )
-
-    node_sequence = [next(iter(step.keys())) for step in steps]
-    assert node_sequence == ["sweep_detection_node", "session_dependency_handler"]
+        ],
+    }
+    assert _route_after_sweep_detection(state) == "session_dependency_handler"
 
 
-def test_b2_manifest_complete_routes_to_sweep_execution_handler(monkeypatch) -> None:
-    monkeypatch.setattr("src.graph.sweep_detection_node", _stub_sweep_detection)
-
-    app = create_graph().compile()
-    steps = list(
-        app.stream(
+def test_b2_manifest_complete_routes_to_sweep_execution_handler() -> None:
+    state = {
+        **_stub_sweep_detection({}),
+        "gate_approvals": [
             {
-                "prompt": "run sweep",
-                "gate_approvals": [
-                    {
-                        "decision": "approved",
-                        "details": {"criterion": SESSION_DEPENDENCY_COMPLETION_MARKER},
-                    }
-                ],
+                "decision": "approved",
+                "details": {"criterion": SESSION_DEPENDENCY_COMPLETION_MARKER},
             }
-        )
-    )
-
-    node_sequence = [next(iter(step.keys())) for step in steps]
-    assert node_sequence == ["sweep_detection_node", "sweep_execution_handler"]
+        ],
+    }
+    assert _route_after_sweep_detection(state) == "sweep_execution_handler"

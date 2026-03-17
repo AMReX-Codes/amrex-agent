@@ -154,6 +154,8 @@ class SuperfacilityRunner:
 
         if compiled_target is None:
             checked = ", ".join(str(path) for path in compile_targets)
+            if self._is_erf_context(case_dir):
+                raise RuntimeError(f"No ERF executable found. Checked paths: {checked}")
             raise RuntimeError(f"Compilation failed in all targets: {checked}")
 
         # Find the newly compiled executable

@@ -251,6 +251,10 @@ def poll_child_status(child: ChildWorkflowState, poll_fn) -> ChildWorkflowState:
             child.failure_reason = reason
         return child
 
+    if polled_status == child.status:
+        # Polling can legitimately return the same in-flight status repeatedly.
+        return child
+
     if not _advance_status(child, polled_status):
         reason = f"invalid status transition from {child.status.value} to {polled_status.value}"
         if _advance_status(child, ChildJobStatus.failed):

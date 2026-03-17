@@ -5,6 +5,7 @@ LangGraph node wrapper for InputWriterService.
 Architecture: Node = Path logic, Service = I/O operations
 """
 import logging
+import inspect
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -219,15 +220,22 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
         # 2. Call service with individual parameters (per contract)
         # apply_plan() signature: selected_case, modifications, baseline, reasoning, output_dir
         with metrics_context("input_writer", node="input_writer", iteration=state.get("iteration", 0)):
-            result = service.apply_plan(
-                selected_case=selected_case,
-                modifications=modifications,
-                baseline=baseline,
-                reasoning=reasoning,
-                user_prompt=(state.get("prompt") or state.get("user_prompt") or ""),
-                output_dir=str(run_dir),  # Service physically creates this
-                requested_plot_vars=requested_plot_vars,
-            )
+            apply_kwargs = {
+                "selected_case": selected_case,
+                "modifications": modifications,
+                "baseline": baseline,
+                "reasoning": reasoning,
+                "user_prompt": (state.get("prompt") or state.get("user_prompt") or ""),
+                "output_dir": str(run_dir),  # Service physically creates this
+                "requested_plot_vars": requested_plot_vars,
+            }
+            signature = inspect.signature(service.apply_plan)
+            params = signature.parameters
+            accepts_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+            if not accepts_var_kw:
+                apply_kwargs = {key: value for key, value in apply_kwargs.items() if key in params}
+
+            result = service.apply_plan(**apply_kwargs)
 
         logger.info(f"Files written to: {result.get('run_dir', 'unknown')}")
 
