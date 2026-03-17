@@ -15,6 +15,7 @@ from scripts.erf_benchmark.lib.explainability_scoring import (
 from scripts.erf_benchmark.generate_prompt_matrix import build_prompt_matrix_rows
 from scripts.erf_benchmark.make_splits import build_splits
 from scripts.erf_benchmark.run_llm_compare_benchmark import (
+    _run_one,
     detect_llm_unavailable,
     extract_selected_case,
     extract_selected_inputs,
@@ -222,3 +223,58 @@ def test_explainability_records_and_summary() -> None:
     summary = summarize_explainability(records, threshold=0.9)
     assert summary["explainability_pass"] is True
     assert summary["explainability_fail_count"] == 0
+
+
+def test_run_one_does_not_rerun_on_success_with_rate_limit_text(tmp_path, monkeypatch) -> None:
+    run_dir = tmp_path / "run_ok"
+    run_dir.mkdir()
+    payload = {"run_directory": str(run_dir), "selected_case": "Exec/ABL/Case", "used_inputs_file": "Exec/ABL/Case/inputs"}
+    completed = __import__("subprocess").CompletedProcess(
+        args=["python", "amrex_agent.py"],
+        returncode=0,
+        stdout=json.dumps(payload),
+        stderr="Recovered from transient rate limit inside pipeline",
+    )
+    calls = {"count": 0}
+
+    def _run(*_args, **_kwargs):
+        calls["count"] += 1
+        return completed
+
+    monkeypatch.setattr("scripts.erf_benchmark.run_llm_compare_benchmark.subprocess.run", _run)
+    monkeypatch.setattr("scripts.erf_benchmark.run_llm_compare_benchmark.time.sleep", lambda *_args, **_kwargs: None)
+
+    _, _, _, console = _run_one("prompt", "simple", output_root=tmp_path)
+    assert calls["count"] == 1
+    assert console["rate_limit_retries"] == 0
+
+
+def test_run_one_retries_once_on_rate_limited_failure_then_succeeds(tmp_path, monkeypatch) -> None:
+    run_dir = tmp_path / "run_ok_retry"
+    run_dir.mkdir()
+    failure = __import__("subprocess").CompletedProcess(
+        args=["python", "amrex_agent.py"],
+        returncode=1,
+        stdout="",
+        stderr="429 too many requests",
+    )
+    success_payload = {"run_directory": str(run_dir), "selected_case": "Exec/ABL/Case", "used_inputs_file": "Exec/ABL/Case/inputs"}
+    success = __import__("subprocess").CompletedProcess(
+        args=["python", "amrex_agent.py"],
+        returncode=0,
+        stdout=json.dumps(success_payload),
+        stderr="",
+    )
+    calls = {"count": 0}
+
+    def _run(*_args, **_kwargs):
+        calls["count"] += 1
+        return failure if calls["count"] == 1 else success
+
+    monkeypatch.setattr("scripts.erf_benchmark.run_llm_compare_benchmark.subprocess.run", _run)
+    monkeypatch.setattr("scripts.erf_benchmark.run_llm_compare_benchmark.time.sleep", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr("scripts.erf_benchmark.run_llm_compare_benchmark.random.uniform", lambda *_args, **_kwargs: 0.0)
+
+    _, _, _, console = _run_one("prompt", "simple", output_root=tmp_path)
+    assert calls["count"] == 2
+    assert console["rate_limit_retries"] == 1

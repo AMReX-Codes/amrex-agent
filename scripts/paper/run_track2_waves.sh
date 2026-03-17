@@ -378,7 +378,7 @@ run_wave1_only() {
   cat <<'MSG' | tee -a "$RUN_LOG"
 Wave 1 complete. Review results/track2/wave1_summary.json.
 Adjust L2 weights in config based on observed failure patterns.
-When ready, run: ./run_track2_waves.sh --wave2
+When ready, run: ./scripts/paper/run_track2_waves.sh --wave2
 MSG
 }
 

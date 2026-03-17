@@ -202,6 +202,10 @@ def _run_one(
         completed = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if rate_limit_retries >= max_rate_limit_retries:
             break
+        # Avoid duplicate full reruns when the internal pipeline already recovered.
+        # Retry only when rate-limit markers accompany a failing process result.
+        if completed.returncode == 0:
+            break
         if not _is_rate_limited_response(completed.stdout, completed.stderr):
             break
         rate_limit_retries += 1

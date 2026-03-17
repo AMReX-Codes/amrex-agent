@@ -629,9 +629,9 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P1] Wrapper-level rate-limit detection can trigger duplicate full reruns after successful internal recovery",
-        "[P3] Printed follow-up command points to a non-existent script path",
-        "[P1] Wrapper-level rate-limit detection can trigger duplicate full reruns after successful internal recovery"
+        "[DONE] [P1] Wrapper-level rate-limit retry now triggers only on failing runs, preventing duplicate reruns after internal recovery",
+        "[DONE] [P3] Wave follow-up command now points to existing scripts/paper/run_track2_waves.sh path",
+        "[DONE] [P1] Wrapper-level rate-limit retry now triggers only on failing runs, preventing duplicate reruns after internal recovery"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
@@ -640,7 +640,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     }
   ]
 }
