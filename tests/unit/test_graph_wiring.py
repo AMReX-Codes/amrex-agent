@@ -315,6 +315,12 @@ class TestIntentClarificationWiring:
         app = graph_builder.compile()
         assert app is not None
 
+    def test_clarification_handler_reenters_workflow(self, compiled_app):
+        graph_def = compiled_app.get_graph()
+        edges = {(edge.source, edge.target) for edge in graph_def.edges}
+        assert ("clarification_handler", "clarification_node") in edges
+        assert ("clarification_handler", "paper_manifest_gate_node") in edges
+
 
 class TestSweepWiring:
     @pytest.fixture
@@ -383,6 +389,11 @@ class TestSweepWiring:
         """
         app = graph_builder.compile()
         assert app is not None
+
+    def test_sweep_handler_routes_back_to_architect(self, compiled_app):
+        graph_def = compiled_app.get_graph()
+        edges = {(edge.source, edge.target) for edge in graph_def.edges}
+        assert ("sweep_execution_handler", "architect_node") in edges
 
     def test_oracle_paths_unaffected_by_sweep_wiring(self):
         """

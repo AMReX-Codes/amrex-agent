@@ -2338,8 +2338,17 @@ def create_graph() -> StateGraph:
             "clarification_handler": "clarification_handler",
         },
     )
-    graph.add_edge("clarification_handler", END)
-    graph.add_edge("sweep_execution_handler", END)
+    graph.add_conditional_edges(
+        "clarification_handler",
+        _route_after_clarification,
+        {
+            "clarification_handler": "clarification_node",
+            "input_writer_node": "paper_manifest_gate_node",
+            "legacy_input_writer_node": "input_writer_node",
+            "paper_validator_node": "paper_validator_node",
+        },
+    )
+    graph.add_edge("sweep_execution_handler", "architect_node")
     graph.add_edge("session_dependency_handler", END)
     graph.add_conditional_edges(
         "input_writer_node",

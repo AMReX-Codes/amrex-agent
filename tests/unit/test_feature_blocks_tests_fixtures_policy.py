@@ -311,6 +311,7 @@ def test_graph_handlers_and_wiring_cover_feature_block_routes() -> None:
     assert ("architect_node", "intent_extraction_node") in edges
     assert ("paper_validator_node", "intent_extraction_node") in edges
     assert ("paper_validator_node", "__end__") in edges
-    assert ("clarification_handler", "__end__") in edges
-    assert ("sweep_execution_handler", "__end__") in edges
+    assert ("clarification_handler", "clarification_node") in edges
+    assert ("clarification_handler", "paper_manifest_gate_node") in edges
+    assert ("sweep_execution_handler", "architect_node") in edges
     assert ("input_writer_node", "__end__") in edges

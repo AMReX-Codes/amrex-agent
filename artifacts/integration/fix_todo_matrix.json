@@ -189,7 +189,7 @@
       "top_findings": [
         "[DONE] [P1] Preconfirm gate approvals are now persisted from reviewer node execution paths",
         "[DONE] [P2] Benchmark normalization now reports missing validation data as unavailable instead of hard invalid",
-        "[P3] New src.graph.create_graph() flow hard-terminates on sweep/clarification branches"
+        "[DONE] [P3] create_graph clarification/sweep branches now re-enter workflow instead of hard-terminating at END"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
@@ -198,7 +198,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 7,
@@ -459,9 +459,9 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P2] Session manifest merge key can silently drop entries for different embedding configurations",
-        "[P3] Missing test for multi-model/provider merge behavior in session manifest",
-        "[P2] Session manifest merge key can silently drop entries for different embedding configurations"
+        "[DONE] [P2] Session manifest merge keys preserve distinct embedding provider/model variants",
+        "[DONE] [P3] Added regression test for multi-model/provider session-manifest merge behavior",
+        "[DONE] [P2] Session manifest merge keys preserve distinct embedding provider/model variants"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
@@ -470,7 +470,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 15,
@@ -596,7 +596,7 @@
       },
       "top_findings": [
         "[DONE] [P1] ERF central build fallback now prioritizes case-derived Exec/<group> over default RegTests fallback",
-        "[P2] Visualization config normalization drops plot options and plot types from architect output",
+        "[DONE] [P2] Visualization config normalization preserves architect plot types and extra plot options",
         "[DONE] [P1] ERF central build fallback now prioritizes case-derived Exec/<group> over default RegTests fallback"
       ],
       "top_failing_tests": [
@@ -606,7 +606,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 19,

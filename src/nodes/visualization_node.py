@@ -457,18 +457,18 @@ def _build_vis_config(
     for plot_cfg in vis_config.get("plots", []):
         if not isinstance(plot_cfg, dict):
             continue
-        if plot_cfg.get("type", "slice") != "slice":
-            continue
-        field = plot_cfg.get("field")
+        field = str(plot_cfg.get("field", "")).strip()
         if not field:
             continue
-        axis = plot_cfg.get("axis") or preferred_axis
-        plan_plots.append({
-            "type": "slice",
+        ptype = str(plot_cfg.get("type", "slice")).strip() or "slice"
+        normalized_plot = {
+            **plot_cfg,
+            "type": ptype,
             "field": field,
-            "axis": axis,
-            **({k: v for k, v in plot_cfg.items() if k not in {"type", "field", "axis"}}),
-        })
+        }
+        if ptype == "slice":
+            normalized_plot["axis"] = str(plot_cfg.get("axis") or preferred_axis)
+        plan_plots.append(normalized_plot)
 
     fields: list[str] = []
     try:
@@ -485,14 +485,22 @@ def _build_vis_config(
     def _add_plot(plot_cfg: dict[str, Any]) -> None:
         field = str(plot_cfg.get("field", "")).strip()
         ptype = str(plot_cfg.get("type", "slice")).strip() or "slice"
-        axis = str(plot_cfg.get("axis", preferred_axis)).strip() or preferred_axis
-        if not field or ptype != "slice":
+        if not field:
             return
-        key = (ptype, field, axis)
+        axis = str(plot_cfg.get("axis", preferred_axis)).strip() or preferred_axis
+        dedupe_axis = axis if ptype == "slice" else str(plot_cfg.get("axis", ""))
+        key = (ptype, field, dedupe_axis)
         if key in seen_keys:
             return
         seen_keys.add(key)
-        merged_plots.append({"type": ptype, "field": field, "axis": axis})
+        normalized_plot = {
+            **plot_cfg,
+            "type": ptype,
+            "field": field,
+        }
+        if ptype == "slice":
+            normalized_plot["axis"] = axis
+        merged_plots.append(normalized_plot)
 
     # 1) Requested plot vars are primary source of truth.
     for field in requested_fields:
