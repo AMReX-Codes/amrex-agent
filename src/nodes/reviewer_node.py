@@ -611,6 +611,10 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     retry_count = state.get("retry_count", 0)
     max_retries = state.get("max_retries", 3)
     workflow_history = state.get("workflow_history", [])
+    preexec_clarification_fallback_enabled = (
+        getattr(config, "enable_clarification_subgraph", False) is True
+        and getattr(config, "preexec_route_to_clarification_on_retry_exhausted", False) is True
+    )
     if gate_entry:
         workflow_history = workflow_history + [gate_entry]
 
@@ -661,6 +665,27 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 f"[Reviewer] Max retries ({max_retries}) exceeded for parameter resolution - "
                 f"terminating with {len(unresolved)} unresolved parameters"
             )
+            if review_context == "pre_execution" and preexec_clarification_fallback_enabled:
+                history_entry = {
+                    "node": "reviewer",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "action": "parameter_resolution_clarification_route",
+                    "iteration": iteration,
+                    "details": {
+                        "status": "clarification",
+                        "reason": "max_retries_exceeded_parameter_resolution",
+                        "unresolved_parameters": unresolved,
+                        "retry_count": retry_count,
+                        "max_retries": max_retries,
+                    },
+                }
+                return {
+                    "mode": "clarification",
+                    "retry_count": retry_count,
+                    "iteration": iteration,
+                    "errors_active": [f"Unresolved parameter: {p[0]}" for p in unresolved],
+                    "workflow_history": workflow_history + [history_entry],
+                }
             taxonomy = _build_final_error_taxonomy(
                 category="parameter_resolution_max_retries",
                 reason="max_retries_exceeded_parameter_resolution",
@@ -895,44 +920,68 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 )
                 if last_schema_retry:
                     last_unresolved = last_schema_retry.get("details", {}).get("unresolved_parameters", [])
-                    if last_unresolved == feedback["unresolved_parameters"]:
-                        taxonomy = _build_final_error_taxonomy(
-                            category="schema_resolution_stalled",
-                            reason="schema_resolution_stalled",
-                            retry_count=retry_count,
-                            max_retries=max_retries,
-                            unresolved_parameters=feedback["unresolved_parameters"],
-                        )
+                if last_unresolved == feedback["unresolved_parameters"]:
+                    if review_context == "pre_execution" and preexec_clarification_fallback_enabled:
                         history_entry = {
                             "node": "reviewer",
                             "timestamp": datetime.utcnow().isoformat() + "Z",
-                            "action": "parameter_resolution_stalled",
+                            "action": "parameter_resolution_clarification_route",
                             "iteration": iteration,
                             "details": {
-                                "status": "terminal",
+                                "status": "clarification",
                                 "reason": "schema_resolution_stalled",
                                 "unresolved_parameters": feedback["unresolved_parameters"],
-                                "resolution_guidance": feedback["resolution_guidance"],
-                                "available_schema_params_count": len(feedback["available_schema_params"]),
-                                "suggested_params": feedback["suggested_params"],
-                                "remap_mapping": remap_mapping,
-                                "remap_success_count": remap_success_count,
                                 "retry_count": retry_count,
-                                "final_error_taxonomy": taxonomy,
-                            }
+                                "max_retries": max_retries,
+                            },
                         }
-
                         return {
-                            "mode": "terminal",
-                            "error": (
-                                "Parameter resolution stalled with unchanged unresolved parameters: "
-                                f"{[p[0] for p in feedback['unresolved_parameters']]}"
-                            ),
-                            "errors_active": [f"Unresolved parameter: {p[0]}" for p in feedback["unresolved_parameters"]],
+                            "mode": "clarification",
+                            "retry_count": retry_count,
+                            "iteration": iteration,
+                            "errors_active": [
+                                f"Unresolved parameter: {p[0]}"
+                                for p in feedback["unresolved_parameters"]
+                            ],
                             "workflow_history": workflow_history + [history_entry],
-                            "reviewer_failure_category": taxonomy["category"],
+                        }
+                    taxonomy = _build_final_error_taxonomy(
+                        category="schema_resolution_stalled",
+                        reason="schema_resolution_stalled",
+                        retry_count=retry_count,
+                        max_retries=max_retries,
+                        unresolved_parameters=feedback["unresolved_parameters"],
+                    )
+                    history_entry = {
+                        "node": "reviewer",
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                        "action": "parameter_resolution_stalled",
+                        "iteration": iteration,
+                        "details": {
+                            "status": "terminal",
+                            "reason": "schema_resolution_stalled",
+                            "unresolved_parameters": feedback["unresolved_parameters"],
+                            "resolution_guidance": feedback["resolution_guidance"],
+                            "available_schema_params_count": len(feedback["available_schema_params"]),
+                            "suggested_params": feedback["suggested_params"],
+                            "remap_mapping": remap_mapping,
+                            "remap_success_count": remap_success_count,
+                            "retry_count": retry_count,
                             "final_error_taxonomy": taxonomy,
                         }
+                    }
+
+                    return {
+                        "mode": "terminal",
+                        "error": (
+                            "Parameter resolution stalled with unchanged unresolved parameters: "
+                            f"{[p[0] for p in feedback['unresolved_parameters']]}"
+                        ),
+                        "errors_active": [f"Unresolved parameter: {p[0]}" for p in feedback["unresolved_parameters"]],
+                        "workflow_history": workflow_history + [history_entry],
+                        "reviewer_failure_category": taxonomy["category"],
+                        "final_error_taxonomy": taxonomy,
+                    }
                 history_entry = {
                     "node": "reviewer",
                     "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -1014,6 +1063,30 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             remap_mapping = schema_hint.get("remap_mapping", {}) if isinstance(schema_hint, dict) else {}
             suggested_params = schema_hint.get("suggested_params", {}) if isinstance(schema_hint, dict) else {}
             if retry_count >= max_retries:
+                if review_context == "pre_execution" and preexec_clarification_fallback_enabled:
+                    history_entry = {
+                        "node": "reviewer",
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                        "action": "intent_coverage_clarification_route",
+                        "iteration": iteration,
+                        "details": {
+                            "status": "clarification",
+                            "reason": "max_retries_exceeded_intent_coverage",
+                            "unresolved_requests": unresolved_requests,
+                            "retry_count": retry_count,
+                            "max_retries": max_retries,
+                        },
+                    }
+                    return {
+                        "mode": "clarification",
+                        "retry_count": retry_count,
+                        "iteration": iteration,
+                        "errors_active": [
+                            f"Intent request missing from plan: {name}"
+                            for name in unresolved_request_names
+                        ],
+                        "workflow_history": workflow_history + [history_entry],
+                    }
                 taxonomy = _build_final_error_taxonomy(
                     category="intent_coverage_max_retries",
                     reason="max_retries_exceeded_intent_coverage",

@@ -1,5 +1,6 @@
 """Integration coverage for reviewer reflexive guidance and clarification routing."""
 
+import importlib
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -408,3 +409,62 @@ def test_flags_off_regression_keeps_retry_loop_without_clarification(tmp_path):
 
     assert final_state["mode"] == "proceed"
     assert clarification_mock.call_count == 0
+
+
+@pytest.mark.integration_full
+def test_preexec_retry_exhaustion_routes_to_clarification_when_enabled(tmp_path, monkeypatch):
+    """Pre-exec intent/parameter retry exhaustion should route to clarification when enabled."""
+    config = _base_config(tmp_path)
+    config.enable_clarification_subgraph = True
+    config.preexec_route_to_clarification_on_retry_exhausted = True
+    config.max_iterations = 0
+
+    with (
+        patch("src.services.embedding_service_factory.get_embedding_service", return_value=DummyEmbeddingService()),
+        patch("src.nodes.architect_node.ArchitectService") as mock_arch_cls,
+        patch("src.nodes.reviewer_node.ReviewerOrchestrator") as mock_rev_cls,
+        patch("src.services.cases.AMReXCasesService", return_value=object()),
+        patch("src.nodes.input_writer_node.InputWriterService", DummyInputWriterService),
+        patch("src.nodes.runner_node.SuperfacilityRunner", DummyRunner),
+        patch("src.nodes.analysis_node.AnalysisService") as mock_analysis_cls,
+        patch("src.main.clarification_node") as clarification_mock,
+    ):
+        mock_arch_cls.return_value.execute_planning.return_value = _plan(
+            "Exec/CanonicalFlows/SquallLine_2D",
+            "ERF",
+        )
+        mock_rev_cls.return_value.validate_plan.return_value = _validation_result("proceed")
+        mock_analysis_cls.return_value.analyze_simulation.return_value = {"status": "success"}
+        clarification_mock.return_value = {
+            "clarification_needed": False,
+            "clarification_questions": [],
+        }
+
+        class FakeIntentCoverageAuditService:
+            def __init__(self, _config):
+                pass
+
+            def audit(self, prompt, plan):
+                del prompt, plan
+                return {
+                    "requires_intent_resolution": True,
+                    "unresolved_requests": [("dt", "20")],
+                    "resolution_guidance": "Include requested dt",
+                    "suggested_modifications": {"dt": "20"},
+                    "reason_code": "intent_missing",
+                }
+
+        reviewer_module = importlib.import_module("src.nodes.reviewer_node")
+        monkeypatch.setattr(
+            reviewer_module,
+            "IntentCoverageAuditService",
+            FakeIntentCoverageAuditService,
+        )
+
+        final_state = run_agent(
+            "integration: force intent retry exhaustion to clarification",
+            config,
+        )
+
+    assert clarification_mock.call_count >= 1
+    assert final_state["mode"] == "proceed"

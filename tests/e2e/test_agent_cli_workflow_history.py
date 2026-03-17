@@ -807,3 +807,85 @@ def test_cli_full_mode_postexec_repair_rerun_converges_remora(tmp_path: Path) ->
         allow_preexec_terminal_skip=True,
         solver_label="REMORA",
     )
+
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.use_real_services
+@pytest.mark.requires_solver("ERF")
+@pytest.mark.requires_repos("ERF")
+@pytest.mark.requires_schema("ERF")
+@pytest.mark.requires_indices("faiss")
+def test_cli_benchmark_wave_phys_row_avoids_preexec_retry_exhaustion(tmp_path: Path) -> None:
+    """Benchmark-row reproducer: one wave_phys row should not terminate via pre-exec retry-exhaustion."""
+    repo_path = _resolve_erf_repo()
+    if not repo_path:
+        pytest.skip("ERF repo not available")
+
+    row_id = "abl_neutral_wave_phys1"
+    prompt_text = (
+        "Configure ERF ABL neutral boundary layer over flat terrain with coriolis forcing and "
+        "stratification controls. Use the canonical Neutral_ABL setup and select a physically "
+        "consistent inputs file for this case."
+    )
+    cfg_path = REPO_ROOT / "results/track2_recovery/model_sweep/configs/lbl__llama4-scout_tuned_weights_retune_20260316.yaml"
+    if not cfg_path.exists():
+        pytest.skip(f"Benchmark config missing: {cfg_path}")
+
+    output_dir = tmp_path / "runs_benchmark_row_repro"
+    cmd = [
+        sys.executable,
+        "./amrex_agent.py",
+        "--prompt",
+        prompt_text,
+        "--output-dir",
+        str(output_dir),
+        "--indexing-strategy",
+        "simple",
+        "--inputs-file-strategy",
+        "llm_compare",
+        "--run-mode",
+        "dry",
+        "--config",
+        str(cfg_path),
+        "--max-iterations",
+        "3",
+        "--save-workflow",
+    ]
+
+    env = os.environ.copy()
+    env["ERF_REPO_PATH"] = str(repo_path)
+
+    result = _run_cli(cmd, env, timeout_seconds=300)
+    run_dir = _find_run_directory(output_dir)
+    workflow_path = _find_workflow_history(output_dir, run_dir)
+    assert workflow_path is not None and workflow_path.exists(), (
+        "workflow_history missing for benchmark-row reproducer.\n"
+        f"row_id={row_id}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+    workflow_history = json.loads(workflow_path.read_text(encoding="utf-8"))
+    assert isinstance(workflow_history, list) and workflow_history
+
+    terminal_preexec = [
+        e for e in workflow_history
+        if e.get("node") == "reviewer"
+        and e.get("action") in {
+            "intent_coverage_max_retries",
+            "parameter_resolution_max_retries",
+            "parameter_resolution_stalled",
+        }
+        and e.get("details", {}).get("status") == "terminal"
+        and e.get("details", {}).get("review_context", "pre_execution") in {None, "pre_execution"}
+    ]
+    assert not terminal_preexec, (
+        "Benchmark-row run terminated via pre-execution retry-exhaustion.\n"
+        f"row_id={row_id}\n"
+        f"workflow_path={workflow_path}\n"
+        f"returncode={result.returncode}\n"
+        f"terminal_entries={terminal_preexec}\n"
+        f"stdout:\n{result.stdout}\n"
+        f"stderr:\n{result.stderr}"
+    )

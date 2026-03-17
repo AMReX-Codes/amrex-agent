@@ -765,6 +765,10 @@ class AMReXAgentConfig(BaseModel):
         default=True,
         description="When true, reviewer routes to clarification only for intent_missing taxonomy."
     )
+    preexec_route_to_clarification_on_retry_exhausted: bool = Field(
+        default=False,
+        description="When true, pre-execution intent/parameter retry exhaustion routes to clarification instead of terminal."
+    )
     reviewer_reflexive_guidance_enabled: bool = Field(
         default=True,
         description="Enable structured reviewer guidance payloads for architect retries."

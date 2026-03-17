@@ -259,6 +259,137 @@ class TestReviewerNodeFinalTaxonomy:
         assert taxonomy["category"] == "parameter_resolution_max_retries"
         assert updates["workflow_history"][-1]["details"]["final_error_taxonomy"] == taxonomy
 
+    def test_parameter_resolution_max_retries_routes_to_clarification_when_enabled(self, mock_config):
+        """
+        GIVEN: parameter resolution retries exhausted in pre-execution context
+        WHEN: clarification fallback is enabled
+        THEN: reviewer routes to clarification instead of terminal
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.enable_clarification_subgraph = True
+        mock_config.preexec_route_to_clarification_on_retry_exhausted = True
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "PeleC/Exec/RegTests/PMF",
+                        "modifications": [("amr.n_cell", "64 64 64")],
+                        "baseline": {"code_name": "PeleC", "local_path": "cases/PMF"},
+                    },
+                },
+                {
+                    "node": "input_writer",
+                    "details": {
+                        "requires_parameter_resolution": True,
+                        "unresolved_parameters": [("pelec.bad_param", "1")],
+                        "resolution_guidance": "Remap to a schema key.",
+                        "available_schema_params": ["pelec.cfl"],
+                        "suggested_params": {"pelec.bad_param": "pelec.cfl"},
+                    },
+                },
+            ],
+            "review_context": "pre_execution",
+            "iteration": 3,
+            "retry_count": 3,
+            "max_retries": 3,
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+
+        assert updates["mode"] == "clarification"
+        assert updates["workflow_history"][-1]["action"] == "parameter_resolution_clarification_route"
+
+    def test_intent_coverage_max_retries_routes_to_clarification_when_enabled(self, monkeypatch, mock_config):
+        """
+        GIVEN: intent coverage retries exhausted in pre-execution context
+        WHEN: clarification fallback is enabled
+        THEN: reviewer routes to clarification instead of terminal
+        """
+        mock_config.preconfirm_gate = False
+        mock_config.preconfirm_gate_auto_approve = False
+        mock_config.reviewer_intent_coverage_enabled = True
+        mock_config.enable_clarification_subgraph = True
+        mock_config.preexec_route_to_clarification_on_retry_exhausted = True
+
+        class FakeOrchestrator:
+            def __init__(self, _config):
+                pass
+
+            def validate_plan(self, _plan):
+                return type(
+                    "ValidationResult",
+                    (),
+                    {
+                        "mode": "proceed",
+                        "violations": [],
+                        "summary": "ok",
+                        "available_schema_params": ["erf.fixed_dt"],
+                        "required_solver": None,
+                        "forbidden_path_patterns": [],
+                        "preferred_path_patterns": [],
+                        "excluded_cases": [],
+                        "schema_escalation_required": False,
+                        "replan_reason_codes": [],
+                    },
+                )
+
+        class FakeIntentCoverageAuditService:
+            def __init__(self, _config):
+                pass
+
+            def audit(self, prompt, plan):
+                del prompt, plan
+                return {
+                    "requires_intent_resolution": True,
+                    "unresolved_requests": [("dt", "20")],
+                    "resolution_guidance": "Include requested dt explicitly",
+                    "suggested_modifications": {"dt": "20"},
+                    "reason_code": "intent_missing",
+                }
+
+        monkeypatch.setattr(reviewer_node_module, "ReviewerOrchestrator", FakeOrchestrator)
+        monkeypatch.setattr(reviewer_node_module, "IntentCoverageAuditService", FakeIntentCoverageAuditService)
+        monkeypatch.setattr(
+            reviewer_node_module,
+            "_resolve_schema_backed_intent_assignments",
+            lambda **_kwargs: (
+                {"erf.fixed_dt": "20"},
+                {"erf.fixed_dt": {"schema_verified": True, "source": "intent_coverage"}},
+                {"remap_mapping": {"dt": "erf.fixed_dt"}, "suggested_params": {"dt": ["erf.fixed_dt"]}},
+            ),
+        )
+
+        state = {
+            "config": mock_config,
+            "workflow_history": [
+                {
+                    "node": "architect",
+                    "details": {
+                        "selected_case": "ERF/Exec/ABL",
+                        "modifications": [("max_step", "10")],
+                        "baseline": {"code_name": "ERF", "local_path": "ERF/Exec/ABL"},
+                    },
+                }
+            ],
+            "prompt": "Set dt = 20",
+            "review_context": "pre_execution",
+            "iteration": 2,
+            "retry_count": 3,
+            "max_retries": 3,
+            "errors_active": [],
+            "errors_found": [],
+            "errors_fixed": [],
+        }
+
+        updates = reviewer_node_module.reviewer_node(state)
+
+        assert updates["mode"] == "clarification"
+        assert updates["workflow_history"][-1]["action"] == "intent_coverage_clarification_route"
+
     def test_postexec_retry_emits_repair_feedback(self, monkeypatch, mock_config):
         """
         GIVEN: Post-execution failure with timestep-like modification present
