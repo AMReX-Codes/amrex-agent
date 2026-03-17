@@ -338,9 +338,12 @@ class TestArchitectOrchestration:
         plan = mock_architect.create_plan_rag(query)
         
         # Assert - verify call order
-        mock_architect.select_solver.assert_called_once_with(query)
+        mock_architect.select_solver.assert_called_once()
+        assert mock_architect.select_solver.call_args.args[0] == query
+        assert "routing_intent" in mock_architect.select_solver.call_args.kwargs
         mock_architect.retrieve_context.assert_called_once()
         mock_architect.select_baseline.assert_called_once()
+        assert "routing_intent" in mock_architect.select_baseline.call_args.kwargs
         mock_architect.plan_modifications.assert_called_once()
         
         # Verify plan structure

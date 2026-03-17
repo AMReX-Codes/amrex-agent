@@ -130,6 +130,28 @@ class InputsFileSelector:
         return 0.5
 
     @classmethod
+    def _select_by_prompt_anchor(
+        cls,
+        candidates: list[Path],
+        user_prompt: str | None = None,
+    ) -> Path | None:
+        prompt = (user_prompt or "").lower()
+        if not prompt:
+            return None
+
+        normalized_candidates = {candidate.name.lower(): candidate for candidate in candidates}
+        direct_markers = [
+            "inputs_anelastic",
+            "inputs_compressible",
+            "inputs_boussinesq",
+            "inputs",
+        ]
+        for marker in direct_markers:
+            if marker in prompt and marker in normalized_candidates:
+                return normalized_candidates[marker]
+        return None
+
+    @classmethod
     def select_best_inputs_file(
         cls,
         case_dir: Path,
@@ -200,6 +222,16 @@ class InputsFileSelector:
             strategy = "smallest"
 
         if strategy == "llm_compare":
+            anchored = cls._select_by_prompt_anchor(candidates, user_prompt=user_prompt)
+            if anchored:
+                logger.info(f"Selected inputs file: {anchored.name} (strategy: prompt_anchor)")
+                _record_inputs_selection(
+                    strategy="prompt_anchor",
+                    original_strategy=original_strategy,
+                    selected=anchored,
+                    candidates=candidates,
+                )
+                return anchored
             selected = cls._select_with_llm(
                 case_dir,
                 candidates,

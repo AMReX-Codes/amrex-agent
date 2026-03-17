@@ -427,6 +427,72 @@ class TestSolverDisambiguationAlternatives:
         assert selected[0]["selection_source"] == "level0_flat_case_override"
         architect.cases.find_best_match.assert_not_called()
 
+    def test_flat_level0_blocks_cross_solver_switch_when_prompt_has_explicit_solver(self, tmp_path):
+        query = "Configure ERF for the Exec/CanonicalFlows/Canonical_LES/Neutral_ABL case"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+        architect.level0_searcher = Mock()
+        architect.level0_searcher.search = Mock(
+            return_value=[
+                {"code": "ERF", "score": 0.52},
+                {"code": "PeleC", "score": 0.50},
+            ]
+        )
+        architect.code_configs = {
+            "ERF": Mock(code_name="ERF"),
+            "PeleC": Mock(code_name="PeleC"),
+        }
+        architect._find_level2_case_name_candidate = Mock(
+            return_value={
+                "solver": "PeleC",
+                "repo_path": "Exec/Production/PistonBowl",
+                "match_confidence": 0.95,
+            }
+        )
+        architect.llm_client = Mock()
+        architect.cases = Mock()
+        architect.cases.find_best_match = Mock(return_value=("PeleC", "Exec/Production/PistonBowl"))
+
+        selection = architect.select_solver(query)
+
+        assert selection.code_name == "ERF"
+
+    def test_level2_override_rejected_on_explicit_solver_conflict(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+        erf_cfg = Mock(code_name="ERF", level0_physics_regimes=[{"family": "atmos"}])
+        pelec_cfg = Mock(code_name="PeleC", level0_physics_regimes=[{"family": "combustion"}])
+        architect.code_configs = {"ERF": erf_cfg, "PeleC": pelec_cfg}
+        architect._find_level2_case_name_candidate = Mock(
+            return_value={
+                "solver": "PeleC",
+                "repo_path": "Exec/Production/PistonBowl",
+                "match_confidence": 0.95,
+            }
+        )
+
+        routing_intent = architect._build_routing_intent(
+            "Configure ERF for Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+        )
+        selected_cfg, trace = architect._apply_level2_case_name_override(
+            prompt="Configure ERF for Exec/CanonicalFlows/Canonical_LES/Neutral_ABL",
+            solver_config=erf_cfg,
+            solver_confidence=0.05,
+            routing_intent=routing_intent,
+        )
+
+        assert selected_cfg.code_name == "ERF"
+        assert trace["level2_override_applied"] is False
+        assert trace["level2_override_rejected"] is True
+        assert trace["level2_override_rejection_reason_code"] == "explicit_solver_conflict"
+
 
 # Architect Service: Solver Selection Marker
 pytestmark = pytest.mark.architect_solver_selection

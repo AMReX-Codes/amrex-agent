@@ -33,3 +33,22 @@ def test_select_best_inputs_file_returns_none_when_missing(tmp_path):
     )
 
     assert selected is None
+
+
+def test_select_best_inputs_file_llm_compare_honors_prompt_anchor(tmp_path):
+    case_dir = tmp_path / "case"
+    case_dir.mkdir()
+
+    anelastic = case_dir / "inputs_anelastic"
+    compressible = case_dir / "inputs_compressible"
+    anelastic.write_text("amr.n_cell = 64 64 64\n")
+    compressible.write_text("amr.n_cell = 64 64 64\n")
+
+    selected = InputsFileSelector.select_best_inputs_file(
+        case_dir,
+        strategy="llm_compare",
+        available_files=[compressible, anelastic],
+        user_prompt="Please use inputs_anelastic for this baseline.",
+    )
+
+    assert selected == anelastic

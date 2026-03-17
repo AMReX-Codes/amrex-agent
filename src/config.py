@@ -714,6 +714,49 @@ class AMReXAgentConfig(BaseModel):
         ge=1,
         description="Minimum number of Level-2 metadata files that must contain the matched case."
     )
+    routing_intent_enabled: bool = Field(
+        default=True,
+        description="Enable prompt-anchor routing intent constraints for solver/case selection."
+    )
+    routing_intent_conflict_policy: Literal["block_then_clarify", "penalize_only"] = Field(
+        default="block_then_clarify",
+        description="Routing intent conflict policy for explicit prompt anchors."
+    )
+    routing_intent_anchor_min_segment_overlap: float = Field(
+        default=0.60,
+        ge=0.0,
+        le=1.0,
+        description="Minimum path-segment overlap ratio to treat a case as aligned with explicit path anchors."
+    )
+    routing_intent_exact_path_boost: float = Field(
+        default=0.20,
+        ge=0.0,
+        description="Score boost for exact explicit path anchor matches."
+    )
+    routing_intent_segment_boost: float = Field(
+        default=0.12,
+        ge=0.0,
+        description="Score boost for partial segment overlap with explicit path anchors."
+    )
+    routing_intent_cross_solver_penalty: float = Field(
+        default=0.25,
+        ge=0.0,
+        description="Score penalty for cross-solver candidates when explicit solver anchors are present."
+    )
+    routing_intent_high_gap_clarification_threshold: float = Field(
+        default=0.20,
+        ge=0.0,
+        le=1.0,
+        description="When conflicting evidence exceeds this gap under explicit anchors, request clarification."
+    )
+    routing_intent_apply_to_level2_override: bool = Field(
+        default=True,
+        description="Apply routing intent constraints before Level-2 case-name override."
+    )
+    routing_intent_apply_to_near_tie: bool = Field(
+        default=True,
+        description="Apply routing intent constraints during Level-0 near-tie disambiguation."
+    )
     
     inputs_file_strategy: Literal["oldest", "newest", "smallest", "llm_compare", "override"] = Field(
         default="newest",

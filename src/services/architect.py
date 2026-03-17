@@ -32,6 +32,7 @@ from src.services.cases import AMReXCasesService
 from src.services.config_model_factory import ConfigModelFactory
 from src.services.knowledge import PeleKnowledgeService
 from src.services.plan import SimulationPlan, SimulationPlanFactory
+from src.models.routing_intent import RoutingIntent
 from src.utils.llm_calls import LLMCallSpec, call_llm
 from database.indexing.level2_constants import LEVEL2_BASE_KEYS
 
@@ -349,6 +350,141 @@ class ArchitectService:
                 return default
         return default
 
+    def _extract_prompt_case_anchor(self, prompt: str) -> str | None:
+        matches = re.findall(r"(?:[A-Za-z0-9_.-]+/){2,}[A-Za-z0-9_.-]+", prompt or "")
+        if not matches:
+            return None
+        ranked = sorted(
+            matches,
+            key=lambda value: (
+                1 if str(value).lower().startswith("exec/") else 0,
+                len(str(value)),
+            ),
+            reverse=True,
+        )
+        return str(ranked[0]).strip()
+
+    def _extract_prompt_solver_anchor(self, prompt: str) -> str | None:
+        prompt_lower = (prompt or "").lower()
+        best: tuple[int, str] | None = None
+        for solver_name in self.code_configs.keys():
+            token = solver_name.lower()
+            if not token:
+                continue
+            idx = prompt_lower.find(token)
+            if idx < 0:
+                continue
+            if best is None or idx < best[0]:
+                best = (idx, solver_name)
+        return best[1] if best else None
+
+    def _build_routing_intent(
+        self,
+        prompt: str,
+        reviewer_guidance: dict[str, Any] | None = None,
+    ) -> RoutingIntent:
+        if not self._config_bool("routing_intent_enabled", True):
+            return RoutingIntent(conflict_policy=self._routing_conflict_policy())
+
+        explicit_solver = self._extract_prompt_solver_anchor(prompt)
+        explicit_case_path = self._extract_prompt_case_anchor(prompt)
+        path_segments = [s.lower() for s in (explicit_case_path or "").split("/") if s]
+        source_tags: list[str] = ["prompt"]
+
+        required_solver = None
+        preferred_path_patterns: list[str] = []
+        forbidden_path_patterns: list[str] = []
+        if isinstance(reviewer_guidance, dict):
+            required_solver = reviewer_guidance.get("required_solver")
+            preferred_path_patterns = list(reviewer_guidance.get("preferred_path_patterns") or [])
+            forbidden_path_patterns = list(reviewer_guidance.get("forbidden_path_patterns") or [])
+            source_tags.append("reviewer_guidance")
+
+        allowed_solvers: list[str] = []
+        if isinstance(required_solver, str) and required_solver in self.code_configs:
+            allowed_solvers = [required_solver]
+        elif explicit_solver and explicit_solver in self.code_configs:
+            allowed_solvers = [explicit_solver]
+
+        forbidden_solvers = [name for name in self.code_configs.keys() if allowed_solvers and name not in allowed_solvers]
+        if explicit_case_path and explicit_case_path not in preferred_path_patterns:
+            preferred_path_patterns.insert(0, explicit_case_path)
+
+        if explicit_solver or explicit_case_path:
+            strength = "strong"
+        elif any(token in (prompt or "").lower() for token in ("abl", "neutral", "boundary layer", "canonical")):
+            strength = "weak"
+        else:
+            strength = "none"
+
+        return RoutingIntent(
+            explicit_solver=explicit_solver,
+            explicit_case_path=explicit_case_path,
+            path_segments=path_segments,
+            anchor_strength=strength,
+            allowed_solvers=allowed_solvers,
+            forbidden_solvers=forbidden_solvers,
+            preferred_path_patterns=preferred_path_patterns,
+            forbidden_path_patterns=forbidden_path_patterns,
+            baseline_override_candidate=explicit_case_path,
+            conflict_policy=self._routing_conflict_policy(),
+            source_tags=source_tags,
+        )
+
+    def _routing_conflict_policy(self) -> str:
+        policy = str(getattr(self.config, "routing_intent_conflict_policy", "block_then_clarify") or "block_then_clarify").strip().lower()
+        if policy in {"penalize_only", "block_then_clarify"}:
+            return policy
+        return "block_then_clarify"
+
+    def _path_overlap_ratio(self, case_path: str, segments: list[str]) -> float:
+        if not case_path or not segments:
+            return 0.0
+        candidate_segments = {s.lower() for s in str(case_path).split("/") if s}
+        if not candidate_segments:
+            return 0.0
+        matched = sum(1 for segment in segments if segment in candidate_segments)
+        return matched / max(1, len(segments))
+
+    def _solver_conflicts_routing_intent(
+        self,
+        solver_name: str | None,
+        routing_intent: RoutingIntent | None,
+    ) -> tuple[bool, str | None]:
+        if not routing_intent or routing_intent.anchor_strength != "strong":
+            return False, None
+        if routing_intent.allowed_solvers and solver_name not in set(routing_intent.allowed_solvers):
+            return True, "explicit_solver_conflict"
+        if solver_name and solver_name in set(routing_intent.forbidden_solvers):
+            return True, "forbidden_solver_conflict"
+        return False, None
+
+    def _path_conflicts_routing_intent(
+        self,
+        case_path: str | None,
+        routing_intent: RoutingIntent | None,
+    ) -> tuple[bool, str | None]:
+        if not routing_intent or routing_intent.anchor_strength != "strong":
+            return False, None
+        if not case_path:
+            return False, None
+
+        case_norm = str(case_path).strip().lower()
+        anchor = (routing_intent.explicit_case_path or "").strip().lower()
+        if anchor:
+            if case_norm == anchor or case_norm.endswith(anchor) or anchor.endswith(case_norm):
+                return False, None
+            overlap = self._path_overlap_ratio(case_norm, routing_intent.path_segments)
+            min_overlap = self._config_float("routing_intent_anchor_min_segment_overlap", 0.60)
+            if overlap < min_overlap:
+                return True, "path_anchor_conflict"
+
+        for pattern in routing_intent.forbidden_path_patterns:
+            if pattern and pattern.lower() in case_norm:
+                return True, "forbidden_path_pattern"
+
+        return False, None
+
     @staticmethod
     def _normalize_weights(weights: dict[str, float]) -> dict[str, float]:
         cleaned: dict[str, float] = {}
@@ -555,6 +691,7 @@ class ArchitectService:
         prompt: str,
         solver_config,
         solver_confidence: float,
+        routing_intent: RoutingIntent | None = None,
     ) -> tuple[Any, dict[str, Any]]:
         try:
             level0_confidence = float(solver_confidence)
@@ -568,6 +705,8 @@ class ArchitectService:
             "level2_override_solver": None,
             "level2_override_case": None,
             "level2_override_confidence": None,
+            "level2_override_rejected": False,
+            "level2_override_rejection_reason_code": None,
         }
 
         enabled = self._config_bool("level2_override_enabled", True)
@@ -595,6 +734,22 @@ class ArchitectService:
         candidate_solver_config = self.code_configs.get(candidate_solver_name)
         if not candidate_solver_config:
             return solver_config, trace
+
+        if self._config_bool("routing_intent_apply_to_level2_override", True):
+            if routing_intent is None:
+                routing_intent = self._build_routing_intent(prompt)
+            solver_conflict, solver_reason = self._solver_conflicts_routing_intent(
+                candidate_solver_name,
+                routing_intent,
+            )
+            case_conflict, case_reason = self._path_conflicts_routing_intent(
+                candidate.get("repo_path") or candidate.get("case_name"),
+                routing_intent,
+            )
+            if solver_conflict or case_conflict:
+                trace["level2_override_rejected"] = True
+                trace["level2_override_rejection_reason_code"] = solver_reason or case_reason or "routing_intent_conflict"
+                return solver_config, trace
 
         level0_families = self._solver_family_labels(solver_config)
         candidate_families = self._solver_family_labels(candidate_solver_config)
@@ -625,6 +780,26 @@ class ArchitectService:
         plan.level2_override_solver = trace.get("level2_override_solver")
         plan.level2_override_case = trace.get("level2_override_case")
         plan.level2_override_confidence = trace.get("level2_override_confidence")
+        return plan
+
+    @staticmethod
+    def _attach_routing_intent_summary(
+        plan: SimulationPlan,
+        routing_intent: RoutingIntent | None,
+    ) -> SimulationPlan:
+        if routing_intent is None:
+            return plan
+        summary = {
+            "anchor_strength": routing_intent.anchor_strength,
+            "explicit_solver": routing_intent.explicit_solver,
+            "explicit_case_path": routing_intent.explicit_case_path,
+            "allowed_solvers": list(routing_intent.allowed_solvers),
+            "conflict_policy": routing_intent.conflict_policy,
+            "source_tags": list(routing_intent.source_tags),
+        }
+        analysis = dict(plan.analysis or {})
+        analysis["routing_intent_summary"] = summary
+        plan.analysis = analysis
         return plan
 
     @staticmethod
@@ -693,7 +868,12 @@ class ArchitectService:
 
         return "simple", ROUTER_REASON_CODES["simple_primary"]
 
-    def select_solver(self, query: str, confidence_threshold: float = 0.15) -> tuple:
+    def select_solver(
+        self,
+        query: str,
+        confidence_threshold: float = 0.15,
+        routing_intent: RoutingIntent | None = None,
+    ) -> tuple:
         """
         Identify the correct solver using Level 0 RAG with LLM fallback.
 
@@ -711,6 +891,9 @@ class ArchitectService:
         tuple
             Tuple of (config_class, confidence_score).
         """
+        if routing_intent is None:
+            routing_intent = self._build_routing_intent(query)
+
         if not self.level0_searcher:
             logger.warning("Level0Searcher not initialized")
             return SolverSelection(None, 0.0)
@@ -786,10 +969,18 @@ class ArchitectService:
             if case_name_candidate:
                 candidate_confidence = float(case_name_candidate.get("match_confidence", 0.0))
                 candidate_solver_name = case_name_candidate.get("solver")
+                candidate_solver_conflict, candidate_solver_reason = self._solver_conflicts_routing_intent(
+                    candidate_solver_name,
+                    routing_intent,
+                )
                 if (
                     candidate_confidence >= flat_case_threshold
                     and candidate_solver_name in self.code_configs
                     and candidate_solver_name != code_name
+                    and not (
+                        self._config_bool("routing_intent_apply_to_near_tie", True)
+                        and candidate_solver_conflict
+                    )
                 ):
                     logger.info(
                         "[Level0 flat disambiguation] Switching solver %s -> %s "
@@ -830,13 +1021,36 @@ class ArchitectService:
                                 "rejection_reason": None,
                             },
                         )
+                elif (
+                    candidate_confidence >= flat_case_threshold
+                    and candidate_solver_name in self.code_configs
+                    and candidate_solver_name != code_name
+                    and self._config_bool("routing_intent_apply_to_near_tie", True)
+                    and candidate_solver_conflict
+                ):
+                    logger.info(
+                        "[Level0 flat disambiguation] Blocked solver switch %s -> %s (%s)",
+                        code_name,
+                        candidate_solver_name,
+                        candidate_solver_reason or "routing_intent_conflict",
+                    )
 
             # If deterministic disambiguation cannot resolve the near-tie, use LLM.
             if not switched_by_flat_disambiguation and self.llm_client:
                 logger.info("Using LLM to resolve near-tie Level0 solver routing")
                 try:
                     llm_code_name, _ = self.cases.find_best_match(query, self.llm_client)
-                    if llm_code_name in self.code_configs:
+                    llm_conflict, llm_conflict_reason = self._solver_conflicts_routing_intent(
+                        llm_code_name,
+                        routing_intent,
+                    )
+                    if (
+                        llm_code_name in self.code_configs
+                        and not (
+                            self._config_bool("routing_intent_apply_to_near_tie", True)
+                            and llm_conflict
+                        )
+                    ):
                         logger.info("LLM selected solver: %s", llm_code_name)
                         code_name = llm_code_name
                         confidence = max(confidence, 0.8)
@@ -867,6 +1081,12 @@ class ArchitectService:
                                     "rejection_reason": None,
                                 },
                             )
+                    elif llm_code_name in self.code_configs and llm_conflict:
+                        logger.info(
+                            "LLM near-tie disambiguation blocked for solver %s (%s)",
+                            llm_code_name,
+                            llm_conflict_reason or "routing_intent_conflict",
+                        )
                 except Exception as e:
                     logger.warning("LLM near-tie disambiguation failed: %s", e)
 
@@ -878,10 +1098,22 @@ class ArchitectService:
                 try:
                     # Use LLM to select solver (returns tuple: (code_name, case_path))
                     llm_code_name, _ = self.cases.find_best_match(query, self.llm_client)
-                    logger.info(f"LLM selected solver: {llm_code_name}")
-                    code_name = llm_code_name
+                    llm_conflict, llm_conflict_reason = self._solver_conflicts_routing_intent(
+                        llm_code_name,
+                        routing_intent,
+                    )
+                    if llm_conflict and self._routing_conflict_policy() == "block_then_clarify":
+                        logger.info(
+                            "LLM fallback solver blocked by routing intent: %s (%s)",
+                            llm_code_name,
+                            llm_conflict_reason or "routing_intent_conflict",
+                        )
+                    else:
+                        logger.info(f"LLM selected solver: {llm_code_name}")
+                        code_name = llm_code_name
                     # Set confidence to 0.8 for LLM-based selection (heuristic-based)
-                    confidence = 0.8
+                    if code_name == llm_code_name:
+                        confidence = 0.8
                     for alt in alternatives:
                         if alt.get("code") == code_name:
                             alt["selected"] = True
@@ -978,6 +1210,7 @@ class ArchitectService:
         query: str,
         solver_config: Any,
         excluded_cases: list[str] | None = None,
+        routing_intent: RoutingIntent | None = None,
     ) -> dict[str, Any] | None:
         """
         Level 2: Select specific baseline case using 7 weighted indices.
@@ -1058,6 +1291,11 @@ class ArchitectService:
         candidates = self._apply_priority_case_boost(candidates, solver_config)
         if self._config_bool("hierarchical_apply_path_adjustment", False):
             candidates = self._apply_path_quality_adjustment(candidates, solver_config)
+        candidates = self._apply_routing_intent_to_ranked_candidates(
+            candidates,
+            solver_name=solver_name,
+            routing_intent=routing_intent,
+        )
 
         # Emit transparent candidate list for weight tuning/debug.
         log_top_n = min(len(candidates), max(5, self._config_int("hierarchical_candidate_log_top_n", 30)))
@@ -1263,6 +1501,60 @@ class ArchitectService:
             adjusted.append(updated)
 
         return sorted(adjusted, key=lambda c: c.get("score", 0.0), reverse=True)
+
+    def _apply_routing_intent_to_ranked_candidates(
+        self,
+        candidates: list[dict[str, Any]],
+        solver_name: str,
+        routing_intent: RoutingIntent | None,
+    ) -> list[dict[str, Any]]:
+        if not candidates or not routing_intent or routing_intent.anchor_strength == "none":
+            return candidates
+
+        adjusted: list[dict[str, Any]] = []
+        exact_boost = self._config_float("routing_intent_exact_path_boost", 0.20)
+        seg_boost = self._config_float("routing_intent_segment_boost", 0.12)
+        cross_solver_penalty = self._config_float("routing_intent_cross_solver_penalty", 0.25)
+        policy = self._routing_conflict_policy()
+
+        for candidate in candidates:
+            updated = dict(candidate)
+            case_path = (
+                candidate.get("metadata", {}).get("repo_path")
+                or candidate.get("case")
+                or ""
+            )
+            solver_conflict, solver_reason = self._solver_conflicts_routing_intent(solver_name, routing_intent)
+            case_conflict, case_reason = self._path_conflicts_routing_intent(case_path, routing_intent)
+            inadmissible = solver_conflict or case_conflict
+
+            score = float(candidate.get("score", 0.0))
+            path_norm = str(case_path).strip().lower()
+            anchor = (routing_intent.explicit_case_path or "").strip().lower()
+            overlap = self._path_overlap_ratio(path_norm, routing_intent.path_segments)
+
+            routing_adjustment = 0.0
+            if anchor and (path_norm == anchor or path_norm.endswith(anchor) or anchor.endswith(path_norm)):
+                routing_adjustment += exact_boost
+            elif overlap > 0.0:
+                routing_adjustment += seg_boost * overlap
+
+            if solver_conflict:
+                routing_adjustment -= cross_solver_penalty
+
+            updated["routing_intent_adjustment"] = routing_adjustment
+            updated["routing_intent_overlap"] = overlap
+            updated["admissibility_status"] = "inadmissible" if inadmissible and policy == "block_then_clarify" else "admissible"
+            updated["admissibility_reason"] = solver_reason or case_reason
+            updated["score"] = score + routing_adjustment
+            adjusted.append(updated)
+
+        adjusted.sort(key=lambda c: c.get("score", 0.0), reverse=True)
+        if policy == "block_then_clarify":
+            admissible_only = [c for c in adjusted if c.get("admissibility_status") != "inadmissible"]
+            if admissible_only:
+                return admissible_only
+        return adjusted
 
     def plan_modifications(self, query: str, baseline: dict, solver_code: str = None, parameter_resolution_feedback: dict[str, Any] = None) -> dict:
         """
@@ -1502,6 +1794,7 @@ class ArchitectService:
                     excluded_inputs_files=excluded_inputs_files,
                     parameter_resolution_feedback=parameter_resolution_feedback,
                     forced_solver=forced_solver,
+                    reviewer_guidance=kwargs.get("reviewer_guidance"),
                 )
                 logger.debug("Hierarchical indexing succeeded")
                 plan.baseline = self._normalize_baseline_metadata(
@@ -2590,6 +2883,7 @@ class ArchitectService:
         excluded_inputs_files: list[str] = None,
         parameter_resolution_feedback: dict[str, Any] = None,
         forced_solver: str | None = None,
+        reviewer_guidance: dict[str, Any] | None = None,
     ) -> SimulationPlan:
         """
         Architect Service: Orchestration Logic: RAG-based plan creation using Architect Service: Solver Selection / Context Retrieval / Baseline Selection / Modification Planning.
@@ -2613,7 +2907,11 @@ class ArchitectService:
             Plan with solver, baseline, modifications, and reasoning.
         """
         # 1. Select Solver (Architect Service: Solver Selection)
-        solver_config, solver_confidence = self.select_solver(user_prompt)
+        routing_intent = self._build_routing_intent(user_prompt, reviewer_guidance=reviewer_guidance)
+        solver_config, solver_confidence = self.select_solver(
+            user_prompt,
+            routing_intent=routing_intent,
+        )
         if forced_solver and forced_solver in self.code_configs:
             solver_config = self.code_configs[forced_solver]
             solver_confidence = 1.0
@@ -2625,6 +2923,7 @@ class ArchitectService:
             prompt=user_prompt,
             solver_config=solver_config,
             solver_confidence=solver_confidence,
+            routing_intent=routing_intent,
         )
         solver_name = solver_config.code_name
 
@@ -2636,7 +2935,8 @@ class ArchitectService:
         baseline_result = self.select_baseline(
             user_prompt,
             solver_config,
-            excluded_cases=excluded_cases
+            excluded_cases=excluded_cases,
+            routing_intent=routing_intent,
         )
 
         if not baseline_result:
@@ -2670,7 +2970,8 @@ class ArchitectService:
                         solver_confidence=solver_confidence,
                         used_llm=True,
                     )
-                    return self._apply_solver_selection_trace(plan, solver_selection_trace)
+                    plan = self._apply_solver_selection_trace(plan, solver_selection_trace)
+                    return self._attach_routing_intent_summary(plan, routing_intent)
                 else:
                     raise ValueError("No baseline found and LLM not available")
             else:
@@ -2731,7 +3032,8 @@ class ArchitectService:
                 solver_confidence=solver_confidence,
                 used_llm=True,
             )
-            return self._apply_solver_selection_trace(plan, solver_selection_trace)
+            plan = self._apply_solver_selection_trace(plan, solver_selection_trace)
+            return self._attach_routing_intent_summary(plan, routing_intent)
 
         plan = SimulationPlanFactory.create_from_rag(
             solver_name=solver_name,
@@ -2742,7 +3044,8 @@ class ArchitectService:
             solver_confidence=solver_confidence,
             used_llm=False
         )
-        return self._apply_solver_selection_trace(plan, solver_selection_trace)
+        plan = self._apply_solver_selection_trace(plan, solver_selection_trace)
+        return self._attach_routing_intent_summary(plan, routing_intent)
 
     def create_plan(
         self,
@@ -2820,6 +3123,11 @@ class ArchitectService:
             requirements["solver_source"] = "reviewer_guidance"
         logger.debug(f"Requirements: {requirements}\n")
 
+        routing_intent = self._build_routing_intent(
+            user_prompt,
+            reviewer_guidance=structured_guidance if isinstance(structured_guidance, dict) else None,
+        )
+
         # Gather domain knowledge from KB
         knowledge = self._gather_knowledge(user_prompt, requirements)
         logger.debug(f"Knowledge gathered: {list(knowledge.keys())}\n")
@@ -2829,7 +3137,8 @@ class ArchitectService:
             requirements=requirements,
             user_prompt=user_prompt,
             prefer_quality=prefer_quality,
-            weights=weights
+            weights=weights,
+            routing_intent=routing_intent,
         )
 
         if not baseline:
@@ -2931,8 +3240,7 @@ class ArchitectService:
         logger.debug(f"       Overall confidence: {plan.get_overall_confidence():.2%}\n")
         if diagnosis_note:
             plan.reasoning = f"{plan.reasoning}\nReviewer feasibility diagnosis: {diagnosis_note}"
-
-        return plan
+        return self._attach_routing_intent_summary(plan, routing_intent)
 
     def extract_physics_modifications(
             self,
@@ -4066,7 +4374,8 @@ Answer with the solver name and brief justification."""
                          user_prompt: str,
                          requirements: dict[str, Any],
                          prefer_quality: str = "excellent",
-                         weights: dict[str, float] | None = None) -> dict[str, Any] | None:
+                         weights: dict[str, float] | None = None,
+                         routing_intent: RoutingIntent | None = None) -> dict[str, Any] | None:
         """
         Four-approach configurable baseline selection.
 
@@ -4104,6 +4413,17 @@ Answer with the solver name and brief justification."""
             code_name = requirements.get('solver')
             if not code_name:
                 raise ValueError("No solver specified in requirements and LLM path not taken")
+
+        solver_conflict, _solver_conflict_reason = self._solver_conflicts_routing_intent(
+            code_name,
+            routing_intent,
+        )
+        if solver_conflict and routing_intent and routing_intent.allowed_solvers:
+            code_name = routing_intent.allowed_solvers[0]
+            logger.info(
+                "Routing intent constrained simple baseline solver selection to %s",
+                code_name,
+            )
 
         # Get all cases for this code
         all_cases = self.cases.list_all_cases()
@@ -4257,6 +4577,47 @@ Answer with the solver name and brief justification."""
                 faiss_score = faiss_scores.get(case_path, 0.0)
                 score_entry['faiss_semantic'] = faiss_score
                 score_entry['total'] += faiss_score * weights['faiss_semantic']
+
+        if routing_intent and routing_intent.anchor_strength != "none":
+            exact_boost = self._config_float("routing_intent_exact_path_boost", 0.20)
+            seg_boost = self._config_float("routing_intent_segment_boost", 0.12)
+            cross_solver_penalty = self._config_float("routing_intent_cross_solver_penalty", 0.25)
+            policy = self._routing_conflict_policy()
+            adjusted: list[dict[str, Any]] = []
+            for entry in scoring_matrix:
+                case_path = str(entry.get("case") or "")
+                path_norm = case_path.lower()
+                anchor = (routing_intent.explicit_case_path or "").strip().lower()
+                overlap = self._path_overlap_ratio(path_norm, routing_intent.path_segments)
+                path_conflict, path_reason = self._path_conflicts_routing_intent(case_path, routing_intent)
+                solver_conflict, solver_reason = self._solver_conflicts_routing_intent(code_name, routing_intent)
+                inadmissible = path_conflict or solver_conflict
+
+                adjustment = 0.0
+                if anchor and (path_norm == anchor or path_norm.endswith(anchor) or anchor.endswith(path_norm)):
+                    adjustment += exact_boost
+                elif overlap > 0.0:
+                    adjustment += seg_boost * overlap
+                if solver_conflict:
+                    adjustment -= cross_solver_penalty
+
+                updated = dict(entry)
+                updated["routing_intent_adjustment"] = adjustment
+                updated["routing_intent_overlap"] = overlap
+                updated["admissibility_status"] = "inadmissible" if inadmissible and policy == "block_then_clarify" else "admissible"
+                updated["admissibility_reason"] = solver_reason or path_reason
+                updated["total"] = float(updated.get("total", 0.0)) + adjustment
+                adjusted.append(updated)
+
+            adjusted.sort(key=lambda x: x['total'], reverse=True)
+            if policy == "block_then_clarify":
+                admissible_only = [entry for entry in adjusted if entry.get("admissibility_status") != "inadmissible"]
+                if admissible_only:
+                    scoring_matrix = admissible_only
+                else:
+                    scoring_matrix = adjusted
+            else:
+                scoring_matrix = adjusted
 
         # === Rank and return ===
 
