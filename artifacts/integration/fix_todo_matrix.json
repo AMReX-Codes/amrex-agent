@@ -493,9 +493,9 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P1] *_complete_current.json can be retargeted to itself for complete-schema groups with 2+ files**",
-        "[P2] Symlink target selection is mtime-based and non-deterministic across environments**",
-        "[P1] *_complete_current.json can be retargeted to itself for complete-schema groups with 2+ files**"
+        "[DONE] [P1] *_complete_current.json no longer retargets to itself for complete-schema groups with 2+ files",
+        "[DONE] [P2] Complete-schema symlink target selection now uses deterministic tie-breaking",
+        "[DONE] [P1] *_complete_current.json no longer retargets to itself for complete-schema groups with 2+ files"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
@@ -504,7 +504,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 16,
@@ -527,9 +527,9 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P1] New unit test module does not match the current build_all_indices API and fails in CI",
-        "[P1] build_all_indices --mock can hard-fail unless --provider is explicitly passed",
-        "[P2] --check mode assumes output/<provider>/build_session_manifest.json, causing false \u201cmanifest not found\u201d for direct-root inputs"
+        "[DONE] [P1] build_all_indices unit tests aligned to current helper API surface",
+        "[DONE] [P1] build_all_indices --mock no longer hard-fails when --provider is omitted",
+        "[DONE] [P2] --check mode now accepts direct-root manifest path as backward-compatible fallback"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
@@ -538,7 +538,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 17,

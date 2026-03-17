@@ -528,7 +528,7 @@ def test_session_manifest_merge_and_normalization(tmp_path: Path, monkeypatch: p
     assert l1_entry["manifest_path"] == "new.json"
 
 
-def test_resolve_build_context_and_run_build_levels(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_build_context_and_run_requested_levels(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """
     PRD v26.05 hardening appendix complexity/decomposition alignment.
     Contract: helper-extracted CLI context/build routing behaves predictably.
@@ -538,14 +538,14 @@ def test_resolve_build_context_and_run_build_levels(tmp_path: Path, monkeypatch:
     parser = argparse.ArgumentParser()
 
     args_l0 = SimpleNamespace(level="0", repo=None, code=None)
-    assert module._resolve_build_context(parser, args_l0) == (None, None, "N/A")
+    assert module._resolve_build_context(args_l0, parser) == (None, None, "N/A")
 
     repo = tmp_path / "repo"
     repo.mkdir()
     monkeypatch.setattr(module, "_resolve_repo_root", lambda *_args, **_kwargs: repo)
     monkeypatch.setattr(module, "_resolve_config_class", lambda **_kwargs: None)
     args_l1 = SimpleNamespace(level="1", repo=None, code="pelec")
-    repo_root, config_class, solver_name = module._resolve_build_context(parser, args_l1)
+    repo_root, config_class, solver_name = module._resolve_build_context(args_l1, parser)
     assert repo_root == repo
     assert solver_name == "repo"
     assert config_class.code_name == "repo"
@@ -554,26 +554,44 @@ def test_resolve_build_context_and_run_build_levels(tmp_path: Path, monkeypatch:
     monkeypatch.setattr(module, "build_level0", lambda *_args, **_kwargs: calls.append("l0") or 2)
     monkeypatch.setattr(module, "build_level1", lambda *_args, **_kwargs: calls.append("l1") or 3)
     monkeypatch.setattr(module, "build_level2", lambda *_args, **_kwargs: calls.append("l2") or 4)
-    args_all = SimpleNamespace(level="all", output=tmp_path)
-    total = module._run_build_levels(args=args_all, repo_root=repo, config_class=config_class, embedder=object())
+    monkeypatch.setattr(
+        module,
+        "_write_provenance_file",
+        lambda **kwargs: (
+            kwargs["output_dir"] / kwargs["filename"],
+            {
+                "level": kwargs["level"],
+                "solver": kwargs["solver"],
+                "generated_at": "now",
+                "embedding_provider": "openai",
+                "embedding_model": "text-embedding-3-small",
+            },
+        ),
+    )
+    total, session_entries = module._run_requested_levels(
+        level="all",
+        provider_output_root=tmp_path,
+        embedder=object(),
+        repo_root=repo,
+        config_class=config_class,
+        solver_name=solver_name,
+    )
     assert total == 9
     assert calls == ["l0", "l1", "l2"]
+    assert [entry["level"] for entry in session_entries] == ["0", "1", "2"]
 
 
-def test_run_cli_provenance_paths_for_levels(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_requested_levels_provenance_paths_for_levels(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """
     PRD v26.05 Amendment B5.1 Phase 2 end-to-end CLI provenance wiring.
     Contract: level-specific provenance writes and conditional session manifest write.
     Graph state: N/A.
     """
     module = importlib.import_module(MODULE_PATH)
-    parser = argparse.ArgumentParser()
     out = tmp_path / "out"
     repo = tmp_path / "repo"
     repo.mkdir()
 
-    monkeypatch.setattr(module, "_resolve_build_context", lambda _parser, _args: (repo, SimpleNamespace(code_name="PeleC"), "PeleC"))
-    monkeypatch.setattr(module, "create_embedder", lambda use_real: object())
     monkeypatch.setattr(module, "build_level0", lambda *_args, **_kwargs: 0)
     monkeypatch.setattr(module, "build_level1", lambda *_args, **_kwargs: 1)
     monkeypatch.setattr(module, "build_level2", lambda *_args, **_kwargs: 1)
@@ -595,9 +613,18 @@ def test_run_cli_provenance_paths_for_levels(tmp_path: Path, monkeypatch: pytest
         lambda **_kwargs: calls.__setitem__("session", calls["session"] + 1) or (out / "build_session_manifest.json"),
     )
 
-    args = SimpleNamespace(check=False, level="all", output=out, mock=True, repo=None, code=None)
-    assert module._run_cli(parser, args) == 0
+    total, session_entries = module._run_requested_levels(
+        level="all",
+        provider_output_root=out,
+        embedder=object(),
+        repo_root=repo,
+        config_class=SimpleNamespace(code_name="PeleC"),
+        solver_name="PeleC",
+    )
+    assert total == 2
     assert calls["provenance"] == ["1", "2"]
+    assert len(session_entries) == 2
+    module._write_build_session_manifest(root_output_dir=out, new_entries=session_entries)
     assert calls["session"] == 1
 
     # No built indices -> no session manifest write
@@ -606,5 +633,14 @@ def test_run_cli_provenance_paths_for_levels(tmp_path: Path, monkeypatch: pytest
     calls = {"provenance": [], "session": 0}
     monkeypatch.setattr(module, "_write_provenance_file", lambda **_kwargs: (_ for _ in ()).throw(AssertionError("should not write provenance")))
     monkeypatch.setattr(module, "_write_build_session_manifest", lambda **_kwargs: calls.__setitem__("session", 99))
-    assert module._run_cli(parser, args) == 0
+    total, session_entries = module._run_requested_levels(
+        level="all",
+        provider_output_root=out,
+        embedder=object(),
+        repo_root=repo,
+        config_class=SimpleNamespace(code_name="PeleC"),
+        solver_name="PeleC",
+    )
+    assert total == 0
+    assert session_entries == []
     assert calls["session"] == 0

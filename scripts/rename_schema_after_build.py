@@ -71,7 +71,12 @@ def _group_schemas(schema_dir: Path) -> list[SchemaGroup]:
 
 
 def _select_newest(files: list[Path]) -> Path:
-    return max(files, key=lambda p: p.stat().st_mtime)
+    # Break mtime ties by filename to keep target selection deterministic.
+    return max(files, key=lambda p: (p.stat().st_mtime, p.name))
+
+
+def _complete_schema_candidates(files: list[Path]) -> list[Path]:
+    return [p for p in files if not p.name.endswith("_complete_current.json")]
 
 
 def _sync_complete_current_symlink(schema_dir: Path, group: SchemaGroup) -> None:
@@ -79,7 +84,11 @@ def _sync_complete_current_symlink(schema_dir: Path, group: SchemaGroup) -> None
     if group.kind != "complete" or not group.files:
         return
 
-    newest = _select_newest(group.files)
+    candidates = _complete_schema_candidates(group.files)
+    if not candidates:
+        return
+
+    newest = _select_newest(candidates)
     current_link = schema_dir / f"{group.solver}_complete_current.json"
     desired_target = newest.name
 
@@ -177,10 +186,13 @@ def main() -> int:
         if len(group.files) >= 2:
             _rename_preserving_history(repo_root, schema_dir, group, args.singleton_rename)
             # Refresh file list after potential rename.
-            group.files = [
+            refreshed_files = [
                 p for p in schema_dir.glob(f"{group.solver}_{group.kind}_*.json")
                 if p.exists()
             ]
+            if group.kind == "complete":
+                refreshed_files = _complete_schema_candidates(refreshed_files)
+            group.files = refreshed_files
         _sync_complete_current_symlink(schema_dir, group)
 
     return 0
