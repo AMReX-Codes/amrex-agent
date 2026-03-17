@@ -243,7 +243,20 @@ def poll_child_status(child: ChildWorkflowState, poll_fn) -> ChildWorkflowState:
 
     poll_result = poll_fn(child)
     polled_status = _coerce_status(poll_result)
-    if not polled_status or not _advance_status(child, polled_status):
+    if not polled_status:
+        reason = "poll returned unknown/unmappable status"
+        if _advance_status(child, ChildJobStatus.failed):
+            child.failure_reason = reason
+        elif _advance_status(child, ChildJobStatus.cancelled):
+            child.failure_reason = reason
+        return child
+
+    if not _advance_status(child, polled_status):
+        reason = f"invalid status transition from {child.status.value} to {polled_status.value}"
+        if _advance_status(child, ChildJobStatus.failed):
+            child.failure_reason = reason
+        elif _advance_status(child, ChildJobStatus.cancelled):
+            child.failure_reason = reason
         return child
 
     if child.status == ChildJobStatus.failed:
