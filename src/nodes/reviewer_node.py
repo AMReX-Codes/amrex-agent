@@ -918,6 +918,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                     ),
                     None
                 )
+                last_unresolved = []
                 if last_schema_retry:
                     last_unresolved = last_schema_retry.get("details", {}).get("unresolved_parameters", [])
                 if last_unresolved == feedback["unresolved_parameters"]:
