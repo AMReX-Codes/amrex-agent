@@ -153,7 +153,8 @@ def test_jsonl_contains_schema_valid_field(tmp_path):
     _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
     record = _read_first_jsonl(path)
     assert "schema_valid" in record
-    assert isinstance(record["schema_valid"], bool)
+    assert record["schema_valid"] is None
+    assert record["schema_valid_unavailable_reason"] == "validation_data_missing"
 
 
 def test_jsonl_contains_physics_valid_field(tmp_path):
@@ -161,7 +162,8 @@ def test_jsonl_contains_physics_valid_field(tmp_path):
     _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
     record = _read_first_jsonl(path)
     assert "physics_valid" in record
-    assert isinstance(record["physics_valid"], bool)
+    assert record["physics_valid"] is None
+    assert record["physics_valid_unavailable_reason"] == "validation_data_missing"
 
 
 def test_jsonl_contains_resource_valid_field(tmp_path):
@@ -169,7 +171,8 @@ def test_jsonl_contains_resource_valid_field(tmp_path):
     _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
     record = _read_first_jsonl(path)
     assert "resource_valid" in record
-    assert isinstance(record["resource_valid"], bool)
+    assert record["resource_valid"] is None
+    assert record["resource_valid_unavailable_reason"] == "validation_data_missing"
 
 
 def test_jsonl_schema_errors_empty_when_valid(tmp_path):
@@ -269,9 +272,12 @@ def test_jsonl_no_new_required_field_breaks_existing(tmp_path):
     path = tmp_path / "bench.jsonl"
     _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
     record = _read_first_jsonl(path)
-    assert record["schema_valid"] is False
-    assert record["physics_valid"] is False
-    assert record["resource_valid"] is False
+    assert record["schema_valid"] is None
+    assert record["physics_valid"] is None
+    assert record["resource_valid"] is None
+    assert record["schema_valid_unavailable_reason"] == "validation_data_missing"
+    assert record["physics_valid_unavailable_reason"] == "validation_data_missing"
+    assert record["resource_valid_unavailable_reason"] == "validation_data_missing"
     assert record["schema_errors"] == []
     assert record["physics_warnings"] == []
     assert record["converged"] is False

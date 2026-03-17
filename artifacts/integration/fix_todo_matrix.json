@@ -188,7 +188,7 @@
       },
       "top_findings": [
         "[DONE] [P1] Preconfirm gate approvals are now persisted from reviewer node execution paths",
-        "[P2] Benchmark normalization now treats missing validation data as hard invalid",
+        "[DONE] [P2] Benchmark normalization now reports missing validation data as unavailable instead of hard invalid",
         "[P3] New src.graph.create_graph() flow hard-terminates on sweep/clarification branches"
       ],
       "top_failing_tests": [
