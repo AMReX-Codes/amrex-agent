@@ -378,6 +378,22 @@ class ArchitectService:
                 best = (idx, solver_name)
         return best[1] if best else None
 
+    def _infer_case_anchor_from_catalog(self, prompt: str) -> tuple[str | None, str | None]:
+        min_hits = max(1, self._config_int("level2_override_min_metadata_hits", 3))
+        try:
+            candidate = self._find_level2_case_name_candidate(prompt, min_hits)
+        except Exception as exc:
+            logger.debug("[Routing Intent] Case-anchor inference skipped: %s", exc)
+            return None, None
+        if not candidate:
+            return None, None
+
+        case_path = str(candidate.get("repo_path") or candidate.get("case_name") or "").strip()
+        if not case_path:
+            return None, None
+        solver_name = str(candidate.get("solver") or "").strip() or None
+        return case_path, solver_name
+
     def _build_routing_intent(
         self,
         prompt: str,
@@ -388,8 +404,17 @@ class ArchitectService:
 
         explicit_solver = self._extract_prompt_solver_anchor(prompt)
         explicit_case_path = self._extract_prompt_case_anchor(prompt)
-        path_segments = [s.lower() for s in (explicit_case_path or "").split("/") if s]
         source_tags: list[str] = ["prompt"]
+
+        if not explicit_case_path:
+            inferred_case_path, inferred_solver = self._infer_case_anchor_from_catalog(prompt)
+            if inferred_case_path:
+                explicit_case_path = inferred_case_path
+                if not explicit_solver and inferred_solver in self.code_configs:
+                    explicit_solver = inferred_solver
+                source_tags.append("level2_case_catalog")
+
+        path_segments = [s.lower() for s in (explicit_case_path or "").split("/") if s]
 
         required_solver = None
         preferred_path_patterns: list[str] = []
@@ -4578,10 +4603,12 @@ Answer with the solver name and brief justification."""
                 score_entry['faiss_semantic'] = faiss_score
                 score_entry['total'] += faiss_score * weights['faiss_semantic']
 
+        routing_diagnostics: dict[str, Any] | None = None
         if routing_intent and routing_intent.anchor_strength != "none":
             exact_boost = self._config_float("routing_intent_exact_path_boost", 0.20)
             seg_boost = self._config_float("routing_intent_segment_boost", 0.12)
             cross_solver_penalty = self._config_float("routing_intent_cross_solver_penalty", 0.25)
+            path_conflict_penalty = self._config_float("routing_intent_path_conflict_penalty", 0.35)
             policy = self._routing_conflict_policy()
             adjusted: list[dict[str, Any]] = []
             for entry in scoring_matrix:
@@ -4600,24 +4627,55 @@ Answer with the solver name and brief justification."""
                     adjustment += seg_boost * overlap
                 if solver_conflict:
                     adjustment -= cross_solver_penalty
+                if path_conflict:
+                    adjustment -= path_conflict_penalty
 
                 updated = dict(entry)
                 updated["routing_intent_adjustment"] = adjustment
                 updated["routing_intent_overlap"] = overlap
+                updated["routing_intent_conflict"] = bool(inadmissible)
                 updated["admissibility_status"] = "inadmissible" if inadmissible and policy == "block_then_clarify" else "admissible"
                 updated["admissibility_reason"] = solver_reason or path_reason
                 updated["total"] = float(updated.get("total", 0.0)) + adjustment
                 adjusted.append(updated)
 
             adjusted.sort(key=lambda x: x['total'], reverse=True)
+            inadmissible_count = len([entry for entry in adjusted if entry.get("admissibility_status") == "inadmissible"])
+            filter_reason = "policy_not_blocking"
             if policy == "block_then_clarify":
                 admissible_only = [entry for entry in adjusted if entry.get("admissibility_status") != "inadmissible"]
                 if admissible_only:
                     scoring_matrix = admissible_only
+                    filter_reason = "admissible_only"
                 else:
-                    scoring_matrix = adjusted
+                    max_overlap = max((float(entry.get("routing_intent_overlap", 0.0)) for entry in adjusted), default=0.0)
+                    overlap_tied = [
+                        entry
+                        for entry in adjusted
+                        if float(entry.get("routing_intent_overlap", 0.0)) == max_overlap and max_overlap > 0.0
+                    ]
+                    if overlap_tied:
+                        for entry in overlap_tied:
+                            entry["admissibility_status"] = "anchor_relaxed"
+                            if not entry.get("admissibility_reason"):
+                                entry["admissibility_reason"] = "no_fully_admissible_candidate"
+                        scoring_matrix = overlap_tied
+                        filter_reason = "no_admissible_relaxed_to_max_overlap"
+                    else:
+                        scoring_matrix = adjusted
+                        filter_reason = "no_admissible_no_overlap_fallback"
             else:
                 scoring_matrix = adjusted
+
+            routing_diagnostics = {
+                "anchor_strength": routing_intent.anchor_strength,
+                "explicit_solver": routing_intent.explicit_solver,
+                "explicit_case_path": routing_intent.explicit_case_path,
+                "conflict_policy": policy,
+                "admissible_candidate_count": len(scoring_matrix),
+                "inadmissible_candidate_count": inadmissible_count,
+                "filter_reason": filter_reason,
+            }
 
         # === Rank and return ===
 
@@ -4653,6 +4711,7 @@ Answer with the solver name and brief justification."""
 
         if scoring_matrix:
             winner = scoring_matrix[0]
+            top_candidates = []
             for entry in scoring_matrix[:10]:
                 case_name = Path(entry['case']).name
                 logger.debug(f"  {case_name:30s} total={entry['total']:.3f} "
@@ -4671,6 +4730,33 @@ Answer with the solver name and brief justification."""
                     logger.debug(f"  path_heuristics: {sedov_entry.get('path_heuristics', 0):.3f} (weight: {weights['path_heuristics']:.0%})")
                     logger.debug(f"  domain_specific: {sedov_entry.get('domain_specific', 0):.3f} (weight: {weights['domain_specific']:.0%})")
 
+            for entry in scoring_matrix[:5]:
+                top_candidates.append(
+                    {
+                        "case": entry.get("case"),
+                        "total": float(entry.get("total", 0.0)),
+                        "routing_intent_adjustment": float(entry.get("routing_intent_adjustment", 0.0)),
+                        "routing_intent_overlap": float(entry.get("routing_intent_overlap", 0.0)),
+                        "anchor_conflict": bool(
+                            entry.get("routing_intent_conflict")
+                            or entry.get("admissibility_status") == "inadmissible"
+                        ),
+                        "conflict_reason": entry.get("admissibility_reason"),
+                    }
+                )
+
+            simple_selection_diagnostics = {
+                "selected_case": winner.get("case"),
+                "selection_reason": "highest_total_score",
+                "top_candidates": top_candidates,
+            }
+
+            if routing_diagnostics is not None:
+                routing_diagnostics["selected_case"] = winner.get("case")
+                routing_diagnostics["selected_admissibility_status"] = winner.get("admissibility_status", "admissible")
+                routing_diagnostics["selected_admissibility_reason"] = winner.get("admissibility_reason")
+                routing_diagnostics["top_candidates"] = top_candidates
+
             baseline = {
                 'code': code_name,
                 'path': winner['case'],
@@ -4678,8 +4764,11 @@ Answer with the solver name and brief justification."""
                 'match_score': winner['total'],
                 'match_rationale': f"{num_buckets}-bucket scoring (weights: {weights})",
                 'scoring_matrix': scoring_matrix[:5],
-                'weights_used': weights
+                'weights_used': weights,
+                'simple_selection_diagnostics': simple_selection_diagnostics,
             }
+            if routing_diagnostics is not None:
+                baseline["routing_intent_diagnostics"] = routing_diagnostics
             code_def = self.cases.get_code_info(code_name)
 
             if code_def and code_def.local_path:

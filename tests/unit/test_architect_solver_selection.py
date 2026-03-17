@@ -18,9 +18,11 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 from typing import Dict, List
+from types import SimpleNamespace
 
 # Import the services we'll test
 from src.services.architect import ArchitectService
+from src.models.routing_intent import RoutingIntent
 from database.indexing.level0_searcher import Level0Searcher
 from database.configs import discover_code_configs
 from database.configs.pelec_config import PeleCConfig
@@ -492,6 +494,94 @@ class TestSolverDisambiguationAlternatives:
         assert trace["level2_override_applied"] is False
         assert trace["level2_override_rejected"] is True
         assert trace["level2_override_rejection_reason_code"] == "explicit_solver_conflict"
+
+
+class TestSimpleRoutingIntentEnforcement:
+    def test_build_routing_intent_promotes_catalog_case_anchor(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        architect = ArchitectService(mock_config, Mock())
+        architect.code_configs = {
+            "ERF": Mock(code_name="ERF"),
+            "PeleC": Mock(code_name="PeleC"),
+        }
+        architect._find_level2_case_name_candidate = Mock(
+            return_value={
+                "solver": "ERF",
+                "repo_path": "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL",
+                "match_confidence": 0.95,
+            }
+        )
+
+        intent = architect._build_routing_intent(
+            "Set up a neutral ABL LES with MOST boundary conditions and geostrophic forcing."
+        )
+
+        assert intent.anchor_strength == "strong"
+        assert intent.explicit_case_path == "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+        assert intent.explicit_solver == "ERF"
+        assert intent.allowed_solvers == ["ERF"]
+        assert "level2_case_catalog" in intent.source_tags
+
+    def test_simple_baseline_disqualifies_anchor_conflicts_and_emits_diagnostics(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+        architect.cases = Mock()
+        architect.cases.find_best_match = Mock(return_value=("ERF", None))
+        architect.cases.list_all_cases = Mock(
+            return_value={
+                "ERF": [
+                    "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL",
+                    "Exec/CanonicalFlows/EkmanSpiral",
+                    "Exec/ABL/MOST_test_suite",
+                ]
+            }
+        )
+        architect.cases.get_code_info = Mock(return_value=SimpleNamespace(local_path=tmp_path))
+        architect.embeddings = None
+        architect._score_kb_relevance_batch = Mock(
+            return_value={
+                "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL": 0.10,
+                "Exec/CanonicalFlows/EkmanSpiral": 0.40,
+                "Exec/ABL/MOST_test_suite": 0.95,
+            }
+        )
+
+        routing_intent = RoutingIntent(
+            explicit_solver="ERF",
+            explicit_case_path="Exec/CanonicalFlows/Canonical_LES/Neutral_ABL",
+            path_segments=["exec", "canonicalflows", "canonical_les", "neutral_abl"],
+            anchor_strength="strong",
+            allowed_solvers=["ERF"],
+            conflict_policy="block_then_clarify",
+        )
+
+        baseline = architect._select_baseline(
+            user_prompt="Configure neutral ABL LES with MOST forcing",
+            requirements={"solver": "ERF"},
+            weights={
+                "kb_relevance": 1.0,
+                "metrics": 0.0,
+                "path_heuristics": 0.0,
+                "domain_specific": 0.0,
+                "faiss_semantic": 0.0,
+            },
+            routing_intent=routing_intent,
+        )
+
+        assert baseline is not None
+        assert baseline["path"] == "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+        assert "routing_intent_diagnostics" in baseline
+        diagnostics = baseline["routing_intent_diagnostics"]
+        assert diagnostics["selected_case"] == "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+        assert diagnostics["selected_admissibility_status"] in {"admissible", "anchor_relaxed"}
+        top = baseline["simple_selection_diagnostics"]["top_candidates"]
+        assert top
+        assert top[0]["case"] == "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+        assert top[0]["anchor_conflict"] is False
 
 
 # Architect Service: Solver Selection Marker
