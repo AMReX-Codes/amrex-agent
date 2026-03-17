@@ -413,13 +413,45 @@ class ArchitectService:
         if not solver_config:
             return set()
         families: set[str] = set()
-        regimes = getattr(solver_config, "level0_physics_regimes", []) or []
+        regimes_raw = getattr(solver_config, "level0_physics_regimes", []) or []
+        if isinstance(regimes_raw, dict):
+            regimes = [regimes_raw]
+        elif isinstance(regimes_raw, (list, tuple, set)):
+            regimes = list(regimes_raw)
+        elif isinstance(regimes_raw, str):
+            regimes = [{"family": regimes_raw}]
+        else:
+            regimes = []
+
         for regime in regimes:
+            if isinstance(regime, str):
+                normalized = self._normalize_match_text(regime)
+                if normalized:
+                    families.add(normalized)
+                continue
+
             if not isinstance(regime, dict):
                 continue
+
             family = regime.get("family")
-            if family:
-                families.add(self._normalize_match_text(str(family)))
+            if isinstance(family, str) and family.strip():
+                families.add(self._normalize_match_text(family))
+
+            aliases = regime.get("aliases")
+            if isinstance(aliases, str):
+                aliases_iter = [aliases]
+            elif isinstance(aliases, (list, tuple, set)):
+                aliases_iter = list(aliases)
+            else:
+                aliases_iter = []
+
+            for alias in aliases_iter:
+                if not isinstance(alias, str):
+                    continue
+                normalized = self._normalize_match_text(alias)
+                if normalized:
+                    families.add(normalized)
+
         if not families:
             code_name = getattr(solver_config, "code_name", "") or ""
             if code_name:
@@ -1211,6 +1243,9 @@ class ArchitectService:
                 or ""
             )
             case_norm = str(case_path).strip().lower()
+            if not case_norm:
+                boosted.append(candidate)
+                continue
             base_score = float(candidate.get("score", 0.0))
             bonus = 0.0
 

@@ -55,9 +55,9 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P2] Priority-case boost can incorrectly reward candidates with missing/empty case paths",
-        "[P2] Level-0 regime parsing is not robust to malformed alias types",
-        "[P2] Priority-case boost can incorrectly reward candidates with missing/empty case paths"
+        "[DONE] [P2] Priority-case boost now ignores candidates with missing/empty case paths",
+        "[DONE] [P2] Level-0 regime parsing now handles malformed alias payload types robustly",
+        "[DONE] [P2] Priority-case boost now ignores candidates with missing/empty case paths"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",

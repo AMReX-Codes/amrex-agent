@@ -476,6 +476,44 @@ class TestPriorityCaseBoost:
         assert result['selected_case']['score'] > 0.38
         assert result['selected_case'].get('score_bonus', 0) > 0
 
+    def test_priority_case_boost_ignores_empty_case_paths(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        architect = ArchitectService(mock_config, Mock())
+
+        solver_config = Mock()
+        solver_config.priority_cases = ["Exec/RegTests/PMF"]
+
+        candidates = [
+            {"case": "", "score": 0.5, "metadata": {"repo_path": ""}},
+            {"case": None, "score": 0.4, "metadata": {}},
+        ]
+
+        boosted = architect._apply_priority_case_boost(candidates, solver_config)
+        assert boosted[0].get("score_bonus", 0.0) == 0.0
+        assert boosted[1].get("score_bonus", 0.0) == 0.0
+
+
+def test_solver_family_labels_handles_malformed_regime_alias_types(tmp_path):
+    mock_config = Mock()
+    mock_config.faiss_db_path = tmp_path
+    architect = ArchitectService(mock_config, Mock())
+
+    solver_config = Mock()
+    solver_config.code_name = "ERF"
+    solver_config.level0_physics_regimes = [
+        {"family": "Atmospheric", "aliases": ["weather", 42, None, {"bad": "shape"}]},
+        {"family": None, "aliases": "mesoscale"},
+        "boundary layer",
+        17,
+    ]
+
+    labels = architect._solver_family_labels(solver_config)
+    assert "atmospheric" in labels
+    assert "weather" in labels
+    assert "mesoscale" in labels
+    assert "boundarylayer" in labels
+
 
 class TestRejectedAlternatives:
     """Ensure non-selected candidates include explicit rejection rationale."""
