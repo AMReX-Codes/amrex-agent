@@ -164,7 +164,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 6,
