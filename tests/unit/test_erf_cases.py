@@ -15,25 +15,34 @@ def _erf_root() -> Path:
     return Path(__file__).resolve().parents[3] / "ERF"
 
 
+def _require_erf_repo() -> Path:
+    root = _erf_root()
+    if not root.exists():
+        pytest.skip(f"ERF repository not found at {root}")
+    if not (root / "Exec").exists():
+        pytest.skip(f"ERF repository at {root} is missing Exec/; skipping ERF case discovery tests")
+    return root
+
+
 def test_discover_erf_cases_minimum_count_threshold() -> None:
-    cases = discover_erf_cases(_erf_root())
+    cases = discover_erf_cases(_require_erf_repo())
     assert len(cases) >= 20
 
 
 def test_squall_line_discovery_multiple_query_forms() -> None:
-    root = _erf_root()
+    root = _require_erf_repo()
     assert select_best_erf_case("squall line", root) is not None
     assert select_best_erf_case("SquallLine_2D", root) is not None
     assert select_best_erf_case("Exec/CanonicalFlows/SquallLine_2D", root) is not None
 
 
 def test_nonsense_query_returns_none() -> None:
-    root = _erf_root()
+    root = _require_erf_repo()
     assert select_best_erf_case("xyzzy plugh qwerty asdfgh", root) is None
 
 
 def test_config_override_precedence() -> None:
-    root = _erf_root()
+    root = _require_erf_repo()
     cases = discover_erf_cases(root)
     matcher = ERFCaseMatcher(
         cases,
@@ -46,7 +55,7 @@ def test_config_override_precedence() -> None:
 
 @pytest.mark.skip(reason="Known false-negative in reachability prompt synthesis; may be spurious work.")
 def test_every_erf_input_file_reachable_by_specific_prompt() -> None:
-    root = _erf_root()
+    root = _require_erf_repo()
     cases = discover_erf_cases(root)
     matcher = ERFCaseMatcher(cases)
 

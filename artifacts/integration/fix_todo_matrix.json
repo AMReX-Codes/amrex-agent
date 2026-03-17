@@ -562,7 +562,7 @@
       },
       "top_findings": [
         "[DONE] [P1] Zero-sum simple baseline weights no longer crash baseline selection",
-        "[P1] New ERF unit tests are environment-coupled and will fail when sibling ERF repo is absent",
+        "[DONE] [P1] ERF unit tests now skip cleanly when sibling ERF repo is unavailable",
         "[P2] Capability-contract compliance checks were disabled by skipping tests"
       ],
       "top_failing_tests": [
