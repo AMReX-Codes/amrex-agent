@@ -467,6 +467,39 @@ class TestInteractiveAvailability:
         assert updates["clarification_needed"] is False
         assert updates["insufficient_prompt"] is True
 
+    def test_non_interactive_with_ai_filled_required_fields_not_flagged_insufficient(self):
+        """
+        Given: interactive_available=False and all required
+               fields are supplied via ai_clarification_answers
+        When:  clarification_node runs
+        Then:  clarification does not block
+               insufficient_prompt is not raised
+               resolved_config includes AI-filled required fields
+        """
+        state = _base_state(
+            interactive_available=False,
+            resolved_config={
+                "amr.plot_vars": "temperature",
+                "node_count": 2,
+                "time_limit": "00:15:00",
+                "cluster": "perlmutter",
+            },
+            ai_clarification_answers={
+                "n_cell": "64 64 64",
+                "max_level": 1,
+                "stop_time": 0.02,
+                "max_step": 200,
+            },
+        )
+        updates = clarification_node(state)
+        assert updates["clarification_needed"] is False
+        assert updates["insufficient_prompt"] is False
+        assert updates["unresolved_level"] is None
+        assert updates["resolved_config"]["n_cell"] == "64 64 64"
+        assert updates["resolved_config"]["max_level"] == 1
+        assert updates["resolved_config"]["stop_time"] == 0.02
+        assert updates["resolved_config"]["max_step"] == 200
+
 
 class TestClarificationRecord:
     def test_record_written_to_history(self):

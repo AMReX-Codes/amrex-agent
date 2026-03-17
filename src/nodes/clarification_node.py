@@ -60,6 +60,14 @@ def clarification_node(state: GraphState) -> dict[str, Any]:
         pending_questions = [record.question for record in records if record.answered_by == "pending"]
 
         if state.get("interactive_available") is False:
+            if not pending_questions:
+                return _no_block_result(
+                    history=history,
+                    context=context,
+                    insufficient_prompt=False,
+                    unresolved_level=None,
+                    resolved_config=resolved,
+                )
             return _no_block_result(
                 history=history,
                 context=context,

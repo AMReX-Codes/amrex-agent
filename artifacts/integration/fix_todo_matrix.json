@@ -221,7 +221,7 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P1] Non-interactive path reports unresolved prompt even after AI filled all missing required fields",
+        "[DONE] [P1] Non-interactive clarification path no longer flags unresolved prompt when AI filled all missing required fields",
         "[P2] clarification_questions contract drift: node now emits dicts, state schema still declares strings",
         "[P2] Sweep polling can stall for up to 1 hour on unknown/unmappable statuses"
       ],
