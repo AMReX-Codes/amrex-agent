@@ -256,8 +256,8 @@
       },
       "top_findings": [
         "[DONE] [P1] Clarification handler is now wired into runtime graph",
-        "[P2] database_mismatch_policy + staleness checker appear to be dead code (no integration path)",
-        "[P2] Clarification handler prioritizes AI response over human response when both are present"
+        "[DONE] [P2] database_mismatch_policy + schema staleness checks are now enforced at schema resolution call sites",
+        "[DONE] [P2] Clarification handler now prioritizes human response when both human and AI responses exist"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
@@ -266,7 +266,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 9,
@@ -563,7 +563,7 @@
       "top_findings": [
         "[DONE] [P1] Zero-sum simple baseline weights no longer crash baseline selection",
         "[DONE] [P1] ERF unit tests now skip cleanly when sibling ERF repo is unavailable",
-        "[P2] Capability-contract compliance checks were disabled by skipping tests"
+        "[DONE] [P2] v26.05 capability-contract compliance checks are active (skip markers removed)"
       ],
       "top_failing_tests": [
         "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
@@ -572,7 +572,7 @@
         "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
         "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
       ],
-      "status": "ready_for_fix_planning"
+      "status": "fixed_on_stacked_branch"
     },
     {
       "slice": 18,
