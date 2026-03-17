@@ -16,6 +16,7 @@ References:
 
 import pytest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, MagicMock, patch
 from typing import Dict, List
 
@@ -600,6 +601,50 @@ class TestHierarchicalWeightsFromConfig:
         assert result["weights_used"]["physics_parameters"] == pytest.approx(0.30)
         assert result["weights_used"]["grid_specifications"] == pytest.approx(0.20)
         assert result["weights_used"]["resource_requirements"] == pytest.approx(0.05)
+
+
+def test_select_baseline_simple_zero_sum_weights_falls_back_to_defaults(tmp_path, monkeypatch):
+    mock_config = Mock()
+    mock_config.faiss_db_path = tmp_path
+    mock_config.faiss_semantic_weight = 0.0
+    mock_config.simple_weight_kb_relevance = 0.0
+    mock_config.simple_weight_metrics = 0.0
+    mock_config.simple_weight_path_heuristics = 0.0
+    mock_config.simple_weight_domain_specific = 0.0
+    mock_config.simple_weight_faiss_semantic = 0.0
+
+    mock_embedder = Mock()
+    mock_embedder.indices_available.return_value = False
+    architect = ArchitectService(mock_config, mock_embedder)
+
+    monkeypatch.setattr(
+        architect.cases,
+        "list_all_cases",
+        lambda: {"PeleC": ["Exec/RegTests/PMF"]},
+    )
+    monkeypatch.setattr(
+        architect.cases,
+        "get_code_info",
+        lambda _code_name: SimpleNamespace(local_path=tmp_path),
+    )
+    monkeypatch.setattr(
+        architect,
+        "_score_kb_relevance_batch",
+        lambda *_args, **_kwargs: {"Exec/RegTests/PMF": 0.8},
+    )
+    monkeypatch.setattr(architect, "_is_kb_signal_weak", lambda *_args, **_kwargs: False)
+    monkeypatch.setattr(architect, "_score_metrics", lambda *_args, **_kwargs: (0.5, {}))
+    monkeypatch.setattr(architect, "_score_path_heuristics", lambda *_args, **_kwargs: (0.5, {}))
+    monkeypatch.setattr(architect, "_score_combustion_domain", lambda *_args, **_kwargs: (0.5, {}))
+
+    result = architect._select_baseline(
+        user_prompt="pmf baseline",
+        requirements={"solver": "PeleC"},
+    )
+
+    assert result is not None
+    assert abs(sum(result["weights_used"].values()) - 1.0) < 1e-9
+    assert result["weights_used"]["kb_relevance"] > 0.0
 
 
 # Architect Service: Baseline Selection Marker

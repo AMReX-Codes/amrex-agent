@@ -561,7 +561,7 @@
         "full_errors": 0
       },
       "top_findings": [
-        "[P1] Zero-sum simple baseline weights can crash baseline selection (ZeroDivisionError)",
+        "[DONE] [P1] Zero-sum simple baseline weights no longer crash baseline selection",
         "[P1] New ERF unit tests are environment-coupled and will fail when sibling ERF repo is absent",
         "[P2] Capability-contract compliance checks were disabled by skipping tests"
       ],

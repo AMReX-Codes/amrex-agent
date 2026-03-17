@@ -4012,9 +4012,21 @@ Answer with the solver name and brief justification."""
                     code_name,
                 )
 
-        # Normalize to sum to 1.0
-        total = sum(weights.values())
-        weights = {k: v/total for k, v in weights.items()}
+        # Normalize to sum to 1.0; guard against zero-sum misconfiguration.
+        weights = self._normalize_weights(weights)
+        if not weights:
+            logger.warning(
+                "Simple baseline weights invalid or zero-sum; falling back to default simple profile"
+            )
+            weights = self._normalize_weights(
+                {
+                    "kb_relevance": 0.40,
+                    "metrics": 0.25,
+                    "path_heuristics": 0.10,
+                    "domain_specific": 0.25,
+                    "faiss_semantic": 0.50,
+                }
+            )
 
         # Determine if using FAISS (5-bucket) or traditional (4-bucket)
         num_buckets = 5 if weights.get('faiss_semantic', 0) > 0 and self.embeddings and self.embeddings.indices_available() else 4
