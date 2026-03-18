@@ -22,6 +22,7 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph
 
 from src.config import AMReXAgentConfig, load_config
+from src.first_run import apply_interactive_fixes, run_startup_readiness_checks
 from src.models import GraphState
 from src.nodes import (
     analysis_node,  # Phase 4
@@ -737,6 +738,66 @@ def _load_benchmark_context(path: str | None) -> dict[str, Any] | None:
     return data
 
 
+def _is_tty_session() -> bool:
+    stdin_tty = bool(getattr(sys.stdin, "isatty", lambda: False)())
+    stdout_tty = bool(getattr(sys.stdout, "isatty", lambda: False)())
+    return stdin_tty and stdout_tty
+
+
+def _log_preflight_issues(issues: list[dict[str, Any]]) -> None:
+    if not issues:
+        return
+    logger.error("Startup readiness preflight found unresolved issues:")
+    for issue in issues:
+        code = issue.get("code", "UNKNOWN")
+        severity = str(issue.get("severity", "unknown")).upper()
+        action = issue.get("suggested_action", "No suggested action provided.")
+        logger.error("  [%s] %s: %s", code, severity, action)
+
+
+def _has_blocking_issues(issues: list[dict[str, Any]]) -> bool:
+    return any(str(issue.get("severity", "")).lower() == "error" for issue in issues)
+
+
+def _run_startup_preflight(config: AMReXAgentConfig) -> None:
+    raw_repo_root = getattr(config, "amrex_agent_root", None)
+    if isinstance(raw_repo_root, Path):
+        repo_root = raw_repo_root
+    elif isinstance(raw_repo_root, (str, os.PathLike)):
+        repo_root = Path(raw_repo_root)
+    else:
+        repo_root = Path.cwd()
+    is_tty = _is_tty_session()
+    readiness_result = run_startup_readiness_checks(
+        repo_root=repo_root,
+        config=config,
+        is_tty=is_tty,
+        allow_clone_missing=is_tty,
+        erf_repo_path=getattr(config, "erf_repo_path", None),
+    )
+
+    if (
+        is_tty
+        and isinstance(readiness_result, dict)
+        and readiness_result.get("mode") == "interactive"
+        and readiness_result.get("issues")
+    ):
+        readiness_result = apply_interactive_fixes(
+            repo_root=repo_root,
+            config=config,
+            issues=readiness_result.get("issues") or [],
+        )
+
+    unresolved = list(readiness_result.get("unresolved") or readiness_result.get("issues") or [])
+    exit_code = int(readiness_result.get("exit_code") or 0)
+    if not unresolved and exit_code == 0:
+        return
+
+    _log_preflight_issues(unresolved)
+    if _has_blocking_issues(unresolved) or exit_code != 0:
+        raise ValueError("Startup readiness preflight failed. Resolve blocking issues and retry.")
+
+
 def _resolve_metrics_workflow_id(
     result: dict[str, Any],
     benchmark_context: dict[str, Any] | None,
@@ -908,6 +969,7 @@ def main(args: list[str] | None = None) -> None:
         apply_privacy_log_filter(config)
 
         _warn_if_schema_missing(config, getattr(parsed_args, "baseline_override", None))
+        _run_startup_preflight(config)
 
         # Disable schema validator temporarily (modifications format issue)
         # config.disabled_validators = ["SchemaSyntaxValidator"]  # Re-enabled for parameter resolution

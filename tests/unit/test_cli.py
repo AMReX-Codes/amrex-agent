@@ -52,6 +52,21 @@ class TestCLIEntryPoint:
             mock.return_value = config
             yield mock
 
+    @pytest.fixture(autouse=True)
+    def mock_preflight(self):
+        """Default preflight behavior for CLI tests."""
+        with patch("src.main.run_startup_readiness_checks") as mock_check:
+            with patch("src.main.apply_interactive_fixes") as mock_apply:
+                mock_check.return_value = {"exit_code": 0, "issues": []}
+                mock_apply.return_value = {
+                    "mode": "interactive",
+                    "attempted_actions": [],
+                    "resolved": [],
+                    "unresolved": [],
+                    "exit_code": 0,
+                }
+                yield {"check": mock_check, "apply": mock_apply}
+
     def test_parses_inline_prompt(self, mock_run_agent, mock_load_config):
         """
         GIVEN: --prompt with inline text
