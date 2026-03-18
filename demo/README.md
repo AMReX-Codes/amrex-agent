@@ -123,6 +123,25 @@ To build indices and upload to the hosted OpenAI vector store:
 bash demo/setup_demo_database.sh --upload-openai
 ```
 
+### Startup readiness preflight prerequisites
+
+Use this as the zero-manual-setup path for first runs:
+
+1. Keep solver repos as siblings of `amrex-agent` (autodetected default).
+2. Run `bash demo/setup_demo_database.sh`.
+3. Start the CLI from repo root.
+
+Required behavior and fallbacks:
+
+- Sibling repo autodetect: default lookup is `../ERF`, `../PeleC`, `../PeleLMeX`, `../amrex`.
+- Auto-clone fallback: run `bash demo/setup_demo_database.sh --clone-missing` to fetch missing repos using `.dependencies.json` pins.
+- Rebuild/index repair: if schemas or FAISS artifacts are stale/corrupt, rerun setup.
+  - Full rebuild: `bash demo/setup_demo_database.sh`
+  - Single-code repair: `bash demo/setup_demo_database.sh --code <code>`
+- Non-interactive fail-fast: CI/headless startup readiness checks should exit non-zero on blocking repo/dependency/index issues instead of prompting.
+- Code-specific build policy: defaults and fallbacks can vary by solver/codebase.
+- ERF-specific build policy is documented in `demo/erf/README.md` (CMake Release default and GNUmake fallback notes).
+
 ### Optional: Hosted Vector Store (no local FAISS)
 
 If you want hosted retrieval instead of local indices, see `demo/vector_store/README.md`.

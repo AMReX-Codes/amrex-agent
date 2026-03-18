@@ -37,3 +37,21 @@ python database/scripts/build_all_indices.py --code erf --repo "$ERF_REPO_PATH" 
 python database/scripts/build_index.py --config erf --type case_structure --source "$ERF_REPO_PATH" --embedding cborg
 python database/scripts/build_index.py --config erf --type case_details --source "$ERF_REPO_PATH" --embedding cborg
 ```
+
+## Startup readiness preflight prerequisites (ERF)
+
+Zero-manual-setup path:
+
+1. Keep ERF as a sibling repo (`../ERF`) or set `ERF_REPO_PATH`.
+2. Run `bash demo/setup_demo_database.sh --code erf`.
+3. Run the agent from repo root.
+
+Required behavior and fallback notes:
+
+- Sibling repo autodetect: ERF is discovered from sibling layout first.
+- Auto-clone fallback: `bash demo/setup_demo_database.sh --code erf --clone-missing` clones missing ERF using `.dependencies.json`.
+- Rebuild/index repair: rerun ERF build commands when schema/index artifacts are stale or mismatched:
+  - `bash demo/setup_demo_database.sh --code erf`
+- Non-interactive fail-fast: headless startup checks must return non-zero on blocking ERF repo/index/dependency issues.
+- CMake-default build note: ERF docs specify `CMAKE_BUILD_TYPE` default `Release` and Release should be preferred for ERF CMake builds.
+- Fallback when CMake is unavailable: use GNUmakefile builds (`make ... DEBUG=FALSE`) as the fallback route.
