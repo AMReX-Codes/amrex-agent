@@ -13,6 +13,11 @@ from typing import Any
 from amrex_tools import copy_to_rundir, setup_run_directory
 
 from src.services.build_tools import compile_amrex
+from src.services.solver_build_policy import (
+    central_build_candidates,
+    derive_central_build_dir,
+    resolve_local_executable_fallback,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,17 +78,18 @@ class LocalRunner:
             if exe:
                 logger.debug(f"[ OK ] Found existing executable: {exe.name}")
                 return str(exe)
-            if self._is_erf_context(case_dir):
-                exe, checked_paths = self._resolve_erf_executable_fallbacks(
+            solver_code = self._active_solver_code(case_dir)
+            if solver_code:
+                exe, checked_paths = self._resolve_executable_fallbacks(
+                    solver_code=solver_code,
                     case_dir=case_dir,
                     require_mpi=require_mpi,
                     require_cuda=False,
                 )
                 if exe:
-                    logger.debug(f"[ OK ] Found ERF fallback executable: {exe.name}")
+                    logger.debug("[ OK ] Found %s fallback executable: %s", solver_code, exe.name)
                     return str(exe)
-                checked = ", ".join(str(path) for path in checked_paths)
-                logger.info("No ERF executable found in fallback paths. Checked: %s", checked)
+                logger.info("No %s executable found in fallback paths. Checked: %s", solver_code, checked_paths)
 
         # No executable found - compile it (FORCE CPU for local).
         # For ERF, prefer compiling in central build dir when available.
@@ -106,14 +112,17 @@ class LocalRunner:
 
         if compiled_target is None:
             checked = ", ".join(str(path) for path in compile_targets)
-            if self._is_erf_context(case_dir):
-                raise RuntimeError(f"No ERF executable found. Checked paths: {checked}")
+            solver_code = self._active_solver_code(case_dir)
+            if solver_code and (solver_code == "ERF" or len(compile_targets) > 1):
+                raise RuntimeError(f"No {solver_code} executable found. Checked paths: {checked}")
             raise RuntimeError(f"Compilation failed in all targets: {checked}")
 
         # Find newly compiled executable in the successful target and known fallbacks
         exe = self._find_exe_in_dir(compiled_target, require_mpi, require_cuda=False)
-        if not exe and self._is_erf_context(case_dir):
-            exe, _ = self._resolve_erf_executable_fallbacks(
+        solver_code = self._active_solver_code(case_dir)
+        if not exe and solver_code:
+            exe, _ = self._resolve_executable_fallbacks(
+                solver_code=solver_code,
                 case_dir=case_dir,
                 require_mpi=require_mpi,
                 require_cuda=False,
@@ -150,84 +159,68 @@ class LocalRunner:
         # Fallback: return first .ex file
         return ex_files[0] if ex_files else None
 
-    def _is_erf_context(self, case_dir: Path | None = None) -> bool:
-        """Return True when execution context is ERF (config or case path)."""
-        if str(getattr(self.config, "default_solver", "")).strip().upper() == "ERF":
-            return True
+    def _active_solver_code(self, case_dir: Path | None = None) -> str | None:
+        solver = str(getattr(self.config, "default_solver", "")).strip().upper()
+        if solver:
+            return solver
 
         if case_dir is None:
-            return False
+            return None
 
-        case_path = Path(case_dir).resolve()
-        repo_root = getattr(self.config, "erf_repo_path", None)
-        if repo_root:
+        for code, repo in getattr(self.config, "repositories", {}).items():
+            if not repo:
+                continue
             try:
-                case_path.relative_to(Path(repo_root).resolve())
-                return True
-            except ValueError:
-                pass
+                Path(case_dir).resolve().relative_to(Path(repo).resolve())
+                return str(code).strip().upper()
+            except (ValueError, FileNotFoundError):
+                continue
+        return None
 
-        return "ERF" in case_path.parts
+    def _solver_repo_path(self, solver_code: str) -> Path | None:
+        attr = f"{solver_code.lower()}_repo_path"
+        value = getattr(self.config, attr, None)
+        return Path(value).expanduser() if value else None
+
+    def _configured_solver_executable_path(self, solver_code: str) -> str | Path | None:
+        return getattr(self.config, f"{solver_code.lower()}_executable_path", None)
+
+    def _configured_solver_central_build_dir(self, solver_code: str) -> str | Path | None:
+        return getattr(self.config, f"{solver_code.lower()}_central_build_dir", None)
+
+    def _solver_central_build_candidates(self, case_dir: Path, solver_code: str) -> list[Path]:
+        return central_build_candidates(
+            case_dir=case_dir,
+            repo_root=self._solver_repo_path(solver_code),
+            configured_central_build_dir=self._configured_solver_central_build_dir(solver_code),
+        )
+
+    def _is_erf_context(self, case_dir: Path | None = None) -> bool:
+        return self._active_solver_code(case_dir) == "ERF"
 
     def _derive_erf_central_build_dir(self, case_dir: Path) -> Path | None:
-        """Derive ERF central build directory (Exec/<group>) from a case path."""
+        repo_root = self._solver_repo_path("ERF")
+        derived = derive_central_build_dir(case_dir=case_dir, repo_root=repo_root)
+        if derived is not None:
+            return derived
+
         case_path = Path(case_dir).resolve()
-
-        repo_root = getattr(self.config, "erf_repo_path", None)
-        repo_path = Path(repo_root).resolve() if repo_root else None
-        relative_case = None
-
-        if repo_path:
-            try:
-                relative_case = case_path.relative_to(repo_path)
-            except ValueError:
-                relative_case = None
-
-        if relative_case is None:
-            parts = case_path.parts
-            if "ERF" not in parts:
-                return None
-            erf_index = parts.index("ERF")
-            repo_path = Path(*parts[:erf_index + 1])
-            relative_case = case_path.relative_to(repo_path)
-
-        if not relative_case.parts or relative_case.parts[0] != "Exec":
+        parts = case_path.parts
+        if "ERF" not in parts:
             return None
-        if len(relative_case.parts) < 2:
+        erf_index = parts.index("ERF")
+        repo_path = Path(*parts[:erf_index + 1])
+        relative_case = case_path.relative_to(repo_path)
+        if not relative_case.parts or relative_case.parts[0] != "Exec" or len(relative_case.parts) < 2:
             return None
         return repo_path / "Exec" / relative_case.parts[1]
-
-    def _configured_erf_central_build_dir(self) -> Path | None:
-        configured = getattr(self.config, "erf_central_build_dir", None)
-        if not configured:
-            return None
-        return Path(os.path.expandvars(str(configured))).expanduser()
-
-    def _erf_central_build_candidates(self, case_dir: Path) -> list[Path]:
-        """Return ordered central-build candidates (case-derived first)."""
-        candidates: list[Path] = []
-        derived = self._derive_erf_central_build_dir(case_dir)
-        if derived:
-            candidates.append(derived)
-        configured = self._configured_erf_central_build_dir()
-        if configured:
-            candidates.append(configured)
-
-        unique: list[Path] = []
-        seen: set[str] = set()
-        for candidate in candidates:
-            key = str(Path(candidate).resolve())
-            if key in seen:
-                continue
-            seen.add(key)
-            unique.append(Path(candidate))
-        return unique
 
     def _compile_targets(self, case_dir: Path) -> list[Path]:
         """Return ordered compile targets for the selected solver."""
         targets: list[Path] = []
-        if self._is_erf_context(case_dir):
-            targets.extend(self._erf_central_build_candidates(case_dir))
+        solver = self._active_solver_code(case_dir)
+        if solver:
+            targets.extend(self._solver_central_build_candidates(case_dir, solver))
         targets.append(case_dir)
 
         unique_targets: list[Path] = []
@@ -240,37 +233,38 @@ class LocalRunner:
             unique_targets.append(Path(target))
         return unique_targets
 
+    def _resolve_executable_fallbacks(
+        self,
+        solver_code: str,
+        case_dir: Path,
+        require_mpi: bool = True,
+        require_cuda: bool = False,
+    ) -> tuple[Path | None, list[Path]]:
+        resolved = resolve_local_executable_fallback(
+            solver_code=solver_code,
+            runtime_config=self.config,
+            case_dir=Path(case_dir),
+            repo_root=self._solver_repo_path(solver_code),
+            configured_executable_path=self._configured_solver_executable_path(solver_code),
+            central_build_dirs=self._solver_central_build_candidates(Path(case_dir), solver_code),
+            require_mpi=require_mpi,
+            require_cuda=require_cuda,
+            find_default_executable=self._find_exe_in_dir,
+        )
+        return resolved["executable_path"], resolved["checked_paths"]
+
     def _resolve_erf_executable_fallbacks(
         self,
         case_dir: Path,
         require_mpi: bool = True,
         require_cuda: bool = False,
     ) -> tuple[Path | None, list[Path]]:
-        """
-        Resolve ERF executable fallback chain after case-dir search fails.
-
-        Order:
-        1. config.erf_executable_path
-        2. derived central build directory (Exec/<group>)
-        """
-        checked_paths: list[Path] = [Path(case_dir)]
-
-        configured = getattr(self.config, "erf_executable_path", None)
-        if configured:
-            configured_path = Path(os.path.expandvars(str(configured))).expanduser()
-            checked_paths.append(configured_path)
-            if configured_path.is_file():
-                return configured_path, checked_paths
-
-        for central_build_dir in self._erf_central_build_candidates(Path(case_dir)):
-            if central_build_dir in checked_paths:
-                continue
-            checked_paths.append(central_build_dir)
-            exe = self._find_exe_in_dir(central_build_dir, require_mpi, require_cuda)
-            if exe:
-                return exe, checked_paths
-
-        return None, checked_paths
+        return self._resolve_executable_fallbacks(
+            solver_code="ERF",
+            case_dir=case_dir,
+            require_mpi=require_mpi,
+            require_cuda=require_cuda,
+        )
 
     def setup_job(
         self,

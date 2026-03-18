@@ -50,6 +50,18 @@ class ERFConfig(BaseAMReXConfig):
     default_inputs_path = "Exec/RegTests/Bubble/inputs"
     default_exec_repo_path = "Exec/RegTests/Bubble"
     default_exec_pattern = "ERF*ex"
+    build_system_preference = "cmake"
+    preferred_build_system = "cmake"
+    executable_search_path_templates = [
+        "{repo_root}/build/Exec",
+        "{repo_root}/Build/Exec",
+        "{repo_root}/install/bin",
+        "{central_build_dir}",
+    ]
+    cmake_executable_names = ["erf_exec"]
+    cmake_executable_ignores_accel_suffix = True
+    gnumake_executable_globs = ["ERF*ex"]
+    gnumake_flags = ["USE_MPI=TRUE", "DEBUG=FALSE"]
 
     selection_keywords = [
         "abl",

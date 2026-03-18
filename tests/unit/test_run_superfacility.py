@@ -163,7 +163,33 @@ def test_erf_fallback_prefers_case_group_over_configured_regtests(tmp_path):
 
     exe, checked = runner._resolve_erf_executable_fallbacks(case_dir=case_dir, require_mpi=True, require_cuda=True)
     assert exe == abl_exe
-    assert checked[1] == abl_dir
+    assert abl_dir in checked
+
+
+def test_erf_fallback_prefers_cmake_build_exec_when_present(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "ABL" / "Scaling" / "Perlmutter"
+    case_dir.mkdir(parents=True)
+    cmake_exe = repo_root / "build" / "Exec" / "erf_exec"
+    cmake_exe.parent.mkdir(parents=True)
+    cmake_exe.write_text("binary")
+
+    gnumake_exe = repo_root / "Exec" / "ABL" / "ERF3d.gnu.TEST.MPI.CUDA.ex"
+    gnumake_exe.parent.mkdir(parents=True, exist_ok=True)
+    gnumake_exe.write_text("binary")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        erf_executable_path=None,
+        erf_repo_path=repo_root,
+        erf_central_build_dir=repo_root / "Exec" / "ABL",
+    )
+    runner = SuperfacilityRunner(config)
+
+    exe, _ = runner._resolve_erf_executable_fallbacks(case_dir=case_dir, require_mpi=True, require_cuda=True)
+    assert exe == cmake_exe
 
 
 def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):

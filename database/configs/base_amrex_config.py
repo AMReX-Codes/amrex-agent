@@ -172,6 +172,16 @@ CASE: <path>"""
 
     default_exec_pattern: ClassVar[str | None] = None
     """Glob pattern for default executable within default_exec_repo_path."""
+    build_system_preference: ClassVar[str] = "gnumake"
+    """Preferred build system for executable discovery (e.g., gnumake, cmake)."""
+    executable_search_path_templates: ClassVar[list[str]] = ["{central_build_dir}"]
+    """Ordered executable search templates used by runtime runner fallbacks."""
+    cmake_executable_names: ClassVar[list[str]] = []
+    """Executable filenames emitted by CMake workflows (e.g., erf_exec)."""
+    cmake_executable_ignores_accel_suffix: ClassVar[bool] = False
+    """If True, CMake executables are treated as feature-agnostic names."""
+    gnumake_executable_globs: ClassVar[list[str]] = ["*.ex"]
+    """Executable glob patterns emitted by GNUmake workflows."""
 
     # === Solver Heuristics (Config-Driven) ===
     selection_keywords: ClassVar[list[str]] = []
@@ -2075,6 +2085,29 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
                 base = Path(repo_root) / base
             return base / "inputs"
         return None
+
+    @classmethod
+    def get_build_system_preference(cls) -> str:
+        return str(getattr(cls, "build_system_preference", "gnumake")).strip().lower()
+
+    @classmethod
+    def get_executable_search_path_templates(cls) -> list[str]:
+        templates = getattr(cls, "executable_search_path_templates", [])
+        return [str(item) for item in templates]
+
+    @classmethod
+    def get_cmake_executable_names(cls) -> list[str]:
+        names = getattr(cls, "cmake_executable_names", [])
+        return [str(item) for item in names]
+
+    @classmethod
+    def cmake_ignores_accel_suffix(cls) -> bool:
+        return bool(getattr(cls, "cmake_executable_ignores_accel_suffix", False))
+
+    @classmethod
+    def get_gnumake_executable_globs(cls) -> list[str]:
+        globs = getattr(cls, "gnumake_executable_globs", [])
+        return [str(item) for item in globs] if globs else ["*.ex"]
 
     @classmethod
     def get_slurm_metadata(cls) -> dict[str, str]:
