@@ -512,7 +512,7 @@ class AMReXAgentConfig(BaseModel):
     )
 
     faiss_embedding_model: str = Field(
-        default="text-embedding-3-small",
+        default="lbl/nomic-embed-text",
         description="Embedding model name (for OpenAI fallback if CBORG unavailable)"
     )
 
