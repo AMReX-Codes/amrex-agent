@@ -1,5 +1,32 @@
 {
+  "build_script": "build_all_indices.py",
   "entries": [
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": null,
+      "embedding_dimension": null,
+      "embedding_model": "lbl/nomic-embed-text",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-18T14:44:08.389712+00:00",
+      "level": "0",
+      "manifest_path": "level0/faiss_provenance.json",
+      "repo_commit": null,
+      "solver": null,
+      "version": "1"
+    },
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": "5613ec3943a33d5f0b4f954e34c4e3ff5559a945",
+      "embedding_dimension": null,
+      "embedding_model": "lbl/nomic-embed-text",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-18T14:45:12.017072+00:00",
+      "level": "1",
+      "manifest_path": "level1/erf_faiss_provenance.json",
+      "repo_commit": "5613ec3943a33d5f0b4f954e34c4e3ff5559a945",
+      "solver": "erf",
+      "version": "1"
+    },
     {
       "build_script": "build_all_indices.py",
       "dependencies_commit": "99914444329f6be784c6a153581c53bc60ae8937",
@@ -23,6 +50,19 @@
       "level": "2",
       "manifest_path": "level2/erf_faiss_provenance.json",
       "repo_commit": "1df48173da427f57a8201e157518afa7fd2e73ee",
+      "solver": "erf",
+      "version": "1"
+    },
+    {
+      "build_script": "build_all_indices.py",
+      "dependencies_commit": "5613ec3943a33d5f0b4f954e34c4e3ff5559a945",
+      "embedding_dimension": null,
+      "embedding_model": "lbl/nomic-embed-text",
+      "embedding_provider": "cborg",
+      "generated_at": "2026-03-18T14:58:05.501994+00:00",
+      "level": "2",
+      "manifest_path": "level2/erf_faiss_provenance.json",
+      "repo_commit": "5613ec3943a33d5f0b4f954e34c4e3ff5559a945",
       "solver": "erf",
       "version": "1"
     },
@@ -66,5 +106,6 @@
       "version": "1"
     }
   ],
+  "generated_at": "2026-03-18T14:58:05.507710+00:00",
   "version": "1"
 }
