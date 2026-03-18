@@ -69,6 +69,8 @@ class GraphState(TypedDict, total=False):
     # ========================================
     # Visualization Outputs (Phase 4/5)
     # ========================================
+    execution_intent: Optional[Dict[str, Any]]  # Canonical pre-run execution intent
+    visualization_intent: Optional[Dict[str, Any]]  # Canonical pre-run visualization intent
     visualization_images: Optional[List[str]]  # Paths to generated images
 
     # Phase 5 Workflow Integration - Visualization metadata

@@ -96,7 +96,7 @@ class LocalRunner:
             success = compile_amrex(
                 case_dir=str(target),
                 use_cuda=False,  # Force CPU for local
-                jobs=16,
+                jobs=12,
             )
             if success:
                 compiled_target = target

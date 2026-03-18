@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from src.models import GraphState
+from src.nodes.visualization_intent_node import resolve_visualization_intent
 from src.services.input_writer import InputWriterService
 from src.utils.gate import run_preconfirm_gate
 
@@ -113,7 +114,9 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
     modifications = plan_details.get("modifications", [])
     baseline = plan_details.get("baseline")
     reasoning = plan_details.get("reasoning", "")
-    requested_plot_vars = state.get("requested_plot_vars", []) or []
+    vis_intent = resolve_visualization_intent(state)
+    requested_plot_vars = vis_intent.get("requested_fields", []) or []
+    visualization_config = vis_intent.get("visualization_config", {}) or {}
 
     logger.debug(f"[InputWriter] Plan extracted from workflow_history: {selected_case}")
     logger.debug(f"[InputWriter] Extracted {len(modifications)} modifications: {modifications[:3]}...")
@@ -228,6 +231,7 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
                 "user_prompt": (state.get("prompt") or state.get("user_prompt") or ""),
                 "output_dir": str(run_dir),  # Service physically creates this
                 "requested_plot_vars": requested_plot_vars,
+                "visualization_config": visualization_config,
             }
             signature = inspect.signature(service.apply_plan)
             params = signature.parameters

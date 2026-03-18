@@ -29,6 +29,14 @@ class REMORAConfig(BaseAMReXConfig):
         """
         return "y"
 
+    @classmethod
+    def get_plotfile_period_param(cls) -> str | None:
+        return "remora.plot_int_time"
+
+    @classmethod
+    def get_plotfile_step_interval_param(cls) -> str | None:
+        return "remora.plot_int"
+
     # === Registry Metadata ===
     github_org = "AMReX-Codes"
     github_repo = "REMORA"

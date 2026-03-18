@@ -52,3 +52,11 @@ class AMReXConfig(BaseAMReXConfig):
     priority_cases = [
         "Tests/Amr/Advection_AmrCore",
     ]
+
+    @classmethod
+    def get_plotfile_period_param(cls) -> str | None:
+        return "amr.plot_per"
+
+    @classmethod
+    def get_plotfile_step_interval_param(cls) -> str | None:
+        return "amr.plot_int"

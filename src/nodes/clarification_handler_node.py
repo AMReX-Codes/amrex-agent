@@ -120,7 +120,15 @@ def _apply_resolved_value(
     if decision_level == 4 or field_name in _PLOT_VAR_FIELDS:
         requested_plot_vars = list(state.get("requested_plot_vars") or [])
         merged = _merge_plot_vars(requested_plot_vars, resolved_value)
-        return {"requested_plot_vars": merged}
+        intent = dict(state.get("visualization_intent") or {})
+        if not isinstance(intent, dict):
+            intent = {}
+        existing_requested = intent.get("requested_fields", intent.get("requested_plot_vars", []))
+        if not isinstance(existing_requested, list):
+            existing_requested = []
+        intent_merged = _merge_plot_vars(existing_requested, resolved_value)
+        intent["requested_fields"] = intent_merged
+        return {"requested_plot_vars": merged, "visualization_intent": intent}
 
     if not field_name:
         return {}

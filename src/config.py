@@ -842,10 +842,9 @@ class AMReXAgentConfig(BaseModel):
     )
 
     visualization_backend: str = Field(
-        default='auto',
-        description="Visualization backend: 'auto' (Phase 5: AMReX tools → pyamrex → yt), "
-                    "'amrex_tools', 'pyamrex', 'yt'. "
-                    "Phase 4: yt-only. Phase 5: Multi-backend with auto-selection."
+        default='yt',
+        description="Visualization backend: 'yt' (default), 'amrex_tools', 'pyamrex', "
+                    "or 'auto' (maps to yt-first selection)."
     )
 
     amrex_tools_path: Optional[Path] = Field(

@@ -43,6 +43,8 @@ Once registered, invoke `execute_workflow` through the Academy path with payload
 ```
 
 For full MCP payload templates and field mapping, see `docs/mcp.md`.
+For runtime intent precedence, fallback, and permission behavior, see
+`docs/intent_runtime_routing.md`.
 
 ## Single-workflow demo (Academy)
 

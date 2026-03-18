@@ -167,6 +167,18 @@ class PeleLMeXConfig(BaseAMReXConfig):
         "prompt": "What {section}.atol and {section}.rtol should I use for PeleLMeX with a QSSA mechanism?",
     }
 
+    @classmethod
+    def get_plotfile_var_param(cls) -> str:
+        return "peleLM.derive_plot_vars"
+
+    @classmethod
+    def get_plotfile_period_param(cls) -> str | None:
+        return "amr.plot_per"
+
+    @classmethod
+    def get_plotfile_step_interval_param(cls) -> str | None:
+        return "amr.plot_int"
+
     prompt_templates: ClassVar[dict[str, Any]] = {
         "misc": {
             "schema_scan": """Identify requested concepts from the case description that do not map to known baseline or schema parameters.

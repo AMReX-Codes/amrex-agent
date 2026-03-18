@@ -20,6 +20,8 @@ from src.services.viz_param_extractor import (
     PLOTFILE_VAR_PARAM,
     PLOTFILE_VAR_PARAM_DEFAULT,
     canonicalize_requested_plot_vars,
+    get_plotfile_period_param,
+    get_plotfile_step_interval_param,
     get_plotfile_var_param,
 )
 
@@ -101,6 +103,88 @@ def apply_plotfile_vars_to_inputs_text(
     if inputs_text.endswith("\n"):
         output += "\n"
     return output
+
+
+def upsert_inputs_param(inputs_text: str, param_name: str, value: str) -> str:
+    """
+    Upsert a single inputs parameter line while preserving unrelated formatting.
+    """
+    lines = inputs_text.splitlines()
+    output_lines: list[str] = []
+    replaced = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and "=" in line:
+            lhs = line.split("=", maxsplit=1)[0].strip()
+            if lhs == param_name:
+                if not replaced:
+                    output_lines.append(f"{param_name} = {value}")
+                    replaced = True
+                continue
+        output_lines.append(line)
+
+    if not replaced:
+        output_lines.append(f"{param_name} = {value}")
+
+    output = "\n".join(output_lines)
+    if inputs_text.endswith("\n"):
+        output += "\n"
+    return output
+
+
+def _resolve_plotfile_period_settings(
+    visualization_config: dict | None,
+    code_name: str,
+) -> list[tuple[str, str]]:
+    """
+    Resolve solver-aware plot cadence settings from extracted visualization intent.
+    """
+    if not isinstance(visualization_config, dict):
+        return []
+
+    settings: list[tuple[str, str]] = []
+    period_param = get_plotfile_period_param(code_name)
+    step_interval_param = get_plotfile_step_interval_param(code_name)
+
+    cadence_solver_time = visualization_config.get("cadence_solver_time")
+    if cadence_solver_time is not None:
+        try:
+            cadence_value = float(cadence_solver_time)
+        except (TypeError, ValueError):
+            cadence_value = 0.0
+        if cadence_value > 0:
+            cadence_str = str(int(cadence_value)) if cadence_value.is_integer() else str(cadence_value)
+            if period_param:
+                settings.append((period_param, cadence_str))
+            if step_interval_param:
+                settings.append((step_interval_param, "-1"))
+            return settings
+
+    cadence_solver_steps = visualization_config.get("cadence_solver_steps")
+    if cadence_solver_steps is not None:
+        try:
+            step_value = int(round(float(cadence_solver_steps)))
+        except (TypeError, ValueError):
+            step_value = 0
+        if step_value > 0 and step_interval_param:
+            settings.append((step_interval_param, str(step_value)))
+            return settings
+
+    # Backward compatibility for existing payloads still using raw seconds.
+    seconds = visualization_config.get("plot_interval_seconds")
+    if seconds is not None:
+        try:
+            cadence_value = float(seconds)
+        except (TypeError, ValueError):
+            cadence_value = 0.0
+        if cadence_value > 0:
+            cadence_str = str(int(cadence_value)) if cadence_value.is_integer() else str(cadence_value)
+            if period_param:
+                settings.append((period_param, cadence_str))
+            if step_interval_param:
+                settings.append((step_interval_param, "-1"))
+
+    return settings
 
 class InputWriterService:
     """Applies architect's plan to generate final configuration.
@@ -223,7 +307,8 @@ class InputWriterService:
                    reasoning: str = "",
                    user_prompt: str = "",
                    output_dir: Path | None = None,
-                   requested_plot_vars: list[str] | None = None) -> dict:
+                   requested_plot_vars: list[str] | None = None,
+                   visualization_config: dict | None = None) -> dict:
         """
         Apply execution plan using Input Writer pipeline.
 
@@ -449,6 +534,10 @@ class InputWriterService:
                 baseline_inputs_content=baseline_text,
                 code_name=code_name,
             )
+            cadence_settings = _resolve_plotfile_period_settings(
+                visualization_config=visualization_config,
+                code_name=code_name,
+            )
 
             if not modifications and baseline_text and selected_inputs_path:
                 logger.info("[2/5] Skipping model hydration (no modifications)")
@@ -457,6 +546,8 @@ class InputWriterService:
                     baseline_text,
                     plotfile_setting,
                 )
+                for param_name, value in cadence_settings:
+                    output_text = upsert_inputs_param(output_text, param_name, value)
                 inputs_path.write_text(output_text)
                 logger.info(f"Wrote {len(output_text)} bytes to {inputs_path}")
 
@@ -624,6 +715,8 @@ class InputWriterService:
                 output_text,
                 plotfile_setting,
             )
+            for param_name, value in cadence_settings:
+                output_text = upsert_inputs_param(output_text, param_name, value)
 
             # Write to file
             inputs_path = output_dir / "inputs"

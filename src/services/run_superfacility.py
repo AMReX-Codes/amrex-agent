@@ -144,7 +144,7 @@ class SuperfacilityRunner:
             success = compile_amrex(
                 case_dir=str(target),
                 use_cuda=require_cuda,
-                jobs=16,
+                jobs=12,
             )
             if success:
                 compiled_target = target

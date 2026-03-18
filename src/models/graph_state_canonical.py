@@ -51,8 +51,10 @@ class GraphState(TypedDict, total=False):
     config: AMReXAgentConfig         # Runtime configuration (paths, API keys)
     output_dir: Optional[str]        # Optional output directory override
     submit: Optional[Dict[str, Any]] # Submission settings (e.g., dry_run)
+    execution_intent: Optional[Dict[str, Any]]  # Canonical execution intent contract
     requested_plot_vars: Optional[List[str]]       # Prompt-extracted plot quantities
     visualization_config: Optional[Dict[str, Any]] # Prompt-extracted visualization settings
+    visualization_intent: Optional[Dict[str, Any]] # Canonical visualization intent contract
 
     # ========================================
     # PLANNING PHASE (Architect outputs)
