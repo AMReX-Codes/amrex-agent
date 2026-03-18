@@ -6,6 +6,7 @@ import json
 import subprocess
 from pathlib import Path
 from shutil import which
+from string import hexdigits
 from typing import Any
 
 from src.services.faiss_artifacts import faiss_indices_present
@@ -63,6 +64,55 @@ def _get_git_head_sha(repo_path: Path) -> str:
     if result.returncode != 0:
         return ""
     return result.stdout.strip()
+
+
+def _checkout_repo_commit(repo_path: Path, commit: str) -> bool:
+    if not commit:
+        return False
+    result = subprocess.run(
+        ["git", "-C", str(repo_path), "checkout", str(commit)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def _short_sha(sha: str) -> str:
+    return sha[:10] if sha else "unknown"
+
+
+def _is_commit_like(value: str) -> bool:
+    text = value.strip()
+    if len(text) < 7:
+        return False
+    return all(ch in hexdigits for ch in text)
+
+
+def _collect_indexed_commits(repo_root: Path, repo_name: str) -> set[str]:
+    commits: set[str] = set()
+    faiss_root = repo_root / "database" / "faiss"
+    if not faiss_root.exists():
+        return commits
+    for manifest_path in faiss_root.glob("*/build_session_manifest.json"):
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        entries = manifest.get("entries")
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            solver = str(entry.get("solver") or "").strip().lower()
+            if solver != repo_name:
+                continue
+            for key in ("repo_commit", "dependencies_commit"):
+                commit = str(entry.get(key) or "").strip()
+                if _is_commit_like(commit):
+                    commits.add(commit.lower())
+    return commits
 
 
 def _detect_schema_staleness(**kwargs: Any) -> bool:
@@ -163,27 +213,31 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
         if not actual_sha and not has_git_metadata:
             return {"issues": issues}
         if actual_sha and actual_sha != expected_sha:
-            rebuild_cmds = (
-                f"ERF_PATH={erf_repo_path} && "
-                "python -u database/scripts/build_schema.py \"$ERF_PATH\" --output database/schemas --auto-compose && "
-                "python -u scripts/rename_schema_after_build.py --repo-root . --schemas-dir database/schemas --singleton-rename && "
-                "python -u database/scripts/build_all_indices.py --level 1 --repo \"$ERF_PATH\" --output database/faiss --provider cborg && "
-                "python -u database/scripts/build_all_indices.py --level 2 --repo \"$ERF_PATH\" --output database/faiss --provider cborg && "
-                "python -u database/scripts/build_index.py --config erf --type case_structure --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg && "
-                "python -u database/scripts/build_index.py --config erf --type case_details --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg && "
-                "python -u database/scripts/build_index.py --config erf --type input_templates --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg && "
-                "python -u database/scripts/build_all_indices.py --check --output database/faiss --provider cborg"
-            )
+            rebuild_steps = [
+                "python -u database/scripts/build_schema.py \"$ERF_PATH\" --output database/schemas --auto-compose",
+                "python -u scripts/rename_schema_after_build.py --repo-root . --schemas-dir database/schemas --singleton-rename",
+                "python -u database/scripts/build_all_indices.py --level 1 --repo \"$ERF_PATH\" --output database/faiss --provider cborg",
+                "python -u database/scripts/build_all_indices.py --level 2 --repo \"$ERF_PATH\" --output database/faiss --provider cborg",
+                "python -u database/scripts/build_index.py --config erf --type case_structure --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg",
+                "python -u database/scripts/build_index.py --config erf --type case_details --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg",
+                "python -u database/scripts/build_index.py --config erf --type input_templates --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg",
+                "python -u database/scripts/build_all_indices.py --check --output database/faiss --provider cborg",
+            ]
+            rebuild_cmds = " && \\\n  ".join(rebuild_steps)
             issues.append(
                 _issue(
                     ISSUE_ERF_COMMIT_MISMATCH,
                     "error",
                     (
-                        "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF schema/indices. "
-                        f"Suggested rebuild sequence: {rebuild_cmds}"
+                        "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF schema/indices.\n"
+                        "Rebuild sequence:\n"
+                        f"  ERF_PATH={erf_repo_path} && \\\n"
+                        f"  {rebuild_cmds}"
                     ),
                     expected_commit=expected_sha,
                     actual_commit=actual_sha,
+                    repo_name="erf",
+                    repo_path=str(erf_repo_path),
                 )
             )
     return {"issues": issues}
@@ -360,14 +414,93 @@ def _is_git_repo(path: Path | None) -> bool:
 def _interactive_missing_repo_prompt(repo_name: str, custom_path: Path | None) -> str:
     upper = repo_name.upper()
     if custom_path is not None and not _is_git_repo(custom_path):
-        return input(
-            f"Configured {upper} path is not usable. Type 'custom' to enter a new path, "
-            f"'clone' to clone {upper}, or 'skip' to continue: "
-        ).strip().lower()
-    return input(
-        f"{upper} repository is missing. Type 'clone' to clone automatically, "
-        "'custom' to provide a path, or 'skip' to continue: "
-    ).strip().lower()
+        print(f"\n{upper} repository path is configured but unusable: {custom_path}")
+    else:
+        print(f"\n{upper} repository is missing.")
+    print("Choose an action:")
+    print("  1) Clone pinned repository")
+    print("  2) Enter custom local path")
+    print("  3) Select from discovered local repositories")
+    print("  4) Skip for now")
+
+    while True:
+        response = input("Selection [1/2/3/4, default 4]: ").strip().lower()
+        if response in {"1", "clone"}:
+            return "clone"
+        if response in {"2", "custom"}:
+            return "custom"
+        if response in {"3", "select"}:
+            return "select"
+        if response in {"", "4", "skip"}:
+            return "skip"
+        print("Invalid selection. Enter 1, 2, 3, or 4.")
+
+
+def _interactive_commit_mismatch_prompt(
+    repo_name: str,
+    expected_commit: str,
+    actual_commit: str,
+) -> str:
+    upper = repo_name.upper()
+    print(f"\n{upper} commit mismatch detected.")
+    print(f"  expected: {_short_sha(expected_commit)} ({expected_commit})")
+    print(f"  actual  : {_short_sha(actual_commit)} ({actual_commit})")
+    print("Choose an action:")
+    print(f"  1) Checkout pinned commit {_short_sha(expected_commit)}")
+    print(f"  2) Continue with current commit {_short_sha(actual_commit)}")
+    print("  3) Abort preflight (safe default)")
+
+    while True:
+        response = input("Selection [1/2/3, default 3]: ").strip().lower()
+        if response in {"1", "checkout"}:
+            return "checkout"
+        if response in {"2", "continue"}:
+            return "continue"
+        if response in {"", "3", "abort"}:
+            return "abort"
+        print("Invalid selection. Enter 1, 2, or 3.")
+
+
+def _interactive_checkout_failure_prompt(repo_name: str, expected_commit: str) -> str:
+    print(f"Checkout to {_short_sha(expected_commit)} failed for {repo_name.upper()}.")
+    print("Choose next step:")
+    print("  1) Retry checkout")
+    print("  2) Continue with current commit")
+    print("  3) Abort preflight")
+    while True:
+        response = input("Selection [1/2/3, default 3]: ").strip().lower()
+        if response in {"1", "retry"}:
+            return "retry"
+        if response in {"2", "continue"}:
+            return "continue"
+        if response in {"", "3", "abort"}:
+            return "abort"
+        print("Invalid selection. Enter 1, 2, or 3.")
+
+
+def _discover_local_repo_candidates(repo_root: Path, repo_name: str) -> list[Path]:
+    repo_token = str(repo_name or "").lower()
+    candidates: dict[str, Path] = {}
+
+    for base in (repo_root.parent, repo_root):
+        if not base.exists():
+            continue
+        for child in base.iterdir():
+            if not child.is_dir():
+                continue
+            if repo_token not in child.name.lower():
+                continue
+            if not _is_git_repo(child):
+                continue
+            candidates[str(child.resolve())] = child
+
+    return [candidates[key] for key in sorted(candidates)]
+
+
+def _candidate_index_status(head_commit: str, indexed_commits: set[str]) -> str:
+    if not head_commit:
+        return "unknown"
+    return "yes" if head_commit.lower() in indexed_commits else "no"
 
 
 def _try_interactive_resolution(
@@ -377,6 +510,8 @@ def _try_interactive_resolution(
     repo_root: Path,
     target_path: Path,
     expected_dependencies: dict[str, Any],
+    discovered_candidates: list[Path] | None = None,
+    indexed_commits: set[str] | None = None,
 ) -> tuple[str, bool]:
     if response == "clone":
         result = _clone_missing_repo(
@@ -390,6 +525,23 @@ def _try_interactive_resolution(
         custom_text = input(f"Enter the full path to your {repo_name.upper()} repository: ").strip()
         custom_path = Path(custom_text) if custom_text else None
         return (f"use_custom_path:{repo_name}", _is_git_repo(custom_path))
+    if response == "select":
+        candidates = list(discovered_candidates or [])
+        if not candidates:
+            print("No discovered repositories are available for selection.")
+            return (f"select_discovered_repo:{repo_name}", False)
+        for idx, candidate in enumerate(candidates, start=1):
+            candidate_sha = _get_git_head_sha(candidate)
+            status = _candidate_index_status(candidate_sha, indexed_commits or set())
+            print(f"[{idx}] {candidate}")
+            print(f"    head={_short_sha(candidate_sha)} indexed_match={status}")
+        selected = input("Select candidate number: ").strip()
+        if not selected.isdigit():
+            return (f"select_discovered_repo:{repo_name}", False)
+        selected_idx = int(selected)
+        if selected_idx < 1 or selected_idx > len(candidates):
+            return (f"select_discovered_repo:{repo_name}", False)
+        return (f"use_discovered_repo:{repo_name}", _is_git_repo(candidates[selected_idx - 1]))
     return ("", False)
 
 
@@ -459,7 +611,48 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
     unresolved: list[dict[str, Any]] = []
 
     for issue in issues:
-        if issue.get("code") != ISSUE_ERF_REPO_MISSING:
+        code = issue.get("code")
+        if code == ISSUE_ERF_COMMIT_MISMATCH:
+            repo_name = str(issue.get("repo_name") or "erf").lower()
+            repo_path = (
+                _as_path(issue.get("repo_path"))
+                or _as_path(custom_repo_paths.get(repo_name))
+                or _config_repo_path(config, repo_name)
+                or _erf_path(repo_root)
+            )
+            expected_commit = str(issue.get("expected_commit") or "")
+            actual_commit = str(issue.get("actual_commit") or "")
+            response = _interactive_commit_mismatch_prompt(repo_name, expected_commit, actual_commit)
+            if response == "checkout":
+                attempted_actions.append(f"checkout_pinned_commit:{repo_name}")
+                while True:
+                    if _is_git_repo(repo_path) and _checkout_repo_commit(repo_path, expected_commit):
+                        resolved.append(issue)
+                        break
+                    next_step = _interactive_checkout_failure_prompt(repo_name, expected_commit)
+                    if next_step == "retry":
+                        attempted_actions.append(f"retry_checkout_pinned_commit:{repo_name}")
+                        continue
+                    if next_step == "continue":
+                        attempted_actions.append(f"continue_with_current_commit:{repo_name}")
+                        resolved.append(issue)
+                        break
+                    attempted_actions.append(f"abort_commit_mismatch:{repo_name}")
+                    unresolved.append(issue)
+                    break
+                if issue in resolved or issue in unresolved:
+                    continue
+                unresolved.append(issue)
+                continue
+            if response == "continue":
+                attempted_actions.append(f"continue_with_current_commit:{repo_name}")
+                resolved.append(issue)
+                continue
+            attempted_actions.append(f"abort_commit_mismatch:{repo_name}")
+            unresolved.append(issue)
+            continue
+
+        if code != ISSUE_ERF_REPO_MISSING:
             unresolved.append(issue)
             continue
 
@@ -476,6 +669,8 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
             resolved.append(issue)
             continue
 
+        discovered_candidates = _discover_local_repo_candidates(repo_root, repo_name)
+        indexed_commits = _collect_indexed_commits(repo_root, repo_name)
         response = _interactive_missing_repo_prompt(repo_name, custom_path)
         action, ok = _try_interactive_resolution(
             response=response,
@@ -483,6 +678,8 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
             repo_root=repo_root,
             target_path=target_path,
             expected_dependencies=expected_dependencies,
+            discovered_candidates=discovered_candidates,
+            indexed_commits=indexed_commits,
         )
         if action:
             attempted_actions.append(action)

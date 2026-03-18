@@ -419,3 +419,152 @@ def test_run_startup_readiness_checks_orchestrates_resolution_usefully(
     assert result.get("resolved") == [issue]
     assert result.get("unresolved") == []
     assert result.get("exit_code") == 0
+
+
+def test_interactive_commit_mismatch_checkout_resolves_issue(
+    first_run_module: Any,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    no_real_subprocess: None,
+) -> None:
+    erf_repo = tmp_path / "ERF"
+    erf_repo.mkdir(parents=True)
+    (erf_repo / ".git").mkdir()
+    issue = {
+        "code": EXPECTED_ISSUE_CODES["erf_commit_mismatch"],
+        "severity": "error",
+        "suggested_action": "Checkout pinned commit or rebuild",
+        "repo_name": "erf",
+        "repo_path": str(erf_repo),
+        "expected_commit": "expected-sha",
+        "actual_commit": "actual-sha",
+    }
+
+    monkeypatch.setattr("builtins.input", lambda *_args, **_kwargs: "checkout")
+    monkeypatch.setattr(first_run_module, "_checkout_repo_commit", lambda *_args, **_kwargs: True)
+
+    result = first_run_module.resolve_readiness_issues_interactive(
+        repo_root=tmp_path,
+        issues=[issue],
+    )
+    assert isinstance(result, dict)
+    assert result.get("resolved") == [issue]
+    assert result.get("unresolved") == []
+    assert "checkout_pinned_commit:erf" in (result.get("attempted_actions") or [])
+
+
+def test_interactive_commit_mismatch_continue_marks_resolved(
+    first_run_module: Any,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    no_real_subprocess: None,
+) -> None:
+    issue = {
+        "code": EXPECTED_ISSUE_CODES["erf_commit_mismatch"],
+        "severity": "error",
+        "suggested_action": "Checkout pinned commit or rebuild",
+        "repo_name": "erf",
+        "expected_commit": "expected-sha",
+        "actual_commit": "actual-sha",
+    }
+
+    monkeypatch.setattr("builtins.input", lambda *_args, **_kwargs: "continue")
+
+    result = first_run_module.resolve_readiness_issues_interactive(
+        repo_root=tmp_path,
+        issues=[issue],
+    )
+    assert isinstance(result, dict)
+    assert result.get("resolved") == [issue]
+    assert result.get("unresolved") == []
+    assert "continue_with_current_commit:erf" in (result.get("attempted_actions") or [])
+
+
+def test_interactive_commit_mismatch_abort_leaves_issue_unresolved(
+    first_run_module: Any,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    no_real_subprocess: None,
+) -> None:
+    issue = {
+        "code": EXPECTED_ISSUE_CODES["erf_commit_mismatch"],
+        "severity": "error",
+        "suggested_action": "Checkout pinned commit or rebuild",
+        "repo_name": "erf",
+        "expected_commit": "expected-sha",
+        "actual_commit": "actual-sha",
+    }
+
+    monkeypatch.setattr("builtins.input", lambda *_args, **_kwargs: "abort")
+
+    result = first_run_module.resolve_readiness_issues_interactive(
+        repo_root=tmp_path,
+        issues=[issue],
+    )
+    assert isinstance(result, dict)
+    assert result.get("resolved") == []
+    assert result.get("unresolved") == [issue]
+    assert "abort_commit_mismatch:erf" in (result.get("attempted_actions") or [])
+
+
+def test_discover_local_repo_candidates_finds_sibling_and_child_erf_git_repos(
+    first_run_module: Any,
+    tmp_path: Path,
+    no_real_subprocess: None,
+) -> None:
+    sibling_repo = tmp_path.parent / "ERF_sibling"
+    sibling_repo.mkdir(parents=True)
+    (sibling_repo / ".git").mkdir()
+
+    child_repo = tmp_path / "my_erf_repo"
+    child_repo.mkdir(parents=True)
+    (child_repo / ".git").mkdir()
+
+    not_git = tmp_path / "ERF_not_git"
+    not_git.mkdir(parents=True)
+
+    candidates = first_run_module._discover_local_repo_candidates(tmp_path, "erf")
+    as_paths = {str(path) for path in candidates}
+
+    assert str(sibling_repo) in as_paths
+    assert str(child_repo) in as_paths
+    assert str(not_git) not in as_paths
+
+
+def test_interactive_missing_repo_select_uses_discovered_candidate(
+    first_run_module: Any,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    no_real_subprocess: None,
+) -> None:
+    selected_repo = tmp_path.parent / "ERF_selected"
+    selected_repo.mkdir(parents=True)
+    (selected_repo / ".git").mkdir()
+
+    issue = {
+        "code": EXPECTED_ISSUE_CODES["missing_erf_repo"],
+        "severity": "error",
+        "suggested_action": "Choose clone/custom/select path",
+        "repo_name": "erf",
+    }
+    inputs = iter(["select", "1"])
+    monkeypatch.setattr("builtins.input", lambda *_args, **_kwargs: next(inputs))
+    monkeypatch.setattr(
+        first_run_module,
+        "_discover_local_repo_candidates",
+        lambda *_args, **_kwargs: [selected_repo],
+    )
+    monkeypatch.setattr(
+        first_run_module,
+        "_get_git_head_sha",
+        lambda *_args, **_kwargs: "5613ec3943a33d5f0b4f954e34c4e3ff5559a945",
+    )
+
+    result = first_run_module.resolve_readiness_issues_interactive(
+        repo_root=tmp_path,
+        issues=[issue],
+    )
+    assert isinstance(result, dict)
+    assert result.get("resolved") == [issue]
+    assert result.get("unresolved") == []
+    assert "use_discovered_repo:erf" in (result.get("attempted_actions") or [])
