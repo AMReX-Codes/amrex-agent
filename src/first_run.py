@@ -163,11 +163,25 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
         if not actual_sha and not has_git_metadata:
             return {"issues": issues}
         if actual_sha and actual_sha != expected_sha:
+            rebuild_cmds = (
+                f"ERF_PATH={erf_repo_path} && "
+                "python -u database/scripts/build_schema.py \"$ERF_PATH\" --output database/schemas --auto-compose && "
+                "python -u scripts/rename_schema_after_build.py --repo-root . --schemas-dir database/schemas --singleton-rename && "
+                "python -u database/scripts/build_all_indices.py --level 1 --repo \"$ERF_PATH\" --output database/faiss --provider cborg && "
+                "python -u database/scripts/build_all_indices.py --level 2 --repo \"$ERF_PATH\" --output database/faiss --provider cborg && "
+                "python -u database/scripts/build_index.py --config erf --type case_structure --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg && "
+                "python -u database/scripts/build_index.py --config erf --type case_details --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg && "
+                "python -u database/scripts/build_index.py --config erf --type input_templates --source \"$ERF_PATH\" --embedding cborg --embedding-model lbl/nomic-embed-text --provider cborg && "
+                "python -u database/scripts/build_all_indices.py --check --output database/faiss --provider cborg"
+            )
             issues.append(
                 _issue(
                     ISSUE_ERF_COMMIT_MISMATCH,
                     "error",
-                    "Check out the ERF commit pinned in .dependencies.json or rebuild the demo assets.",
+                    (
+                        "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF schema/indices. "
+                        f"Suggested rebuild sequence: {rebuild_cmds}"
+                    ),
                     expected_commit=expected_sha,
                     actual_commit=actual_sha,
                 )

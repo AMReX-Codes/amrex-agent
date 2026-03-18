@@ -795,6 +795,11 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
 
     _log_preflight_issues(unresolved)
     if _has_blocking_issues(unresolved) or exit_code != 0:
+        if not is_tty:
+            logger.error(
+                "Interactive remediation is disabled in non-TTY mode. Re-run from a terminal "
+                "without output redirection to enable interactive fixes."
+            )
         raise ValueError("Startup readiness preflight failed. Resolve blocking issues and retry.")
 
 
