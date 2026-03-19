@@ -523,17 +523,165 @@ def _interactive_commit_mismatch_prompt(
     print("Choose an action:")
     print(f"  1) Checkout pinned commit {_short_sha(expected_commit)}")
     print(f"  2) Continue with current commit {_short_sha(actual_commit)}")
-    print("  3) Abort preflight (safe default)")
+    print("  3) Checkout development + rebuild local artifacts")
+    print("  4) Abort preflight (safe default)")
 
     while True:
-        response = input("Selection [1/2/3, default 3]: ").strip().lower()
+        response = input("Selection [1/2/3/4, default 4]: ").strip().lower()
         if response in {"1", "checkout"}:
             return "checkout"
         if response in {"2", "continue"}:
             return "continue"
-        if response in {"", "3", "abort"}:
+        if response in {"3", "development_rebuild", "dev", "development"}:
+            return "development_rebuild"
+        if response in {"", "4", "abort"}:
             return "abort"
-        print("Invalid selection. Enter 1, 2, or 3.")
+        print("Invalid selection. Enter 1, 2, 3, or 4.")
+
+
+def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
+    commands = [
+        [
+            "python",
+            "-u",
+            "database/scripts/build_schema.py",
+            str(erf_repo_path),
+            "--output",
+            "database/schemas",
+            "--auto-compose",
+        ],
+        [
+            "python",
+            "-u",
+            "scripts/rename_schema_after_build.py",
+            "--repo-root",
+            ".",
+            "--schemas-dir",
+            "database/schemas",
+            "--singleton-rename",
+        ],
+        [
+            "python",
+            "-u",
+            "database/scripts/build_all_indices.py",
+            "--level",
+            "1",
+            "--repo",
+            str(erf_repo_path),
+            "--output",
+            "database/faiss",
+            "--provider",
+            "cborg",
+        ],
+        [
+            "python",
+            "-u",
+            "database/scripts/build_all_indices.py",
+            "--level",
+            "2",
+            "--repo",
+            str(erf_repo_path),
+            "--output",
+            "database/faiss",
+            "--provider",
+            "cborg",
+        ],
+        [
+            "python",
+            "-u",
+            "database/scripts/build_index.py",
+            "--config",
+            "erf",
+            "--type",
+            "case_structure",
+            "--source",
+            str(erf_repo_path),
+            "--embedding",
+            "cborg",
+            "--embedding-model",
+            "lbl/nomic-embed-text",
+            "--provider",
+            "cborg",
+        ],
+        [
+            "python",
+            "-u",
+            "database/scripts/build_index.py",
+            "--config",
+            "erf",
+            "--type",
+            "case_details",
+            "--source",
+            str(erf_repo_path),
+            "--embedding",
+            "cborg",
+            "--embedding-model",
+            "lbl/nomic-embed-text",
+            "--provider",
+            "cborg",
+        ],
+        [
+            "python",
+            "-u",
+            "database/scripts/build_index.py",
+            "--config",
+            "erf",
+            "--type",
+            "input_templates",
+            "--source",
+            str(erf_repo_path),
+            "--embedding",
+            "cborg",
+            "--embedding-model",
+            "lbl/nomic-embed-text",
+            "--provider",
+            "cborg",
+        ],
+        [
+            "python",
+            "-u",
+            "database/scripts/build_all_indices.py",
+            "--check",
+            "--output",
+            "database/faiss",
+            "--provider",
+            "cborg",
+        ],
+    ]
+    for command in commands:
+        result = subprocess.run(
+            command,
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            logger.error(
+                "Rebuild command failed (%s): %s",
+                result.returncode,
+                " ".join(command),
+            )
+            if result.stderr:
+                logger.error("%s", result.stderr.strip())
+            return False
+    return True
+
+
+def _checkout_development_and_rebuild(repo_root: Path, repo_path: Path) -> bool:
+    if not _is_git_repo(repo_path):
+        return False
+    checkout_attempts = [["checkout", "development"], ["checkout", "HEAD~1"]]
+    for args in checkout_attempts:
+        result = subprocess.run(
+            ["git", "-C", str(repo_path), *args],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            return _run_rebuild_chain(repo_root, repo_path)
+    return False
 
 
 def _interactive_checkout_failure_prompt(repo_name: str, expected_commit: str) -> str:
@@ -722,6 +870,13 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
             if response == "continue":
                 attempted_actions.append(f"continue_with_current_commit:{repo_name}")
                 resolved.append(issue)
+                continue
+            if response == "development_rebuild":
+                attempted_actions.append(f"checkout_development_rebuild:{repo_name}")
+                if _checkout_development_and_rebuild(repo_root, repo_path):
+                    resolved.append(issue)
+                    continue
+                unresolved.append(issue)
                 continue
             attempted_actions.append(f"abort_commit_mismatch:{repo_name}")
             unresolved.append(issue)

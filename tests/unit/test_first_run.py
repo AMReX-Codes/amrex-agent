@@ -507,6 +507,78 @@ def test_interactive_commit_mismatch_abort_leaves_issue_unresolved(
     assert "abort_commit_mismatch:erf" in (result.get("attempted_actions") or [])
 
 
+def test_interactive_commit_mismatch_development_rebuild_resolves_issue(
+    first_run_module: Any,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    no_real_subprocess: None,
+) -> None:
+    erf_repo = tmp_path / "ERF"
+    erf_repo.mkdir(parents=True)
+    (erf_repo / ".git").mkdir()
+    issue = {
+        "code": EXPECTED_ISSUE_CODES["erf_commit_mismatch"],
+        "severity": "error",
+        "suggested_action": "Checkout pinned commit or rebuild",
+        "repo_name": "erf",
+        "repo_path": str(erf_repo),
+        "expected_commit": "expected-sha",
+        "actual_commit": "actual-sha",
+    }
+
+    monkeypatch.setattr("builtins.input", lambda *_args, **_kwargs: "development_rebuild")
+    monkeypatch.setattr(
+        first_run_module,
+        "_checkout_development_and_rebuild",
+        lambda *_args, **_kwargs: True,
+    )
+
+    result = first_run_module.resolve_readiness_issues_interactive(
+        repo_root=tmp_path,
+        issues=[issue],
+    )
+    assert isinstance(result, dict)
+    assert result.get("resolved") == [issue]
+    assert result.get("unresolved") == []
+    assert "checkout_development_rebuild:erf" in (result.get("attempted_actions") or [])
+
+
+def test_interactive_commit_mismatch_development_rebuild_failure_unresolved(
+    first_run_module: Any,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    no_real_subprocess: None,
+) -> None:
+    erf_repo = tmp_path / "ERF"
+    erf_repo.mkdir(parents=True)
+    (erf_repo / ".git").mkdir()
+    issue = {
+        "code": EXPECTED_ISSUE_CODES["erf_commit_mismatch"],
+        "severity": "error",
+        "suggested_action": "Checkout pinned commit or rebuild",
+        "repo_name": "erf",
+        "repo_path": str(erf_repo),
+        "expected_commit": "expected-sha",
+        "actual_commit": "actual-sha",
+    }
+
+    monkeypatch.setattr("builtins.input", lambda *_args, **_kwargs: "development_rebuild")
+    monkeypatch.setattr(
+        first_run_module,
+        "_checkout_development_and_rebuild",
+        lambda *_args, **_kwargs: False,
+    )
+
+    result = first_run_module.resolve_readiness_issues_interactive(
+        repo_root=tmp_path,
+        issues=[issue],
+    )
+    assert isinstance(result, dict)
+    assert result.get("resolved") == []
+    assert result.get("unresolved") == [issue]
+    assert "checkout_development_rebuild:erf" in (result.get("attempted_actions") or [])
+
+
 def test_discover_local_repo_candidates_finds_sibling_and_child_erf_git_repos(
     first_run_module: Any,
     tmp_path: Path,
