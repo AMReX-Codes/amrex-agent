@@ -797,6 +797,25 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
         )
         _apply_resolved_repo_paths(readiness_result)
 
+        unresolved_after_interactive = list(readiness_result.get("unresolved") or [])
+        if unresolved_after_interactive:
+            unresolved_codes = {
+                str(issue.get("code") or "").strip()
+                for issue in unresolved_after_interactive
+                if isinstance(issue, dict)
+            }
+            attempted_actions = list(readiness_result.get("attempted_actions") or [])
+            attempted_rebuild = any("rebuild" in str(action) for action in attempted_actions)
+            if attempted_rebuild and "ERF_COMMIT_MISMATCH" in unresolved_codes:
+                logger.warning(
+                    "Skipping immediate second interactive remediation pass after rebuild failure."
+                )
+                unresolved = unresolved_after_interactive
+                readiness_result.setdefault("issues", unresolved)
+                readiness_result["exit_code"] = 1
+                _log_preflight_issues(unresolved)
+                raise ValueError("Startup readiness preflight failed. Resolve blocking issues and retry.")
+
         # Re-run checks immediately so post-selection commit mismatch and other
         # follow-on gates are evaluated in the same preflight session.
         followup_result = run_startup_readiness_checks(

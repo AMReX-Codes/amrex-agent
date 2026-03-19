@@ -624,8 +624,12 @@ def _interactive_commit_mismatch_prompt(
 
 
 def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
-    commands = [
-        [
+    def _announce(message: str) -> None:
+        print(message, flush=True)
+        logger.info("%s", message)
+
+    commands: list[tuple[list[str], bool]] = [
+        ([
             "python",
             "-u",
             "database/scripts/build_schema.py",
@@ -633,8 +637,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "--output",
             "database/schemas",
             "--auto-compose",
-        ],
-        [
+        ], True),
+        ([
             "python",
             "-u",
             "scripts/rename_schema_after_build.py",
@@ -643,8 +647,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "--schemas-dir",
             "database/schemas",
             "--singleton-rename",
-        ],
-        [
+        ], True),
+        ([
             "python",
             "-u",
             "database/scripts/build_all_indices.py",
@@ -656,8 +660,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "database/faiss",
             "--provider",
             "cborg",
-        ],
-        [
+        ], True),
+        ([
             "python",
             "-u",
             "database/scripts/build_all_indices.py",
@@ -669,8 +673,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "database/faiss",
             "--provider",
             "cborg",
-        ],
-        [
+        ], True),
+        ([
             "python",
             "-u",
             "database/scripts/build_index.py",
@@ -686,8 +690,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "lbl/nomic-embed-text",
             "--provider",
             "cborg",
-        ],
-        [
+        ], True),
+        ([
             "python",
             "-u",
             "database/scripts/build_index.py",
@@ -703,8 +707,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "lbl/nomic-embed-text",
             "--provider",
             "cborg",
-        ],
-        [
+        ], True),
+        ([
             "python",
             "-u",
             "database/scripts/build_index.py",
@@ -720,8 +724,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "lbl/nomic-embed-text",
             "--provider",
             "cborg",
-        ],
-        [
+        ], True),
+        ([
             "python",
             "-u",
             "database/scripts/build_all_indices.py",
@@ -730,15 +734,15 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "database/faiss",
             "--provider",
             "cborg",
-        ],
+        ], False),
     ]
-    logger.info(
-        "Preflight rebuild: starting embeddings/inputs-schema rebuild for ERF at %s",
-        erf_repo_path,
+    _announce(
+        f"[preflight] Starting ERF embeddings/inputs-schema rebuild at: {erf_repo_path}"
     )
-    for index, command in enumerate(commands, start=1):
+    for index, (command, required) in enumerate(commands, start=1):
         start_time = time.monotonic()
-        logger.info("Preflight rebuild step %s/%s: %s", index, len(commands), " ".join(command))
+        _announce(f"[preflight] Rebuild step {index}/{len(commands)} starting")
+        logger.info("Preflight rebuild command: %s", " ".join(command))
         result = subprocess.run(
             command,
             cwd=repo_root,
@@ -748,16 +752,31 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
         )
         elapsed = time.monotonic() - start_time
         if result.returncode != 0:
-            logger.error(
-                "Rebuild command failed (%s): %s",
-                result.returncode,
-                " ".join(command),
-            )
-            if result.stderr:
-                logger.error("%s", result.stderr.strip())
-            return False
-        logger.info("Preflight rebuild step %s/%s complete in %.1fs", index, len(commands), elapsed)
-    logger.info("Preflight rebuild complete.")
+            level_msg = "FAILED" if required else "WARN"
+            _announce(f"[preflight] Rebuild step {index}/{len(commands)} {level_msg} in {elapsed:.1f}s")
+            if required:
+                logger.error(
+                    "Rebuild command failed (%s): %s",
+                    result.returncode,
+                    " ".join(command),
+                )
+            else:
+                logger.warning(
+                    "Optional rebuild check failed (%s): %s",
+                    result.returncode,
+                    " ".join(command),
+                )
+            stdout_tail = (result.stdout or "").strip().splitlines()[-10:]
+            stderr_tail = (result.stderr or "").strip().splitlines()[-10:]
+            if stdout_tail:
+                logger.error("stdout tail:\n%s", "\n".join(stdout_tail))
+            if stderr_tail:
+                logger.error("stderr tail:\n%s", "\n".join(stderr_tail))
+            if required:
+                return False
+            continue
+        _announce(f"[preflight] Rebuild step {index}/{len(commands)} complete in {elapsed:.1f}s")
+    _announce("[preflight] ERF embeddings/inputs-schema rebuild complete.")
     return True
 
 
