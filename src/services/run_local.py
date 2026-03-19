@@ -160,22 +160,29 @@ class LocalRunner:
         return ex_files[0] if ex_files else None
 
     def _active_solver_code(self, case_dir: Path | None = None) -> str | None:
+        if case_dir is not None:
+            case_path = Path(case_dir).resolve()
+
+            for code, repo in getattr(self.config, "repositories", {}).items():
+                if not repo:
+                    continue
+                try:
+                    case_path.relative_to(Path(repo).resolve())
+                    return str(code).strip().upper()
+                except (ValueError, FileNotFoundError):
+                    continue
+
+            for attr, repo in vars(self.config).items():
+                if not attr.endswith("_repo_path") or not repo:
+                    continue
+                try:
+                    case_path.relative_to(Path(repo).resolve())
+                    return attr[: -len("_repo_path")].upper()
+                except (ValueError, FileNotFoundError):
+                    continue
+
         solver = str(getattr(self.config, "default_solver", "")).strip().upper()
-        if solver:
-            return solver
-
-        if case_dir is None:
-            return None
-
-        for code, repo in getattr(self.config, "repositories", {}).items():
-            if not repo:
-                continue
-            try:
-                Path(case_dir).resolve().relative_to(Path(repo).resolve())
-                return str(code).strip().upper()
-            except (ValueError, FileNotFoundError):
-                continue
-        return None
+        return solver or None
 
     def _solver_repo_path(self, solver_code: str) -> Path | None:
         attr = f"{solver_code.lower()}_repo_path"
