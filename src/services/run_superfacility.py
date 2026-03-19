@@ -343,7 +343,12 @@ class SuperfacilityRunner:
             return explicit_executable
         if not getattr(self.config, "remote_executable_find", False):
             return None
-        return self._search_remote_executable_candidates(candidate_dirs, system=system)
+        solver_code = self._active_solver_code(case_dir_path)
+        return self._search_remote_executable_candidates(
+            candidate_dirs,
+            system=system,
+            solver_code=solver_code,
+        )
 
     def _render_remote_candidate_dirs(self, case_dir_path: Path) -> tuple[list[Path], Path | None]:
         relative_case_dir = None
@@ -395,7 +400,17 @@ class SuperfacilityRunner:
             f"{remote_dir}{hint}"
         )
 
-    def _search_remote_executable_candidates(self, candidate_dirs: list[Path], system: str) -> Path | None:
+    def _search_remote_executable_candidates(
+        self,
+        candidate_dirs: list[Path],
+        system: str,
+        solver_code: str | None = None,
+    ) -> Path | None:
+        policy = (
+            get_solver_build_policy(solver_code, runtime_config=self.config)
+            if solver_code
+            else {}
+        )
         for remote_dir in candidate_dirs:
             try:
                 list_remote_entries(str(remote_dir), system=system)
@@ -405,10 +420,41 @@ class SuperfacilityRunner:
             found = find_remote_executable(
                 remote_case_dir=str(remote_dir),
                 system=system,
+                build_system_preference=str(policy.get("build_system_preference", "gnumake")),
+                cmake_executable_names=list(policy.get("cmake_executable_names") or []),
+                gnumake_executable_globs=list(policy.get("gnumake_executable_globs") or ["*.ex"]),
             )
             if found:
                 return Path(found)
         return None
+
+    def _active_submit_solver_code(self, case_dir: str | Path | None = None) -> str | None:
+        if case_dir is not None:
+            return self._active_solver_code(Path(case_dir))
+        return self._active_solver_code(None)
+
+    def _find_submit_executable(self, run_dir: Path, case_dir: str | Path | None = None) -> str | None:
+        solver_code = self._active_submit_solver_code(case_dir)
+        if solver_code:
+            policy = get_solver_build_policy(solver_code, runtime_config=self.config)
+            preference = str(policy.get("build_system_preference", "gnumake")).strip().lower()
+            branch_order = ["cmake", "gnumake"] if preference == "cmake" else ["gnumake", "cmake"]
+
+            for branch in branch_order:
+                if branch == "cmake":
+                    for name in policy.get("cmake_executable_names", []):
+                        candidate = run_dir / str(name)
+                        if candidate.is_file():
+                            return candidate.name
+                else:
+                    for pattern in policy.get("gnumake_executable_globs", ["*.ex"]):
+                        matches = sorted(run_dir.glob(str(pattern)))
+                        for candidate in matches:
+                            if candidate.is_file():
+                                return candidate.name
+
+        exe_files = sorted(run_dir.glob("*.ex"))
+        return exe_files[0].name if exe_files else None
 
     def setup_job(self,
                   inputs_path: str | Path | None = None,
@@ -572,8 +618,7 @@ class SuperfacilityRunner:
         account = os.path.expandvars(str(account))
 
         # Find executable in run directory
-        exe_files = list(run_dir.glob("*.ex"))
-        executable = exe_files[0].name if exe_files else None
+        executable = self._find_submit_executable(run_dir, case_dir=case_dir)
         remote_executable_path = getattr(self.config, "remote_executable_path", None)
         if remote_executable_path:
             remote_executable_path = Path(os.path.expandvars(str(remote_executable_path)))

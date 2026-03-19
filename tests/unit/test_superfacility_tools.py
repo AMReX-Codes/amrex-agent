@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from src.services.run_superfacility_tools import (
     create_nersc_session,
+    find_remote_executable,
     generate_slurm_script,
     monitor_job,
     resolve_remote_output_dir,
@@ -159,3 +160,31 @@ def test_resolve_remote_output_dir_returns_local_path(monkeypatch):
     )
 
     assert result == Path("/tmp/amrex_agent_runs")
+
+
+def test_find_remote_executable_prefers_cmake_name_when_configured(monkeypatch):
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools.list_remote_files",
+        lambda *args, **kwargs: ["/remote/ERF3d.gnu.TEST.MPI.CUDA.ex", "/remote/erf_exec"],
+    )
+    found = find_remote_executable(
+        remote_case_dir="/remote",
+        build_system_preference="cmake",
+        cmake_executable_names=["erf_exec"],
+        gnumake_executable_globs=["ERF*ex"],
+    )
+    assert found == "/remote/erf_exec"
+
+
+def test_find_remote_executable_falls_back_to_gnumake_glob(monkeypatch):
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools.list_remote_files",
+        lambda *args, **kwargs: ["/remote/ERF3d.gnu.TEST.MPI.CUDA.ex", "/remote/readme.txt"],
+    )
+    found = find_remote_executable(
+        remote_case_dir="/remote",
+        build_system_preference="cmake",
+        cmake_executable_names=["erf_exec"],
+        gnumake_executable_globs=["ERF*ex"],
+    )
+    assert found == "/remote/ERF3d.gnu.TEST.MPI.CUDA.ex"

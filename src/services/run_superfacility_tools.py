@@ -1,5 +1,6 @@
 """NERSC Superfacility helpers for job submission."""
 
+import fnmatch
 import os
 from pathlib import Path
 from typing import Any
@@ -1417,23 +1418,40 @@ def find_remote_executable(
     remote_case_dir: str,
     nersc_session: dict | None = None,
     system: str = "perlmutter",
+    build_system_preference: str = "gnumake",
+    cmake_executable_names: list[str] | None = None,
+    gnumake_executable_globs: list[str] | None = None,
 ) -> str | None:
     """
-    Find a .ex executable in a remote case directory.
+    Find a remote executable using policy branch ordering.
     """
     files = list_remote_files(remote_case_dir, nersc_session=nersc_session, system=system)
-    candidates: list[str] = []
-    for item in files:
-        name = Path(item).name
-        if name.endswith(".ex"):
-            candidates.append(str(Path(remote_case_dir) / name))
-    if not candidates:
-        return None
+    file_names = [Path(item).name for item in files if Path(item).name]
+    name_set = set(file_names)
 
-    cuda_candidates = [c for c in candidates if "CUDA" in Path(c).name]
-    if cuda_candidates:
-        return sorted(cuda_candidates)[0]
-    return sorted(candidates)[0]
+    preference = str(build_system_preference).strip().lower()
+    branch_order = ["cmake", "gnumake"] if preference == "cmake" else ["gnumake", "cmake"]
+    cmake_names = [str(name) for name in (cmake_executable_names or [])]
+    gnumake_globs = [str(pattern) for pattern in (gnumake_executable_globs or ["*.ex"])]
+
+    for branch in branch_order:
+        if branch == "cmake":
+            for name in cmake_names:
+                if name in name_set:
+                    return str(Path(remote_case_dir) / name)
+        else:
+            candidates: list[str] = []
+            for name in file_names:
+                if any(fnmatch.fnmatch(name, pattern) for pattern in gnumake_globs):
+                    candidates.append(str(Path(remote_case_dir) / name))
+            if not candidates:
+                continue
+            cuda_candidates = [c for c in candidates if "CUDA" in Path(c).name]
+            if cuda_candidates:
+                return sorted(cuda_candidates)[0]
+            return sorted(candidates)[0]
+
+    return None
 
 
 def monitor_job(

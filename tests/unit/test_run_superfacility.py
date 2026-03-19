@@ -289,7 +289,7 @@ def test_resolve_remote_executable_template_dir_find_success(tmp_path, monkeypat
     monkeypatch.setattr("src.services.run_superfacility.list_remote_entries", lambda *args, **kwargs: [])
     monkeypatch.setattr(
         "src.services.run_superfacility.find_remote_executable",
-        lambda remote_case_dir, system=None: f"{remote_case_dir}/ERF3d.gnu.TEST.MPI.CUDA.ex",
+        lambda remote_case_dir, system=None, **kwargs: f"{remote_case_dir}/ERF3d.gnu.TEST.MPI.CUDA.ex",
     )
     result = runner._resolve_remote_executable(case_dir=case_dir)
     assert str(result).endswith(".ex")
@@ -509,7 +509,7 @@ def test_resolve_remote_executable_env_derived_path(tmp_path, monkeypatch):
     monkeypatch.setattr("src.services.run_superfacility.list_remote_entries", _list_remote)
     monkeypatch.setattr(
         "src.services.run_superfacility.find_remote_executable",
-        lambda remote_case_dir, system=None: f"{remote_case_dir}/solver.ex",
+        lambda remote_case_dir, system=None, **kwargs: f"{remote_case_dir}/solver.ex",
     )
 
     config = SimpleNamespace(
@@ -816,6 +816,55 @@ def test_submit_uses_resolved_remote_executable_when_template_enabled(tmp_path, 
     runner = SuperfacilityRunner(config)
     result = runner.submit(run_dir, dry_run=False, case_dir=tmp_path / "case")
     assert result["params"]["executable"] == "/remote/tmpl.ex"
+
+
+def test_submit_accepts_policy_named_local_executable_without_ex_suffix(tmp_path, monkeypatch):
+    run_dir = tmp_path / "run_sf_erf_exec"
+    run_dir.mkdir()
+    exe = run_dir / "erf_exec"
+    exe.write_text("binary")
+
+    monkeypatch.setattr("src.services.run_superfacility.generate_slurm_script", lambda **kwargs: "#!/bin/bash\n")
+    monkeypatch.setattr("src.config.detect_environment", lambda: "local")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        environment="local",
+        remote_executable_find=False,
+    )
+    runner = SuperfacilityRunner(config)
+    result = runner.submit(run_dir, dry_run=True, case_dir=tmp_path / "ERF" / "Exec" / "Case")
+    assert result["method"] == "dry_run"
+    assert Path(result["script_path"]).exists()
+
+
+def test_resolve_remote_executable_passes_policy_names_to_finder(tmp_path, monkeypatch):
+    case_dir = tmp_path / "ERF" / "Exec" / "Case"
+    case_dir.mkdir(parents=True)
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        repositories={"ERF": tmp_path / "ERF"},
+        remote_executable_template="/remote/{case_dir}",
+        remote_executable_find=True,
+    )
+    runner = SuperfacilityRunner(config)
+
+    captured = {}
+    monkeypatch.setattr("src.services.run_superfacility.list_remote_entries", lambda *args, **kwargs: [])
+
+    def _fake_find(**kwargs):
+        captured.update(kwargs)
+        return "/remote/Exec/Case/erf_exec"
+
+    monkeypatch.setattr("src.services.run_superfacility.find_remote_executable", _fake_find)
+    resolved = runner._resolve_remote_executable(case_dir=case_dir)
+    assert str(resolved).endswith("erf_exec")
+    assert captured.get("build_system_preference") == "cmake"
+    assert "erf_exec" in (captured.get("cmake_executable_names") or [])
 
 
 def test_submit_stage_load_sfapi_key_file_none(tmp_path, monkeypatch):
