@@ -15,7 +15,38 @@ def _runtime_override(runtime_config: Any, key: str, default: Any) -> Any:
     return getattr(runtime_config, key, default)
 
 
-def get_solver_build_policy(solver_code: str, runtime_config: Any = None) -> dict[str, Any]:
+def _normalize_string_list(value: Any, default: list[str] | None = None) -> list[str]:
+    if value is None:
+        return list(default or [])
+    return [str(item) for item in value]
+
+
+def _resolve_template(
+    template: str | None,
+    *,
+    case_dir: Path | None,
+    repo_root: Path | None,
+    central_build_dirs: list[Path] | None,
+) -> str | None:
+    if template is None:
+        return None
+
+    text = str(template)
+    central_dir = str(central_build_dirs[0]) if central_build_dirs else ""
+    text = text.replace("{case_dir}", str(case_dir) if case_dir is not None else "")
+    text = text.replace("{repo_root}", str(repo_root) if repo_root is not None else "")
+    text = text.replace("{central_build_dir}", central_dir)
+    return text if text.strip() else None
+
+
+def get_solver_build_policy(
+    solver_code: str,
+    runtime_config: Any = None,
+    *,
+    case_dir: Path | None = None,
+    repo_root: Path | None = None,
+    central_build_dirs: list[Path] | None = None,
+) -> dict[str, Any]:
     """Resolve build/executable policy for a solver with optional runtime overrides."""
     solver = str(solver_code).strip().upper()
     solver_config = get_config_class(solver)
@@ -53,6 +84,77 @@ def get_solver_build_policy(solver_code: str, runtime_config: Any = None) -> dic
         f"{solver.lower()}_gnumake_executable_globs",
         solver_config.get_gnumake_executable_globs(),
     )
+    cmake_source_dir_template = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_cmake_source_dir_template",
+        solver_config.get_cmake_source_dir_template(),
+    )
+    cmake_build_dir_template = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_cmake_build_dir_template",
+        solver_config.get_cmake_build_dir_template(),
+    )
+    cmake_install_prefix_template = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_cmake_install_prefix_template",
+        solver_config.get_cmake_install_prefix_template(),
+    )
+    cmake_configure_args = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_cmake_configure_args",
+        solver_config.get_cmake_configure_args(),
+    )
+    cmake_build_args = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_cmake_build_args",
+        solver_config.get_cmake_build_args(),
+    )
+    cmake_install_args = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_cmake_install_args",
+        solver_config.get_cmake_install_args(),
+    )
+    gnumake_clean_targets = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_gnumake_clean_targets",
+        solver_config.get_gnumake_clean_targets(),
+    )
+    gnumake_build_args = _runtime_override(
+        runtime_config,
+        f"{solver.lower()}_gnumake_build_args",
+        solver_config.get_gnumake_build_args(),
+    )
+
+    compile_policy = {
+        "cmake_source_dir_template": str(cmake_source_dir_template),
+        "cmake_build_dir_template": str(cmake_build_dir_template),
+        "cmake_install_prefix_template": (
+            None if cmake_install_prefix_template is None else str(cmake_install_prefix_template)
+        ),
+        "cmake_source_dir": _resolve_template(
+            str(cmake_source_dir_template),
+            case_dir=case_dir,
+            repo_root=repo_root,
+            central_build_dirs=central_build_dirs,
+        ),
+        "cmake_build_dir": _resolve_template(
+            str(cmake_build_dir_template),
+            case_dir=case_dir,
+            repo_root=repo_root,
+            central_build_dirs=central_build_dirs,
+        ),
+        "cmake_install_prefix": _resolve_template(
+            None if cmake_install_prefix_template is None else str(cmake_install_prefix_template),
+            case_dir=case_dir,
+            repo_root=repo_root,
+            central_build_dirs=central_build_dirs,
+        ),
+        "cmake_configure_args": _normalize_string_list(cmake_configure_args),
+        "cmake_build_args": _normalize_string_list(cmake_build_args),
+        "cmake_install_args": _normalize_string_list(cmake_install_args),
+        "gnumake_clean_targets": _normalize_string_list(gnumake_clean_targets, default=["realclean"]),
+        "gnumake_build_args": _normalize_string_list(gnumake_build_args),
+    }
 
     return {
         "solver_config": solver_config,
@@ -61,6 +163,7 @@ def get_solver_build_policy(solver_code: str, runtime_config: Any = None) -> dic
         "cmake_executable_names": [str(item) for item in (cmake_names or [])],
         "cmake_executable_ignores_accel_suffix": cmake_ignore_suffix,
         "gnumake_executable_globs": [str(item) for item in (gnumake_globs or ["*.ex"])],
+        "compile_policy": compile_policy,
     }
 
 
@@ -191,7 +294,13 @@ def resolve_local_executable_fallback(
     - selected_branch: str | None
     - matching_rules: dict[str, Any]
     """
-    policy = get_solver_build_policy(solver_code, runtime_config=runtime_config)
+    policy = get_solver_build_policy(
+        solver_code,
+        runtime_config=runtime_config,
+        case_dir=case_dir,
+        repo_root=repo_root,
+        central_build_dirs=central_build_dirs,
+    )
     checked_paths: list[Path] = [Path(case_dir)]
 
     if configured_executable_path:

@@ -12,10 +12,11 @@ from typing import Any
 
 from amrex_tools import copy_to_rundir, setup_run_directory
 
-from src.services.build_tools import compile_amrex
+from src.services.build_tools import compile_solver
 from src.services.solver_build_policy import (
     central_build_candidates,
     derive_central_build_dir,
+    get_solver_build_policy,
     resolve_local_executable_fallback,
 )
 
@@ -92,34 +93,39 @@ class LocalRunner:
                 logger.info("No %s executable found in fallback paths. Checked: %s", solver_code, checked_paths)
 
         # No executable found - compile it (FORCE CPU for local).
-        # For ERF, prefer compiling in central build dir when available.
         logger.info("No suitable executable found, compiling (CPU-only)...")
         logger.debug(f"       MPI: {require_mpi}, CUDA: False (forced for local)")
-
-        compile_targets = self._compile_targets(case_dir)
-        compiled_target: Path | None = None
-        for target in compile_targets:
-            success = compile_amrex(
-                case_dir=str(target),
-                use_cuda=False,  # Force CPU for local
-                jobs=12,
-            )
-            if success:
-                compiled_target = target
-                logger.info("Compilation succeeded in %s", target)
-                break
-            logger.warning("Compilation attempt failed in %s", target)
-
-        if compiled_target is None:
-            checked = ", ".join(str(path) for path in compile_targets)
-            solver_code = self._active_solver_code(case_dir)
-            if solver_code and (solver_code == "ERF" or len(compile_targets) > 1):
-                raise RuntimeError(f"No {solver_code} executable found. Checked paths: {checked}")
-            raise RuntimeError(f"Compilation failed in all targets: {checked}")
-
-        # Find newly compiled executable in the successful target and known fallbacks
-        exe = self._find_exe_in_dir(compiled_target, require_mpi, require_cuda=False)
         solver_code = self._active_solver_code(case_dir)
+        compile_success = compile_solver(
+            case_dir=case_dir,
+            solver_code=solver_code or "AMREX",
+            runtime_config=self.config,
+            use_cuda=False,
+            jobs=12,
+        )
+        if not compile_success:
+            preference = "gnumake"
+            if solver_code:
+                preference = str(
+                    get_solver_build_policy(solver_code, runtime_config=self.config).get(
+                        "build_system_preference", "gnumake"
+                    )
+                ).strip().lower()
+            if solver_code and preference == "cmake":
+                checked = [case_dir]
+                _, checked = self._resolve_executable_fallbacks(
+                    solver_code=solver_code,
+                    case_dir=case_dir,
+                    require_mpi=require_mpi,
+                    require_cuda=False,
+                )
+                raise RuntimeError(
+                    f"No {solver_code} executable found. Checked paths: {', '.join(str(path) for path in checked)}"
+                )
+            raise RuntimeError(f"Compilation failed in {case_dir}")
+
+        # Find newly compiled executable in case dir and policy fallbacks
+        exe = self._find_exe_in_dir(case_dir, require_mpi, require_cuda=False)
         if not exe and solver_code:
             exe, _ = self._resolve_executable_fallbacks(
                 solver_code=solver_code,
@@ -129,7 +135,7 @@ class LocalRunner:
             )
 
         if not exe:
-            raise RuntimeError(f"Compiled but no executable found in {compiled_target}")
+            raise RuntimeError(f"Compiled but no executable found in {case_dir}")
 
         logger.info(f"Compiled: {exe.name}")
         return str(exe)

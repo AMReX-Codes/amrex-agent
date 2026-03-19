@@ -182,6 +182,22 @@ CASE: <path>"""
     """If True, CMake executables are treated as feature-agnostic names."""
     gnumake_executable_globs: ClassVar[list[str]] = ["*.ex"]
     """Executable glob patterns emitted by GNUmake workflows."""
+    cmake_source_dir_template: ClassVar[str] = "{repo_root}"
+    """CMake source directory template for compile orchestration."""
+    cmake_build_dir_template: ClassVar[str] = "{repo_root}/build"
+    """CMake build directory template for compile orchestration."""
+    cmake_install_prefix_template: ClassVar[str | None] = None
+    """Optional CMake install prefix template."""
+    cmake_configure_args: ClassVar[list[str]] = []
+    """Additional args for `cmake -S ... -B ...`."""
+    cmake_build_args: ClassVar[list[str]] = []
+    """Additional args for `cmake --build ...`."""
+    cmake_install_args: ClassVar[list[str]] = []
+    """Additional args for `cmake --install ...`."""
+    gnumake_clean_targets: ClassVar[list[str]] = ["realclean"]
+    """GNUmake clean targets executed before build."""
+    gnumake_build_args: ClassVar[list[str]] = ["USE_MPI=TRUE", "DEBUG=FALSE"]
+    """GNUmake build flag defaults."""
 
     # === Solver Heuristics (Config-Driven) ===
     selection_keywords: ClassVar[list[str]] = []
@@ -2108,6 +2124,45 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
     def get_gnumake_executable_globs(cls) -> list[str]:
         globs = getattr(cls, "gnumake_executable_globs", [])
         return [str(item) for item in globs] if globs else ["*.ex"]
+
+    @classmethod
+    def get_cmake_source_dir_template(cls) -> str:
+        return str(getattr(cls, "cmake_source_dir_template", "{repo_root}"))
+
+    @classmethod
+    def get_cmake_build_dir_template(cls) -> str:
+        return str(getattr(cls, "cmake_build_dir_template", "{repo_root}/build"))
+
+    @classmethod
+    def get_cmake_install_prefix_template(cls) -> str | None:
+        value = getattr(cls, "cmake_install_prefix_template", None)
+        return None if value is None else str(value)
+
+    @classmethod
+    def get_cmake_configure_args(cls) -> list[str]:
+        return [str(item) for item in getattr(cls, "cmake_configure_args", [])]
+
+    @classmethod
+    def get_cmake_build_args(cls) -> list[str]:
+        return [str(item) for item in getattr(cls, "cmake_build_args", [])]
+
+    @classmethod
+    def get_cmake_install_args(cls) -> list[str]:
+        return [str(item) for item in getattr(cls, "cmake_install_args", [])]
+
+    @classmethod
+    def get_gnumake_clean_targets(cls) -> list[str]:
+        targets = getattr(cls, "gnumake_clean_targets", None)
+        if targets is None:
+            return ["realclean"]
+        return [str(item) for item in targets] or ["realclean"]
+
+    @classmethod
+    def get_gnumake_build_args(cls) -> list[str]:
+        args = getattr(cls, "gnumake_build_args", None)
+        if args is None:
+            args = getattr(cls, "gnumake_flags", ["USE_MPI=TRUE", "DEBUG=FALSE"])
+        return [str(item) for item in args]
 
     @classmethod
     def get_slurm_metadata(cls) -> dict[str, str]:

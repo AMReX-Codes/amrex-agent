@@ -15,12 +15,51 @@ def test_erf_policy_uses_cmake_override_from_config_class():
     assert policy["cmake_executable_names"] == ["erf_exec"]
     assert policy["cmake_executable_ignores_accel_suffix"] is True
     assert policy["gnumake_executable_globs"] == ["ERF*ex"]
+    assert policy["compile_policy"]["cmake_build_dir_template"] == "{repo_root}/build"
+    assert "-DCMAKE_BUILD_TYPE=Release" in policy["compile_policy"]["cmake_configure_args"]
 
 
 def test_runtime_override_wins_over_solver_default():
     runtime = SimpleNamespace(erf_build_system_preference="gnumake")
     policy = get_solver_build_policy("ERF", runtime_config=runtime)
     assert policy["build_system_preference"] == "gnumake"
+
+
+def test_compile_policy_templates_are_resolved_with_context(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "ABL" / "Case"
+    case_dir.mkdir(parents=True)
+    policy = get_solver_build_policy(
+        "ERF",
+        runtime_config=SimpleNamespace(),
+        case_dir=case_dir,
+        repo_root=repo_root,
+        central_build_dirs=[repo_root / "Exec" / "ABL"],
+    )
+
+    compile_policy = policy["compile_policy"]
+    assert compile_policy["cmake_source_dir"] == str(repo_root)
+    assert compile_policy["cmake_build_dir"] == str(repo_root / "build")
+
+
+def test_compile_policy_runtime_overrides_apply(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "ABL" / "Case"
+    case_dir.mkdir(parents=True)
+    runtime = SimpleNamespace(
+        erf_cmake_build_dir_template="{repo_root}/custom_build",
+        erf_gnumake_build_args=["USE_MPI=TRUE", "DEBUG=FALSE", "CUSTOM=ON"],
+    )
+    policy = get_solver_build_policy(
+        "ERF",
+        runtime_config=runtime,
+        case_dir=case_dir,
+        repo_root=repo_root,
+    )
+
+    compile_policy = policy["compile_policy"]
+    assert compile_policy["cmake_build_dir"] == str(repo_root / "custom_build")
+    assert "CUSTOM=ON" in compile_policy["gnumake_build_args"]
 
 
 def test_resolver_prefers_cmake_when_both_artifacts_exist(tmp_path):

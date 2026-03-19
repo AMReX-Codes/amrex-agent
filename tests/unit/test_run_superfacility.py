@@ -192,6 +192,22 @@ def test_erf_fallback_prefers_cmake_build_exec_when_present(tmp_path):
     assert exe == cmake_exe
 
 
+def test_active_solver_prefers_case_repo_path_over_default_solver(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "CanonicalTests" / "SquallLine_2D"
+    case_dir.mkdir(parents=True)
+
+    config = SimpleNamespace(
+        default_solver="AMREX",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        erf_repo_path=repo_root,
+    )
+    runner = SuperfacilityRunner(config)
+
+    assert runner._active_solver_code(case_dir) == "ERF"
+
+
 def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):
     case_dir = tmp_path / "case"
     case_dir.mkdir()
@@ -199,7 +215,7 @@ def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):
     runner = SuperfacilityRunner(config)
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: None)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: False)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: False)
 
     with pytest.raises(RuntimeError, match="Compilation failed"):
         runner.find_or_compile_executable(case_dir=case_dir)
@@ -212,7 +228,7 @@ def test_non_erf_compiled_but_missing_executable_raises(tmp_path, monkeypatch):
     runner = SuperfacilityRunner(config)
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: None)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: True)
 
     with pytest.raises(RuntimeError, match="Compiled but no executable found"):
         runner.find_or_compile_executable(case_dir=case_dir)
@@ -435,7 +451,7 @@ def test_find_or_compile_compiles_and_returns_exe(tmp_path, monkeypatch):
         return None if calls["count"] == 1 else compiled
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", _find)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: True)
     assert Path(runner.find_or_compile_executable(case_dir=case_dir)) == compiled
 
 
@@ -672,7 +688,7 @@ def test_find_or_compile_force_recompile_path(tmp_path, monkeypatch):
     exe.write_text("binary")
     config = SimpleNamespace(default_solver="PeleC", output_dir=tmp_path, superfacility_account="acct")
     runner = SuperfacilityRunner(config)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: True)
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: exe)
     assert Path(runner.find_or_compile_executable(case_dir=case_dir, force_recompile=True)) == exe
 

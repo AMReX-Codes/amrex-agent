@@ -117,7 +117,7 @@ def test_non_erf_compiles_when_case_has_no_executable(tmp_path, monkeypatch):
         return None if calls["count"] == 1 else compiled_exe
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", fake_find)
-    monkeypatch.setattr("src.services.run_local.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_local.compile_solver", lambda **kwargs: True)
 
     exe_path = runner.find_or_compile_executable(case_dir=case_dir, require_mpi=True, require_cuda=False)
     assert Path(exe_path) == compiled_exe
@@ -130,7 +130,7 @@ def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):
     runner = LocalRunner(config)
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: None)
-    monkeypatch.setattr("src.services.run_local.compile_amrex", lambda **kwargs: False)
+    monkeypatch.setattr("src.services.run_local.compile_solver", lambda **kwargs: False)
 
     with pytest.raises(RuntimeError, match="Compilation failed"):
         runner.find_or_compile_executable(case_dir=case_dir)
@@ -143,7 +143,7 @@ def test_non_erf_compiled_but_missing_executable_raises(tmp_path, monkeypatch):
     runner = LocalRunner(config)
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: None)
-    monkeypatch.setattr("src.services.run_local.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_local.compile_solver", lambda **kwargs: True)
 
     with pytest.raises(RuntimeError, match="Compiled but no executable found"):
         runner.find_or_compile_executable(case_dir=case_dir)
@@ -407,3 +407,19 @@ def test_erf_fallback_prefers_cmake_build_exec_when_present(tmp_path):
 
     exe, _ = runner._resolve_erf_executable_fallbacks(case_dir=case_dir)
     assert exe == cmake_exe
+
+
+def test_active_solver_prefers_case_repo_path_over_default_solver(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "CanonicalTests" / "SquallLine_2D"
+    case_dir.mkdir(parents=True)
+
+    config = SimpleNamespace(
+        default_solver="AMREX",
+        output_dir=tmp_path,
+        use_mpi=True,
+        erf_repo_path=repo_root,
+    )
+    runner = LocalRunner(config)
+
+    assert runner._active_solver_code(case_dir) == "ERF"

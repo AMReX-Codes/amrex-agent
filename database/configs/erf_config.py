@@ -61,6 +61,17 @@ class ERFConfig(BaseAMReXConfig):
     cmake_executable_names = ["erf_exec"]
     cmake_executable_ignores_accel_suffix = True
     gnumake_executable_globs = ["ERF*ex"]
+    cmake_source_dir_template = "{repo_root}"
+    cmake_build_dir_template = "{repo_root}/build"
+    cmake_install_prefix_template = None
+    cmake_configure_args = [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DERF_ENABLE_MPI=ON",
+    ]
+    cmake_build_args = []
+    cmake_install_args = []
+    gnumake_clean_targets = ["realclean"]
+    gnumake_build_args = ["USE_MPI=TRUE", "DEBUG=FALSE"]
     gnumake_flags = ["USE_MPI=TRUE", "DEBUG=FALSE"]
 
     selection_keywords = [
