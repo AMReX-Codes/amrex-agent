@@ -279,6 +279,34 @@ class LocalRunner:
             require_cuda=require_cuda,
         )
 
+    def _active_submit_solver_code(self, case_dir: str | Path | None = None) -> str | None:
+        if case_dir is not None:
+            return self._active_solver_code(Path(case_dir))
+        return self._active_solver_code(None)
+
+    def _find_submit_executable(self, run_path: Path, case_dir: str | Path | None = None) -> Path | None:
+        solver_code = self._active_submit_solver_code(case_dir)
+        if solver_code:
+            policy = get_solver_build_policy(solver_code, runtime_config=self.config)
+            preference = str(policy.get("build_system_preference", "gnumake")).strip().lower()
+            branch_order = ["cmake", "gnumake"] if preference == "cmake" else ["gnumake", "cmake"]
+
+            for branch in branch_order:
+                if branch == "cmake":
+                    for name in policy.get("cmake_executable_names", []):
+                        candidate = run_path / str(name)
+                        if candidate.is_file():
+                            return candidate
+                else:
+                    for pattern in policy.get("gnumake_executable_globs", ["*.ex"]):
+                        matches = sorted(run_path.glob(str(pattern)))
+                        for candidate in matches:
+                            if candidate.is_file():
+                                return candidate
+
+        executables = sorted(run_path.glob("*.ex"))
+        return executables[0] if executables else None
+
     def setup_job(
         self,
         inputs_path: str | Path | None = None,
@@ -425,11 +453,9 @@ class LocalRunner:
         run_path = Path(run_directory)
 
         # Find executable
-        executables = list(run_path.glob("*.ex"))
-        if not executables:
+        exe = self._find_submit_executable(run_path, case_dir=case_dir)
+        if exe is None:
             raise FileNotFoundError(f"No executable found in {run_path}")
-
-        exe = executables[0]
 
         # Build command
         if self.config.use_mpi if hasattr(self.config, 'use_mpi') else True:

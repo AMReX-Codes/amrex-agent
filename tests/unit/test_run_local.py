@@ -238,6 +238,26 @@ def test_submit_execution_failure_marks_failed(tmp_path, monkeypatch):
     assert result["exit_code"] == 2
 
 
+def test_submit_accepts_policy_named_executable_without_ex_suffix(tmp_path):
+    run_dir = tmp_path / "run_local_erf_exec"
+    run_dir.mkdir()
+    exe = run_dir / "erf_exec"
+    exe.write_text("binary")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        use_mpi=True,
+    )
+    runner = LocalRunner(config)
+
+    result = runner.submit(run_dir, nodes=2, dry_run=True)
+    script_path = Path(result["script_path"])
+    assert result["method"] == "dry_run"
+    assert script_path.exists()
+    assert "mpirun -np 2 erf_exec inputs" in script_path.read_text()
+
+
 def test_find_or_compile_returns_existing_executable_without_compile(tmp_path):
     case_dir = tmp_path / "case"
     case_dir.mkdir()
