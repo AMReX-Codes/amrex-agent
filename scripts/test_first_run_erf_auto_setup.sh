@@ -28,7 +28,7 @@ if [[ -z "${SKIP_BUILD_SCENARIOS:-}" ]]; then
     export SKIP_BUILD_SCENARIOS=""
   fi
 fi
-export SCENARIO_E_SELECTION="${SCENARIO_E_SELECTION:-3}"
+export SCENARIO_E_SELECTION="${SCENARIO_E_SELECTION:-4}"
 
 : "${CBORG_API_KEY:?CBORG_API_KEY is required}"
 

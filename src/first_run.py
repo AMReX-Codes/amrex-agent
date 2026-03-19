@@ -7,6 +7,7 @@ import logging
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 from shutil import which
 from string import hexdigits
@@ -384,7 +385,7 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
                     ISSUE_ERF_COMMIT_MISMATCH,
                     "error",
                     (
-                        "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF schema/indices.\n"
+                        "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF embeddings and inputs schema.\n"
                         "Rebuild sequence:\n"
                         f"  ERF_PATH={erf_repo_path} && \\\n"
                         f"  {rebuild_cmds}"
@@ -603,20 +604,23 @@ def _interactive_commit_mismatch_prompt(
     print("Choose an action:")
     print(f"  1) Checkout pinned commit {_short_sha(expected_commit)}")
     print(f"  2) Continue with current commit {_short_sha(actual_commit)}")
-    print("  3) Checkout development + rebuild local artifacts")
-    print("  4) Abort preflight (safe default)")
+    print("  3) Continue with current commit + rebuild embeddings and inputs schema")
+    print("  4) Checkout development + rebuild embeddings and inputs schema")
+    print("  5) Abort preflight (safe default)")
 
     while True:
-        response = input("Selection [1/2/3/4, default 4]: ").strip().lower()
+        response = input("Selection [1/2/3/4/5, default 5]: ").strip().lower()
         if response in {"1", "checkout"}:
             return "checkout"
         if response in {"2", "continue"}:
             return "continue"
-        if response in {"3", "development_rebuild", "dev", "development"}:
+        if response in {"3", "continue_rebuild"}:
+            return "continue_rebuild"
+        if response in {"4", "development_rebuild", "dev", "development"}:
             return "development_rebuild"
-        if response in {"", "4", "abort"}:
+        if response in {"", "5", "abort"}:
             return "abort"
-        print("Invalid selection. Enter 1, 2, 3, or 4.")
+        print("Invalid selection. Enter 1, 2, 3, 4, or 5.")
 
 
 def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
@@ -728,7 +732,13 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             "cborg",
         ],
     ]
-    for command in commands:
+    logger.info(
+        "Preflight rebuild: starting embeddings/inputs-schema rebuild for ERF at %s",
+        erf_repo_path,
+    )
+    for index, command in enumerate(commands, start=1):
+        start_time = time.monotonic()
+        logger.info("Preflight rebuild step %s/%s: %s", index, len(commands), " ".join(command))
         result = subprocess.run(
             command,
             cwd=repo_root,
@@ -736,6 +746,7 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             text=True,
             check=False,
         )
+        elapsed = time.monotonic() - start_time
         if result.returncode != 0:
             logger.error(
                 "Rebuild command failed (%s): %s",
@@ -745,6 +756,8 @@ def _run_rebuild_chain(repo_root: Path, erf_repo_path: Path) -> bool:
             if result.stderr:
                 logger.error("%s", result.stderr.strip())
             return False
+        logger.info("Preflight rebuild step %s/%s complete in %.1fs", index, len(commands), elapsed)
+    logger.info("Preflight rebuild complete.")
     return True
 
 
@@ -960,6 +973,14 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
                 attempted_actions.append(f"continue_with_current_commit:{repo_name}")
                 resolved.append(issue)
                 resolved_repo_paths[repo_name] = str(repo_path)
+                continue
+            if response == "continue_rebuild":
+                attempted_actions.append(f"continue_with_current_commit_rebuild:{repo_name}")
+                if _run_rebuild_chain(repo_root, repo_path):
+                    resolved.append(issue)
+                    resolved_repo_paths[repo_name] = str(repo_path)
+                    continue
+                unresolved.append(issue)
                 continue
             if response == "development_rebuild":
                 attempted_actions.append(f"checkout_development_rebuild:{repo_name}")
