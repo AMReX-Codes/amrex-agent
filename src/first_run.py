@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import shutil
 import subprocess
 from pathlib import Path
 from shutil import which
@@ -11,6 +13,8 @@ from typing import Any
 
 from src.services.faiss_artifacts import faiss_indices_present
 from src.services.schema_staleness import check_schema_staleness
+
+logger = logging.getLogger(__name__)
 
 
 ISSUE_ERF_REPO_MISSING = "ERF_REPO_MISSING"
@@ -137,6 +141,54 @@ def _manifest_path(faiss_root: Path, provider: str) -> Path:
     return faiss_root / provider / "build_session_manifest.json"
 
 
+def _github_https_to_ssh(url: str) -> str:
+    text = str(url).strip()
+    prefix = "https://github.com/"
+    if not text.startswith(prefix):
+        return text
+    repo_path = text[len(prefix):].strip("/")
+    if not repo_path:
+        return text
+    return f"git@github.com:{repo_path}.git" if not repo_path.endswith(".git") else f"git@github.com:{repo_path}"
+
+
+def _preferred_clone_urls(repo_url: str) -> list[str]:
+    primary = str(repo_url).strip()
+    ssh = _github_https_to_ssh(primary)
+    if ssh == primary:
+        return [primary]
+    return [ssh, primary]
+
+
+def _run_git_streaming(cmd: list[str], *, timeout: int) -> tuple[int, str]:
+    """Run a git command with line-by-line streamed output and captured tail."""
+    tail_lines: list[str] = []
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    try:
+        if process.stdout is not None:
+            for line in process.stdout:
+                logger.info("%s", line.rstrip("\n"))
+                tail_lines.append(line.rstrip("\n"))
+                if len(tail_lines) > 80:
+                    tail_lines.pop(0)
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait()
+        return 124, f"git command timed out after {timeout}s: {' '.join(cmd)}"
+    finally:
+        if process.stdout is not None:
+            process.stdout.close()
+
+    tail = "\n".join(tail_lines).strip()
+    return process.returncode, tail[-500:]
+
+
 def _clone_missing_repo(**kwargs: Any) -> dict[str, Any]:
     repo_name = str(kwargs.get("repo_name") or "erf").lower()
     repo_root = Path(kwargs.get("repo_root") or ".")
@@ -150,14 +202,36 @@ def _clone_missing_repo(**kwargs: Any) -> dict[str, Any]:
     if not repo_url:
         return {"ok": False, "error": "Missing repository URL in dependencies metadata"}
 
-    clone = subprocess.run(
-        ["git", "clone", "--recursive", str(repo_url), str(target_path)],
-        capture_output=True,
-        text=True,
-        check=False,
+    clone_timeout = int(kwargs.get("clone_timeout_seconds") or 300)
+    clone_error = ""
+    selected_url = None
+    logger.info(
+        "Preflight clone start: repo=%s target=%s timeout=%ss",
+        repo_name.upper(),
+        target_path,
+        clone_timeout,
     )
-    if clone.returncode != 0:
-        return {"ok": False, "error": (clone.stderr or "git clone failed").strip()}
+    for candidate_url in _preferred_clone_urls(str(repo_url)):
+        selected_url = candidate_url
+        logger.info("Preflight clone attempt: %s", candidate_url)
+        if target_path.exists():
+            shutil.rmtree(target_path, ignore_errors=True)
+
+        clone_rc, clone_tail = _run_git_streaming(
+            ["git", "clone", "--recursive", str(candidate_url), str(target_path)],
+            timeout=clone_timeout,
+        )
+        if clone_rc == 124:
+            clone_error = clone_tail
+            logger.warning("Preflight clone timed out for %s", candidate_url)
+            continue
+        if clone_rc == 0:
+            logger.info("Preflight clone succeeded via %s", candidate_url)
+            break
+        clone_error = clone_tail or "git clone failed"
+        logger.warning("Preflight clone failed for %s", candidate_url)
+    else:
+        return {"ok": False, "error": clone_error or "git clone failed"}
 
     if commit:
         subprocess.run(
@@ -174,13 +248,14 @@ def _clone_missing_repo(**kwargs: Any) -> dict[str, Any]:
             check=False,
         )
 
-    subprocess.run(
+    submodule_rc, submodule_tail = _run_git_streaming(
         ["git", "-C", str(target_path), "submodule", "update", "--init", "--recursive"],
-        capture_output=True,
-        text=True,
-        check=False,
+        timeout=clone_timeout,
     )
-    return {"ok": True, "path": str(target_path)}
+    if submodule_rc != 0:
+        return {"ok": False, "error": submodule_tail or "git submodule update failed"}
+    logger.info("Preflight submodule update complete")
+    return {"ok": True, "path": str(target_path), "url": selected_url}
 
 
 def check_repo_readiness(**kwargs: Any) -> dict[str, Any]:
