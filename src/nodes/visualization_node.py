@@ -42,23 +42,60 @@ def get_run_directory_and_analysis(state: GraphState) -> tuple:
     tuple
         Tuple of (run_directory, analysis_report).
     """
-    # Try canonical path for run_directory
-    run_dir = None
+    workflow_history = state.get("workflow_history", [])
+    runner_run_dir = None
+    input_writer_run_dir = None
+
+    # Prefer latest runner entry (post-staging/execution path).
     try:
-        input_writer_entry = next(
-            e for e in state.get('workflow_history', [])
-            if e.get('node') == 'input_writer'
+        runner_entry = next(
+            e for e in reversed(workflow_history)
+            if e.get("node") == "runner"
         )
-        run_dir = input_writer_entry.get('details', {}).get('run_directory')
+        runner_run_dir = runner_entry.get("details", {}).get("run_directory")
+        if runner_run_dir:
+            logger.debug("Visualization run directory loaded from runner workflow_history entry")
     except StopIteration:
         pass
 
-    # Fallback to state
-    if not run_dir:
-        run_dir = state.get("run_directory")
+    # Fall back to latest input_writer entry (canonical initial run dir).
+    try:
+        input_writer_entry = next(
+            e for e in reversed(workflow_history)
+            if e.get("node") == "input_writer"
+        )
+        input_writer_run_dir = input_writer_entry.get("details", {}).get("run_directory")
+    except StopIteration:
+        pass
 
-    # Get analysis report (can be in state or as fallback from workflow_history)
+    if runner_run_dir:
+        run_dir = runner_run_dir
+    elif input_writer_run_dir:
+        run_dir = input_writer_run_dir
+        logger.debug("Visualization run directory loaded from input_writer workflow_history entry")
+    else:
+        run_dir = state.get("run_directory")
+        if run_dir:
+            logger.debug("Visualization run directory loaded from state fallback")
+
+    if runner_run_dir and input_writer_run_dir and runner_run_dir != input_writer_run_dir:
+        logger.warning(
+            "Visualization run directory divergence: runner=%s input_writer=%s; using runner path",
+            runner_run_dir,
+            input_writer_run_dir,
+        )
+
+    # Get analysis report from state, then workflow history if missing.
     analysis_report = state.get("analysis_report", {})
+    if not analysis_report:
+        try:
+            analysis_entry = next(
+                e for e in reversed(workflow_history)
+                if e.get("node") == "analysis"
+            )
+            analysis_report = analysis_entry.get("details", {}).get("report", {}) or {}
+        except StopIteration:
+            analysis_report = {}
 
     return run_dir, analysis_report
 
