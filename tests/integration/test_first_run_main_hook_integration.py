@@ -85,6 +85,20 @@ def test_main_tty_preflight_uses_interactive_fix_path_then_runs_agent() -> None:
                                 "unresolved": [preflight_issue],
                                 "exit_code": 0,
                             }
+                            preflight_mock.side_effect = [
+                                {
+                                    "mode": "interactive",
+                                    "issues": [preflight_issue],
+                                    "unresolved": [preflight_issue],
+                                    "exit_code": 0,
+                                },
+                                {
+                                    "mode": "noninteractive",
+                                    "issues": [],
+                                    "unresolved": [],
+                                    "exit_code": 0,
+                                },
+                            ]
                             apply_mock.return_value = {
                                 "mode": "interactive",
                                 "attempted_actions": ["clone_missing:erf"],
@@ -99,6 +113,6 @@ def test_main_tty_preflight_uses_interactive_fix_path_then_runs_agent() -> None:
 
                             main(args=["--prompt", "run test"])
 
-    preflight_mock.assert_called_once()
+    assert preflight_mock.call_count == 2
     apply_mock.assert_called_once()
     run_agent_mock.assert_called_once()

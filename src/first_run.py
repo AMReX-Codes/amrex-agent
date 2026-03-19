@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -56,6 +57,85 @@ def _erf_path(repo_root: Path, erf_repo_path: Any = None) -> Path:
     if path is not None:
         return path
     return repo_root.parent / "ERF"
+
+
+def _path_matches(left: Any, right: Any) -> bool:
+    if left in (None, "") or right in (None, ""):
+        return False
+    try:
+        return Path(left).expanduser().resolve() == Path(right).expanduser().resolve()
+    except OSError:
+        return str(left) == str(right)
+
+
+def _resolution_source_for_erf(
+    repo_root: Path,
+    config: Any,
+    explicit_erf_path: Any,
+) -> tuple[str, bool]:
+    sibling = repo_root.parent / "ERF"
+    env_value = os.environ.get("ERF_REPO_PATH")
+    config_value = getattr(config, "erf_repo_path", None) if config is not None else None
+
+    if explicit_erf_path not in (None, ""):
+        if _path_matches(explicit_erf_path, env_value):
+            return ("env", True)
+        if _path_matches(explicit_erf_path, config_value):
+            return ("config", True)
+        return ("cli", True)
+    if env_value:
+        return ("env", True)
+    if config_value not in (None, ""):
+        return ("config", True)
+    if sibling.exists():
+        return ("sibling", True)
+    return ("sibling", True)
+
+
+def _repo_resolution_row(
+    *,
+    repo_name: str,
+    repo_path: Path,
+    source: str,
+    deterministic: bool,
+) -> dict[str, Any]:
+    exists = repo_path.exists()
+    is_git_repo = exists and (repo_path / ".git").exists()
+    head_sha = _get_git_head_sha(repo_path) if is_git_repo else ""
+    status = "ok"
+    if not exists:
+        status = "missing"
+    elif not is_git_repo:
+        status = "invalid"
+    return {
+        "solver": repo_name,
+        "selected_path": str(repo_path),
+        "source": source,
+        "deterministic": "yes" if deterministic else "no",
+        "exists": "yes" if exists else "no",
+        "is_git_repo": "yes" if is_git_repo else "no",
+        "head_sha": head_sha or "-",
+        "status": status,
+    }
+
+
+def _log_repo_resolution_table(rows: list[dict[str, Any]], stage: str) -> None:
+    if not rows:
+        return
+    logger.info("Preflight repo resolution (%s):", stage)
+    logger.info("solver | selected_path | source | deterministic | exists | is_git_repo | head_sha | status")
+    for row in rows:
+        logger.info(
+            "%s | %s | %s | %s | %s | %s | %s | %s",
+            row.get("solver", "-"),
+            row.get("selected_path", "-"),
+            row.get("source", "-"),
+            row.get("deterministic", "-"),
+            row.get("exists", "-"),
+            row.get("is_git_repo", "-"),
+            row.get("head_sha", "-"),
+            row.get("status", "-"),
+        )
 
 
 def _get_git_head_sha(repo_path: Path) -> str:
@@ -735,7 +815,7 @@ def _try_interactive_resolution(
     expected_dependencies: dict[str, Any],
     discovered_candidates: list[Path] | None = None,
     indexed_commits: set[str] | None = None,
-) -> tuple[str, bool]:
+) -> tuple[str, bool, Path | None]:
     if response == "clone":
         result = _clone_missing_repo(
             repo_root=repo_root,
@@ -743,16 +823,16 @@ def _try_interactive_resolution(
             target_path=str(target_path),
             expected_dependencies=expected_dependencies,
         )
-        return (f"clone_missing:{repo_name}", bool(result.get("ok")))
+        return (f"clone_missing:{repo_name}", bool(result.get("ok")), target_path if result.get("ok") else None)
     if response == "custom":
         custom_text = input(f"Enter the full path to your {repo_name.upper()} repository: ").strip()
         custom_path = Path(custom_text) if custom_text else None
-        return (f"use_custom_path:{repo_name}", _is_git_repo(custom_path))
+        return (f"use_custom_path:{repo_name}", _is_git_repo(custom_path), custom_path if _is_git_repo(custom_path) else None)
     if response == "select":
         candidates = list(discovered_candidates or [])
         if not candidates:
             print("No discovered repositories are available for selection.")
-            return (f"select_discovered_repo:{repo_name}", False)
+            return (f"select_discovered_repo:{repo_name}", False, None)
         for idx, candidate in enumerate(candidates, start=1):
             candidate_sha = _get_git_head_sha(candidate)
             status = _candidate_index_status(candidate_sha, indexed_commits or set())
@@ -760,12 +840,13 @@ def _try_interactive_resolution(
             print(f"    head={_short_sha(candidate_sha)} indexed_match={status}")
         selected = input("Select candidate number: ").strip()
         if not selected.isdigit():
-            return (f"select_discovered_repo:{repo_name}", False)
+            return (f"select_discovered_repo:{repo_name}", False, None)
         selected_idx = int(selected)
         if selected_idx < 1 or selected_idx > len(candidates):
-            return (f"select_discovered_repo:{repo_name}", False)
-        return (f"use_discovered_repo:{repo_name}", _is_git_repo(candidates[selected_idx - 1]))
-    return ("", False)
+            return (f"select_discovered_repo:{repo_name}", False, None)
+        selected_repo = candidates[selected_idx - 1]
+        return (f"use_discovered_repo:{repo_name}", _is_git_repo(selected_repo), selected_repo if _is_git_repo(selected_repo) else None)
+    return ("", False, None)
 
 
 def resolve_readiness_issues_noninteractive(**kwargs: Any) -> dict[str, Any]:
@@ -779,6 +860,7 @@ def resolve_readiness_issues_noninteractive(**kwargs: Any) -> dict[str, Any]:
     attempted_actions: list[str] = []
     resolved: list[dict[str, Any]] = []
     unresolved: list[dict[str, Any]] = []
+    resolved_repo_paths: dict[str, str] = {}
 
     for issue in issues:
         if issue.get("code") != ISSUE_ERF_REPO_MISSING:
@@ -790,12 +872,14 @@ def resolve_readiness_issues_noninteractive(**kwargs: Any) -> dict[str, Any]:
         if _is_git_repo(custom_path):
             attempted_actions.append(f"use_custom_path:{repo_name}")
             resolved.append(issue)
+            resolved_repo_paths[repo_name] = str(custom_path)
             continue
 
         sibling_path = Path(issue.get("target_path") or _erf_path(repo_root))
         if _is_git_repo(sibling_path):
             attempted_actions.append(f"use_sibling_repo:{repo_name}")
             resolved.append(issue)
+            resolved_repo_paths[repo_name] = str(sibling_path)
             continue
 
         if allow_clone_missing:
@@ -808,6 +892,7 @@ def resolve_readiness_issues_noninteractive(**kwargs: Any) -> dict[str, Any]:
             attempted_actions.append(f"clone_missing:{repo_name}")
             if clone_result.get("ok"):
                 resolved.append(issue)
+                resolved_repo_paths[repo_name] = str(sibling_path)
                 continue
 
         unresolved.append(issue)
@@ -818,6 +903,7 @@ def resolve_readiness_issues_noninteractive(**kwargs: Any) -> dict[str, Any]:
         "attempted_actions": attempted_actions,
         "resolved": resolved,
         "unresolved": unresolved,
+        "resolved_repo_paths": resolved_repo_paths,
         "exit_code": exit_code,
     }
 
@@ -832,6 +918,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
     attempted_actions: list[str] = []
     resolved: list[dict[str, Any]] = []
     unresolved: list[dict[str, Any]] = []
+    resolved_repo_paths: dict[str, str] = {}
 
     for issue in issues:
         code = issue.get("code")
@@ -851,6 +938,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
                 while True:
                     if _is_git_repo(repo_path) and _checkout_repo_commit(repo_path, expected_commit):
                         resolved.append(issue)
+                        resolved_repo_paths[repo_name] = str(repo_path)
                         break
                     next_step = _interactive_checkout_failure_prompt(repo_name, expected_commit)
                     if next_step == "retry":
@@ -859,6 +947,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
                     if next_step == "continue":
                         attempted_actions.append(f"continue_with_current_commit:{repo_name}")
                         resolved.append(issue)
+                        resolved_repo_paths[repo_name] = str(repo_path)
                         break
                     attempted_actions.append(f"abort_commit_mismatch:{repo_name}")
                     unresolved.append(issue)
@@ -870,11 +959,13 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
             if response == "continue":
                 attempted_actions.append(f"continue_with_current_commit:{repo_name}")
                 resolved.append(issue)
+                resolved_repo_paths[repo_name] = str(repo_path)
                 continue
             if response == "development_rebuild":
                 attempted_actions.append(f"checkout_development_rebuild:{repo_name}")
                 if _checkout_development_and_rebuild(repo_root, repo_path):
                     resolved.append(issue)
+                    resolved_repo_paths[repo_name] = str(repo_path)
                     continue
                 unresolved.append(issue)
                 continue
@@ -891,18 +982,20 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
         if _is_git_repo(custom_path):
             attempted_actions.append(f"use_custom_path:{repo_name}")
             resolved.append(issue)
+            resolved_repo_paths[repo_name] = str(custom_path)
             continue
 
         target_path = Path(issue.get("target_path") or _erf_path(repo_root))
         if _is_git_repo(target_path):
             attempted_actions.append(f"use_sibling_repo:{repo_name}")
             resolved.append(issue)
+            resolved_repo_paths[repo_name] = str(target_path)
             continue
 
         discovered_candidates = _discover_local_repo_candidates(repo_root, repo_name)
         indexed_commits = _collect_indexed_commits(repo_root, repo_name)
         response = _interactive_missing_repo_prompt(repo_name, custom_path)
-        action, ok = _try_interactive_resolution(
+        action, ok, selected_path = _try_interactive_resolution(
             response=response,
             repo_name=repo_name,
             repo_root=repo_root,
@@ -915,6 +1008,8 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
             attempted_actions.append(action)
         if ok:
             resolved.append(issue)
+            if selected_path is not None:
+                resolved_repo_paths[repo_name] = str(selected_path)
             continue
 
         unresolved.append(issue)
@@ -924,6 +1019,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
         "attempted_actions": attempted_actions,
         "resolved": resolved,
         "unresolved": unresolved,
+        "resolved_repo_paths": resolved_repo_paths,
         "exit_code": 0,
     }
 
@@ -937,10 +1033,22 @@ def run_startup_readiness_checks(**kwargs: Any) -> dict[str, Any]:
     config = kwargs.get("config")
     is_tty = bool(kwargs.get("is_tty", False))
     non_interactive = bool(getattr(config, "non_interactive", False))
+    explicit_erf_path = kwargs.get("erf_repo_path")
+    source, deterministic = _resolution_source_for_erf(repo_root, config, explicit_erf_path)
+    erf_path = _erf_path(repo_root, explicit_erf_path)
+    repo_resolution_rows = [
+        _repo_resolution_row(
+            repo_name="erf",
+            repo_path=erf_path,
+            source=source,
+            deterministic=deterministic,
+        )
+    ]
+    _log_repo_resolution_table(repo_resolution_rows, "deterministic")
 
     issues = _collect_readiness_issues(**kwargs)
     if not issues:
-        return {"exit_code": 0, "issues": []}
+        return {"exit_code": 0, "issues": [], "repo_resolution_rows": repo_resolution_rows}
 
     if non_interactive or not is_tty:
         result = resolve_readiness_issues_noninteractive(
@@ -952,6 +1060,7 @@ def run_startup_readiness_checks(**kwargs: Any) -> dict[str, Any]:
             config=config,
         )
         result.setdefault("issues", issues)
+        result.setdefault("repo_resolution_rows", repo_resolution_rows)
         return result
 
     return {
@@ -959,5 +1068,6 @@ def run_startup_readiness_checks(**kwargs: Any) -> dict[str, Any]:
         "issues": issues,
         "resolved": [],
         "unresolved": issues,
+        "repo_resolution_rows": repo_resolution_rows,
         "exit_code": 0,
     }

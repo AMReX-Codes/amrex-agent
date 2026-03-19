@@ -776,6 +776,14 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
         erf_repo_path=getattr(config, "erf_repo_path", None),
     )
 
+    def _apply_resolved_repo_paths(result: dict[str, Any]) -> None:
+        resolved_repo_paths = result.get("resolved_repo_paths") or {}
+        if not isinstance(resolved_repo_paths, dict):
+            return
+        erf_path = resolved_repo_paths.get("erf")
+        if erf_path:
+            setattr(config, "erf_repo_path", Path(erf_path))
+
     if (
         is_tty
         and isinstance(readiness_result, dict)
@@ -787,6 +795,25 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
             config=config,
             issues=readiness_result.get("issues") or [],
         )
+        _apply_resolved_repo_paths(readiness_result)
+
+        # Re-run checks immediately so post-selection commit mismatch and other
+        # follow-on gates are evaluated in the same preflight session.
+        followup_result = run_startup_readiness_checks(
+            repo_root=repo_root,
+            config=config,
+            is_tty=is_tty,
+            allow_clone_missing=False,
+            erf_repo_path=getattr(config, "erf_repo_path", None),
+        )
+        if followup_result.get("mode") == "interactive" and followup_result.get("issues"):
+            followup_result = apply_interactive_fixes(
+                repo_root=repo_root,
+                config=config,
+                issues=followup_result.get("issues") or [],
+            )
+            _apply_resolved_repo_paths(followup_result)
+        readiness_result = followup_result
 
     unresolved = list(readiness_result.get("unresolved") or readiness_result.get("issues") or [])
     exit_code = int(readiness_result.get("exit_code") or 0)
