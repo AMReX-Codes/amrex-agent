@@ -775,6 +775,7 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
         allow_clone_missing=is_tty,
         erf_repo_path=getattr(config, "erf_repo_path", None),
     )
+    waived_issue_codes: set[str] = set()
 
     def _apply_resolved_repo_paths(result: dict[str, Any]) -> None:
         resolved_repo_paths = result.get("resolved_repo_paths") or {}
@@ -795,6 +796,7 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
             config=config,
             issues=readiness_result.get("issues") or [],
         )
+        waived_issue_codes.update(str(code) for code in (readiness_result.get("waived_issue_codes") or []))
         _apply_resolved_repo_paths(readiness_result)
 
         unresolved_after_interactive = list(readiness_result.get("unresolved") or [])
@@ -824,6 +826,7 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
             is_tty=is_tty,
             allow_clone_missing=False,
             erf_repo_path=getattr(config, "erf_repo_path", None),
+            ignore_issue_codes=sorted(waived_issue_codes),
         )
         if followup_result.get("mode") == "interactive" and followup_result.get("issues"):
             followup_result = apply_interactive_fixes(
@@ -831,6 +834,7 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
                 config=config,
                 issues=followup_result.get("issues") or [],
             )
+            waived_issue_codes.update(str(code) for code in (followup_result.get("waived_issue_codes") or []))
             _apply_resolved_repo_paths(followup_result)
         readiness_result = followup_result
 

@@ -951,6 +951,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
     resolved: list[dict[str, Any]] = []
     unresolved: list[dict[str, Any]] = []
     resolved_repo_paths: dict[str, str] = {}
+    waived_issue_codes: set[str] = set()
 
     for issue in issues:
         code = issue.get("code")
@@ -998,6 +999,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
                 if _run_rebuild_chain(repo_root, repo_path):
                     resolved.append(issue)
                     resolved_repo_paths[repo_name] = str(repo_path)
+                    waived_issue_codes.add(ISSUE_ERF_COMMIT_MISMATCH)
                     continue
                 unresolved.append(issue)
                 continue
@@ -1006,6 +1008,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
                 if _checkout_development_and_rebuild(repo_root, repo_path):
                     resolved.append(issue)
                     resolved_repo_paths[repo_name] = str(repo_path)
+                    waived_issue_codes.add(ISSUE_ERF_COMMIT_MISMATCH)
                     continue
                 unresolved.append(issue)
                 continue
@@ -1060,6 +1063,7 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
         "resolved": resolved,
         "unresolved": unresolved,
         "resolved_repo_paths": resolved_repo_paths,
+        "waived_issue_codes": sorted(waived_issue_codes),
         "exit_code": 0,
     }
 
@@ -1086,7 +1090,18 @@ def run_startup_readiness_checks(**kwargs: Any) -> dict[str, Any]:
     ]
     _log_repo_resolution_table(repo_resolution_rows, "deterministic")
 
+    ignore_issue_codes = {
+        str(code).strip()
+        for code in (kwargs.get("ignore_issue_codes") or [])
+        if str(code).strip()
+    }
     issues = _collect_readiness_issues(**kwargs)
+    if ignore_issue_codes:
+        issues = [
+            issue
+            for issue in issues
+            if str(issue.get("code") or "").strip() not in ignore_issue_codes
+        ]
     if not issues:
         return {"exit_code": 0, "issues": [], "repo_resolution_rows": repo_resolution_rows}
 
