@@ -8,14 +8,14 @@
       "PeleLMeX"
     ],
     "composition_method": "auto-compose (gitmodules)",
-    "total_parameters": 951,
+    "total_parameters": 955,
     "repo_commits": {
       "amrex-hydro": "756c76ad6719fde5209ef4bf3b77bd4c1169a44e",
       "amrex": "53dc0a470c5d39562b33b55aab9d92976a48db9f",
       "pelephysics": "ac521b352806e7da29673c64879a2f013d05fffa",
-      "pelelmex": "7578f85da7bbc8f8e128bd2e02228787d7e30f03"
+      "pelelmex": "9e7fb9f245c3ef363fc0cbd14960089247934157"
     },
-    "generated_at": "2026-02-16T14:59:21.325329+00:00"
+    "generated_at": "2026-03-10T10:43:52.549122+00:00"
   },
   "parameters": {
     "amr.regrid_on_restart": {
@@ -5915,7 +5915,7 @@
       "required": false,
       "is_array": false,
       "build_flags": [],
-      "default": "std::max(m_verbose - 2, 0)",
+      "default": "amrex::max<int>(m_verbose - 2, 0)",
       "source_file": "Source/PeleLMeX_Setup.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -6201,7 +6201,7 @@
       "required": false,
       "is_array": false,
       "build_flags": [],
-      "default": "std::max(m_verbose - 1, m_deltaT_verbose)",
+      "default": "amrex::max<int>(m_verbose - 1, m_deltaT_verbose)",
       "source_file": "Source/PeleLMeX_Setup.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -6597,7 +6597,7 @@
       "required": false,
       "is_array": true,
       "build_flags": [],
-      "default": "std::max(m_verbose - 2, 0)",
+      "default": "amrex::max<int>(m_verbose - 2, 0)",
       "source_file": "Source/PeleLMeX_Setup.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -6674,7 +6674,7 @@
       "required": false,
       "is_array": true,
       "build_flags": [],
-      "default": "std::max(m_verbose - 2, 0)",
+      "default": "amrex::max<int>(m_verbose - 2, 0)",
       "source_file": "Source/PeleLMeX_Setup.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -6872,7 +6872,7 @@
       "required": false,
       "is_array": false,
       "build_flags": [],
-      "default": "amrex::max(1, amrex::min(amrex::ParallelDescriptor::NProcs(), 256))",
+      "default": "amrex::Clamp(amrex::ParallelDescriptor::NProcs(), 1, 256)",
       "source_file": "Source/PeleLMeX_Setup.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -7255,6 +7255,17 @@
       "is_array": false,
       "build_flags": [],
       "default": "true",
+      "source_file": "Source/PeleLMeX_Setup.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "peleLM.base_output_prefix": {
+      "type": "std::string",
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
       "source_file": "Source/PeleLMeX_Setup.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -8322,7 +8333,7 @@
       "required": false,
       "is_array": false,
       "build_flags": [],
-      "default": "std::max(m_pelelm->getVerbose() - 2, m_mg_verbose)",
+      "default": "amrex::max<int>(m_pelelm->getVerbose() - 2, m_mg_verbose)",
       "source_file": "Source/PeleLMeX_DiffusionOp.cpp",
       "source_type": "manual",
       "priority": "tier3",
@@ -8960,6 +8971,17 @@
       "description": null
     },
     "prob.jet_init_time": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Exec/Production/JetInCrossflow/pelelmex_prob.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "prob.jet_start_time": {
       "type": null,
       "required": false,
       "is_array": false,
@@ -10690,6 +10712,28 @@
     "prob.pertlength": {
       "type": null,
       "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Exec/RegTests/FlameSheet/pelelmex_prob.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "prob.ref_frame": {
+      "type": null,
+      "required": false,
+      "is_array": false,
+      "build_flags": [],
+      "default": null,
+      "source_file": "Exec/RegTests/FlameSheet/pelelmex_prob.cpp",
+      "source_type": "manual",
+      "priority": "tier3",
+      "description": null
+    },
+    "prob.moving_frame_velocity": {
+      "type": null,
+      "required": true,
       "is_array": false,
       "build_flags": [],
       "default": null,

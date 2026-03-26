@@ -80,7 +80,15 @@ class TestFullGraphExecution:
             def __init__(self, _config):
                 self.cases_svc = None
 
-            def apply_plan(self, selected_case, modifications, baseline, reasoning, output_dir):
+            def apply_plan(
+                self,
+                selected_case,
+                modifications,
+                baseline,
+                reasoning,
+                output_dir,
+                requested_plot_vars=None,
+            ):
                 run_dir = Path(output_dir)
                 run_dir.mkdir(parents=True, exist_ok=True)
                 inputs_path = run_dir / "inputs"
