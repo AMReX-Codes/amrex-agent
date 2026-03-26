@@ -3,6 +3,13 @@
     "code_name": "AMReX",
     "capability": "AMReX framework reference and core AMR tutorials",
     "capability_type": "description",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 0,
     "chunk_index": 0
   },
@@ -10,385 +17,1400 @@
     "code_name": "AMReX",
     "capability": "amrex framework tutorials",
     "capability_type": "specific",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 1,
     "chunk_index": 1
   },
   {
     "code_name": "AMReX",
-    "capability": "amrcore reference advection tests",
+    "capability": "advection tutorial and nested grid advection examples",
     "capability_type": "specific",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 2,
     "chunk_index": 2
   },
   {
     "code_name": "AMReX",
-    "capability": "amrex",
-    "capability_type": "keyword",
+    "capability": "amrcore reference advection tests",
+    "capability_type": "specific",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 3,
     "chunk_index": 3
   },
   {
     "code_name": "AMReX",
-    "capability": "amrex tutorial",
-    "capability_type": "keyword",
+    "capability": "AMR advection and passive scalar transport workflows",
+    "capability_type": "specific",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 4,
     "chunk_index": 4
   },
   {
     "code_name": "AMReX",
-    "capability": "amrex amrcore",
+    "capability": "amrex",
     "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 5,
     "chunk_index": 5
   },
   {
-    "code_name": "PeleC",
-    "capability": "Compressible reacting flow with detailed chemistry",
-    "capability_type": "description",
+    "code_name": "AMReX",
+    "capability": "amrex tutorial",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 6,
     "chunk_index": 6
   },
   {
-    "code_name": "PeleC",
-    "capability": "compressible reacting flow",
-    "capability_type": "specific",
+    "code_name": "AMReX",
+    "capability": "amrex amrcore",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 7,
     "chunk_index": 7
   },
   {
-    "code_name": "PeleC",
-    "capability": "strong shock handling",
-    "capability_type": "specific",
+    "code_name": "AMReX",
+    "capability": "advection tutorial",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 8,
     "chunk_index": 8
   },
   {
-    "code_name": "PeleC",
-    "capability": "detonation and flame propagation",
-    "capability_type": "specific",
+    "code_name": "AMReX",
+    "capability": "amr advection",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 9,
     "chunk_index": 9
   },
   {
-    "code_name": "PeleC",
-    "capability": "detailed chemical kinetics",
-    "capability_type": "specific",
+    "code_name": "AMReX",
+    "capability": "passive scalar",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 10,
     "chunk_index": 10
   },
   {
-    "code_name": "PeleC",
-    "capability": "flame",
+    "code_name": "AMReX",
+    "capability": "nested grid advection",
     "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 11,
     "chunk_index": 11
   },
   {
-    "code_name": "PeleC",
-    "capability": "combustion",
+    "code_name": "AMReX",
+    "capability": "advection_amrcore",
     "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "AMReX@bac24575",
+      "l1": "AMReX@bac24575",
+      "l2": "AMReX@bac24575"
+    },
     "chunk_parent": 12,
     "chunk_index": 12
   },
   {
     "code_name": "PeleC",
-    "capability": "methane",
-    "capability_type": "keyword",
+    "capability": "Compressible reacting flow with detailed chemistry",
+    "capability_type": "description",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
     "chunk_parent": 13,
     "chunk_index": 13
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "compressible reacting flow",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 14,
+    "chunk_index": 14
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "strong shock handling",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 15,
+    "chunk_index": 15
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "detonation and flame propagation",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 16,
+    "chunk_index": 16
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "premixed methane and PMF combustion workflows",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 17,
+    "chunk_index": 17
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "jet flame and reacting jet configurations",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 18,
+    "chunk_index": 18
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "fuel injection and turbulent flame interaction studies",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 19,
+    "chunk_index": 19
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "detailed chemical kinetics",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 20,
+    "chunk_index": 20
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "flame",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 21,
+    "chunk_index": 21
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "combustion",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 22,
+    "chunk_index": 22
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "methane",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 23,
+    "chunk_index": 23
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "premixed methane",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 24,
+    "chunk_index": 24
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "pmf",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 25,
+    "chunk_index": 25
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "premixed flame",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 26,
+    "chunk_index": 26
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "jet flame",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 27,
+    "chunk_index": 27
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "reacting jet",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 28,
+    "chunk_index": 28
+  },
+  {
+    "code_name": "PeleC",
+    "capability": "fuel injection",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+    "level_versions": {
+      "l0": "PeleC@unknown",
+      "l1": "PeleC@unknown",
+      "l2": "PeleC@unknown"
+    },
+    "chunk_parent": 29,
+    "chunk_index": 29
   },
   {
     "code_name": "PeleLMeX",
     "capability": "Low Mach combustion with detailed transport",
     "capability_type": "description",
-    "chunk_parent": 14,
-    "chunk_index": 14
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 30,
+    "chunk_index": 30
   },
   {
     "code_name": "PeleLMeX",
     "capability": "low Mach number formulation",
     "capability_type": "specific",
-    "chunk_parent": 15,
-    "chunk_index": 15
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 31,
+    "chunk_index": 31
   },
   {
     "code_name": "PeleLMeX",
     "capability": "detailed chemical kinetics",
     "capability_type": "specific",
-    "chunk_parent": 16,
-    "chunk_index": 16
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 32,
+    "chunk_index": 32
   },
   {
     "code_name": "PeleLMeX",
     "capability": "diffusion-dominated combustion",
     "capability_type": "specific",
-    "chunk_parent": 17,
-    "chunk_index": 17
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 33,
+    "chunk_index": 33
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "counterflow and counter-flow diffusion flame configurations",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 34,
+    "chunk_index": 34
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "opposed-flow reacting flame setups",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 35,
+    "chunk_index": 35
   },
   {
     "code_name": "PeleLMeX",
     "capability": "flame dynamics with transport effects",
     "capability_type": "specific",
-    "chunk_parent": 18,
-    "chunk_index": 18
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 36,
+    "chunk_index": 36
   },
   {
     "code_name": "PeleLMeX",
     "capability": "low mach",
     "capability_type": "keyword",
-    "chunk_parent": 19,
-    "chunk_index": 19
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 37,
+    "chunk_index": 37
   },
   {
     "code_name": "PeleLMeX",
     "capability": "incompressible combustion",
     "capability_type": "keyword",
-    "chunk_parent": 20,
-    "chunk_index": 20
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 38,
+    "chunk_index": 38
   },
   {
     "code_name": "PeleLMeX",
     "capability": "diffusion flame",
     "capability_type": "keyword",
-    "chunk_parent": 21,
-    "chunk_index": 21
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 39,
+    "chunk_index": 39
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "counterflow",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 40,
+    "chunk_index": 40
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "counter-flow",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 41,
+    "chunk_index": 41
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "opposed-flow",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 42,
+    "chunk_index": 42
+  },
+  {
+    "code_name": "PeleLMeX",
+    "capability": "counterflow diffusion",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+    "level_versions": {
+      "l0": "PeleLMeX@unknown",
+      "l1": "PeleLMeX@unknown",
+      "l2": "PeleLMeX@unknown"
+    },
+    "chunk_parent": 43,
+    "chunk_index": 43
   },
   {
     "code_name": "incflo",
     "capability": "Incompressible flow solver",
     "capability_type": "description",
-    "chunk_parent": 22,
-    "chunk_index": 22
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "incflo@bac24575",
+      "l1": "incflo@bac24575",
+      "l2": "incflo@bac24575"
+    },
+    "chunk_parent": 44,
+    "chunk_index": 44
   },
   {
     "code_name": "incflo",
     "capability": "incompressible navier-stokes solver",
     "capability_type": "specific",
-    "chunk_parent": 23,
-    "chunk_index": 23
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "incflo@bac24575",
+      "l1": "incflo@bac24575",
+      "l2": "incflo@bac24575"
+    },
+    "chunk_parent": 45,
+    "chunk_index": 45
   },
   {
     "code_name": "incflo",
     "capability": "godunov-based fluid dynamics",
     "capability_type": "specific",
-    "chunk_parent": 24,
-    "chunk_index": 24
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "incflo@bac24575",
+      "l1": "incflo@bac24575",
+      "l2": "incflo@bac24575"
+    },
+    "chunk_parent": 46,
+    "chunk_index": 46
   },
   {
     "code_name": "incflo",
     "capability": "benchmark turbulent and channel-flow configurations",
     "capability_type": "specific",
-    "chunk_parent": 25,
-    "chunk_index": 25
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "incflo@bac24575",
+      "l1": "incflo@bac24575",
+      "l2": "incflo@bac24575"
+    },
+    "chunk_parent": 47,
+    "chunk_index": 47
   },
   {
     "code_name": "incflo",
     "capability": "incompressible",
     "capability_type": "keyword",
-    "chunk_parent": 26,
-    "chunk_index": 26
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "incflo@bac24575",
+      "l1": "incflo@bac24575",
+      "l2": "incflo@bac24575"
+    },
+    "chunk_parent": 48,
+    "chunk_index": 48
   },
   {
     "code_name": "incflo",
     "capability": "flow",
     "capability_type": "keyword",
-    "chunk_parent": 27,
-    "chunk_index": 27
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "incflo@bac24575",
+      "l1": "incflo@bac24575",
+      "l2": "incflo@bac24575"
+    },
+    "chunk_parent": 49,
+    "chunk_index": 49
   },
   {
     "code_name": "WarpX",
     "capability": "Advanced electromagnetic particle-in-cell code",
     "capability_type": "description",
-    "chunk_parent": 28,
-    "chunk_index": 28
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "WarpX@bac24575",
+      "l1": "WarpX@bac24575",
+      "l2": "WarpX@bac24575"
+    },
+    "chunk_parent": 50,
+    "chunk_index": 50
   },
   {
     "code_name": "WarpX",
     "capability": "particle-in-cell method",
     "capability_type": "specific",
-    "chunk_parent": 29,
-    "chunk_index": 29
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "WarpX@bac24575",
+      "l1": "WarpX@bac24575",
+      "l2": "WarpX@bac24575"
+    },
+    "chunk_parent": 51,
+    "chunk_index": 51
   },
   {
     "code_name": "WarpX",
     "capability": "electromagnetic field evolution",
     "capability_type": "specific",
-    "chunk_parent": 30,
-    "chunk_index": 30
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "WarpX@bac24575",
+      "l1": "WarpX@bac24575",
+      "l2": "WarpX@bac24575"
+    },
+    "chunk_parent": 52,
+    "chunk_index": 52
   },
   {
     "code_name": "WarpX",
     "capability": "laser-plasma and beam dynamics",
     "capability_type": "specific",
-    "chunk_parent": 31,
-    "chunk_index": 31
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "WarpX@bac24575",
+      "l1": "WarpX@bac24575",
+      "l2": "WarpX@bac24575"
+    },
+    "chunk_parent": 53,
+    "chunk_index": 53
   },
   {
     "code_name": "WarpX",
     "capability": "plasma",
     "capability_type": "keyword",
-    "chunk_parent": 32,
-    "chunk_index": 32
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "WarpX@bac24575",
+      "l1": "WarpX@bac24575",
+      "l2": "WarpX@bac24575"
+    },
+    "chunk_parent": 54,
+    "chunk_index": 54
   },
   {
     "code_name": "WarpX",
     "capability": "laser",
     "capability_type": "keyword",
-    "chunk_parent": 33,
-    "chunk_index": 33
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "WarpX@bac24575",
+      "l1": "WarpX@bac24575",
+      "l2": "WarpX@bac24575"
+    },
+    "chunk_parent": 55,
+    "chunk_index": 55
   },
   {
     "code_name": "WarpX",
     "capability": "accelerator",
     "capability_type": "keyword",
-    "chunk_parent": 34,
-    "chunk_index": 34
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "WarpX@bac24575",
+      "l1": "WarpX@bac24575",
+      "l2": "WarpX@bac24575"
+    },
+    "chunk_parent": 56,
+    "chunk_index": 56
   },
   {
     "code_name": "ERF",
     "capability": "Atmospheric modeling and weather simulation",
     "capability_type": "description",
-    "chunk_parent": 35,
-    "chunk_index": 35
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 57,
+    "chunk_index": 57
   },
   {
     "code_name": "ERF",
     "capability": "atmospheric boundary layer modeling",
     "capability_type": "specific",
-    "chunk_parent": 36,
-    "chunk_index": 36
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 58,
+    "chunk_index": 58
+  },
+  {
+    "code_name": "ERF",
+    "capability": "atmospheric boundary and stratified atmosphere studies",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 59,
+    "chunk_index": 59
   },
   {
     "code_name": "ERF",
     "capability": "terrain-influenced weather dynamics",
     "capability_type": "specific",
-    "chunk_parent": 37,
-    "chunk_index": 37
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 60,
+    "chunk_index": 60
+  },
+  {
+    "code_name": "ERF",
+    "capability": "thermal bubble and dry convection benchmarks",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 61,
+    "chunk_index": 61
   },
   {
     "code_name": "ERF",
     "capability": "buoyancy-driven and density-current flows",
     "capability_type": "specific",
-    "chunk_parent": 38,
-    "chunk_index": 38
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 62,
+    "chunk_index": 62
+  },
+  {
+    "code_name": "ERF",
+    "capability": "density current and cold air outflow dynamics",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 63,
+    "chunk_index": 63
   },
   {
     "code_name": "ERF",
     "capability": "moist convection and squall-line simulations",
     "capability_type": "specific",
-    "chunk_parent": 39,
-    "chunk_index": 39
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 64,
+    "chunk_index": 64
+  },
+  {
+    "code_name": "ERF",
+    "capability": "squall line and squall-line convection workflows",
+    "capability_type": "specific",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 65,
+    "chunk_index": 65
   },
   {
     "code_name": "ERF",
     "capability": "hurricane and tropical-cyclone test workflows",
     "capability_type": "specific",
-    "chunk_parent": 40,
-    "chunk_index": 40
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 66,
+    "chunk_index": 66
   },
   {
     "code_name": "ERF",
     "capability": "radiation and land-surface coupling tests",
     "capability_type": "specific",
-    "chunk_parent": 41,
-    "chunk_index": 41
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 67,
+    "chunk_index": 67
   },
   {
     "code_name": "ERF",
     "capability": "wind-farm parameterization workflows",
     "capability_type": "specific",
-    "chunk_parent": 42,
-    "chunk_index": 42
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 68,
+    "chunk_index": 68
   },
   {
     "code_name": "ERF",
     "capability": "data-assimilation and initialization from netcdf",
     "capability_type": "specific",
-    "chunk_parent": 43,
-    "chunk_index": 43
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 69,
+    "chunk_index": 69
+  },
+  {
+    "code_name": "ERF",
+    "capability": "abl",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 70,
+    "chunk_index": 70
   },
   {
     "code_name": "ERF",
     "capability": "atmospheric",
     "capability_type": "keyword",
-    "chunk_parent": 44,
-    "chunk_index": 44
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 71,
+    "chunk_index": 71
+  },
+  {
+    "code_name": "ERF",
+    "capability": "boundary layer",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 72,
+    "chunk_index": 72
   },
   {
     "code_name": "ERF",
     "capability": "weather",
     "capability_type": "keyword",
-    "chunk_parent": 45,
-    "chunk_index": 45
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 73,
+    "chunk_index": 73
   },
   {
     "code_name": "ERF",
     "capability": "wind",
     "capability_type": "keyword",
-    "chunk_parent": 46,
-    "chunk_index": 46
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 74,
+    "chunk_index": 74
+  },
+  {
+    "code_name": "ERF",
+    "capability": "thermal bubble",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 75,
+    "chunk_index": 75
+  },
+  {
+    "code_name": "ERF",
+    "capability": "dry convection",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 76,
+    "chunk_index": 76
+  },
+  {
+    "code_name": "ERF",
+    "capability": "2d squall line",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 77,
+    "chunk_index": 77
+  },
+  {
+    "code_name": "ERF",
+    "capability": "squallline",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 78,
+    "chunk_index": 78
+  },
+  {
+    "code_name": "ERF",
+    "capability": "squall line",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 79,
+    "chunk_index": 79
+  },
+  {
+    "code_name": "ERF",
+    "capability": "squall-line",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 80,
+    "chunk_index": 80
+  },
+  {
+    "code_name": "ERF",
+    "capability": "moist convection",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 81,
+    "chunk_index": 81
+  },
+  {
+    "code_name": "ERF",
+    "capability": "atmospheric boundary",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 82,
+    "chunk_index": 82
+  },
+  {
+    "code_name": "ERF",
+    "capability": "density current",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 83,
+    "chunk_index": 83
+  },
+  {
+    "code_name": "ERF",
+    "capability": "cold air outflow",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 84,
+    "chunk_index": 84
+  },
+  {
+    "code_name": "ERF",
+    "capability": "stratified atmosphere",
+    "capability_type": "keyword",
+    "solver_commit": "unknown",
+    "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+    "level_versions": {
+      "l0": "ERF@unknown",
+      "l1": "ERF@unknown",
+      "l2": "ERF@unknown"
+    },
+    "chunk_parent": 85,
+    "chunk_index": 85
   },
   {
     "code_name": "REMORA",
     "capability": "Ocean modeling and coastal circulation simulation",
     "capability_type": "description",
-    "chunk_parent": 47,
-    "chunk_index": 47
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 86,
+    "chunk_index": 86
   },
   {
     "code_name": "REMORA",
     "capability": "regional ocean circulation modeling",
     "capability_type": "specific",
-    "chunk_parent": 48,
-    "chunk_index": 48
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 87,
+    "chunk_index": 87
+  },
+  {
+    "code_name": "REMORA",
+    "capability": "ocean circulation",
+    "capability_type": "specific",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 88,
+    "chunk_index": 88
   },
   {
     "code_name": "REMORA",
     "capability": "wind-driven upwelling configurations",
     "capability_type": "specific",
-    "chunk_parent": 49,
-    "chunk_index": 49
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 89,
+    "chunk_index": 89
   },
   {
     "code_name": "REMORA",
     "capability": "periodic channel and coastal flow setups",
     "capability_type": "specific",
-    "chunk_parent": 50,
-    "chunk_index": 50
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 90,
+    "chunk_index": 90
+  },
+  {
+    "code_name": "REMORA",
+    "capability": "baroclinic flow over coastal ocean topography",
+    "capability_type": "specific",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 91,
+    "chunk_index": 91
+  },
+  {
+    "code_name": "REMORA",
+    "capability": "seamount and bathymetry-driven circulation dynamics",
+    "capability_type": "specific",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 92,
+    "chunk_index": 92
   },
   {
     "code_name": "REMORA",
     "capability": "ocean",
     "capability_type": "keyword",
-    "chunk_parent": 51,
-    "chunk_index": 51
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 93,
+    "chunk_index": 93
   },
   {
     "code_name": "REMORA",
     "capability": "coastal",
     "capability_type": "keyword",
-    "chunk_parent": 52,
-    "chunk_index": 52
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 94,
+    "chunk_index": 94
   },
   {
     "code_name": "REMORA",
     "capability": "circulation",
     "capability_type": "keyword",
-    "chunk_parent": 53,
-    "chunk_index": 53
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 95,
+    "chunk_index": 95
   },
   {
     "code_name": "REMORA",
     "capability": "seamount",
     "capability_type": "keyword",
-    "chunk_parent": 54,
-    "chunk_index": 54
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 96,
+    "chunk_index": 96
   },
   {
     "code_name": "REMORA",
     "capability": "upwelling",
     "capability_type": "keyword",
-    "chunk_parent": 55,
-    "chunk_index": 55
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 97,
+    "chunk_index": 97
+  },
+  {
+    "code_name": "REMORA",
+    "capability": "baroclinic flow",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 98,
+    "chunk_index": 98
+  },
+  {
+    "code_name": "REMORA",
+    "capability": "coastal ocean",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 99,
+    "chunk_index": 99
+  },
+  {
+    "code_name": "REMORA",
+    "capability": "topography",
+    "capability_type": "keyword",
+    "solver_commit": "bac24575",
+    "solver_schema_file": "amrex_schema_bac24575.json",
+    "level_versions": {
+      "l0": "REMORA@bac24575",
+      "l1": "REMORA@bac24575",
+      "l2": "REMORA@bac24575"
+    },
+    "chunk_parent": 100,
+    "chunk_index": 100
   }
 ]

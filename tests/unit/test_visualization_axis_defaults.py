@@ -176,3 +176,26 @@ def test_build_vis_config_preserves_plot_types_and_extra_options():
     assert plots[1]["field"] == "pressure"
     assert plots[1]["lineout_axis"] == "x"
     assert plots[1]["position"] == 0.5
+
+
+def test_build_vis_config_uses_prompt_timestep_scope():
+    class _Backend:
+        @staticmethod
+        def get_field_list(_plotfile):
+            return ["qc"]
+
+    class _VizService:
+        backend = _Backend()
+
+    vis_config = _build_vis_config(
+        plan={"visualization": {"plots": [{"type": "slice", "field": "qc"}]}},
+        analysis_report={},
+        plotfiles=[Path("plt00000")],
+        viz_service=_VizService(),
+        prompt="show cloud water every 2 minutes",
+        solver_name="ERF",
+        inputs_file_path=None,
+        requested_plot_vars=["cloud_water"],
+        prompt_visualization_config={"timesteps": "all"},
+    )
+    assert vis_config.get("timesteps") == "all"

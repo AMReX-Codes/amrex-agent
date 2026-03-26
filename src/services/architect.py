@@ -5272,117 +5272,25 @@ If uncertain, still return numeric scores for all candidates."""
 
     def _plan_visualization(self, requirements: dict, baseline: dict) -> dict:
         """
-        Determine visualization configuration from user requirements.
-
-        Extracts visualization intent from prompt:
-        - "show temperature" → temperature slice plot
-        - "visualize flame structure" → Temp + species slices
-        - "plot velocity field" → velocity magnitude slice
-        - "compare different timesteps" → timesteps = 'all'
-
-        Args:
-            requirements: User requirements dict
-            baseline: Selected baseline case
-
-        Returns
-        -------
-            Visualization configuration dict
+        Determine semantic visualization intent from user requirements.
         """
+        del baseline
+
+        from src.services.viz_param_extractor import extract_viz_params_from_prompt
+
+        prompt = str(requirements.get("user_prompt", ""))
+        semantic_tokens, extracted_config = extract_viz_params_from_prompt(prompt)
+
         vis_config = {
             'enabled': True,
             'backend': 'yt',  # Phase 4: yt-only
             'plots': [],
-            'timesteps': 'latest',
+            'timesteps': str(extracted_config.get("timesteps", "latest")),
             'format': 'png',
-            'container_mode': self.config.environment in ['perlmutter', 'mcp']
+            'container_mode': self.config.environment in ['perlmutter', 'mcp'],
+            'requested_semantic_tokens': semantic_tokens,
+            'visualization_config': extracted_config,
         }
-
-        prompt = requirements.get('user_prompt', '').lower()
-
-        # Temperature (common for combustion)
-        if any(kw in prompt for kw in ['temperature', 'temp', 'flame', 'heat']):
-            vis_config['plots'].append({
-                'type': 'slice',
-                'field': 'Temp',
-                'axis': 'z',
-                'colormap': 'hot'
-            })
-
-        # Density
-        if 'density' in prompt or 'rho' in prompt:
-            vis_config['plots'].append({
-                'type': 'slice',
-                'field': 'density',
-                'axis': 'z',
-                'colormap': 'viridis'
-            })
-
-        # Velocity
-        if any(kw in prompt for kw in ['velocity', 'flow', 'speed']):
-            vis_config['plots'].append({
-                'type': 'slice',
-                'field': 'velocity_magnitude',
-                'axis': 'z',
-                'colormap': 'plasma'
-            })
-
-        # Species (if reactions enabled)
-        solver_name = (
-            baseline.get('code_name')
-            or baseline.get('code')
-            or baseline.get('metadata', {}).get('code')
-            or requirements.get('solver')
-        )
-        solver_config = self.code_configs.get(solver_name) if solver_name else None
-        reaction_flag_keys = get_reaction_flag_keys(solver_name) if solver_name else []
-        inputs_content = baseline.get('metadata', {}).get('inputs_content', {})
-        reactions_enabled = False
-        for flag_key in reaction_flag_keys:
-            if flag_key in inputs_content:
-                reactions_enabled = str(inputs_content.get(flag_key)) == "1"
-                break
-
-        if not reactions_enabled and solver_config:
-            section_key = solver_config.code_name.lower()
-            section = baseline.get(section_key, {})
-            if isinstance(section, dict):
-                reactions_enabled = str(section.get("use_reactions", "0")) == "1"
-
-        if reactions_enabled:
-            fuel = requirements.get('fuel', 'CH4')
-            if 'species' in prompt or fuel.lower() in prompt:
-                vis_config['plots'].append({
-                    'type': 'slice',
-                    'field': f'Y({fuel})',
-                    'axis': 'z',
-                    'colormap': 'RdYlBu_r'
-                })
-
-        # Profile plots
-        if 'profile' in prompt or '1d' in prompt:
-            field = 'Temp'  # Default
-            if 'density' in prompt:
-                field = 'density'
-
-            vis_config['plots'].append({
-                'type': 'profile',
-                'field': field,
-                'direction': 'x'
-            })
-
-        # All timesteps (for movies/comparisons)
-        if any(kw in prompt for kw in ['movie', 'animation', 'evolution', 'all timesteps']):
-            vis_config['timesteps'] = 'all'
-
-        # If no plots specified, add default temperature
-        if not vis_config['plots']:
-            vis_config['plots'].append({
-                'type': 'slice',
-                'field': 'Temp',
-                'axis': 'z',
-                'colormap': 'hot'
-            })
-
         return vis_config
 
     def _plan_analysis(self, requirements: dict) -> dict:

@@ -22,6 +22,7 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph
 
 from src.config import AMReXAgentConfig, load_config
+from src.first_run import apply_interactive_fixes, run_startup_readiness_checks
 from src.models import GraphState
 from src.nodes import (
     analysis_node,  # Phase 4
@@ -36,6 +37,8 @@ from src.router_func import (
     route_after_reviewer,
     route_after_runner,  # Phase 4
 )
+from src.nodes.execution_intent_node import build_execution_intent, execution_intent_node
+from src.nodes.visualization_intent_node import build_visualization_intent
 from src.services.viz_param_extractor import extract_viz_params_from_prompt
 from src.utils.job_status import normalize_job_status
 
@@ -735,6 +738,121 @@ def _load_benchmark_context(path: str | None) -> dict[str, Any] | None:
     return data
 
 
+def _is_tty_session() -> bool:
+    stdin_tty = bool(getattr(sys.stdin, "isatty", lambda: False)())
+    stdout_tty = bool(getattr(sys.stdout, "isatty", lambda: False)())
+    return stdin_tty and stdout_tty
+
+
+def _log_preflight_issues(issues: list[dict[str, Any]]) -> None:
+    if not issues:
+        return
+    logger.error("Startup readiness preflight found unresolved issues:")
+    for issue in issues:
+        code = issue.get("code", "UNKNOWN")
+        severity = str(issue.get("severity", "unknown")).upper()
+        action = issue.get("suggested_action", "No suggested action provided.")
+        logger.error("  [%s] %s: %s", code, severity, action)
+
+
+def _has_blocking_issues(issues: list[dict[str, Any]]) -> bool:
+    return any(str(issue.get("severity", "")).lower() == "error" for issue in issues)
+
+
+def _run_startup_preflight(config: AMReXAgentConfig) -> None:
+    raw_repo_root = getattr(config, "amrex_agent_root", None)
+    if isinstance(raw_repo_root, Path):
+        repo_root = raw_repo_root
+    elif isinstance(raw_repo_root, (str, os.PathLike)):
+        repo_root = Path(raw_repo_root)
+    else:
+        repo_root = Path.cwd()
+    is_tty = _is_tty_session()
+    readiness_result = run_startup_readiness_checks(
+        repo_root=repo_root,
+        config=config,
+        is_tty=is_tty,
+        allow_clone_missing=is_tty,
+        erf_repo_path=getattr(config, "erf_repo_path", None),
+    )
+    waived_issue_codes: set[str] = set()
+
+    def _apply_resolved_repo_paths(result: dict[str, Any]) -> None:
+        resolved_repo_paths = result.get("resolved_repo_paths") or {}
+        if not isinstance(resolved_repo_paths, dict):
+            return
+        erf_path = resolved_repo_paths.get("erf")
+        if erf_path:
+            setattr(config, "erf_repo_path", Path(erf_path))
+
+    if (
+        is_tty
+        and isinstance(readiness_result, dict)
+        and readiness_result.get("mode") == "interactive"
+        and readiness_result.get("issues")
+    ):
+        readiness_result = apply_interactive_fixes(
+            repo_root=repo_root,
+            config=config,
+            issues=readiness_result.get("issues") or [],
+        )
+        waived_issue_codes.update(str(code) for code in (readiness_result.get("waived_issue_codes") or []))
+        _apply_resolved_repo_paths(readiness_result)
+
+        unresolved_after_interactive = list(readiness_result.get("unresolved") or [])
+        if unresolved_after_interactive:
+            unresolved_codes = {
+                str(issue.get("code") or "").strip()
+                for issue in unresolved_after_interactive
+                if isinstance(issue, dict)
+            }
+            attempted_actions = list(readiness_result.get("attempted_actions") or [])
+            attempted_rebuild = any("rebuild" in str(action) for action in attempted_actions)
+            if attempted_rebuild and "ERF_COMMIT_MISMATCH" in unresolved_codes:
+                logger.warning(
+                    "Skipping immediate second interactive remediation pass after rebuild failure."
+                )
+                unresolved = unresolved_after_interactive
+                readiness_result.setdefault("issues", unresolved)
+                readiness_result["exit_code"] = 1
+                _log_preflight_issues(unresolved)
+                raise ValueError("Startup readiness preflight failed. Resolve blocking issues and retry.")
+
+        # Re-run checks immediately so post-selection commit mismatch and other
+        # follow-on gates are evaluated in the same preflight session.
+        followup_result = run_startup_readiness_checks(
+            repo_root=repo_root,
+            config=config,
+            is_tty=is_tty,
+            allow_clone_missing=False,
+            erf_repo_path=getattr(config, "erf_repo_path", None),
+            ignore_issue_codes=sorted(waived_issue_codes),
+        )
+        if followup_result.get("mode") == "interactive" and followup_result.get("issues"):
+            followup_result = apply_interactive_fixes(
+                repo_root=repo_root,
+                config=config,
+                issues=followup_result.get("issues") or [],
+            )
+            waived_issue_codes.update(str(code) for code in (followup_result.get("waived_issue_codes") or []))
+            _apply_resolved_repo_paths(followup_result)
+        readiness_result = followup_result
+
+    unresolved = list(readiness_result.get("unresolved") or readiness_result.get("issues") or [])
+    exit_code = int(readiness_result.get("exit_code") or 0)
+    if not unresolved and exit_code == 0:
+        return
+
+    _log_preflight_issues(unresolved)
+    if _has_blocking_issues(unresolved) or exit_code != 0:
+        if not is_tty:
+            logger.error(
+                "Interactive remediation is disabled in non-TTY mode. Re-run from a terminal "
+                "without output redirection to enable interactive fixes."
+            )
+        raise ValueError("Startup readiness preflight failed. Resolve blocking issues and retry.")
+
+
 def _resolve_metrics_workflow_id(
     result: dict[str, Any],
     benchmark_context: dict[str, Any] | None,
@@ -906,6 +1024,7 @@ def main(args: list[str] | None = None) -> None:
         apply_privacy_log_filter(config)
 
         _warn_if_schema_missing(config, getattr(parsed_args, "baseline_override", None))
+        _run_startup_preflight(config)
 
         # Disable schema validator temporarily (modifications format issue)
         # config.disabled_validators = ["SchemaSyntaxValidator"]  # Re-enabled for parameter resolution
@@ -1130,6 +1249,19 @@ def initialize_state(
         raise ValueError("User requirement prompt cannot be empty")
 
     requested_plot_vars, visualization_config = extract_viz_params_from_prompt(prompt_content)
+    visualization_intent = build_visualization_intent(
+        prompt=prompt_content,
+        solver_name="",
+        repo_root=None,
+        requested_plot_vars=requested_plot_vars,
+        visualization_config=visualization_config,
+        prior_intent=None,
+    ).model_dump()
+    execution_intent = build_execution_intent(
+        prompt=prompt_content,
+        resolved_config={},
+        prior_intent=None,
+    ).model_dump()
 
     # 3. Initialize state with defaults
     return {
@@ -1138,6 +1270,8 @@ def initialize_state(
         "config": config,
         "requested_plot_vars": requested_plot_vars,
         "visualization_config": visualization_config,
+        "visualization_intent": visualization_intent,
+        "execution_intent": execution_intent,
         "paper_source": paper_source,
         "paper_input_type": paper_input_type,
         "paper_validator_enabled": paper_validator_enabled,
@@ -1179,6 +1313,7 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     workflow.add_node("architect", architect_node)
     workflow.add_node("reviewer", reviewer_node)
     workflow.add_node("input_writer", input_writer_node)
+    workflow.add_node("execution_intent", execution_intent_node)
     workflow.add_node("runner", runner_node)
     workflow.add_node("analysis", analysis_node)
     workflow.add_node("visualization", visualization_node)
@@ -1208,7 +1343,8 @@ def create_amrex_agent_graph(checkpointer: Any = None) -> StateGraph:
     )
 
     # 4. Linear execution path
-    workflow.add_edge("input_writer", "runner")
+    workflow.add_edge("input_writer", "execution_intent")
+    workflow.add_edge("execution_intent", "runner")
 
     # 4b. Conditional routing from runner (check for failures)
     workflow.add_conditional_edges(

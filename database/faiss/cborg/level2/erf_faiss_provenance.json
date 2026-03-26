@@ -1,12 +1,12 @@
 {
   "build_script": "build_all_indices.py",
-  "dependencies_commit": "1df48173da427f57a8201e157518afa7fd2e73ee",
+  "dependencies_commit": "5613ec3943a33d5f0b4f954e34c4e3ff5559a945",
   "embedding_dimension": null,
-  "embedding_model": "text-embedding-3-small",
+  "embedding_model": "lbl/nomic-embed-text",
   "embedding_provider": "cborg",
-  "generated_at": "2026-03-11T22:53:38.819203+00:00",
+  "generated_at": "2026-03-18T14:58:05.501994+00:00",
   "level": "2",
-  "repo_commit": "1df48173da427f57a8201e157518afa7fd2e73ee",
+  "repo_commit": "5613ec3943a33d5f0b4f954e34c4e3ff5559a945",
   "solver": "erf",
   "version": "1"
 }

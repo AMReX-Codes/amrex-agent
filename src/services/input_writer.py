@@ -17,10 +17,10 @@ from src.services.files import AMReXInputsService
 from src.services.inputs_file_selector import InputsFileSelector
 from src.services.inputs_file_writer import InputsFileWriter
 from src.services.viz_param_extractor import (
-    PLOTFILE_VAR_PARAM,
-    PLOTFILE_VAR_PARAM_DEFAULT,
     canonicalize_requested_plot_vars,
-    get_plotfile_var_param,
+    get_plotfile_period_param,
+    get_plotfile_step_interval_param,
+    get_plot_var_param_candidates,
 )
 
 # Input Writer imports (Schema-Based Configuration System)
@@ -42,10 +42,8 @@ def _extract_param_value_from_inputs(inputs_text: str, param_name: str) -> str |
     return None
 
 
-def _all_known_plotfile_params() -> set[str]:
-    params = set(PLOTFILE_VAR_PARAM.values())
-    params.add(PLOTFILE_VAR_PARAM_DEFAULT)
-    return params
+def _all_known_plotfile_params(code_name: str) -> set[str]:
+    return set(get_plot_var_param_candidates(code_name))
 
 
 def _resolve_plotfile_vars(
@@ -60,14 +58,16 @@ def _resolve_plotfile_vars(
     Priority 2: requested empty, preserve baseline param value for this solver.
     Priority 3: requested empty, baseline missing param -> write nothing.
     """
-    param_name = get_plotfile_var_param(code_name)
+    param_candidates = get_plot_var_param_candidates(code_name)
+    primary_param = param_candidates[0]
 
     if requested:
-        return param_name, " ".join(requested)
+        return primary_param, " ".join(requested)
 
-    baseline_value = _extract_param_value_from_inputs(baseline_inputs_content, param_name)
-    if baseline_value:
-        return param_name, baseline_value
+    for param_name in param_candidates:
+        baseline_value = _extract_param_value_from_inputs(baseline_inputs_content, param_name)
+        if baseline_value:
+            return param_name, baseline_value
 
     return None
 
@@ -75,13 +75,14 @@ def _resolve_plotfile_vars(
 def apply_plotfile_vars_to_inputs_text(
     inputs_text: str,
     plotfile_setting: tuple[str, str] | None,
+    code_name: str | None = None,
 ) -> str:
     """
     Apply plotfile variable line update to inputs text.
 
     If plotfile_setting is None, remove known plotfile var lines.
     """
-    known_params = _all_known_plotfile_params()
+    known_params = _all_known_plotfile_params(code_name or "")
     kept_lines: list[str] = []
     for line in inputs_text.splitlines():
         stripped = line.strip()
@@ -101,6 +102,88 @@ def apply_plotfile_vars_to_inputs_text(
     if inputs_text.endswith("\n"):
         output += "\n"
     return output
+
+
+def upsert_inputs_param(inputs_text: str, param_name: str, value: str) -> str:
+    """
+    Upsert a single inputs parameter line while preserving unrelated formatting.
+    """
+    lines = inputs_text.splitlines()
+    output_lines: list[str] = []
+    replaced = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and "=" in line:
+            lhs = line.split("=", maxsplit=1)[0].strip()
+            if lhs == param_name:
+                if not replaced:
+                    output_lines.append(f"{param_name} = {value}")
+                    replaced = True
+                continue
+        output_lines.append(line)
+
+    if not replaced:
+        output_lines.append(f"{param_name} = {value}")
+
+    output = "\n".join(output_lines)
+    if inputs_text.endswith("\n"):
+        output += "\n"
+    return output
+
+
+def _resolve_plotfile_period_settings(
+    visualization_config: dict | None,
+    code_name: str,
+) -> list[tuple[str, str]]:
+    """
+    Resolve solver-aware plot cadence settings from extracted visualization intent.
+    """
+    if not isinstance(visualization_config, dict):
+        return []
+
+    settings: list[tuple[str, str]] = []
+    period_param = get_plotfile_period_param(code_name)
+    step_interval_param = get_plotfile_step_interval_param(code_name)
+
+    cadence_solver_time = visualization_config.get("cadence_solver_time")
+    if cadence_solver_time is not None:
+        try:
+            cadence_value = float(cadence_solver_time)
+        except (TypeError, ValueError):
+            cadence_value = 0.0
+        if cadence_value > 0:
+            cadence_str = str(int(cadence_value)) if cadence_value.is_integer() else str(cadence_value)
+            if period_param:
+                settings.append((period_param, cadence_str))
+            if step_interval_param:
+                settings.append((step_interval_param, "-1"))
+            return settings
+
+    cadence_solver_steps = visualization_config.get("cadence_solver_steps")
+    if cadence_solver_steps is not None:
+        try:
+            step_value = int(round(float(cadence_solver_steps)))
+        except (TypeError, ValueError):
+            step_value = 0
+        if step_value > 0 and step_interval_param:
+            settings.append((step_interval_param, str(step_value)))
+            return settings
+
+    # Backward compatibility for existing payloads still using raw seconds.
+    seconds = visualization_config.get("plot_interval_seconds")
+    if seconds is not None:
+        try:
+            cadence_value = float(seconds)
+        except (TypeError, ValueError):
+            cadence_value = 0.0
+        if cadence_value > 0:
+            cadence_str = str(int(cadence_value)) if cadence_value.is_integer() else str(cadence_value)
+            if period_param:
+                settings.append((period_param, cadence_str))
+            if step_interval_param:
+                settings.append((step_interval_param, "-1"))
+
+    return settings
 
 class InputWriterService:
     """Applies architect's plan to generate final configuration.
@@ -223,7 +306,8 @@ class InputWriterService:
                    reasoning: str = "",
                    user_prompt: str = "",
                    output_dir: Path | None = None,
-                   requested_plot_vars: list[str] | None = None) -> dict:
+                   requested_plot_vars: list[str] | None = None,
+                   visualization_config: dict | None = None) -> dict:
         """
         Apply execution plan using Input Writer pipeline.
 
@@ -276,9 +360,6 @@ class InputWriterService:
 
         # Ensure output directory exists
         output_dir = Path(output_dir)
-        from src.utils.write_policy import ensure_write_allowed
-
-        ensure_write_allowed(output_dir, self.config, purpose="input_writer.apply_plan")
         output_dir.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -396,8 +477,7 @@ class InputWriterService:
                                 strategy=strategy,
                                 excluded_files=[],
                                 available_files=inputs_candidates,
-                                config=self.config,
-                                user_prompt=user_prompt,
+                                config=self.config
                             )
                             if selected:
                                 selected_inputs_path = str(selected)
@@ -449,6 +529,10 @@ class InputWriterService:
                 baseline_inputs_content=baseline_text,
                 code_name=code_name,
             )
+            cadence_settings = _resolve_plotfile_period_settings(
+                visualization_config=visualization_config,
+                code_name=code_name,
+            )
 
             if not modifications and baseline_text and selected_inputs_path:
                 logger.info("[2/5] Skipping model hydration (no modifications)")
@@ -456,7 +540,10 @@ class InputWriterService:
                 output_text = apply_plotfile_vars_to_inputs_text(
                     baseline_text,
                     plotfile_setting,
+                    code_name=code_name,
                 )
+                for param_name, value in cadence_settings:
+                    output_text = upsert_inputs_param(output_text, param_name, value)
                 inputs_path.write_text(output_text)
                 logger.info(f"Wrote {len(output_text)} bytes to {inputs_path}")
 
@@ -508,7 +595,6 @@ class InputWriterService:
                     solver_config,
                     schema_dir,
                     repo_path,
-                    runtime_config=self.config,
                 )
                 logger.debug(f"Loading schema from: {schema_path}")
 
@@ -623,7 +709,10 @@ class InputWriterService:
             output_text = apply_plotfile_vars_to_inputs_text(
                 output_text,
                 plotfile_setting,
+                code_name=code_name,
             )
+            for param_name, value in cadence_settings:
+                output_text = upsert_inputs_param(output_text, param_name, value)
 
             # Write to file
             inputs_path = output_dir / "inputs"
@@ -822,8 +911,8 @@ class InputWriterService:
             templates_index = f"{code_lower}_input_templates"
 
             results = self.embeddings.retrieve_faiss(
-                search_query,
                 templates_index,
+                search_query,
                 topk=50
             )
 

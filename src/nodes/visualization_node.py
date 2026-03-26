@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from src.models import GraphState
+from src.nodes.visualization_intent_node import resolve_visualization_intent
 from src.services.visualization import VisualizationService
 from src.utils.gate import run_preconfirm_gate
 
@@ -41,23 +42,60 @@ def get_run_directory_and_analysis(state: GraphState) -> tuple:
     tuple
         Tuple of (run_directory, analysis_report).
     """
-    # Try canonical path for run_directory
-    run_dir = None
+    workflow_history = state.get("workflow_history", [])
+    runner_run_dir = None
+    input_writer_run_dir = None
+
+    # Prefer latest runner entry (post-staging/execution path).
     try:
-        input_writer_entry = next(
-            e for e in state.get('workflow_history', [])
-            if e.get('node') == 'input_writer'
+        runner_entry = next(
+            e for e in reversed(workflow_history)
+            if e.get("node") == "runner"
         )
-        run_dir = input_writer_entry.get('details', {}).get('run_directory')
+        runner_run_dir = runner_entry.get("details", {}).get("run_directory")
+        if runner_run_dir:
+            logger.debug("Visualization run directory loaded from runner workflow_history entry")
     except StopIteration:
         pass
 
-    # Fallback to state
-    if not run_dir:
-        run_dir = state.get("run_directory")
+    # Fall back to latest input_writer entry (canonical initial run dir).
+    try:
+        input_writer_entry = next(
+            e for e in reversed(workflow_history)
+            if e.get("node") == "input_writer"
+        )
+        input_writer_run_dir = input_writer_entry.get("details", {}).get("run_directory")
+    except StopIteration:
+        pass
 
-    # Get analysis report (can be in state or as fallback from workflow_history)
+    if runner_run_dir:
+        run_dir = runner_run_dir
+    elif input_writer_run_dir:
+        run_dir = input_writer_run_dir
+        logger.debug("Visualization run directory loaded from input_writer workflow_history entry")
+    else:
+        run_dir = state.get("run_directory")
+        if run_dir:
+            logger.debug("Visualization run directory loaded from state fallback")
+
+    if runner_run_dir and input_writer_run_dir and runner_run_dir != input_writer_run_dir:
+        logger.warning(
+            "Visualization run directory divergence: runner=%s input_writer=%s; using runner path",
+            runner_run_dir,
+            input_writer_run_dir,
+        )
+
+    # Get analysis report from state, then workflow history if missing.
     analysis_report = state.get("analysis_report", {})
+    if not analysis_report:
+        try:
+            analysis_entry = next(
+                e for e in reversed(workflow_history)
+                if e.get("node") == "analysis"
+            )
+            analysis_report = analysis_entry.get("details", {}).get("report", {}) or {}
+        except StopIteration:
+            analysis_report = {}
 
     return run_dir, analysis_report
 
@@ -294,6 +332,7 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
         or plan.get("inputs_file_path")
         or plan.get("baseline_inputs_path")
     )
+    vis_intent = resolve_visualization_intent(state)
     vis_config = _build_vis_config(
         plan=plan,
         analysis_report=analysis_report,
@@ -302,8 +341,20 @@ def visualization_node(state: GraphState) -> dict[str, Any]:
         prompt=state.get("prompt", ""),
         solver_name=solver_name,
         inputs_file_path=inputs_file_path,
-        requested_plot_vars=state.get("requested_plot_vars", []) or [],
+        requested_plot_vars=vis_intent.get("requested_fields", []) or [],
+        prompt_visualization_config=vis_intent.get("visualization_config", {}) or {},
     )
+
+    if (
+        str(getattr(config, "environment", "local")).lower() != "local"
+        and str(vis_config.get("timesteps", "latest")).lower() == "all"
+    ):
+        logger.info(
+            "Requested visualization over all plotfiles, but remote stage-out currently "
+            "retrieves only the latest plotfile; using latest."
+        )
+        vis_config["timesteps"] = "latest"
+        vis_config["timesteps_adjusted_reason"] = "remote_stage_out_latest_only"
 
     logger.debug(f"  Will generate {len(vis_config.get('plots', []))} plot(s):")
     for plot_cfg in vis_config.get('plots', []):
@@ -419,6 +470,7 @@ def _build_vis_config(
     solver_name: str = "",
     inputs_file_path: str | None = None,
     requested_plot_vars: list[str] | None = None,
+    prompt_visualization_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build visualization configuration from plan and analysis signals.
@@ -451,6 +503,11 @@ def _build_vis_config(
         vis_config = {'plots': []}
     if not isinstance(vis_config.get("plots"), list):
         vis_config["plots"] = []
+
+    prompt_vis = prompt_visualization_config if isinstance(prompt_visualization_config, dict) else {}
+    prompt_timestep_scope = str(prompt_vis.get("timesteps", "")).strip().lower()
+    if prompt_timestep_scope in {"all", "latest"}:
+        vis_config["timesteps"] = prompt_timestep_scope
 
     # Normalize plan-provided entries so defaults are deterministic.
     plan_plots: list[dict[str, Any]] = []

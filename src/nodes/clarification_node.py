@@ -6,11 +6,11 @@ from typing import Any
 
 from src.models import GraphState
 from src.models.clarification_schemas import ClarificationQuestion, ClarificationRecord
+from src.services.viz_param_extractor import get_plot_var_param_candidates
 
 
 REQUIRED_FIELDS = ("n_cell", "max_level", "stop_time", "max_step")
 RESOURCE_FIELDS = ("node_count", "time_limit", "cluster")
-PLOTFILE_VAR_KEYS = ("amr.plot_vars", "peleLM.derive_plot_vars", "plot_vars")
 MAX_CLARIFICATION_TURNS = 3
 
 
@@ -261,8 +261,41 @@ def _check_level_4_visualization(
     prompt: str,
     requested_plot_vars: Any,
 ) -> ClarificationQuestion | None:
-    del state, locked_fields, prompt
-    if requested_plot_vars == [] and not _has_plotfile_var(resolved):
+    del locked_fields, prompt
+    mapping_candidates = state.get("visualization_mapping_candidates")
+    mapping_unresolved = state.get("visualization_mapping_unresolved")
+    if isinstance(mapping_candidates, dict) and mapping_candidates:
+        token = next(iter(mapping_candidates.keys()))
+        entries = mapping_candidates.get(token, [])
+        names: list[str] = []
+        if isinstance(entries, list):
+            for entry in entries:
+                if isinstance(entry, dict):
+                    name = str(entry.get("name", "")).strip()
+                    if name:
+                        names.append(name)
+        if names:
+            return ClarificationQuestion(
+                field_name="requested_plot_vars",
+                question_text=f"Which field should represent '{token}' in visualization output?",
+                decision_level=4,
+                fallback_tier="amrex_generic",
+                context={
+                    "reason": "visualization_mapping_ambiguity",
+                    "token": token,
+                    "candidates": names,
+                },
+            )
+    if isinstance(mapping_unresolved, list) and mapping_unresolved:
+        token = str(mapping_unresolved[0]).strip()
+        return ClarificationQuestion(
+            field_name="requested_plot_vars",
+            question_text=f"No solver field matched '{token}'. Which plot variable should be used?",
+            decision_level=4,
+            fallback_tier="amrex_generic",
+            context={"reason": "visualization_mapping_unresolved", "token": token, "candidates": []},
+        )
+    if requested_plot_vars == [] and not _has_plotfile_var(resolved, state):
         return ClarificationQuestion(
             field_name="plot_vars",
             question_text="Which variables should be written to plotfiles for visualization?",
@@ -386,7 +419,7 @@ def _base_context(
         "missing_fields": missing_fields,
         "ambiguous_fields": [],
         "requested_plot_vars_empty": requested_plot_vars == [],
-        "missing_plotfile_vars": requested_plot_vars == [] and not _has_plotfile_var(resolved),
+        "missing_plotfile_vars": requested_plot_vars == [] and not _has_plotfile_var(resolved, None),
     }
 
 
@@ -406,8 +439,12 @@ def _fallback_tier_for_field(field: str) -> str:
     return "free_text"
 
 
-def _has_plotfile_var(resolved: dict[str, Any]) -> bool:
-    for key in PLOTFILE_VAR_KEYS:
+def _has_plotfile_var(resolved: dict[str, Any], state: GraphState | None) -> bool:
+    solver = ""
+    if isinstance(state, dict):
+        solver = str(state.get("selected_solver") or "").strip()
+    keys = get_plot_var_param_candidates(solver) + ["plot_vars"]
+    for key in keys:
         if _has_value(resolved.get(key)):
             return True
     return False

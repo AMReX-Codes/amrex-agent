@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -29,6 +30,16 @@ PRD_PATH = Path("docs/PRD/PRD_v2605.md")
 def _read_prd_or_skip() -> str:
     if not PRD_PATH.exists():
         pytest.skip(f"PRD document not found: {PRD_PATH}")
+
+    tracked = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", str(PRD_PATH)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if tracked.returncode != 0:
+        pytest.skip(f"PRD document is not tracked in git: {PRD_PATH}")
+
     return PRD_PATH.read_text(encoding="utf-8")
 
 

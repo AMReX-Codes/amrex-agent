@@ -176,3 +176,10 @@ If `session_id` is provided on calls via `src/academy_mcp_agent.py`, merged tool
 ```bash
 pytest tests/unit/test_mcp_tools.py
 ```
+
+## Runtime intent notes
+
+- Runtime intent routing is documented in `docs/intent_runtime_routing.md`.
+- Prompt-specified runtime settings remain subject to critical-tool gating.
+- Noninteractive payloads do not gain extra permissions; approval still requires
+  an approval token or trusted approval source.

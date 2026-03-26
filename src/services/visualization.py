@@ -2,10 +2,7 @@
 VisualizationService - Multi-backend AMReX plotfile visualization.
 
 Purpose: Generate visualizations from AMReX plotfiles
-Backends: AMReX native tools (preferred), pyamrex (optional), yt-project (fallback)
-
-Phase 4: yt-only
-Phase 5: Multi-backend with AMReX tools priority
+Backends: yt-project (default), pyamrex (optional), AMReX native tools (opt-in)
 
 Based on: Plan at /home/jmsexton/.claude/plans/dynamic-foraging-pond.md
 """
@@ -22,10 +19,8 @@ class VisualizationService:
     """Multi-backend AMReX plotfile visualization.
 
     Features:
-    - Auto-selects best available backend:
-      1. AMReX Tools (fextract, fextrema, fsnapshot)
-      2. PyAMReX (Python bindings) - optional
-      3. yt-project (fallback)
+    - Selects backend from config.visualization_backend.
+    - Defaults to yt to avoid fsnapshot/toolchain coupling.
     - Container-aware two-stage architecture (with yt backend)
     - Auto-detect available fields
     - Standard plots (Temp, density, species)
@@ -45,7 +40,7 @@ class VisualizationService:
         self.backend = self._select_backend()
 
     def _select_backend(self):
-        """Auto-select best available backend."""
+        """Select backend honoring config.visualization_backend."""
         from .amrex_tools_backend import AMReXToolsBackend
         from .yt_backend import YtBackend
 
@@ -56,23 +51,33 @@ class VisualizationService:
         except ImportError:
             has_pyamrex = False
 
-        # Priority order
-        backends = [
-            ('amrex_tools', AMReXToolsBackend),  # Priority 1: Native C++ tools
-        ]
+        requested_backend = str(getattr(self.config, "visualization_backend", "yt")).strip().lower()
+        if requested_backend in {"", "auto"}:
+            requested_backend = "yt"
 
+        backend_map: dict[str, type] = {
+            "yt": YtBackend,
+            "amrex_tools": AMReXToolsBackend,
+        }
         if has_pyamrex:
-            backends.append(('pyamrex', PyAMReXBackend))  # Priority 2: Python bindings
+            backend_map["pyamrex"] = PyAMReXBackend
 
-        backends.append(('yt', YtBackend))  # Priority 3: Fallback
+        backend_class = backend_map.get(requested_backend)
+        if backend_class is None:
+            valid = sorted(backend_map.keys())
+            raise RuntimeError(
+                f"Unknown visualization backend '{requested_backend}'. "
+                f"Expected one of: {', '.join(valid)}"
+            )
 
-        for name, backend_class in backends:
-            backend = backend_class(self.config)
-            if backend.available():
-                logger.debug(f" Selected visualization backend: {name}")
-                return backend
+        backend = backend_class(self.config)
+        if not backend.available():
+            raise RuntimeError(
+                f"Visualization backend '{requested_backend}' is not available in this environment"
+            )
 
-        raise RuntimeError("No visualization backend available")
+        logger.debug(f" Selected visualization backend: {requested_backend}")
+        return backend
 
     def find_plotfiles(self, run_dir: Path) -> list[Path]:
         """
@@ -175,11 +180,13 @@ class VisualizationService:
             logger.warning("[WARN] No plotfiles found")
             return []
 
-        # Use latest plotfile
-        latest = plotfiles[-1]
+        timestep_mode = "latest"
+        if isinstance(vis_config, dict):
+            timestep_mode = str(vis_config.get("timesteps", "latest")).strip().lower() or "latest"
+        target_plotfiles = plotfiles if timestep_mode == "all" else [plotfiles[-1]]
 
         # Get available fields
-        fields = self.backend.get_field_list(latest)
+        fields = self.backend.get_field_list(target_plotfiles[-1])
         logger.debug("available fields (%d): %s", len(fields), fields)
 
         # Determine which fields to plot
@@ -199,33 +206,37 @@ class VisualizationService:
         # Create plots
         images = []
         logger.debug("plots to render (%d): %s", len(plots), plots)
-        for plot_cfg in plots:
-            try:
-                if plot_cfg.get('type') != 'slice':
-                    logger.debug(f"  Skipping unsupported plot type: {plot_cfg.get('type')}")
-                    continue
-                field = plot_cfg.get('field')
-                axis = plot_cfg.get('axis', 'z')
-                colormap = plot_cfg.get('colormap', 'viridis')
-                if not field:
-                    logger.debug("  Skipping plot with missing field")
-                    continue
+        for plotfile in target_plotfiles:
+            for plot_cfg in plots:
+                try:
+                    if plot_cfg.get('type') != 'slice':
+                        logger.debug(f"  Skipping unsupported plot type: {plot_cfg.get('type')}")
+                        continue
+                    field = plot_cfg.get('field')
+                    axis = plot_cfg.get('axis', 'z')
+                    colormap = plot_cfg.get('colormap', 'viridis')
+                    if not field:
+                        logger.debug("  Skipping plot with missing field")
+                        continue
 
-                output_path = output_dir / f"{field}_slice.png"
+                    if len(target_plotfiles) > 1:
+                        output_path = output_dir / f"{plotfile.name}_{field}_slice.png"
+                    else:
+                        output_path = output_dir / f"{field}_slice.png"
 
-                self.backend.create_slice_plot(
-                    plotfile=latest,
-                    field=field,
-                    axis=axis,
-                    output_path=output_path,
-                    colormap=colormap
-                )
+                    self.backend.create_slice_plot(
+                        plotfile=plotfile,
+                        field=field,
+                        axis=axis,
+                        output_path=output_path,
+                        colormap=colormap
+                    )
 
-                images.append(output_path)
-                logger.debug(f"  Created {field} slice")
+                    images.append(output_path)
+                    logger.debug(f"  Created {plotfile.name}: {field} slice")
 
-            except Exception as e:
-                logger.debug(f"  Failed to create {field} slice: {e}")
+                except Exception as e:
+                    logger.debug(f"  Failed to create {field} slice for {plotfile.name}: {e}")
 
         logger.debug(f"\n[ OK ] Generated {len(images)} visualizations")
 

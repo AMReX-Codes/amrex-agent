@@ -163,7 +163,49 @@ def test_erf_fallback_prefers_case_group_over_configured_regtests(tmp_path):
 
     exe, checked = runner._resolve_erf_executable_fallbacks(case_dir=case_dir, require_mpi=True, require_cuda=True)
     assert exe == abl_exe
-    assert checked[1] == abl_dir
+    assert abl_dir in checked
+
+
+def test_erf_fallback_prefers_cmake_build_exec_when_present(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "ABL" / "Scaling" / "Perlmutter"
+    case_dir.mkdir(parents=True)
+    cmake_exe = repo_root / "build" / "Exec" / "erf_exec"
+    cmake_exe.parent.mkdir(parents=True)
+    cmake_exe.write_text("binary")
+
+    gnumake_exe = repo_root / "Exec" / "ABL" / "ERF3d.gnu.TEST.MPI.CUDA.ex"
+    gnumake_exe.parent.mkdir(parents=True, exist_ok=True)
+    gnumake_exe.write_text("binary")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        erf_executable_path=None,
+        erf_repo_path=repo_root,
+        erf_central_build_dir=repo_root / "Exec" / "ABL",
+    )
+    runner = SuperfacilityRunner(config)
+
+    exe, _ = runner._resolve_erf_executable_fallbacks(case_dir=case_dir, require_mpi=True, require_cuda=True)
+    assert exe == cmake_exe
+
+
+def test_active_solver_prefers_case_repo_path_over_default_solver(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "CanonicalTests" / "SquallLine_2D"
+    case_dir.mkdir(parents=True)
+
+    config = SimpleNamespace(
+        default_solver="AMREX",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        erf_repo_path=repo_root,
+    )
+    runner = SuperfacilityRunner(config)
+
+    assert runner._active_solver_code(case_dir) == "ERF"
 
 
 def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):
@@ -173,7 +215,7 @@ def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):
     runner = SuperfacilityRunner(config)
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: None)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: False)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: False)
 
     with pytest.raises(RuntimeError, match="Compilation failed"):
         runner.find_or_compile_executable(case_dir=case_dir)
@@ -186,7 +228,7 @@ def test_non_erf_compiled_but_missing_executable_raises(tmp_path, monkeypatch):
     runner = SuperfacilityRunner(config)
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: None)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: True)
 
     with pytest.raises(RuntimeError, match="Compiled but no executable found"):
         runner.find_or_compile_executable(case_dir=case_dir)
@@ -247,7 +289,7 @@ def test_resolve_remote_executable_template_dir_find_success(tmp_path, monkeypat
     monkeypatch.setattr("src.services.run_superfacility.list_remote_entries", lambda *args, **kwargs: [])
     monkeypatch.setattr(
         "src.services.run_superfacility.find_remote_executable",
-        lambda remote_case_dir, system=None: f"{remote_case_dir}/ERF3d.gnu.TEST.MPI.CUDA.ex",
+        lambda remote_case_dir, system=None, **kwargs: f"{remote_case_dir}/ERF3d.gnu.TEST.MPI.CUDA.ex",
     )
     result = runner._resolve_remote_executable(case_dir=case_dir)
     assert str(result).endswith(".ex")
@@ -409,7 +451,7 @@ def test_find_or_compile_compiles_and_returns_exe(tmp_path, monkeypatch):
         return None if calls["count"] == 1 else compiled
 
     monkeypatch.setattr(runner, "_find_exe_in_dir", _find)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: True)
     assert Path(runner.find_or_compile_executable(case_dir=case_dir)) == compiled
 
 
@@ -467,7 +509,7 @@ def test_resolve_remote_executable_env_derived_path(tmp_path, monkeypatch):
     monkeypatch.setattr("src.services.run_superfacility.list_remote_entries", _list_remote)
     monkeypatch.setattr(
         "src.services.run_superfacility.find_remote_executable",
-        lambda remote_case_dir, system=None: f"{remote_case_dir}/solver.ex",
+        lambda remote_case_dir, system=None, **kwargs: f"{remote_case_dir}/solver.ex",
     )
 
     config = SimpleNamespace(
@@ -646,7 +688,7 @@ def test_find_or_compile_force_recompile_path(tmp_path, monkeypatch):
     exe.write_text("binary")
     config = SimpleNamespace(default_solver="PeleC", output_dir=tmp_path, superfacility_account="acct")
     runner = SuperfacilityRunner(config)
-    monkeypatch.setattr("src.services.run_superfacility.compile_amrex", lambda **kwargs: True)
+    monkeypatch.setattr("src.services.run_superfacility.compile_solver", lambda **kwargs: True)
     monkeypatch.setattr(runner, "_find_exe_in_dir", lambda *args, **kwargs: exe)
     assert Path(runner.find_or_compile_executable(case_dir=case_dir, force_recompile=True)) == exe
 
@@ -774,6 +816,55 @@ def test_submit_uses_resolved_remote_executable_when_template_enabled(tmp_path, 
     runner = SuperfacilityRunner(config)
     result = runner.submit(run_dir, dry_run=False, case_dir=tmp_path / "case")
     assert result["params"]["executable"] == "/remote/tmpl.ex"
+
+
+def test_submit_accepts_policy_named_local_executable_without_ex_suffix(tmp_path, monkeypatch):
+    run_dir = tmp_path / "run_sf_erf_exec"
+    run_dir.mkdir()
+    exe = run_dir / "erf_exec"
+    exe.write_text("binary")
+
+    monkeypatch.setattr("src.services.run_superfacility.generate_slurm_script", lambda **kwargs: "#!/bin/bash\n")
+    monkeypatch.setattr("src.config.detect_environment", lambda: "local")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        environment="local",
+        remote_executable_find=False,
+    )
+    runner = SuperfacilityRunner(config)
+    result = runner.submit(run_dir, dry_run=True, case_dir=tmp_path / "ERF" / "Exec" / "Case")
+    assert result["method"] == "dry_run"
+    assert Path(result["script_path"]).exists()
+
+
+def test_resolve_remote_executable_passes_policy_names_to_finder(tmp_path, monkeypatch):
+    case_dir = tmp_path / "ERF" / "Exec" / "Case"
+    case_dir.mkdir(parents=True)
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        repositories={"ERF": tmp_path / "ERF"},
+        remote_executable_template="/remote/{case_dir}",
+        remote_executable_find=True,
+    )
+    runner = SuperfacilityRunner(config)
+
+    captured = {}
+    monkeypatch.setattr("src.services.run_superfacility.list_remote_entries", lambda *args, **kwargs: [])
+
+    def _fake_find(**kwargs):
+        captured.update(kwargs)
+        return "/remote/Exec/Case/erf_exec"
+
+    monkeypatch.setattr("src.services.run_superfacility.find_remote_executable", _fake_find)
+    resolved = runner._resolve_remote_executable(case_dir=case_dir)
+    assert str(resolved).endswith("erf_exec")
+    assert captured.get("build_system_preference") == "cmake"
+    assert "erf_exec" in (captured.get("cmake_executable_names") or [])
 
 
 def test_submit_stage_load_sfapi_key_file_none(tmp_path, monkeypatch):

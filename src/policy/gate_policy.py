@@ -28,7 +28,8 @@ class GateDecision:
 
 def _has_explicit_approval(context: dict[str, Any]) -> bool:
     """Check request/session context for explicit gate approval."""
-    if context.get("gate_approved") is True:
+    approval_source = str(context.get("approval_source") or "").strip().lower()
+    if context.get("gate_approved") is True and approval_source in {"interactive", "ui", "human"}:
         return True
     token = context.get("approval_token")
     return isinstance(token, str) and bool(token.strip())

@@ -309,6 +309,22 @@ class TestDecisionLevels:
         updates = clarification_node(state)
         assert any(q["decision_level"] == 4 for q in _questions(updates))
 
+    def test_level_4_visualization_ambiguity_includes_candidates(self):
+        state = _base_state(
+            requested_plot_vars=[],
+            visualization_mapping_candidates={
+                "velocity": [
+                    {"name": "x_velocity", "aliases": ["velocity"]},
+                    {"name": "y_velocity", "aliases": ["velocity"]},
+                ]
+            },
+            visualization_mapping_unresolved=[],
+        )
+        updates = clarification_node(state)
+        q = next(q for q in _questions(updates) if q["decision_level"] == 4)
+        assert q["context"]["token"] == "velocity"
+        assert q["context"]["candidates"] == ["x_velocity", "y_velocity"]
+
     def test_level_5_optional_refinement(self):
         """
         Given: required fields present

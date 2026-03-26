@@ -172,6 +172,32 @@ CASE: <path>"""
 
     default_exec_pattern: ClassVar[str | None] = None
     """Glob pattern for default executable within default_exec_repo_path."""
+    build_system_preference: ClassVar[str] = "gnumake"
+    """Preferred build system for executable discovery (e.g., gnumake, cmake)."""
+    executable_search_path_templates: ClassVar[list[str]] = ["{central_build_dir}"]
+    """Ordered executable search templates used by runtime runner fallbacks."""
+    cmake_executable_names: ClassVar[list[str]] = []
+    """Executable filenames emitted by CMake workflows (e.g., erf_exec)."""
+    cmake_executable_ignores_accel_suffix: ClassVar[bool] = False
+    """If True, CMake executables are treated as feature-agnostic names."""
+    gnumake_executable_globs: ClassVar[list[str]] = ["*.ex"]
+    """Executable glob patterns emitted by GNUmake workflows."""
+    cmake_source_dir_template: ClassVar[str] = "{repo_root}"
+    """CMake source directory template for compile orchestration."""
+    cmake_build_dir_template: ClassVar[str] = "{repo_root}/build"
+    """CMake build directory template for compile orchestration."""
+    cmake_install_prefix_template: ClassVar[str | None] = None
+    """Optional CMake install prefix template."""
+    cmake_configure_args: ClassVar[list[str]] = []
+    """Additional args for `cmake -S ... -B ...`."""
+    cmake_build_args: ClassVar[list[str]] = []
+    """Additional args for `cmake --build ...`."""
+    cmake_install_args: ClassVar[list[str]] = []
+    """Additional args for `cmake --install ...`."""
+    gnumake_clean_targets: ClassVar[list[str]] = ["realclean"]
+    """GNUmake clean targets executed before build."""
+    gnumake_build_args: ClassVar[list[str]] = ["USE_MPI=TRUE", "DEBUG=FALSE"]
+    """GNUmake build flag defaults."""
 
     # === Solver Heuristics (Config-Driven) ===
     selection_keywords: ClassVar[list[str]] = []
@@ -2077,6 +2103,68 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         return None
 
     @classmethod
+    def get_build_system_preference(cls) -> str:
+        return str(getattr(cls, "build_system_preference", "gnumake")).strip().lower()
+
+    @classmethod
+    def get_executable_search_path_templates(cls) -> list[str]:
+        templates = getattr(cls, "executable_search_path_templates", [])
+        return [str(item) for item in templates]
+
+    @classmethod
+    def get_cmake_executable_names(cls) -> list[str]:
+        names = getattr(cls, "cmake_executable_names", [])
+        return [str(item) for item in names]
+
+    @classmethod
+    def cmake_ignores_accel_suffix(cls) -> bool:
+        return bool(getattr(cls, "cmake_executable_ignores_accel_suffix", False))
+
+    @classmethod
+    def get_gnumake_executable_globs(cls) -> list[str]:
+        globs = getattr(cls, "gnumake_executable_globs", [])
+        return [str(item) for item in globs] if globs else ["*.ex"]
+
+    @classmethod
+    def get_cmake_source_dir_template(cls) -> str:
+        return str(getattr(cls, "cmake_source_dir_template", "{repo_root}"))
+
+    @classmethod
+    def get_cmake_build_dir_template(cls) -> str:
+        return str(getattr(cls, "cmake_build_dir_template", "{repo_root}/build"))
+
+    @classmethod
+    def get_cmake_install_prefix_template(cls) -> str | None:
+        value = getattr(cls, "cmake_install_prefix_template", None)
+        return None if value is None else str(value)
+
+    @classmethod
+    def get_cmake_configure_args(cls) -> list[str]:
+        return [str(item) for item in getattr(cls, "cmake_configure_args", [])]
+
+    @classmethod
+    def get_cmake_build_args(cls) -> list[str]:
+        return [str(item) for item in getattr(cls, "cmake_build_args", [])]
+
+    @classmethod
+    def get_cmake_install_args(cls) -> list[str]:
+        return [str(item) for item in getattr(cls, "cmake_install_args", [])]
+
+    @classmethod
+    def get_gnumake_clean_targets(cls) -> list[str]:
+        targets = getattr(cls, "gnumake_clean_targets", None)
+        if targets is None:
+            return ["realclean"]
+        return [str(item) for item in targets] or ["realclean"]
+
+    @classmethod
+    def get_gnumake_build_args(cls) -> list[str]:
+        args = getattr(cls, "gnumake_build_args", None)
+        if args is None:
+            args = getattr(cls, "gnumake_flags", ["USE_MPI=TRUE", "DEBUG=FALSE"])
+        return [str(item) for item in args]
+
+    @classmethod
     def get_slurm_metadata(cls) -> dict[str, str]:
         """
         Return SLURM metadata defaults for this solver.
@@ -2296,6 +2384,68 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         return []
 
     @classmethod
+    def get_viz_tier1_intents(cls) -> dict[str, dict[str, Any]]:
+        """
+        Return canonical semantic visualization intents (Tier 1).
+        """
+        return {
+            "temperature": {"aliases": ["temperature", "temp", "thermal"]},
+            "velocity": {"aliases": ["velocity", "speed"]},
+            "vertical_velocity": {
+                "aliases": [
+                    "vertical velocity",
+                    "vertical_velocity",
+                    "w-velocity",
+                    "w velocity",
+                    "updraft",
+                    "downdraft",
+                ]
+            },
+            "pressure": {"aliases": ["pressure", "pres"]},
+            "density": {"aliases": ["density", "rho"]},
+            "vorticity": {"aliases": ["vorticity", "vort"]},
+            "cloud_water": {
+                "aliases": [
+                    "cloud water",
+                    "cloud_water",
+                    "liquid water",
+                    "cloud liquid",
+                    "qc",
+                ]
+            },
+        }
+
+    @classmethod
+    def build_viz_tier2_candidates(cls, repo_root: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+        """
+        Build solver candidates (Tier 2) from live source catalog.
+        """
+        catalog = cls.get_viz_variable_catalog(repo_root=repo_root)
+        if not catalog:
+            return {}
+
+        intents = cls.get_viz_tier1_intents()
+        candidates: dict[str, list[dict[str, Any]]] = {}
+        for token, spec in intents.items():
+            aliases = {token.lower()}
+            for alias in spec.get("aliases", []) or []:
+                aliases.add(str(alias).strip().lower())
+            token_candidates: list[dict[str, Any]] = []
+            for entry in catalog:
+                if not isinstance(entry, dict):
+                    continue
+                name = str(entry.get("name", "")).strip()
+                if not name:
+                    continue
+                entry_aliases = {name.lower()}
+                for alias in entry.get("aliases", []) or []:
+                    entry_aliases.add(str(alias).strip().lower())
+                if aliases.intersection(entry_aliases):
+                    token_candidates.append(dict(entry))
+            if token_candidates:
+                candidates[token] = token_candidates
+        return candidates
+
     def get_default_slice_axis(cls) -> str | None:
         """
         Return preferred default slice-normal axis for visualization.
@@ -2303,6 +2453,50 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         Subclasses can override to encode solver-specific plotting preference.
         """
         return None
+
+    @classmethod
+    def get_plotfile_var_param(cls) -> str:
+        """
+        Return solver-specific parameter key for plot variable selection.
+        """
+        return "amr.plot_vars"
+
+    @classmethod
+    def get_plot_var_param_candidates(cls) -> list[str]:
+        """
+        Return ordered plot-var ParmParse candidate keys (primary first).
+        """
+        return [cls.get_plotfile_var_param()]
+
+    @classmethod
+    def get_plotfile_period_param(cls) -> str | None:
+        """
+        Return solver-specific time-based plot cadence parameter, if supported.
+        """
+        return None
+
+    @classmethod
+    def get_plotfile_step_interval_param(cls) -> str | None:
+        """
+        Return solver-specific step-based plot interval parameter, if supported.
+        """
+        return None
+
+    @classmethod
+    def supports_physical_time_cadence(cls) -> bool:
+        """
+        Return whether solver time-based cadence can be interpreted from seconds.
+        """
+        return True
+
+    @classmethod
+    def convert_plot_cadence_prompt_seconds_to_solver_time(cls, seconds: float) -> float | None:
+        """
+        Convert prompt seconds into solver-time cadence units.
+
+        Default behavior assumes solver time is seconds (identity transform).
+        """
+        return float(seconds)
 
     @classmethod
     def _resource_bytes_per_cell(cls, config: dict[str, Any]) -> int:

@@ -50,7 +50,7 @@ def test_config_override_precedence() -> None:
     )
     case = matcher.match("canonical squall line")
     assert case is not None
-    assert case.relative_path.startswith("Exec/CanonicalFlows/")
+    assert case.relative_path.startswith(("Exec/CanonicalFlows/", "Exec/CanonicalTests/"))
 
 
 @pytest.mark.skip(reason="Known false-negative in reachability prompt synthesis; may be spurious work.")

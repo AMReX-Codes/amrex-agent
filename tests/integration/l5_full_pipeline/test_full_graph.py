@@ -251,6 +251,8 @@ class TestFullGraphExecution:
 
 @pytest.mark.integration_full
 @pytest.mark.slow
+@pytest.mark.requires_solver("PeleC")
+@pytest.mark.requires_repos("PeleC")
 class TestVisualizationParameterExtraction:
     """
     Visualization parameter extraction end-to-end.
@@ -271,14 +273,14 @@ class TestVisualizationParameterExtraction:
     ) -> SimulationPlan:
         return SimulationPlan(
             selected_solver="PeleC",
-            selected_case="PeleC/Exec/RegTests/PMF",
+            selected_case="Exec/RegTests/PMF",
             modifications=[],
             reasoning="Visualization extraction baseline test",
             baseline_confidence=0.9,
             prompt=prompt,
             baseline={
                 "code_name": "PeleC",
-                "repo_path": str(baseline_dir.parents[3]),
+                "repo_path": str(baseline_dir.parents[2]),
                 "case_path": "Exec/RegTests/PMF",
                 "local_path": str(baseline_dir),
             },
@@ -286,8 +288,25 @@ class TestVisualizationParameterExtraction:
         )
 
     def _make_baseline_dir(self, tmp_path: Path) -> Path:
+        repo_root = tmp_path / "PeleC"
         baseline = tmp_path / "PeleC" / "Exec" / "RegTests" / "PMF"
         baseline.mkdir(parents=True, exist_ok=True)
+        source_dir = repo_root / "Source"
+        source_dir.mkdir(parents=True, exist_ok=True)
+        (source_dir / "Setup.cpp").write_text(
+            "\n".join(
+                [
+                    "void setup() {",
+                    '  name[cnt] = "density";',
+                    '  name[cnt] = "Temp";',
+                    '  derive_lst.add("magvel");',
+                    '  derive_lst.add("magvort");',
+                    '  derive_lst.add("z_velocity");',
+                    "}",
+                    "",
+                ]
+            )
+        )
         (baseline / "AMReX.ex").write_text("#!/bin/bash\nexit 0\n")
         (baseline / "inputs").write_text(
             "\n".join(
@@ -307,7 +326,7 @@ class TestVisualizationParameterExtraction:
         config = AMReXAgentConfig()
         config.output_dir = tmp_path / "output"
         config.environment = "perlmutter"
-        config.repositories = {"PeleC": baseline_dir.parents[3]}
+        config.repositories = {"PeleC": baseline_dir.parents[2]}
         config.run_mode = "dry_run"
         config.dry_run = True
 
@@ -399,7 +418,7 @@ class TestVisualizationParameterExtraction:
             visualization={"quantities": ["temperature"]},
         )
         plot_vars = self._plot_vars(self._read_inputs_text(final_state))
-        assert "temperature" in plot_vars
+        assert "Temp" in plot_vars
 
     def test_multiple_quantities_all_in_plotfile_vars(
             self, tmp_path):
@@ -420,9 +439,9 @@ class TestVisualizationParameterExtraction:
             },
         )
         plot_vars = self._plot_vars(self._read_inputs_text(final_state))
-        assert "temperature" in plot_vars
-        assert "velocity" in plot_vars
-        assert "vorticity" in plot_vars
+        assert "Temp" in plot_vars
+        assert "magvel" in plot_vars
+        assert "magvort" in plot_vars
 
     def test_log_scale_in_prompt_sets_viz_metadata(
             self, tmp_path):
@@ -492,5 +511,99 @@ class TestVisualizationParameterExtraction:
             },
         )
         plot_vars = self._plot_vars(self._read_inputs_text(final_state))
-        assert "vertical_velocity" in plot_vars
-        assert "temperature" in plot_vars
+        assert "z_velocity" in plot_vars
+        assert "Temp" in plot_vars
+
+
+@pytest.mark.integration_full
+class TestVisualizationCatalogHardFail:
+    def test_missing_solver_catalog_hard_fails_before_inputs_write(self, tmp_path):
+        baseline = tmp_path / "PeleC" / "Exec" / "RegTests" / "PMF"
+        baseline.mkdir(parents=True, exist_ok=True)
+        (baseline / "inputs").write_text("amr.plot_vars = density pressure\n")
+        (baseline / "AMReX.ex").write_text("#!/bin/bash\nexit 0\n")
+
+        config = AMReXAgentConfig()
+        config.output_dir = tmp_path / "output"
+        config.environment = "perlmutter"
+        config.repositories = {"PeleC": baseline.parents[2]}
+        config.run_mode = "dry_run"
+        config.dry_run = True
+
+        class DummyEmbeddingService:
+            embeddings = None
+
+        class DummyRunner:
+            def __init__(self, _config):
+                pass
+
+            def setup_job(self, output_dir, case_dir, inputs_path=None):
+                return {"run_dir": output_dir, "executable": "AMReX.ex"}
+
+            def submit(self, run_directory, nodes=None, run_mode=None, dry_run=None, case_dir=None):
+                return {
+                    "job_id": "viz_catalog_fail_123",
+                    "method": "sbatch",
+                    "script_path": str(Path(run_directory) / "submit.sh"),
+                    "job_status": "completed",
+                }
+
+        with patch("src.services.embedding_service_factory.get_embedding_service", return_value=DummyEmbeddingService()), \
+             patch("src.nodes.architect_node.ArchitectService") as MockArch, \
+             patch("src.nodes.reviewer_node.ReviewerOrchestrator") as MockRev, \
+             patch("src.services.cases.AMReXCasesService", return_value=object()), \
+             patch("src.nodes.runner_node.SuperfacilityRunner", DummyRunner), \
+             patch("src.nodes.analysis_node.AnalysisService") as MockAnalysis:
+
+            MockArch.return_value.execute_planning.return_value = SimulationPlan(
+                selected_solver="PeleC",
+                selected_case="Exec/RegTests/PMF",
+                modifications=[],
+                reasoning="catalog hard-fail integration test",
+                baseline_confidence=0.9,
+                prompt="plot temperature",
+                baseline={
+                    "code_name": "PeleC",
+                    "repo_path": str(baseline.parents[2]),
+                    "case_path": "Exec/RegTests/PMF",
+                    "local_path": str(baseline),
+                },
+                visualization={"quantities": ["temperature"]},
+            )
+            MockRev.return_value.validate_plan.return_value = ValidationResult(
+                mode="proceed",
+                violations=[],
+                summary="ok",
+                available_schema_params=[],
+            )
+            MockAnalysis.return_value.analyze_simulation.return_value = {
+                "status": "success",
+                "total_steps": 1,
+                "final_time": 0.01,
+                "issues": [],
+                "warnings": [],
+                "completed": True,
+            }
+
+            final_state = run_agent(
+                user_requirement="Run PMF and plot temperature.",
+                config=config,
+            )
+
+        assert final_state.get("inputs_file_path") is None
+        errors_active = [str(err) for err in final_state.get("errors_active", [])]
+        assert any(
+            "Visualization mapping requires solver code-derived catalog" in err
+            for err in errors_active
+        )
+        input_writer_entries = [
+            entry
+            for entry in final_state.get("workflow_history", [])
+            if entry.get("node") == "input_writer"
+        ]
+        assert input_writer_entries
+        detail_errors = [str(err) for err in input_writer_entries[-1].get("details", {}).get("errors", [])]
+        assert any(
+            "Visualization mapping requires solver code-derived catalog" in err
+            for err in detail_errors
+        )
