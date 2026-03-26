@@ -48,6 +48,16 @@ def clarification_handler_node(state: dict[str, Any]) -> dict[str, Any]:
             "clarification_turns": turns + 1,
             "skip_further_clarification": False,
         }
+    if answered_by == "ai_agent" and not _is_allowed_candidate_response(
+        pending_record.get("question", {}),
+        response,
+    ):
+        return {
+            "clarification_history": history,
+            "clarification_needed": True,
+            "clarification_turns": turns + 1,
+            "skip_further_clarification": False,
+        }
 
     updated_record = _resolve_record(pending_record, response, answered_by)
     history[pending_index] = updated_record
@@ -175,6 +185,18 @@ def _merge_plot_vars(current: list[Any], resolved_value: str) -> list[str]:
         if cleaned and cleaned not in merged:
             merged.append(cleaned)
     return merged
+
+
+def _is_allowed_candidate_response(question: dict[str, Any], response: str) -> bool:
+    question_data = _question_to_dict(question)
+    context = question_data.get("context", {})
+    if not isinstance(context, dict):
+        return True
+    allowed = context.get("candidates")
+    if not isinstance(allowed, list) or not allowed:
+        return True
+    allowed_set = {str(v).strip() for v in allowed if str(v).strip()}
+    return str(response).strip() in allowed_set
 
 
 def _as_history(value: Any) -> list[dict[str, Any]]:

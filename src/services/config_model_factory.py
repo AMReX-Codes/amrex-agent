@@ -661,6 +661,20 @@ class ConfigModelFactory:
 
         if force_append or merge_strategy == "append":
             merged = ConfigModelFactory._flatten_values(values)
+            if param in {"amr.plot_vars", "erf.plot_vars_1", "peleLM.derive_plot_vars"}:
+                deduped: list[Any] = []
+                seen: set[str] = set()
+                for value in merged:
+                    if isinstance(value, str):
+                        tokens = [t.strip() for t in value.replace(",", " ").split() if t.strip()]
+                    else:
+                        tokens = [str(value).strip()]
+                    for token in tokens:
+                        if not token or token in seen:
+                            continue
+                        seen.add(token)
+                        deduped.append(token)
+                merged = deduped
             logger.debug(
                 f"[ConfigFactory] Appended {len(values)} values for array param {param}: {merged}"
             )

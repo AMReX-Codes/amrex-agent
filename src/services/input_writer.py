@@ -17,12 +17,10 @@ from src.services.files import AMReXInputsService
 from src.services.inputs_file_selector import InputsFileSelector
 from src.services.inputs_file_writer import InputsFileWriter
 from src.services.viz_param_extractor import (
-    PLOTFILE_VAR_PARAM,
-    PLOTFILE_VAR_PARAM_DEFAULT,
     canonicalize_requested_plot_vars,
     get_plotfile_period_param,
     get_plotfile_step_interval_param,
-    get_plotfile_var_param,
+    get_plot_var_param_candidates,
 )
 
 # Input Writer imports (Schema-Based Configuration System)
@@ -44,10 +42,8 @@ def _extract_param_value_from_inputs(inputs_text: str, param_name: str) -> str |
     return None
 
 
-def _all_known_plotfile_params() -> set[str]:
-    params = set(PLOTFILE_VAR_PARAM.values())
-    params.add(PLOTFILE_VAR_PARAM_DEFAULT)
-    return params
+def _all_known_plotfile_params(code_name: str) -> set[str]:
+    return set(get_plot_var_param_candidates(code_name))
 
 
 def _resolve_plotfile_vars(
@@ -62,14 +58,16 @@ def _resolve_plotfile_vars(
     Priority 2: requested empty, preserve baseline param value for this solver.
     Priority 3: requested empty, baseline missing param -> write nothing.
     """
-    param_name = get_plotfile_var_param(code_name)
+    param_candidates = get_plot_var_param_candidates(code_name)
+    primary_param = param_candidates[0]
 
     if requested:
-        return param_name, " ".join(requested)
+        return primary_param, " ".join(requested)
 
-    baseline_value = _extract_param_value_from_inputs(baseline_inputs_content, param_name)
-    if baseline_value:
-        return param_name, baseline_value
+    for param_name in param_candidates:
+        baseline_value = _extract_param_value_from_inputs(baseline_inputs_content, param_name)
+        if baseline_value:
+            return param_name, baseline_value
 
     return None
 
@@ -77,13 +75,14 @@ def _resolve_plotfile_vars(
 def apply_plotfile_vars_to_inputs_text(
     inputs_text: str,
     plotfile_setting: tuple[str, str] | None,
+    code_name: str | None = None,
 ) -> str:
     """
     Apply plotfile variable line update to inputs text.
 
     If plotfile_setting is None, remove known plotfile var lines.
     """
-    known_params = _all_known_plotfile_params()
+    known_params = _all_known_plotfile_params(code_name or "")
     kept_lines: list[str] = []
     for line in inputs_text.splitlines():
         stripped = line.strip()
@@ -541,6 +540,7 @@ class InputWriterService:
                 output_text = apply_plotfile_vars_to_inputs_text(
                     baseline_text,
                     plotfile_setting,
+                    code_name=code_name,
                 )
                 for param_name, value in cadence_settings:
                     output_text = upsert_inputs_param(output_text, param_name, value)
@@ -709,6 +709,7 @@ class InputWriterService:
             output_text = apply_plotfile_vars_to_inputs_text(
                 output_text,
                 plotfile_setting,
+                code_name=code_name,
             )
             for param_name, value in cadence_settings:
                 output_text = upsert_inputs_param(output_text, param_name, value)

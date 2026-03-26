@@ -4,6 +4,7 @@ from src.nodes.visualization_intent_node import (
     resolve_visualization_intent,
     visualization_intent_node,
 )
+from src.services.viz_param_extractor import VizMappingCatalogUnavailableError
 
 
 def test_visualization_intent_model_defaults():
@@ -27,6 +28,32 @@ def test_build_visualization_intent_from_prompt_cadence():
     assert model.cadence_solver_time == 120.0
     assert model.timestep_scope == "all"
     assert model.source == "prompt"
+
+
+def test_build_visualization_intent_hard_fails_when_solver_catalog_unavailable(monkeypatch):
+    class _MockConfig:
+        @classmethod
+        def get_viz_tier1_intents(cls):
+            return {"cloud_water": {"aliases": ["cloud water"]}}
+
+        @classmethod
+        def build_viz_tier2_candidates(cls, repo_root=None):
+            del cls, repo_root
+            return {}
+
+    monkeypatch.setattr(
+        "database.configs.registry.get_config_class",
+        lambda code_name: _MockConfig,
+    )
+
+    try:
+        build_visualization_intent(
+            prompt="show cloud water",
+            solver_name="ERF",
+        )
+    except VizMappingCatalogUnavailableError:
+        return
+    assert False, "expected hard failure when solver catalog is unavailable"
 
 
 def test_resolve_visualization_intent_uses_existing_typed_payload():
@@ -65,6 +92,46 @@ def test_visualization_intent_node_populates_state_and_legacy_mirror():
     assert updates["visualization_intent"]["visualization_config"]["cadence_solver_steps"] == 5
     assert updates["requested_plot_vars"] == ["temperature"]
     assert updates["visualization_config"]["plot_interval_seconds"] == 5
+
+
+def test_visualization_intent_node_routes_ambiguous_mapping_to_clarification(monkeypatch):
+    monkeypatch.setattr(
+        "src.nodes.visualization_intent_node.extract_viz_params_from_prompt",
+        lambda prompt, code_name=None, repo_root=None: (["velocity"], {}),
+    )
+
+    class _MockConfig:
+        @classmethod
+        def get_viz_tier1_intents(cls):
+            return {"velocity": {"aliases": ["velocity"]}}
+
+        @classmethod
+        def build_viz_tier2_candidates(cls, repo_root=None):
+            del cls, repo_root
+            return {
+                "velocity": [
+                    {"name": "x_velocity", "aliases": ["velocity"]},
+                    {"name": "y_velocity", "aliases": ["velocity"]},
+                ]
+            }
+
+    monkeypatch.setattr(
+        "database.configs.registry.get_config_class",
+        lambda code_name: _MockConfig,
+    )
+
+    updates = visualization_intent_node(
+        {
+            "prompt": "plot velocity",
+            "selected_solver": "ERF",
+            "requested_plot_vars": [],
+            "visualization_config": {},
+        }
+    )
+    assert updates["requested_plot_vars"] == []
+    assert updates["visualization_intent"]["requested_fields"] == []
+    assert updates["visualization_mapping_candidates"]["velocity"][0]["name"] == "x_velocity"
+    assert updates["visualization_mapping_unresolved"] == []
 
 
 def test_build_visualization_intent_falls_back_to_step_cadence_for_unknown_solver():

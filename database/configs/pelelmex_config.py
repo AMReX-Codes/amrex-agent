@@ -172,6 +172,10 @@ class PeleLMeXConfig(BaseAMReXConfig):
         return "peleLM.derive_plot_vars"
 
     @classmethod
+    def get_plot_var_param_candidates(cls) -> list[str]:
+        return ["peleLM.derive_plot_vars", "amr.plot_vars", "plot_vars"]
+
+    @classmethod
     def get_plotfile_period_param(cls) -> str | None:
         return "amr.plot_per"
 

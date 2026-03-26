@@ -110,6 +110,21 @@ class TestInputWriterPlotfileInjection:
         assert "erf.plot_vars_1 = qc" in updated
         assert "amr.plot_vars = qc" not in updated
 
+    def test_resolve_plotfile_vars_uses_candidate_contract_order(self, monkeypatch):
+        class _MockConfig:
+            @classmethod
+            def get_plot_var_param_candidates(cls):
+                return ["erf.plot_vars_1", "amr.plot_vars"]
+
+        monkeypatch.setattr(
+            "database.configs.registry.get_config_class",
+            lambda code_name: _MockConfig,
+        )
+
+        baseline = "amr.plot_vars = density pressure\nerf.plot_vars_1 = qv qc\n"
+        setting = _resolve_plotfile_vars([], baseline, "ERF")
+        assert setting == ("erf.plot_vars_1", "qv qc")
+
     def test_cadence_settings_for_erf_use_time_period_and_disable_step_interval(self):
         settings = _resolve_plotfile_period_settings(
             visualization_config={"plot_interval_seconds": 120},

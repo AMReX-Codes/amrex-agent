@@ -10,6 +10,8 @@ from src.services.viz_param_extractor import (
     canonicalize_requested_plot_vars,
     extract_viz_params_from_prompt,
     get_plotfile_var_param,
+    resolve_viz_field_mapping,
+    VizMappingCatalogUnavailableError,
 )
 
 
@@ -155,6 +157,56 @@ class TestVizParamExtractor:
 
         mapped = canonicalize_requested_plot_vars(["cloud_water"], code_name="ERF")
         assert mapped == ["qc"]
+
+    def test_resolve_viz_field_mapping_reports_ambiguity(self, monkeypatch):
+        class _MockConfig:
+            @classmethod
+            def get_viz_tier1_intents(cls):
+                return {
+                    "velocity": {
+                        "aliases": ["velocity", "speed"],
+                    }
+                }
+
+            @classmethod
+            def build_viz_tier2_candidates(cls, repo_root=None):
+                del cls, repo_root
+                return {
+                    "velocity": [
+                        {"name": "x_velocity", "aliases": ["velocity"]},
+                        {"name": "y_velocity", "aliases": ["velocity"]},
+                    ]
+                }
+
+        monkeypatch.setattr(
+            "database.configs.registry.get_config_class",
+            lambda code_name: _MockConfig,
+        )
+
+        result = resolve_viz_field_mapping(["velocity"], code_name="ERF")
+        assert result["resolved_fields"] == []
+        assert result["ambiguous_tokens"] == ["velocity"]
+        assert result["candidate_fields_by_token"]["velocity"][0]["name"] == "x_velocity"
+        assert result["mapping_source"] == "solver_catalog"
+
+    def test_resolve_viz_field_mapping_hard_fails_when_catalog_missing(self, monkeypatch):
+        class _MockConfig:
+            @classmethod
+            def get_viz_tier1_intents(cls):
+                return {"cloud_water": {"aliases": ["cloud water"]}}
+
+            @classmethod
+            def build_viz_tier2_candidates(cls, repo_root=None):
+                del cls, repo_root
+                return {}
+
+        monkeypatch.setattr(
+            "database.configs.registry.get_config_class",
+            lambda code_name: _MockConfig,
+        )
+
+        with pytest.raises(VizMappingCatalogUnavailableError):
+            resolve_viz_field_mapping(["cloud_water"], code_name="ERF")
 
 
 class TestPlotfileParamLookup:

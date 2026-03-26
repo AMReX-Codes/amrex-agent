@@ -12,6 +12,27 @@ The workflow generates visualizations from AMReX plotfiles after a successful
 analysis pass. Visualization uses the multi-backend service (AMReX tools first,
 then optional pyamrex, then yt) and records metadata in the graph state.
 
+### Intent Resolution and Clarification
+
+Visualization intent resolution is deterministic-first and code-derived:
+
+- Architect emits semantic visualization intent only.
+- `visualization_intent_node` performs canonical mapping through solver
+  Tier-2 candidates from live code catalogs.
+- If mapping is ambiguous/unresolved, the node records diagnostics:
+  - `visualization_mapping_candidates`
+  - `visualization_mapping_unresolved`
+  - `visualization_mapping_source`
+  - `visualization_mapping_confidence`
+- Clarification node asks constrained disambiguation questions using provided
+  candidate sets, and AI responses outside the candidate set are rejected.
+
+Hard-fail behavior:
+
+- If solver catalog/source code is unavailable for a visualization mapping
+  request, runtime fails with actionable remediation instead of silently
+  guessing fields.
+
 ### Workflow Flow
 
 ```

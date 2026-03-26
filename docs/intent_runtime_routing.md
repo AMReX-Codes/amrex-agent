@@ -18,6 +18,26 @@ mixing it into inputs-file modifications.
 Runtime intent is consumed by runner and visualization paths. It is not passed
 into `ConfigModelFactory.apply_modifications`.
 
+## Visualization Mapping Contract
+
+Visualization field resolution is code-gated and tiered:
+
+1. Tier 1 semantic intents: canonical tokens extracted from prompt text (for
+   example `cloud_water`, `temperature`, `velocity`).
+2. Tier 2 solver candidates: live solver-code catalog candidates resolved from
+   `build_viz_tier2_candidates(repo_root)`.
+3. Tier 3 executable selection: final `requested_fields` consumed by input
+   writing/visualization, selected only from Tier 2 candidates.
+
+Policy:
+
+- Missing solver code/catalog during visualization mapping is a hard runtime
+  failure with remediation guidance.
+- No blind fallback to unresolved generic semantic tokens in final
+  `requested_fields`.
+- Ambiguity or no-match is routed to clarification with candidate-constrained
+  question payloads.
+
 ## Precedence
 
 Effective runtime values are resolved in this order:

@@ -2384,6 +2384,68 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         return []
 
     @classmethod
+    def get_viz_tier1_intents(cls) -> dict[str, dict[str, Any]]:
+        """
+        Return canonical semantic visualization intents (Tier 1).
+        """
+        return {
+            "temperature": {"aliases": ["temperature", "temp", "thermal"]},
+            "velocity": {"aliases": ["velocity", "speed"]},
+            "vertical_velocity": {
+                "aliases": [
+                    "vertical velocity",
+                    "vertical_velocity",
+                    "w-velocity",
+                    "w velocity",
+                    "updraft",
+                    "downdraft",
+                ]
+            },
+            "pressure": {"aliases": ["pressure", "pres"]},
+            "density": {"aliases": ["density", "rho"]},
+            "vorticity": {"aliases": ["vorticity", "vort"]},
+            "cloud_water": {
+                "aliases": [
+                    "cloud water",
+                    "cloud_water",
+                    "liquid water",
+                    "cloud liquid",
+                    "qc",
+                ]
+            },
+        }
+
+    @classmethod
+    def build_viz_tier2_candidates(cls, repo_root: Path | None = None) -> dict[str, list[dict[str, Any]]]:
+        """
+        Build solver candidates (Tier 2) from live source catalog.
+        """
+        catalog = cls.get_viz_variable_catalog(repo_root=repo_root)
+        if not catalog:
+            return {}
+
+        intents = cls.get_viz_tier1_intents()
+        candidates: dict[str, list[dict[str, Any]]] = {}
+        for token, spec in intents.items():
+            aliases = {token.lower()}
+            for alias in spec.get("aliases", []) or []:
+                aliases.add(str(alias).strip().lower())
+            token_candidates: list[dict[str, Any]] = []
+            for entry in catalog:
+                if not isinstance(entry, dict):
+                    continue
+                name = str(entry.get("name", "")).strip()
+                if not name:
+                    continue
+                entry_aliases = {name.lower()}
+                for alias in entry.get("aliases", []) or []:
+                    entry_aliases.add(str(alias).strip().lower())
+                if aliases.intersection(entry_aliases):
+                    token_candidates.append(dict(entry))
+            if token_candidates:
+                candidates[token] = token_candidates
+        return candidates
+
     def get_default_slice_axis(cls) -> str | None:
         """
         Return preferred default slice-normal axis for visualization.
@@ -2398,6 +2460,13 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         Return solver-specific parameter key for plot variable selection.
         """
         return "amr.plot_vars"
+
+    @classmethod
+    def get_plot_var_param_candidates(cls) -> list[str]:
+        """
+        Return ordered plot-var ParmParse candidate keys (primary first).
+        """
+        return [cls.get_plotfile_var_param()]
 
     @classmethod
     def get_plotfile_period_param(cls) -> str | None:

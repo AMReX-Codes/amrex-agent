@@ -12,9 +12,9 @@ from typing import Any
 from src.models import GraphState
 from src.models.visualization_intent import VisualizationIntent, VisualizationPlotSpec
 from src.services.viz_param_extractor import (
-    canonicalize_requested_plot_vars,
     convert_prompt_seconds_to_solver_time,
     extract_viz_params_from_prompt,
+    resolve_viz_field_mapping,
 )
 
 
@@ -84,6 +84,7 @@ def build_visualization_intent(
     requested_plot_vars: list[str] | None = None,
     visualization_config: dict[str, Any] | None = None,
     prior_intent: dict[str, Any] | None = None,
+    mapping_diagnostics_out: dict[str, Any] | None = None,
 ) -> VisualizationIntent:
     """
     Build a canonical visualization_intent payload.
@@ -112,12 +113,21 @@ def build_visualization_intent(
         + list(prior_fields)
         + list(prior_vars)
     )
-    if solver_name:
-        merged_requested = canonicalize_requested_plot_vars(
+    mapping_diagnostics: dict[str, Any] = {
+        "resolved_fields": list(merged_requested),
+        "candidate_fields_by_token": {},
+        "unresolved_tokens": [],
+        "ambiguous_tokens": [],
+        "mapping_source": "semantic_only" if merged_requested else "none",
+        "mapping_confidence": 1.0,
+    }
+    if solver_name and merged_requested:
+        mapping_diagnostics = resolve_viz_field_mapping(
             merged_requested,
             code_name=solver_name,
             repo_root=repo_root,
         )
+        merged_requested = list(mapping_diagnostics.get("resolved_fields", []))
 
     merged_config: dict[str, Any] = {}
     if isinstance(extracted_config, dict):
@@ -184,6 +194,10 @@ def build_visualization_intent(
     if source not in {"prompt", "clarification", "default"}:
         source = "default"
 
+    if isinstance(mapping_diagnostics_out, dict):
+        mapping_diagnostics_out.clear()
+        mapping_diagnostics_out.update(mapping_diagnostics)
+
     return VisualizationIntent(
         requested_fields=merged_requested,
         cadence_prompt_seconds=cadence_prompt_seconds,
@@ -248,6 +262,7 @@ def visualization_intent_node(state: GraphState) -> dict[str, Any]:
     prompt = str(state.get("prompt") or state.get("user_requirement") or "")
     prior_intent = state.get("visualization_intent") if isinstance(state.get("visualization_intent"), dict) else {}
 
+    mapping: dict[str, Any] = {}
     model = build_visualization_intent(
         prompt=prompt,
         solver_name=solver_name,
@@ -255,6 +270,7 @@ def visualization_intent_node(state: GraphState) -> dict[str, Any]:
         requested_plot_vars=[],
         visualization_config={},
         prior_intent=prior_intent,
+        mapping_diagnostics_out=mapping,
     )
     intent = model.model_dump()
 
@@ -262,4 +278,8 @@ def visualization_intent_node(state: GraphState) -> dict[str, Any]:
         "visualization_intent": intent,
         "requested_plot_vars": list(model.requested_fields),
         "visualization_config": dict(intent.get("visualization_config", {})),
+        "visualization_mapping_candidates": dict(mapping.get("candidate_fields_by_token", {})),
+        "visualization_mapping_unresolved": list(mapping.get("unresolved_tokens", [])),
+        "visualization_mapping_source": mapping.get("mapping_source"),
+        "visualization_mapping_confidence": mapping.get("mapping_confidence"),
     }

@@ -145,6 +145,24 @@ class TestSchemaAwareHandler:
         assert record["answered_by"] == "human"
         assert record["resolved_value"] == "temperature vorticity"
 
+    def test_level_4_ai_answer_must_match_candidate_set(self):
+        record = _pending_record(
+            "requested_plot_vars",
+            decision_level=4,
+            fallback_tier="amrex_generic",
+        )
+        record["question"]["context"] = {
+            "token": "velocity",
+            "candidates": ["x_velocity", "y_velocity"],
+        }
+        state = _base_state(
+            clarification_history=[record],
+            ai_agent_response="z_velocity",
+        )
+        updates = clarification_handler_node(state)
+        assert updates["clarification_history"][0]["answered_by"] == "pending"
+        assert updates["clarification_needed"] is True
+
     def test_fallback_tier_faiss_empty_response(self):
         """
         Given: pending record with
