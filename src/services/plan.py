@@ -20,6 +20,7 @@ Usage:
 """
 
 import logging
+import re
 from typing import Any
 
 from pydantic import BaseModel
@@ -102,6 +103,35 @@ def has_checklist_implementation_locations(context: dict[str, Any]) -> bool:
             return False
 
     return True
+
+
+_FEATURE_BLOCK_HEADER_RE = re.compile(r"^##\s+\[[^\]]+\]\s+.+$")
+_TESTS_FIXTURES_LINE_RE = re.compile(r"^tests/fixtures\s*:\s*(.+)$", re.IGNORECASE)
+_HELPER_EXTRACTION_LINE_RE = re.compile(r"^helper\s+extraction\s*:\s*(.+)$", re.IGNORECASE)
+_LARGE_LOC_RE = re.compile(r"\b([1-9]\d{2,})\s*loc\b", re.IGNORECASE)
+_NEW_FILES_SECTION_RE = re.compile(r"^new\s+files\s*:\s*$", re.IGNORECASE)
+_SECTION_HEADER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 /_-]*:\s*$")
+
+
+def normalize_modifications(payload: Any) -> list[tuple[str, Any]]:
+    """Normalize mixed modification payloads into (parameter, value) tuples."""
+    if not isinstance(payload, list):
+        return []
+
+    normalized: list[tuple[str, Any]] = []
+    for entry in payload:
+        if isinstance(entry, tuple) and len(entry) == 2:
+            normalized.append((str(entry[0]), entry[1]))
+            continue
+        if isinstance(entry, list) and len(entry) == 2:
+            normalized.append((str(entry[0]), entry[1]))
+            continue
+        if isinstance(entry, dict):
+            parameter = entry.get("parameter")
+            if parameter is None:
+                continue
+            normalized.append((str(parameter), entry.get("value")))
+    return normalized
 
 
 class SimulationPlan(BaseModel):
@@ -323,15 +353,7 @@ class SimulationPlanFactory:
         baseline_conf = baseline_result.get('confidence', 0.0)
 
         # Extract modifications
-        modifications = cbr_plan.get('modifications', [])
-
-        # Validate modification format
-        if not all(isinstance(m, tuple) and len(m) == 2 for m in modifications):
-            logger.warning("Modifications not in (param, value) tuple format, attempting conversion")
-            # Try to convert if they're dicts
-            if modifications and isinstance(modifications[0], dict):
-                modifications = [(m.get('parameter', ''), m.get('value', ''))
-                               for m in modifications]
+        modifications = normalize_modifications(cbr_plan.get('modifications', []))
 
         # Extract CBR confidence
         cbr_conf = cbr_plan.get('confidence', 0.0)
@@ -349,7 +371,7 @@ class SimulationPlanFactory:
             selected_solver=solver_name,
             selected_case=baseline_case.get('case',
                                            baseline_case.get('metadata', {}).get('repo_path', 'unknown')),
-            modifications=modifications,
+            modifications=normalize_modifications(modifications),
             reasoning=reasoning,
 
             # Confidence metrics
@@ -477,14 +499,13 @@ class SimulationPlanFactory:
 
         # Filter to known fields to avoid TypeErrors
         valid_fields = {
-            k: v for k, v in data.items() if k in SimulationPlan.model_fields
+            k: v for k, v in data.items()
+            if k in SimulationPlan.model_fields
         }
 
-        # Ensure modifications are tuples, not lists
+        # Ensure modifications are normalized tuples.
         if 'modifications' in valid_fields:
-            mods = valid_fields['modifications']
-            if mods and isinstance(mods[0], list):
-                valid_fields['modifications'] = [tuple(m) for m in mods]
+            valid_fields['modifications'] = normalize_modifications(valid_fields['modifications'])
 
         return SimulationPlan(**valid_fields)
 
@@ -517,11 +538,8 @@ class SimulationPlanFactory:
                old_dict.get('baseline', {}).get('case_dir') or
                'unknown')
 
-        # Extract modifications (ensure tuple format)
-        mods = old_dict.get('modifications', [])
-        if mods and isinstance(mods[0], dict):
-            # Convert from dict format to tuple
-            mods = [(m.get('parameter', ''), m.get('value', '')) for m in mods]
+        # Extract modifications (ensure tuple format).
+        mods = normalize_modifications(old_dict.get('modifications', []))
 
         return {
             'selected_solver': solver,
@@ -544,3 +562,137 @@ class SimulationPlanFactory:
             'used_llm': old_dict.get('used_llm', False),
             'indexing_strategy': old_dict.get('indexing_strategy', 'simple')
         }
+
+
+def find_feature_blocks_missing_tests_fixtures(markdown_text: str) -> list[str]:
+    """
+    Return feature block headers that do not include a Tests/Fixtures mapping line.
+
+    A feature block is treated as any markdown section header matching:
+    ``## [ID] Title``.
+    """
+    missing: list[str] = []
+    current_header: str | None = None
+    current_has_mapping = False
+
+    for raw_line in markdown_text.splitlines():
+        line = raw_line.strip()
+        if _FEATURE_BLOCK_HEADER_RE.match(line):
+            if current_header is not None and not current_has_mapping:
+                missing.append(current_header)
+            current_header = line
+            current_has_mapping = False
+            continue
+
+        if current_header is None:
+            continue
+
+        match = _TESTS_FIXTURES_LINE_RE.match(line)
+        if match and match.group(1).strip():
+            current_has_mapping = True
+
+    if current_header is not None and not current_has_mapping:
+        missing.append(current_header)
+
+    return missing
+
+
+def validate_feature_blocks_tests_fixtures(markdown_text: str) -> dict[str, Any]:
+    """Validate that every feature block includes a non-empty Tests/Fixtures line."""
+    missing = find_feature_blocks_missing_tests_fixtures(markdown_text)
+    return normalize_unnumbered_003(
+        missing_items=missing,
+        result_key_prefix="feature_blocks_validation",
+        missing_key="feature_blocks_missing_tests_fixtures",
+        missing_reason="missing_tests_fixtures_mapping",
+    )
+
+
+def normalize_unnumbered_003(
+    missing_items: list[str],
+    result_key_prefix: str,
+    missing_key: str,
+    missing_reason: str,
+) -> dict[str, Any]:
+    """
+    Build a normalized pass/fail payload for UNNUMBERED-003 style validators.
+
+    This keeps validation response shapes consistent across call sites.
+    """
+    passed = not missing_items
+    return {
+        f"{result_key_prefix}_passed": passed,
+        f"{result_key_prefix}_reason": "ok" if passed else missing_reason,
+        missing_key: [] if passed else missing_items,
+    }
+
+
+def _split_feature_blocks(markdown_text: str) -> list[tuple[str, list[str]]]:
+    blocks: list[tuple[str, list[str]]] = []
+    current_header: str | None = None
+    current_lines: list[str] = []
+
+    for raw_line in markdown_text.splitlines():
+        line = raw_line.strip()
+        if _FEATURE_BLOCK_HEADER_RE.match(line):
+            if current_header is not None:
+                blocks.append((current_header, current_lines))
+            current_header = line
+            current_lines = []
+            continue
+        if current_header is not None:
+            current_lines.append(line)
+
+    if current_header is not None:
+        blocks.append((current_header, current_lines))
+
+    return blocks
+
+
+def _declares_large_new_file(block_lines: list[str]) -> bool:
+    in_new_files_section = False
+    for line in block_lines:
+        if _NEW_FILES_SECTION_RE.match(line):
+            in_new_files_section = True
+            continue
+        if in_new_files_section and _SECTION_HEADER_RE.match(line):
+            in_new_files_section = False
+            continue
+        if in_new_files_section and _LARGE_LOC_RE.search(line):
+            return True
+    return False
+
+
+def _has_helper_extraction_documented(block_lines: list[str]) -> bool:
+    for line in block_lines:
+        match = _HELPER_EXTRACTION_LINE_RE.match(line)
+        if not match:
+            continue
+        value = match.group(1).strip().lower()
+        if value and value not in {"none", "n/a", "na"}:
+            return True
+    return False
+
+
+def find_feature_blocks_missing_helper_extraction(markdown_text: str) -> list[str]:
+    """
+    Return feature blocks that declare a new file >=100 LOC without helper extraction docs.
+    """
+    missing: list[str] = []
+    for header, block_lines in _split_feature_blocks(markdown_text):
+        if _declares_large_new_file(block_lines) and not _has_helper_extraction_documented(block_lines):
+            missing.append(header)
+    return missing
+
+
+def validate_new_file_helper_extraction(markdown_text: str) -> dict[str, Any]:
+    """
+    Validate helper extraction documentation for feature blocks with large new files.
+    """
+    missing = find_feature_blocks_missing_helper_extraction(markdown_text)
+    return normalize_unnumbered_003(
+        missing_items=missing,
+        result_key_prefix="new_file_helper_extraction_validation",
+        missing_key="new_file_helper_extraction_missing",
+        missing_reason="missing_helper_extraction_for_large_new_file",
+    )

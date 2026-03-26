@@ -6,9 +6,9 @@ Gate 0: Testing detect_environment() with 100% coverage
 
 import pytest
 from pathlib import Path
-from src.config import detect_environment, resolve_database_path, AMReXAgentConfig
+from src.config import detect_environment, resolve_database_path, AMReXAgentConfig, get_llm_client, unwrap_llm_client
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 class TestDetectEnvironment:
     """Test environment detection logic"""
@@ -318,3 +318,98 @@ class TestLoadConfigDeprecated:
             
             # Assert - Returns config
             assert isinstance(result, AMReXAgentConfig)
+
+
+class TestProviderDependencyRiskFallback:
+    """Session 55: provider fallback behavior across configured providers."""
+
+    @patch("openai.OpenAI")
+    def test_falls_back_from_anthropic_to_openai_when_openai_available(self, mock_openai_class, monkeypatch):
+        """
+        Given: Anthropic is selected but not implemented
+        When:  OpenAI credentials are configured
+        Then:  get_llm_client should fall back to OpenAI provider
+        """
+        # Arrange
+        monkeypatch.delenv("CBORG_API_KEY", raising=False)
+        monkeypatch.delenv("ALCF_API_KEY", raising=False)
+        monkeypatch.delenv("LLM_API_KEY", raising=False)
+        monkeypatch.delenv("LITELLM_BASE_URL", raising=False)
+        monkeypatch.delenv("LITELLM_MODEL", raising=False)
+        mock_client = MagicMock()
+        mock_openai_class.return_value = mock_client
+        config = AMReXAgentConfig(
+            llm_provider="anthropic",
+            openai_api_key="sk-fallback-openai",
+        )
+
+        # Act
+        result = get_llm_client(config)
+
+        # Assert
+        mock_openai_class.assert_called_once_with(api_key="sk-fallback-openai")
+        assert unwrap_llm_client(result) == mock_client
+        assert config.llm_provider == "openai"
+
+    @patch("openai.OpenAI")
+    def test_falls_back_from_cborg_to_openai_when_cborg_key_missing(self, mock_openai_class, monkeypatch):
+        """
+        Given: CBORG is selected but unavailable due to missing key
+        When:  OpenAI credentials are configured
+        Then:  get_llm_client should use OpenAI as fallback provider
+        """
+        # Arrange
+        monkeypatch.delenv("CBORG_API_KEY", raising=False)
+        mock_client = MagicMock()
+        mock_openai_class.return_value = mock_client
+        config = AMReXAgentConfig(
+            llm_provider="cborg",
+            openai_api_key="sk-openai-key",
+        )
+
+        # Act
+        result = get_llm_client(config)
+
+        # Assert
+        mock_openai_class.assert_called_once_with(api_key="sk-openai-key")
+        assert unwrap_llm_client(result) == mock_client
+        assert config.llm_provider == "openai"
+
+    def test_raises_not_implemented_when_anthropic_and_no_fallback(self, monkeypatch):
+        """
+        Given: Anthropic is selected without any fallback provider credentials
+        When:  get_llm_client is called
+        Then:  the original NotImplementedError should be raised
+        """
+        # Arrange
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        monkeypatch.delenv("CBORG_API_KEY", raising=False)
+        monkeypatch.delenv("ALCF_API_KEY", raising=False)
+        monkeypatch.delenv("LLM_API_KEY", raising=False)
+        monkeypatch.delenv("LITELLM_BASE_URL", raising=False)
+        monkeypatch.delenv("LITELLM_MODEL", raising=False)
+        config = AMReXAgentConfig(llm_provider="anthropic")
+
+        # Act / Assert
+        with pytest.raises(NotImplementedError) as exc_info:
+            get_llm_client(config)
+        assert "Anthropic provider not yet implemented" in str(exc_info.value)
+
+    @patch("openai.OpenAI")
+    def test_unknown_provider_does_not_fallback_to_other_configured_backends(
+        self,
+        mock_openai_class,
+    ):
+        """
+        Given: an invalid configured provider name and valid OpenAI credentials
+        When:  get_llm_client is called
+        Then:  it should fail fast with unknown-provider error and never call OpenAI
+        """
+        config = AMReXAgentConfig(llm_provider="openai", openai_api_key="sk-openai-key")
+        config.llm_provider = "opneai"
+
+        with pytest.raises(ValueError) as exc_info:
+            get_llm_client(config)
+
+        assert "Unknown LLM provider: opneai" in str(exc_info.value)
+        mock_openai_class.assert_not_called()

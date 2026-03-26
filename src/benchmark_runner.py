@@ -20,6 +20,9 @@ DEFAULT_BENCHMARK_SEED = 1729
 
 
 # ===== Shared helpers =====
+_FEATURE_BLOCK_HEADER_RE = re.compile(r"^##\s+\[([^\]]+)\]\s*(.+?)\s*$")
+_TESTS_FIXTURES_LINE_RE = re.compile(r"^tests/fixtures\s*:\s*(.+)$", re.IGNORECASE)
+
 
 def _load_yaml(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
@@ -545,6 +548,281 @@ def _derive_migration_plan_fields(payload: dict[str, Any], graph_state: dict[str
     }
 
 
+def _as_list(value: Any) -> list[Any]:
+    if isinstance(value, list):
+        return value
+    if value is None:
+        return []
+    return [value]
+
+
+def _split_mapping_values(value: Any) -> list[str]:
+    if isinstance(value, list):
+        candidates = value
+    elif isinstance(value, str):
+        candidates = re.split(r"[,;\n]", value)
+    elif value is None:
+        candidates = []
+    else:
+        candidates = [value]
+
+    return [str(item).strip() for item in candidates if str(item).strip()]
+
+
+def _classify_mapping_path(path: str) -> str:
+    lowered = path.lower()
+    if "fixture" in lowered or lowered.endswith((".json", ".yaml", ".yml")):
+        return "fixture"
+    return "test"
+
+
+def _normalize_feature_mapping_entries(entries: list[Any]) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
+    for index, entry in enumerate(entries, start=1):
+        feature_id = f"F-{index:03d}"
+        feature_label = f"feature_{index:03d}"
+        tests: list[str] = []
+        fixtures: list[str] = []
+
+        if isinstance(entry, dict):
+            feature_id = str(entry.get("feature_id") or entry.get("id") or feature_id)
+            feature_label = str(entry.get("feature_label") or entry.get("title") or feature_label)
+            tests = _split_mapping_values(entry.get("tests") or entry.get("test_files"))
+            fixtures = _split_mapping_values(entry.get("fixtures") or entry.get("fixture_files"))
+            if not tests and not fixtures:
+                combined = _split_mapping_values(entry.get("tests_fixtures"))
+                for candidate in combined:
+                    if _classify_mapping_path(candidate) == "fixture":
+                        fixtures.append(candidate)
+                    else:
+                        tests.append(candidate)
+        elif isinstance(entry, str):
+            feature_label = entry
+
+        normalized.append(
+            {
+                "feature_id": feature_id,
+                "feature_label": feature_label,
+                "tests": tests,
+                "fixtures": fixtures,
+                "mapping_complete": bool(tests) and bool(fixtures),
+            }
+        )
+    return normalized
+
+
+def _parse_feature_mapping_from_markdown(markdown: str) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+
+    for raw_line in markdown.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        header_match = _FEATURE_BLOCK_HEADER_RE.match(line)
+        if header_match:
+            if current is not None:
+                current["mapping_complete"] = bool(current["tests"]) and bool(current["fixtures"])
+                entries.append(current)
+            current = {
+                "feature_id": header_match.group(1).strip(),
+                "feature_label": line,
+                "tests": [],
+                "fixtures": [],
+                "mapping_complete": False,
+            }
+            continue
+        if current is None:
+            continue
+        mapping_match = _TESTS_FIXTURES_LINE_RE.match(line)
+        if not mapping_match:
+            continue
+        for candidate in _split_mapping_values(mapping_match.group(1)):
+            if _classify_mapping_path(candidate) == "fixture":
+                current["fixtures"].append(candidate)
+            else:
+                current["tests"].append(candidate)
+
+    if current is not None:
+        current["mapping_complete"] = bool(current["tests"]) and bool(current["fixtures"])
+        entries.append(current)
+
+    return entries
+
+
+def _derive_claim_evidence_fields(payload: dict[str, Any], graph_state: dict[str, Any]) -> dict[str, Any]:
+    claims = _as_list(payload.get("claims") or graph_state.get("claims"))
+    evidence = _as_list(payload.get("evidence") or graph_state.get("evidence"))
+    raw_matrix = _as_list(payload.get("claim_evidence_matrix") or graph_state.get("claim_evidence_matrix"))
+
+    matrix: list[dict[str, Any]] = []
+    if raw_matrix:
+        for idx, row in enumerate(raw_matrix, start=1):
+            if not isinstance(row, dict):
+                continue
+            claim_id = row.get("claim_id") or f"claim_{idx:03d}"
+            evidence_refs = _as_list(row.get("evidence_refs"))
+            matrix.append(
+                {
+                    "claim_id": str(claim_id),
+                    "claim": row.get("claim") or row.get("text") or "",
+                    "evidence_refs": [str(ref) for ref in evidence_refs if ref is not None],
+                    "covered": bool(evidence_refs),
+                }
+            )
+    else:
+        for idx, claim in enumerate(claims, start=1):
+            claim_id = f"claim_{idx:03d}"
+            claim_text = claim
+            evidence_refs: list[str] = []
+            if isinstance(claim, dict):
+                claim_id = str(claim.get("id") or claim_id)
+                claim_text = claim.get("claim") or claim.get("text") or ""
+                evidence_refs = [str(ref) for ref in _as_list(claim.get("evidence_refs")) if ref is not None]
+            matrix.append(
+                {
+                    "claim_id": claim_id,
+                    "claim": str(claim_text or ""),
+                    "evidence_refs": evidence_refs,
+                    "covered": bool(evidence_refs),
+                }
+            )
+
+    claim_count = len(matrix)
+    covered_claim_count = sum(1 for row in matrix if row["covered"])
+    uncovered_claim_ids = [row["claim_id"] for row in matrix if not row["covered"]]
+    status = "missing"
+    if claim_count > 0:
+        status = "complete" if covered_claim_count == claim_count else "partial"
+
+    return {
+        "claim_evidence_matrix": matrix,
+        "claim_count": claim_count,
+        "evidence_count": len(evidence),
+        "covered_claim_count": covered_claim_count,
+        "uncovered_claim_ids": uncovered_claim_ids,
+        "claim_evidence_matrix_status": status,
+    }
+
+
+def _derive_uc_summary_traceability_fields(
+    payload: dict[str, Any],
+    graph_state: dict[str, Any],
+) -> dict[str, Any]:
+    raw_entries = (
+        payload.get("uc_summary_entries")
+        or payload.get("uc_summary")
+        or graph_state.get("uc_summary_entries")
+        or graph_state.get("uc_summary")
+    )
+    entries = _as_list(raw_entries)
+
+    normalized_entries: list[dict[str, Any]] = []
+    for index, entry in enumerate(entries, start=1):
+        uc_id = f"uc_{index:03d}"
+        summary = ""
+        artifacts: list[str] = []
+
+        if isinstance(entry, dict):
+            uc_id = str(
+                entry.get("uc_id")
+                or entry.get("use_case_id")
+                or entry.get("id")
+                or entry.get("case_id")
+                or uc_id
+            )
+            summary = str(
+                entry.get("summary")
+                or entry.get("use_case_summary")
+                or entry.get("description")
+                or ""
+            )
+            artifact_candidates = (
+                _as_list(entry.get("artifacts"))
+                + _as_list(entry.get("artifact_refs"))
+                + _as_list(entry.get("traceability_artifacts"))
+                + _as_list(entry.get("tests"))
+                + _as_list(entry.get("fixtures"))
+                + _as_list(entry.get("benchmarks"))
+            )
+            artifacts = [
+                str(item).strip()
+                for item in artifact_candidates
+                if str(item).strip()
+            ]
+        else:
+            summary = str(entry or "")
+
+        normalized_entries.append(
+            {
+                "uc_id": uc_id,
+                "summary": summary,
+                "artifacts": artifacts,
+                "traceable": bool(artifacts),
+            }
+        )
+
+    uc_summary_count = len(normalized_entries)
+    traceable_count = sum(1 for entry in normalized_entries if entry["traceable"])
+    untraceable_ids = [
+        str(entry["uc_id"])
+        for entry in normalized_entries
+        if not entry["traceable"]
+    ]
+
+    status = "missing"
+    if uc_summary_count:
+        status = "complete" if traceable_count == uc_summary_count else "partial"
+
+    return {
+        "uc_summary_entries": normalized_entries,
+        "uc_summary_count": uc_summary_count,
+        "uc_summary_traceable_count": traceable_count,
+        "uc_summary_untraceable_ids": untraceable_ids,
+        "uc_summary_traceability_status": status,
+    }
+
+
+def _derive_feature_fixture_mapping_fields(
+    payload: dict[str, Any],
+    graph_state: dict[str, Any],
+) -> dict[str, Any]:
+    raw_entries = payload.get("feature_test_fixture_mapping")
+    if raw_entries is None:
+        raw_entries = graph_state.get("feature_test_fixture_mapping")
+
+    mapping_entries: list[dict[str, Any]] = []
+    if raw_entries is not None:
+        mapping_entries = _normalize_feature_mapping_entries(_as_list(raw_entries))
+    else:
+        markdown = payload.get("feature_blocks_markdown")
+        if not isinstance(markdown, str):
+            markdown = graph_state.get("feature_blocks_markdown")
+        if isinstance(markdown, str):
+            mapping_entries = _parse_feature_mapping_from_markdown(markdown)
+
+    total_features = len(mapping_entries)
+    complete_features = sum(1 for entry in mapping_entries if entry["mapping_complete"])
+    missing_features = [
+        entry["feature_label"]
+        for entry in mapping_entries
+        if not entry["mapping_complete"]
+    ]
+
+    status = "missing"
+    if total_features:
+        status = "complete" if complete_features == total_features else "partial"
+
+    return {
+        "feature_test_fixture_mapping": mapping_entries,
+        "feature_test_fixture_mapping_count": total_features,
+        "feature_test_fixture_mapping_complete_count": complete_features,
+        "feature_test_fixture_mapping_missing": missing_features,
+        "feature_test_fixture_mapping_complete": total_features > 0 and complete_features == total_features,
+        "feature_test_fixture_mapping_status": status,
+    }
+
+
 def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(payload)
     graph_state = normalized.pop("__graph_state", None)
@@ -556,10 +834,13 @@ def _normalize_benchmark_record(payload: dict[str, Any]) -> dict[str, Any]:
     normalized.update(_derive_benchmark_metrics_fields(normalized, graph_state))
     normalized.update(_derive_gate_approval_fields(normalized, graph_state))
     normalized.update(_derive_migration_plan_fields(normalized, graph_state))
+    normalized.update(_derive_claim_evidence_fields(normalized, graph_state))
+    normalized.update(_derive_uc_summary_traceability_fields(normalized, graph_state))
+    normalized.update(_derive_feature_fixture_mapping_fields(normalized, graph_state))
     return normalized
 
 
-def _write_jsonl(path: Path, payload: dict[str, Any], config: Any | None = None) -> None:
+def _write_jsonl(path: Path, payload: dict[str, Any], config: Any | None = None) -> dict[str, Any]:
     payload = _normalize_benchmark_record(payload)
     with path.open("a", encoding="utf-8") as handle:
         if config is not None:
@@ -568,6 +849,35 @@ def _write_jsonl(path: Path, payload: dict[str, Any], config: Any | None = None)
             payload = sanitize_payload(payload, config=config)
         handle.write(json.dumps(payload, default=str))
         handle.write("\n")
+    return payload
+
+
+def _build_claim_evidence_coverage_matrix(records: list[dict[str, Any]]) -> dict[str, Any]:
+    total_claims = sum(int(record.get("claim_count", 0) or 0) for record in records)
+    total_covered = sum(int(record.get("covered_claim_count", 0) or 0) for record in records)
+    coverage_ratio = (float(total_covered) / float(total_claims)) if total_claims else 0.0
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_records": len(records),
+        "total_claims": total_claims,
+        "total_covered_claims": total_covered,
+        "coverage_ratio": coverage_ratio,
+        "records": records,
+    }
+
+
+def _build_uc_summary_traceability_report(records: list[dict[str, Any]]) -> dict[str, Any]:
+    total_uc_summaries = sum(int(record.get("uc_summary_count", 0) or 0) for record in records)
+    total_traceable = sum(int(record.get("uc_summary_traceable_count", 0) or 0) for record in records)
+    coverage_ratio = (float(total_traceable) / float(total_uc_summaries)) if total_uc_summaries else 0.0
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_records": len(records),
+        "total_uc_summaries": total_uc_summaries,
+        "total_traceable_uc_summaries": total_traceable,
+        "coverage_ratio": coverage_ratio,
+        "records": records,
+    }
 
 
 def _privacy_config(run_args: dict[str, Any]) -> Any | None:
@@ -687,6 +997,8 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         manifest["prompts"].append(prompt_manifest)
 
     raw_metrics_path = run_dir / "benchmark_runs.jsonl"
+    matrix_records: list[dict[str, Any]] = []
+    uc_traceability_records: list[dict[str, Any]] = []
 
     for model in models:
         model_id = model.get("id")
@@ -820,7 +1132,29 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "replay_fingerprint": determinism_controls["replay_fingerprint"],
                 "__graph_state": result_data,
             }
-            _write_jsonl(raw_metrics_path, record, config=privacy_config)
+            normalized_record = _write_jsonl(raw_metrics_path, record, config=privacy_config)
+            matrix_records.append(
+                {
+                    "model_id": normalized_record.get("model_id"),
+                    "prompt_id": normalized_record.get("prompt_id"),
+                    "claim_count": normalized_record.get("claim_count", 0),
+                    "covered_claim_count": normalized_record.get("covered_claim_count", 0),
+                    "claim_evidence_matrix_status": normalized_record.get("claim_evidence_matrix_status"),
+                    "uncovered_claim_ids": normalized_record.get("uncovered_claim_ids", []),
+                    "claim_evidence_matrix": normalized_record.get("claim_evidence_matrix", []),
+                }
+            )
+            uc_traceability_records.append(
+                {
+                    "model_id": normalized_record.get("model_id"),
+                    "prompt_id": normalized_record.get("prompt_id"),
+                    "uc_summary_count": normalized_record.get("uc_summary_count", 0),
+                    "uc_summary_traceable_count": normalized_record.get("uc_summary_traceable_count", 0),
+                    "uc_summary_traceability_status": normalized_record.get("uc_summary_traceability_status"),
+                    "uc_summary_untraceable_ids": normalized_record.get("uc_summary_untraceable_ids", []),
+                    "uc_summary_entries": normalized_record.get("uc_summary_entries", []),
+                }
+            )
 
             per_run = prompt_dir / "result.json"
             per_run_payload = {
@@ -843,4 +1177,10 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
         manifest = sanitize_payload(manifest, config=privacy_config)
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
     (run_dir / "replay_manifest.json").write_text(json.dumps(replay_manifest, indent=2))
+    (run_dir / "claim_evidence_coverage_matrix.json").write_text(
+        json.dumps(_build_claim_evidence_coverage_matrix(matrix_records), indent=2)
+    )
+    (run_dir / "uc_summary_traceability.json").write_text(
+        json.dumps(_build_uc_summary_traceability_report(uc_traceability_records), indent=2)
+    )
     return {"run_dir": str(run_dir), "metrics": str(raw_metrics_path)}

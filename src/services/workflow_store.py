@@ -17,6 +17,51 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+POSTGRESQL_MIGRATION_EVIDENCE_MARKER = "postgresql_migration_evidence"
+
+
+def _non_empty_str(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    return normalized
+
+
+def collect_postgresql_migration_evidence(state: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Normalize migration evidence payload used by migration gate checks."""
+    state = state or {}
+    raw_evidence = state.get(POSTGRESQL_MIGRATION_EVIDENCE_MARKER)
+    if isinstance(raw_evidence, dict):
+        evidence_source = dict(raw_evidence)
+    else:
+        evidence_source = {}
+
+    runbook_ref = _non_empty_str(evidence_source.get("migration_runbook_ref")) or _non_empty_str(
+        state.get("postgresql_migration_runbook_ref")
+    )
+    index_growth_ref = _non_empty_str(evidence_source.get("index_growth_proof_ref")) or _non_empty_str(
+        state.get("index_growth_proof_ref")
+    )
+
+    return {
+        "migration_runbook_ref": runbook_ref,
+        "index_growth_proof_ref": index_growth_ref,
+        "proof_complete": bool(runbook_ref and index_growth_ref),
+    }
+
+
+def has_postgresql_migration_index_growth_proof(evidence: Any) -> bool:
+    """Return True when migration runbook and index-growth proof references are present."""
+    if not isinstance(evidence, dict):
+        return False
+
+    runbook_ref = _non_empty_str(evidence.get("migration_runbook_ref"))
+    index_growth_ref = _non_empty_str(evidence.get("index_growth_proof_ref"))
+    return bool(runbook_ref and index_growth_ref)
+
+
 @dataclass
 class WorkflowSession:
     session_id: str

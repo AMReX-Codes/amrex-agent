@@ -11,6 +11,37 @@ from pydantic import BaseModel, Field, ConfigDict
 import logging
 
 logger = logging.getLogger(__name__)
+TRANSIENT_API_RECOVERY_TARGET = 0.95
+
+
+def compute_transient_api_recovery_rate(outcomes: list[bool]) -> float | None:
+    """Return recovery rate for transient retry events."""
+    if not outcomes:
+        return None
+    recovered = sum(1 for outcome in outcomes if outcome)
+    return recovered / len(outcomes)
+
+
+def evaluate_transient_api_recovery_target(
+    outcomes: list[bool],
+    target: float = TRANSIENT_API_RECOVERY_TARGET,
+) -> dict[str, Any]:
+    """Evaluate whether transient API retries meet the configured recovery target."""
+    try:
+        target_value = float(target)
+    except (TypeError, ValueError):
+        target_value = TRANSIENT_API_RECOVERY_TARGET
+    if not (0.0 < target_value <= 1.0):
+        target_value = TRANSIENT_API_RECOVERY_TARGET
+
+    recovery_rate = compute_transient_api_recovery_rate(outcomes)
+    return {
+        "transient_recovery_target": target_value,
+        "transient_recovery_observations": len(outcomes),
+        "transient_recovery_successes": sum(1 for outcome in outcomes if outcome),
+        "transient_recovery_rate": recovery_rate,
+        "transient_recovery_target_met": recovery_rate is not None and recovery_rate >= target_value,
+    }
 
 def should_stage_run(target_env: str | None, detected_env: str | None) -> bool:
     """Decide if runs need remote staging based on target vs detected environment."""
@@ -515,7 +546,7 @@ class AMReXAgentConfig(BaseModel):
     )
     enable_clarification_subgraph: bool = Field(
         default=False,
-        description="Enable Session 8 clarification subgraph decision checks before input writing."
+        description="Enable clarification subgraph decision checks before input writing."
     )
 
     llm_gate_strategy: Literal[
@@ -932,27 +963,52 @@ def resolve_alcf_base_url(config: AMReXAgentConfig) -> str:
     return _resolve_alcf_base_url(config.alcf_cluster, config.alcf_base_url)
 
 
-def get_llm_client(config: AMReXAgentConfig) -> Any:
-    """Get LLM client based on config
-    
-    Returns OpenAI-compatible client (CBORG, ALCF, OpenAI, or Anthropic)
-    """
-    from openai import OpenAI
-    
-    if config.llm_provider == "cborg":
-        if not config.cborg_api_key:
-            raise ValueError("CBORG_API_KEY not set")
-        
-        client = OpenAI(
+def _provider_fallback_order(primary_provider: str) -> list[str]:
+    """Return deterministic provider order beginning with the configured provider."""
+    providers = ["cborg", "alcf", "openai", "pnnl", "litellm", "anthropic"]
+    if primary_provider not in providers:
+        raise ValueError(f"Unknown LLM provider: {primary_provider}")
+    order = [primary_provider]
+    for provider in providers:
+        if provider != primary_provider:
+            order.append(provider)
+    return order
+
+
+def _missing_provider_dependency_reason(config: AMReXAgentConfig, provider: str) -> str | None:
+    """Return missing dependency reason for provider, or None when ready to initialize."""
+    if provider == "cborg":
+        return None if config.cborg_api_key else "CBORG_API_KEY not set"
+    if provider == "alcf":
+        return None if config.alcf_api_key else "ALCF_API_KEY not set"
+    if provider == "openai":
+        return None if config.openai_api_key else "OPENAI_API_KEY not set"
+    if provider == "anthropic":
+        return "Anthropic provider not yet implemented"
+    if provider == "pnnl":
+        return None if config.pnnl_api_key else "LLM_API_KEY environment variable not set for PNNL AI API"
+    if provider == "litellm":
+        if not config.litellm_base_url:
+            return "LITELLM_BASE_URL not set"
+        if config.llm_model or os.getenv("LITELLM_MODEL"):
+            return None
+        return "llm_model not set for LiteLLM provider"
+    return f"Unknown LLM provider: {provider}"
+
+
+def _build_llm_client_for_provider(config: AMReXAgentConfig, provider: str, openai_client_cls):
+    """Build client for a specific provider once dependencies are satisfied."""
+    if provider == "cborg":
+        client = openai_client_cls(
             api_key=config.cborg_api_key,
             base_url=config.cborg_base_url
         )
-        
+
         # Auto-detect model if not set
         if not config.llm_model:
             models = client.models.list()
             available = [m.id for m in models]
-            
+
             # Prefer LBL models > Llama > Claude > GPT
             preferred = [
                 'lbl/Llama-4-Scout-17B-16E-Instruct',
@@ -961,7 +1017,7 @@ def get_llm_client(config: AMReXAgentConfig) -> Any:
                 'llama-3.1-70b-instruct',
                 'claude-sonnet-4',
             ]
-            
+
             for pref in preferred:
                 for avail in available:
                     if pref.lower() in avail.lower():
@@ -970,67 +1026,89 @@ def get_llm_client(config: AMReXAgentConfig) -> Any:
                         break
                 if config.llm_model:
                     break
-            
+
             if not config.llm_model and available:
                 config.llm_model = available[0]
                 logger.info(f" Using first available model: {config.llm_model}")
 
-        return _wrap_llm_client_if_needed(client, config)
-    
-    elif config.llm_provider == "alcf":
-        if not config.alcf_api_key:
-            raise ValueError("ALCF_API_KEY not set")
+        return client
+
+    if provider == "alcf":
         base_url = resolve_alcf_base_url(config)
-        client = OpenAI(
+        return openai_client_cls(
             api_key=config.alcf_api_key,
             base_url=base_url,
         )
-        return _wrap_llm_client_if_needed(client, config)
 
-    elif config.llm_provider == "openai":
-        if not config.openai_api_key:
-            raise ValueError("OPENAI_API_KEY not set")
-        client = OpenAI(api_key=config.openai_api_key)
-        return _wrap_llm_client_if_needed(client, config)
-    
-    elif config.llm_provider == "anthropic":
-        # TODO: Implement Anthropic client wrapper
+    if provider == "openai":
+        return openai_client_cls(api_key=config.openai_api_key)
+
+    if provider == "anthropic":
         raise NotImplementedError("Anthropic provider not yet implemented")
-    
-    elif config.llm_provider == "pnnl":
-        if not config.pnnl_api_key:
-            raise ValueError("LLM_API_KEY environment variable not set for PNNL AI API")
-        
+
+    if provider == "pnnl":
         # Use default model if not explicitly set
         if not config.llm_model:
             config.llm_model = config.pnnl_default_model
             logger.info(f" Using PNNL default model: {config.llm_model}")
-        
-        client = OpenAI(
+        return openai_client_cls(
             api_key=config.pnnl_api_key,
             base_url=config.pnnl_base_url
         )
-        return _wrap_llm_client_if_needed(client, config)
 
-    elif config.llm_provider == "litellm":
-        base_url = config.litellm_base_url
-        if not base_url:
-            raise ValueError("LITELLM_BASE_URL not set")
+    if provider == "litellm":
         if not config.llm_model:
             env_model = os.getenv("LITELLM_MODEL")
             if env_model:
                 config.llm_model = env_model
-        if not config.llm_model:
-            raise ValueError("llm_model not set for LiteLLM provider")
         api_key = config.litellm_api_key or "litellm"
-        client = OpenAI(
+        return openai_client_cls(
             api_key=api_key,
-            base_url=base_url
+            base_url=config.litellm_base_url
         )
-        return _wrap_llm_client_if_needed(client, config)
+
+    raise ValueError(f"Unknown LLM provider: {provider}")
+
+
+def get_llm_client(config: AMReXAgentConfig) -> Any:
+    """Get LLM client based on config
     
-    else:
-        raise ValueError(f"Unknown LLM provider: {config.llm_provider}")
+    Returns OpenAI-compatible client (CBORG, ALCF, OpenAI, or Anthropic)
+    """
+    from openai import OpenAI
+    configured_provider = config.llm_provider
+    primary_error: Exception | None = None
+
+    for provider in _provider_fallback_order(configured_provider):
+        reason = _missing_provider_dependency_reason(config, provider)
+        if reason:
+            error = NotImplementedError(reason) if provider == "anthropic" else ValueError(reason)
+            if provider == configured_provider:
+                primary_error = error
+            continue
+
+        try:
+            client = _build_llm_client_for_provider(config, provider, OpenAI)
+            if provider != configured_provider:
+                logger.warning(
+                    "[Config] Falling back LLM provider from %s to %s",
+                    configured_provider,
+                    provider,
+                )
+                config.llm_provider = provider
+            return _wrap_llm_client_if_needed(client, config)
+        except Exception as error:
+            if provider == configured_provider:
+                primary_error = error
+            logger.warning(
+                "[Config] LLM provider %s initialization failed: %s",
+                provider,
+                error,
+            )
+
+    if primary_error:
+        raise primary_error
+    raise ValueError(f"Unknown LLM provider: {configured_provider}")
 
 
 def _wrap_llm_client_if_needed(client, config: AMReXAgentConfig):
@@ -1152,17 +1230,33 @@ class _LLMRetryCompletions:
         self._completions = completions_resource
         self._max_attempts = max_attempts
         self._retryable_statuses = {429, 500, 502, 503}
+        self._transient_recovery_outcomes: list[bool] = []
+
+    def get_transient_recovery_target_status(
+        self,
+        target: float = TRANSIENT_API_RECOVERY_TARGET,
+    ) -> dict[str, Any]:
+        """Return benchmark-style recovery metrics for transient retries."""
+        return evaluate_transient_api_recovery_target(self._transient_recovery_outcomes, target=target)
 
     def create(self, *args: Any, **kwargs: Any) -> Any:
         attempt = 0
+        saw_transient_failure = False
         while True:
             attempt += 1
             try:
-                return self._completions.create(*args, **kwargs)
+                response = self._completions.create(*args, **kwargs)
+                if saw_transient_failure:
+                    self._transient_recovery_outcomes.append(True)
+                return response
             except Exception as exc:
                 status_code = _get_http_status(exc)
                 retryable = status_code in self._retryable_statuses
-                if not retryable or attempt >= self._max_attempts:
+                if not retryable:
+                    raise
+                saw_transient_failure = True
+                if attempt >= self._max_attempts:
+                    self._transient_recovery_outcomes.append(False)
                     raise
                 base_delay = 1.0
                 max_delay = 20.0

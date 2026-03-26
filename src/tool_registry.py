@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from jsonschema import Draft202012Validator
+
 ToolHandler = Callable[[dict[str, Any]], Any]
 
 
@@ -65,8 +67,39 @@ def get_handler(name: str) -> ToolHandler:
     return handler
 
 
+def _get_input_schema(name: str) -> dict[str, Any] | None:
+    for spec in get_tool_specs():
+        if spec.get("name") != name:
+            continue
+        input_schema = spec.get("inputSchema")
+        if isinstance(input_schema, dict):
+            return input_schema
+        return None
+    return None
+
+
+def _validate_tool_context(name: str, context: dict[str, Any]) -> None:
+    schema = _get_input_schema(name)
+    if schema is None:
+        return
+
+    errors = sorted(
+        Draft202012Validator(schema).iter_errors(context),
+        key=lambda error: list(error.path),
+    )
+    if not errors:
+        return
+
+    first_error = errors[0]
+    path = ".".join(str(part) for part in first_error.path) or "<root>"
+    raise ValueError(
+        f"Schema validation failed for tool '{name}' at {path}: {first_error.message}"
+    )
+
+
 def dispatch_tool(name: str, context: dict[str, Any]) -> Any:
     """Dispatch a tool by name using the shared registry."""
+    _validate_tool_context(name, context)
     return get_handler(name)(context)
 
 

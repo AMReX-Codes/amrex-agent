@@ -476,5 +476,56 @@ class TestPriorityCaseBoost:
         assert result['selected_case'].get('score_bonus', 0) > 0
 
 
+class TestRejectedAlternatives:
+    """Ensure non-selected candidates include explicit rejection rationale."""
+
+    def test_rejected_alternatives_include_reason_text(self, tmp_path):
+        query = "premixed methane combustion"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+        architect = ArchitectService(mock_config, mock_embedder)
+
+        solver_config = Mock()
+        solver_config.code_name = "PeleC"
+
+        mock_candidates = [
+            {
+                "case": "Exec/RegTests/PMF",
+                "score": 0.86,
+                "metadata": {"repo_path": "Exec/RegTests/PMF"},
+            },
+            {
+                "case": "Exec/RegTests/Sedov",
+                "score": 0.47,
+                "metadata": {"repo_path": "Exec/RegTests/Sedov"},
+            },
+            {
+                "case": "Exec/RegTests/AcousticPulse",
+                "score": 0.41,
+                "metadata": {"repo_path": "Exec/RegTests/AcousticPulse"},
+            },
+        ]
+
+        with patch("database.indexing.level2_searcher.Level2Searcher") as MockLevel2:
+            mock_searcher = Mock()
+            mock_searcher.search_all_cases = Mock(return_value=mock_candidates)
+            MockLevel2.return_value = mock_searcher
+
+            result = architect.select_baseline(query, solver_config)
+
+        assert result is not None
+        rejected = result.get("rejected_alternatives")
+        assert isinstance(rejected, list)
+        assert len(rejected) == 2
+
+        for entry in rejected:
+            assert entry["case"] in {"Exec/RegTests/Sedov", "Exec/RegTests/AcousticPulse"}
+            assert entry["rejection_code"] == "lower_weighted_score"
+            assert "rejected in favor of" in entry["rejection_reason"].lower()
+            assert entry["score_gap"] > 0
+
+
 # Architect Service: Baseline Selection Marker
 pytestmark = pytest.mark.architect_baseline_selection

@@ -559,6 +559,46 @@ class ArchitectService:
         plan.level2_override_confidence = trace.get("level2_override_confidence")
         return plan
 
+    @staticmethod
+    def _build_router_diagram_mapping(
+        strategy: str,
+        baseline_override: str | None = None,
+        fallback_to: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Map execute_planning router branches to PRD diagram node identifiers.
+        """
+        if baseline_override:
+            branch = "baseline_override"
+            branch_node = "static_strategy"
+        elif fallback_to == "simple":
+            branch = "hierarchical_fallback_to_simple"
+            branch_node = "simple_strategy"
+        elif strategy == "hierarchical":
+            branch = "hierarchical"
+            branch_node = "hierarchical_strategy"
+        else:
+            branch = "simple"
+            branch_node = "simple_strategy"
+
+        return {
+            "router_branch": branch,
+            "diagram_nodes": {
+                "router": "strategy_router",
+                "branch": branch_node,
+            },
+            "strategy": strategy,
+            "baseline_override_active": bool(baseline_override),
+            "fallback_to": fallback_to,
+        }
+
+    @staticmethod
+    def _attach_router_mapping(plan: SimulationPlan, mapping: dict[str, Any]) -> SimulationPlan:
+        analysis = dict(plan.analysis or {})
+        analysis["router_mapping"] = mapping
+        plan.analysis = analysis
+        return plan
+
     def select_solver(self, query: str, confidence_threshold: float = 0.15) -> tuple:
         """
         Identify the correct solver using Level 0 RAG with LLM fallback.
@@ -746,8 +786,71 @@ class ArchitectService:
         return {
             "selected_case": selected,
             "candidates": candidates,
-            "confidence": selected["score"]
+            "confidence": selected["score"],
+            "rejected_alternatives": self._build_rejected_alternatives(candidates),
         }
+
+    @staticmethod
+    def _build_rejected_alternatives(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Build explicit rejection reasons for non-selected baseline alternatives.
+
+        Parameters
+        ----------
+        candidates : list[dict[str, Any]]
+            Ranked candidate list (highest score first).
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Rejected alternatives with deterministic reason text.
+        """
+        if len(candidates) <= 1:
+            return []
+
+        selected = candidates[0]
+        selected_score = float(selected.get("score", 0.0))
+        selected_bonus = float(selected.get("score_bonus", 0.0))
+        selected_case = selected.get("case") or selected.get("metadata", {}).get("repo_path") or "unknown"
+
+        rejected: list[dict[str, Any]] = []
+        for candidate in candidates[1:]:
+            case_name = candidate.get("case") or candidate.get("metadata", {}).get("repo_path") or "unknown"
+            candidate_score = float(candidate.get("score", 0.0))
+            candidate_bonus = float(candidate.get("score_bonus", 0.0))
+            score_gap = max(0.0, selected_score - candidate_score)
+
+            if candidate_bonus < selected_bonus:
+                reason = (
+                    f"Rejected in favor of '{selected_case}' due to lower final score "
+                    f"({candidate_score:.2f} vs {selected_score:.2f}) and lower priority-case bonus "
+                    f"(+{candidate_bonus:.2f} vs +{selected_bonus:.2f})."
+                )
+                reason_code = "lower_score_with_bonus_disadvantage"
+            elif candidate_score < selected_score:
+                reason = (
+                    f"Rejected in favor of '{selected_case}' due to lower weighted Level-2 match score "
+                    f"({candidate_score:.2f} vs {selected_score:.2f})."
+                )
+                reason_code = "lower_weighted_score"
+            else:
+                reason = (
+                    f"Rejected in favor of '{selected_case}' after tie-break ordering; "
+                    "scores were equivalent."
+                )
+                reason_code = "tie_break_ordering"
+
+            rejected.append(
+                {
+                    "case": case_name,
+                    "score": candidate_score,
+                    "score_gap": round(score_gap, 6),
+                    "rejection_code": reason_code,
+                    "rejection_reason": reason,
+                }
+            )
+
+        return rejected
 
     def _apply_priority_case_boost(self, candidates: list[dict], solver_config) -> list[dict]:
         """
@@ -1002,16 +1105,36 @@ class ArchitectService:
 
         # === BASELINE OVERRIDE PATH ===
         if baseline_override:
+            router_mapping = self._build_router_diagram_mapping(
+                strategy=strategy,
+                baseline_override=baseline_override,
+            )
+            logger.info(
+                "[Strategy Router] %s -> %s (branch=%s, strategy=%s, baseline_override=true)",
+                router_mapping["diagram_nodes"]["router"],
+                router_mapping["diagram_nodes"]["branch"],
+                router_mapping["router_branch"],
+                strategy,
+            )
             logger.info(f"Baseline override detected: {baseline_override}")
-            return self._execute_planning_with_override(
+            plan = self._execute_planning_with_override(
                 user_prompt=user_prompt,
                 baseline_override=baseline_override,
                 strategy=strategy,
                 **kwargs
             )
+            return self._attach_router_mapping(plan, router_mapping)
 
         # === NORMAL PATH (No override) ===
+        fell_back_from_hierarchical = False
         if strategy == "hierarchical":
+            router_mapping = self._build_router_diagram_mapping(strategy="hierarchical")
+            logger.info(
+                "[Strategy Router] %s -> %s (branch=%s, strategy=hierarchical)",
+                router_mapping["diagram_nodes"]["router"],
+                router_mapping["diagram_nodes"]["branch"],
+                router_mapping["router_branch"],
+            )
             try:
                 # Extract hierarchical-specific kwargs
                 excluded_cases = kwargs.get('excluded_cases', [])
@@ -1029,23 +1152,47 @@ class ArchitectService:
                     plan.baseline,
                     selected_case=plan.selected_case,
                 )
-                return plan
+                return self._attach_router_mapping(plan, router_mapping)
             except Exception as e:
                 logger.exception("Hierarchical indexing failed: %s", e)
                 if getattr(self.config, 'fallback_to_simple_on_error', True):
+                    fallback_mapping = self._build_router_diagram_mapping(
+                        strategy="hierarchical",
+                        fallback_to="simple",
+                    )
+                    logger.info(
+                        "[Strategy Router] %s -> %s (branch=%s, strategy=simple, fallback=hierarchical_error)",
+                        fallback_mapping["diagram_nodes"]["router"],
+                        fallback_mapping["diagram_nodes"]["branch"],
+                        fallback_mapping["router_branch"],
+                    )
                     logger.debug("Falling back to simple indexing")
                     strategy = "simple"
+                    fell_back_from_hierarchical = True
                 else:
                     raise
 
         # Simple strategy
+        router_mapping = self._build_router_diagram_mapping(strategy="simple")
+        logger.info(
+            "[Strategy Router] %s -> %s (branch=%s, strategy=simple)",
+            router_mapping["diagram_nodes"]["router"],
+            router_mapping["diagram_nodes"]["branch"],
+            router_mapping["router_branch"],
+        )
         plan = self.create_plan(user_prompt=user_prompt, **kwargs)
         logger.debug("Simple indexing succeeded")
         plan.baseline = self._normalize_baseline_metadata(
             plan.baseline,
             selected_case=plan.selected_case,
         )
-        return plan
+        if strategy == "simple" and not fell_back_from_hierarchical:
+            return self._attach_router_mapping(plan, router_mapping)
+        fallback_mapping = self._build_router_diagram_mapping(
+            strategy="hierarchical",
+            fallback_to="simple",
+        )
+        return self._attach_router_mapping(plan, fallback_mapping)
 
 
     def _execute_planning_with_override(

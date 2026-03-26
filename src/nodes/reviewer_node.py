@@ -20,6 +20,28 @@ from src.utils.gate import run_preconfirm_gate
 logger = logging.getLogger(__name__)
 
 
+def _build_final_error_taxonomy(
+    *,
+    category: str,
+    reason: str,
+    retry_count: int,
+    max_retries: int,
+    unresolved_parameters: list[tuple[str, Any]] | None = None,
+) -> dict[str, Any]:
+    taxonomy = {
+        "stage": "reviewer",
+        "terminal": True,
+        "type": "retry_exhausted",
+        "category": category,
+        "reason": reason,
+        "retry_count": retry_count,
+        "max_retries": max_retries,
+    }
+    if unresolved_parameters:
+        taxonomy["unresolved_parameters"] = [p[0] for p in unresolved_parameters]
+    return taxonomy
+
+
 def get_architect_plan(state: GraphState) -> dict[str, Any] | None:
     """
     Resolve the architect plan from workflow history or state.
@@ -200,6 +222,13 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 f"[Reviewer] Max retries ({max_retries}) exceeded for parameter resolution - "
                 f"terminating with {len(unresolved)} unresolved parameters"
             )
+            taxonomy = _build_final_error_taxonomy(
+                category="parameter_resolution_max_retries",
+                reason="max_retries_exceeded_parameter_resolution",
+                retry_count=retry_count,
+                max_retries=max_retries,
+                unresolved_parameters=unresolved,
+            )
 
             history_entry = {
                 "node": "reviewer",
@@ -211,7 +240,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                     "reason": "max_retries_exceeded_parameter_resolution",
                     "unresolved_parameters": unresolved,
                     "retry_count": retry_count,
-                    "max_retries": max_retries
+                    "max_retries": max_retries,
+                    "final_error_taxonomy": taxonomy,
                 }
             }
 
@@ -219,7 +249,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 "mode": "terminal",
                 "error": f"Parameter resolution failed after {max_retries} retries: {[p[0] for p in unresolved]}",
                 "errors_active": [f"Unresolved parameter: {p[0]}" for p in unresolved],
-                "workflow_history": workflow_history + [history_entry]
+                "workflow_history": workflow_history + [history_entry],
+                "reviewer_failure_category": taxonomy["category"],
+                "final_error_taxonomy": taxonomy,
             }
 
         # Route back to architect with feedback
@@ -550,6 +582,11 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     # ========================================
     # RETRY GUIDANCE (Inputs vs Baseline)
     # ========================================
+    unknown_param_count = 0
+    persistent_unknown_count = 0
+    has_schema_missing = schema_missing
+    has_solver_unknown = solver_unknown
+
     def _extract_param_from_error(message: str) -> str | None:
         import re
         match = re.search(r"Parameter '([^']+)'", message or "")
@@ -574,6 +611,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 persistent_unknown_count += 1
 
     def _derive_retry_guidance(violations, rejected_inputs_file, rejected_baseline_case, baseline_dir_rejected_flag, solver_unknown_flag):
+        nonlocal unknown_param_count, persistent_unknown_count, has_schema_missing, has_solver_unknown
         inputs_action = "keep"
         baseline_action = "keep"
         inputs_reason = None
@@ -620,6 +658,17 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         baseline_dir_rejected,
         solver_unknown
     )
+
+    final_error_taxonomy = None
+    reviewer_failure_category = None
+    if next_mode == "terminal" and retry_count >= max_retries:
+        final_error_taxonomy = _build_final_error_taxonomy(
+            category="review_validation_max_retries",
+            reason="max_retries_exceeded_review_validation",
+            retry_count=retry_count,
+            max_retries=max_retries,
+        )
+        reviewer_failure_category = final_error_taxonomy["category"]
 
     # Optional LLM refinement (only when guidance is keep/keep)
     if (
@@ -754,6 +803,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             "plan_rejected_inputs_file": rejected_inputs,
         }
     }
+    if final_error_taxonomy:
+        history_entry["details"]["final_error_taxonomy"] = final_error_taxonomy
+        history_entry["details"]["reviewer_failure_category"] = reviewer_failure_category
     if metrics_summary:
         history_entry["details"]["metrics"] = metrics_summary
 
@@ -797,6 +849,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         "baseline_dir_rejected": baseline_dir_rejected,
         "plan_rejected_baseline": rejected_baseline,
         "plan_rejected_inputs_file": rejected_inputs,
+        "reviewer_failure_category": reviewer_failure_category,
+        "final_error_taxonomy": final_error_taxonomy,
     }
 
     logger.info(f"Review complete: {next_mode} (errors: {len(errors_current)})")
