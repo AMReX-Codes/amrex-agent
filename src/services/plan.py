@@ -469,6 +469,10 @@ class SimulationPlan(BaseModel):
     - baseline_confidence: Level 2 (case selection: which example)
     - cbr_confidence: Level 3 (modification extraction quality)
 
+    Also records per-query retrieval telemetry for L0/L1/L2:
+    - confidence per level
+    - latency (ms) per level
+
     Reference: PRD Section 12.2.3
     """
 
@@ -586,6 +590,39 @@ class SimulationPlan(BaseModel):
         ]
         return "\n".join(lines)
 
+    def get_query_level_metrics(self) -> dict[str, dict[str, float | None]]:
+        """
+        Return explicit per-query confidence and latency for L0/L1/L2.
+
+        Returns
+        -------
+        dict[str, dict[str, float | None]]
+            Nested map for each retrieval level:
+            {
+              "L0": {"confidence": ..., "latency_ms": ...},
+              "L1": {"confidence": ..., "latency_ms": ...},
+              "L2": {"confidence": ..., "latency_ms": ...},
+            }
+        """
+        l0_confidence = self.level0_confidence
+        if l0_confidence is None:
+            l0_confidence = self.solver_confidence
+
+        return {
+            "L0": {
+                "confidence": l0_confidence,
+                "latency_ms": self.level0_latency_per_query_ms,
+            },
+            "L1": {
+                "confidence": self.level1_confidence,
+                "latency_ms": self.level1_latency_per_query_ms,
+            },
+            "L2": {
+                "confidence": self.baseline_confidence,
+                "latency_ms": self.level2_latency_per_query_ms,
+            },
+        }
+
 
 class SimulationPlanFactory:
     """
@@ -671,13 +708,18 @@ class SimulationPlanFactory:
             selected_solver=solver_name,
             selected_case=baseline_case.get('case',
                                            baseline_case.get('metadata', {}).get('repo_path', 'unknown')),
-            modifications=modifications,
+            modifications=normalize_modifications(modifications),
             reasoning=reasoning,
 
             # Confidence metrics
             solver_confidence=solver_confidence,
             baseline_confidence=baseline_conf,
             cbr_confidence=cbr_conf,
+            level0_confidence=solver_confidence,
+            level1_confidence=baseline_result.get("level1_confidence"),
+            level0_latency_per_query_ms=baseline_result.get("level0_latency_per_query_ms"),
+            level1_latency_per_query_ms=baseline_result.get("level1_latency_per_query_ms"),
+            level2_latency_per_query_ms=baseline_result.get("level2_latency_per_query_ms"),
 
             # Context
             prompt=user_prompt,
@@ -753,6 +795,11 @@ class SimulationPlanFactory:
             solver_confidence=0.8,  # Heuristic-based
             baseline_confidence=baseline_confidence,
             cbr_confidence=1.0 if modifications else 0.0,
+            level0_confidence=0.8,
+            level1_confidence=knowledge.get("level1_confidence") if isinstance(knowledge, dict) else None,
+            level0_latency_per_query_ms=knowledge.get("level0_latency_per_query_ms") if isinstance(knowledge, dict) else None,
+            level1_latency_per_query_ms=knowledge.get("level1_latency_per_query_ms") if isinstance(knowledge, dict) else None,
+            level2_latency_per_query_ms=knowledge.get("level2_latency_per_query_ms") if isinstance(knowledge, dict) else None,
 
             # Context
             prompt=user_prompt,
@@ -791,7 +838,7 @@ class SimulationPlanFactory:
         # Filter to known fields to avoid TypeErrors
         valid_fields = {k: v for k, v in data.items() if k in SimulationPlan.model_fields}
 
-        # Ensure modifications are tuples, not lists
+        # Ensure modifications are normalized tuples.
         if 'modifications' in valid_fields:
             valid_fields['modifications'] = normalize_unnumbered_023(valid_fields['modifications'])
 
@@ -837,6 +884,11 @@ class SimulationPlanFactory:
             'solver_confidence': old_dict.get('solver_confidence', 0.8),
             'baseline_confidence': old_dict.get('baseline_confidence', 0.5),
             'cbr_confidence': old_dict.get('cbr_confidence', 0.5),
+            'level0_confidence': old_dict.get('level0_confidence', old_dict.get('solver_confidence', 0.8)),
+            'level1_confidence': old_dict.get('level1_confidence'),
+            'level0_latency_per_query_ms': old_dict.get('level0_latency_per_query_ms'),
+            'level1_latency_per_query_ms': old_dict.get('level1_latency_per_query_ms'),
+            'level2_latency_per_query_ms': old_dict.get('level2_latency_per_query_ms'),
             'prompt': old_dict.get('prompt'),
             'requirements': old_dict.get('requirements'),
             'baseline': old_dict.get('baseline'),

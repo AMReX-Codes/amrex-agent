@@ -1,4 +1,5 @@
 import importlib
+from types import MethodType, SimpleNamespace
 
 import pytest
 
@@ -7,6 +8,7 @@ from src.services.plan import SimulationPlan
 
 architect_node_module = importlib.import_module("src.nodes.architect_node")
 embedding_factory_module = importlib.import_module("src.services.embedding_service_factory")
+architect_service_module = importlib.import_module("src.services.architect")
 
 
 class DummyConfig:
@@ -41,6 +43,9 @@ def _plan(selected_case="PeleC/Exec/RegTests/PMF", selected_solver="PeleC"):
             ],
         },
         baseline_confidence=0.92,
+        level0_latency_per_query_ms=6.0,
+        level1_latency_per_query_ms=14.5,
+        level2_latency_per_query_ms=11.25,
         indexing_strategy="simple",
         case_candidates=[],
     )
