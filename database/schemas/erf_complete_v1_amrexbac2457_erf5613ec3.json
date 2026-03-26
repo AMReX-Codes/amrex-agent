@@ -7,21 +7,12 @@
       "ERF"
     ],
     "composition_method": "auto-compose (gitmodules)",
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
     "total_parameters": 862,
     "repo_commits": {
       "amrex": "bac24575699ecaa6ce153cf088077b1282dfbe87",
       "erf": "5613ec3943a33d5f0b4f954e34c4e3ff5559a945"
     },
     "generated_at": "2026-03-18T14:38:38.575463+00:00"
-========
-    "total_parameters": 855,
-    "repo_commits": {
-      "amrex": "bac24575699ecaa6ce153cf088077b1282dfbe87",
-      "erf": "1df48173da427f57a8201e157518afa7fd2e73ee"
-    },
-    "generated_at": "2026-03-12T11:12:11.621840+00:00"
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
   },
   "parameters": {
     "amr.regrid_on_restart": {
@@ -7127,11 +7118,7 @@
       "is_array": false,
       "build_flags": [],
       "default": 1.0,
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
       "source_file": "Source/Prob/ERF_InitCustomPert_RICO.H",
-========
-      "source_file": "Source/Prob/ERF_InitCustomPertVels_TurbulentInflow.H",
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
       "source_type": "header",
       "priority": "tier3",
       "description": null
@@ -7142,7 +7129,6 @@
       "is_array": false,
       "build_flags": [],
       "default": 0.1,
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
       "source_file": "Source/Prob/ERF_InitCustomPert_RICO.H",
       "source_type": "header",
       "priority": "tier3",
@@ -7243,9 +7229,6 @@
       "build_flags": [],
       "default": "false",
       "source_file": "Source/Prob/ERF_InitCustomPert_RICO.H",
-========
-      "source_file": "Source/Prob/ERF_InitCustomPertVels_TurbulentInflow.H",
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
       "source_type": "header",
       "priority": "tier3",
       "description": null
@@ -7305,20 +7288,6 @@
       "priority": "tier3",
       "description": null
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
-========
-    "prob.T_0_Pert_Mag": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 0.0,
-      "source_file": "Source/Prob/ERF_InitCustomPertVels_TurbulentInflow.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "prob.pert_rhotheta": {
       "type": "bool",
       "required": false,
@@ -7374,20 +7343,6 @@
       "priority": "tier3",
       "description": null
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
-========
-    "prob.pert_ref_height": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 100.0,
-      "source_file": "Source/Prob/ERF_InitCustomPertVels_TurbulentInflow.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "prob.qt_init": {
       "type": "Real",
       "required": false,
@@ -7520,7 +7475,6 @@
       "priority": "tier3",
       "description": null
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
     "prob.advection_heating_rate": {
       "type": "Real",
       "required": false,
@@ -7554,8 +7508,6 @@
       "priority": "tier3",
       "description": null
     },
-========
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "prob.y_c": {
       "type": "Real",
       "required": false,
@@ -7622,7 +7574,6 @@
       "priority": "tier3",
       "description": null
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
     "prob.wbar_cutoff_max": {
       "type": "Real",
       "required": false,
@@ -7645,8 +7596,6 @@
       "priority": "tier3",
       "description": "random initial perturbations (legacy code)"
     },
-========
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "prob.rhoKE_0": {
       "type": "Real",
       "required": false,
@@ -7658,31 +7607,6 @@
       "priority": "tier3",
       "description": null
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
-========
-    "prob.qv_0_Pert_Mag": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 0.0,
-      "source_file": "Source/Prob/ERF_InitCustomPert_Bomex.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
-    "prob.custom_TKE": {
-      "type": "bool",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": "false",
-      "source_file": "Source/Prob/ERF_InitCustomPert_Bomex.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "prob.B_0": {
       "type": "Real",
       "required": false,
@@ -7760,42 +7684,6 @@
       "priority": "tier3",
       "description": "z-radius of scalar bubble"
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
-========
-    "prob.source_cutoff": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 500.0,
-      "source_file": "Source/Prob/ERF_UpdateRhoThetaSources_Bomex.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
-    "prob.source_cutoff_transition": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 50.0,
-      "source_file": "Source/Prob/ERF_UpdateRhoThetaSources_Bomex.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
-    "prob.advection_heating_rate": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 0.0,
-      "source_file": "Source/Prob/ERF_UpdateRhoThetaSources_Bomex.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "prob.pert_periods_u": {
       "type": "Real",
       "required": false,
@@ -7851,7 +7739,6 @@
       "priority": "tier3",
       "description": null
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
     "prob.advection_heating_rate_base": {
       "type": "Real",
       "required": false,
@@ -7874,8 +7761,6 @@
       "priority": "tier3",
       "description": null
     },
-========
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "erf.init_type": {
       "type": "InitType",
       "required": false,
@@ -7920,31 +7805,6 @@
       "priority": "tier3",
       "description": null
     },
-<<<<<<<< HEAD:database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json
-========
-    "prob.wbar_sub_max": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": -0.65,
-      "source_file": "Source/Prob/ERF_UpdateWSubsidence_Bomex.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
-    "prob.wbar_cutoff_max": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 1500.0,
-      "source_file": "Source/Prob/ERF_UpdateWSubsidence_Bomex.H",
-      "source_type": "header",
-      "priority": "tier3",
-      "description": null
-    },
->>>>>>>> amrex-codes/development:database/schemas/erf_complete_v1_amrexbac2457_erf1df4817.json
     "prob.wbar_cutoff_min": {
       "type": "Real",
       "required": false,

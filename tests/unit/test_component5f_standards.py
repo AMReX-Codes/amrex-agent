@@ -16,9 +16,24 @@ Markers:
 
 import ast
 import json
+import math
 import pytest
+import sys
 from pathlib import Path
 from typing import Set, Dict, Any
+
+from src.services.plan import (
+    SimulationPlan,
+    SimulationPlanFactory,
+    find_feature_blocks_missing_helper_extraction,
+    find_feature_blocks_missing_tests_fixtures,
+    normalize_unnumbered_003,
+    validate_feature_blocks_tests_fixtures,
+    validate_new_file_helper_extraction,
+)
+
+# Coverage compatibility for session command targets using file-like module names.
+sys.modules["src/services/plan.py"] = sys.modules["src.services.plan"]
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

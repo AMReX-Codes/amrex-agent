@@ -6,6 +6,7 @@ Uses the tested pattern from 02_llm_qa_notebook.md
 """
 
 import logging
+import re
 from pathlib import Path
 
 from amrex_tools import dict_to_pele_inputs, parse_pele_inputs
