@@ -147,6 +147,7 @@ vector_store_base_url: https://your-host/path/to/faiss
 
 Note: ALCF embeddings use the OpenAI-compatible path above (set `ALCF_BASE_URL` or `ALCF_CLUSTER`).
 Default ALCF embedding model is `mistralai/Mistral-7B-Instruct-v0.3-embed` when `embedding_provider: alcf`.
+See also: dependencies_update_policy.md
 
 ## Troubleshooting
 

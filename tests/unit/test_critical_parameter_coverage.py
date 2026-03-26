@@ -17,9 +17,9 @@ References:
 import pytest
 import warnings
 from pathlib import Path
-from typing import Set, Dict
+from typing import Dict
 
-from database.scripts.build_schema import SchemaBuilder
+from database.scripts.build_schema import SchemaBuilder, normalize_unnumbered_112
 from database.configs.pelec_config import PeleCConfig
 
 
@@ -168,3 +168,71 @@ class TestMultiSolverCoverage:
         """
         # This would be fully implemented with actual solver repos
         pytest.skip("Requires full solver repositories")
+
+
+class TestUnnumbered112Tier2Behavior:
+    """Validate UNNUMBERED-112 Tier 2 warning + UQ recommendation contract."""
+
+    def test_normalize_unnumbered_112_warning_payload(self):
+        """
+        Given: Missing Tier 2 parameters
+        When:  Normalizing criterion payload
+        Then:  Warning status includes coupled UQ recommendations
+        """
+        result = normalize_unnumbered_112(
+            missing_tier2_parameters=["amr.blocking_factor"]
+        )
+
+        assert result["criterion"] == "UNNUMBERED-112"
+        assert result["status"] == "warning"
+        assert result["missing_tier2_parameters"] == ["amr.blocking_factor"]
+        assert len(result["uq_recommendations"]) == 1
+        assert result["uq_recommendations"][0]["parameter"] == "amr.blocking_factor"
+
+    def test_tier2_warning_channel_emits_recommendations(self, caplog):
+        """
+        Given: Schema missing one Tier 2 stability parameter
+        When:  Evaluating UNNUMBERED-112 runtime behavior
+        Then:  Warning channel output is emitted with UQ recommendations
+        """
+        builder = SchemaBuilder(Path("."))
+        builder.schema = {
+            "amr.max_level": {"priority": "tier2"},
+            "pelec.cfl": {"priority": "tier1"},
+        }
+
+        with caplog.at_level("WARNING"):
+            result = builder._emit_tier2_warning_uq_recommendation()
+
+        assert result["status"] == "warning"
+        assert result["missing_tier2_parameters"] == ["amr.blocking_factor"]
+        assert builder.uq_recommendations == result["uq_recommendations"]
+        assert any(
+            "Tier 2 warning channel (UNNUMBERED-112)" in record.message
+            for record in caplog.records
+        )
+
+    def test_tier2_warning_channel_pass_has_no_recommendations(self, caplog):
+        """
+        Given: Schema with all Tier 2 stability parameters
+        When:  Evaluating UNNUMBERED-112 runtime behavior
+        Then:  No warning payload and no UQ recommendations are generated
+        """
+        builder = SchemaBuilder(Path("."))
+        builder.schema = {
+            "amr.max_level": {"priority": "tier2"},
+            "amr.blocking_factor": {"priority": "tier2"},
+            "pelec.cfl": {"priority": "tier1"},
+        }
+
+        with caplog.at_level("WARNING"):
+            result = builder._emit_tier2_warning_uq_recommendation()
+
+        assert result["status"] == "pass"
+        assert result["missing_tier2_parameters"] == []
+        assert result["uq_recommendations"] == []
+        assert builder.uq_recommendations == []
+        assert not any(
+            "Tier 2 warning channel (UNNUMBERED-112)" in record.message
+            for record in caplog.records
+        )

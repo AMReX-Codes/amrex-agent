@@ -1,0 +1,38 @@
+[B1.2]	Intent Extraction Node	ABSENT
+[B1.5]	GraphState Additions	ABSENT
+[B1.6]	interactive_service Required	ABSENT
+[B2]	gate_approvals Schema Precondition	ABSENT
+[B2.8]	Sweep Output Structure	ABSENT
+[B3.1-04]	GraphState Field Confirmation for Output	ABSENT
+[F2.5]	Scaling Report Template	ABSENT
+[F6.2]	Capability reporting breadth	ABSENT
+[F6.2]	Standards checklist mapped to evidence	ABSENT
+[F6.2]	Agents4Science capability table	ABSENT
+[F6.2]	Gap flagging with plan/risk notes	ABSENT
+[UNNUMBERED-002]	Claim/evidence/gap table structure	ABSENT
+[UNNUMBERED-017]	User sees context before approval	ABSENT
+[UNNUMBERED-021]	Fix suggestions include evidence	ABSENT
+[UNNUMBERED-035]	Metrics Endpoint Workflow/Cost Summary	ABSENT
+[UNNUMBERED-054]	Manual CSV Creation Requirement	ABSENT
+[UNNUMBERED-066]	David Story 2 (Recompilation Awareness)	ABSENT
+[UNNUMBERED-069]	David Story 5 (Specific Mechanism File)	ABSENT
+[UNNUMBERED-073]	Mechanism Provenance and Path Validation	ABSENT
+[UNNUMBERED-096]	Tables 1-5 from metrics.jsonl	ABSENT
+[UNNUMBERED-108]	Onboarding LOC Metric	ABSENT
+UNNUMBERED-117	Schema Version + Solver + Commit Metadata	ABSENT
+UNNUMBERED-127	Per-Node LLM and Numerical Error Sources	ABSENT
+UNNUMBERED-128	error_estimates Append Contract	ABSENT
+UNNUMBERED-130	Summary Aggregation of Top Error Sources by Node	ABSENT
+UNNUMBERED-136	State Schema Table (Required/Optional)	ABSENT
+[UNNUMBERED-231]	Tier-1 Physics Validator Constraint Example	ABSENT
+UNNUMBERED-239	Aggregation Errors by Tier and Node	ABSENT
+UNNUMBERED-248	Versioned Migrations + Backup/Restore Steps	ABSENT
+UNNUMBERED-249	Versioned Schema Changes + Migration Notes	ABSENT
+UNNUMBERED-250	Backup/Restore Procedure Documented	ABSENT
+UNNUMBERED-252	Concurrency Limits + WAL + Deployment Validation	ABSENT
+UNNUMBERED-253	WAL Enabled + Verified at Startup	ABSENT
+UNNUMBERED-257	A2A Schema Validation + Versioning	ABSENT
+UNNUMBERED-258	A2A protocol_version + trace_id Required	ABSENT
+UNNUMBERED-263	Polling Exponential Backoff + Max Cap	ABSENT
+[UNNUMBERED-268]	Explicit gap and planned-work callouts	ABSENT
+[UNNUMBERED-272]	E2E smoke updates for solver-facing changes	ABSENT

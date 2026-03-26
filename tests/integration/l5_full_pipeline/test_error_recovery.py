@@ -73,7 +73,16 @@ class TestErrorRecovery:
             def __init__(self, _config):
                 self.cases_svc = None
 
-            def apply_plan(self, selected_case, modifications, baseline, reasoning, output_dir):
+            def apply_plan(
+                self,
+                selected_case,
+                modifications,
+                baseline,
+                reasoning,
+                output_dir,
+                requested_plot_vars=None,
+                **_kwargs,
+            ):
                 run_dir = Path(output_dir)
                 run_dir.mkdir(parents=True, exist_ok=True)
                 inputs_path = run_dir / "inputs"
@@ -149,7 +158,10 @@ class TestErrorRecovery:
         config = AMReXAgentConfig(output_dir=tmp_path)
         config.max_iterations = 0
 
-        with patch("src.services.embedding_service_factory.get_embedding_service", return_value=object()), \
+        class DummyEmbeddingService:
+            embeddings = None
+
+        with patch("src.services.embedding_service_factory.get_embedding_service", return_value=DummyEmbeddingService()), \
              patch("src.nodes.architect_node.ArchitectService") as MockArch, \
              patch("src.nodes.reviewer_node.ReviewerOrchestrator") as MockRev:
 
@@ -166,7 +178,15 @@ class TestErrorRecovery:
 
             final_state = run_agent("Test max retries", config)
 
-        assert final_state["mode"] in {"terminal", "fail"}
+        assert final_state["mode"] == "terminal"
+        assert final_state["reviewer_failure_category"] == "review_validation_max_retries"
+        reviewer_entries = [e for e in final_state["workflow_history"] if e.get("node") == "reviewer"]
+        taxonomy = reviewer_entries[-1]["details"]["final_error_taxonomy"]
+        assert taxonomy["version"] == "v1"
+        assert taxonomy["stage"] == "reviewer"
+        assert taxonomy["type"] == "retry_exhausted"
+        assert taxonomy["category"] == "review_validation_max_retries"
+        assert taxonomy["reason_code"] == "max_retries_exceeded_review_validation"
 
     def test_analysis_failure_triggers_retry(self, mock_baseline_dir, tmp_path):
         """
@@ -191,7 +211,16 @@ class TestErrorRecovery:
             def __init__(self, _config):
                 self.cases_svc = None
 
-            def apply_plan(self, selected_case, modifications, baseline, reasoning, output_dir):
+            def apply_plan(
+                self,
+                selected_case,
+                modifications,
+                baseline,
+                reasoning,
+                output_dir,
+                requested_plot_vars=None,
+                **_kwargs,
+            ):
                 run_dir = Path(output_dir)
                 run_dir.mkdir(parents=True, exist_ok=True)
                 inputs_path = run_dir / "inputs"

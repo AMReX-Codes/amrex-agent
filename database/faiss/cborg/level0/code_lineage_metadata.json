@@ -1,0 +1,66 @@
+[
+  {
+    "code_name": "AMReX",
+    "lineage_info": {
+      "description": "AMReX is the base framework supporting solver applications."
+    },
+    "chunk_parent": 0,
+    "chunk_index": 0
+  },
+  {
+    "code_name": "PeleC",
+    "lineage_info": {
+      "related": [
+        "CNS",
+        "Combustion"
+      ],
+      "description": "PeleC evolved from CNS for compressible reacting flows."
+    },
+    "chunk_parent": 1,
+    "chunk_index": 1
+  },
+  {
+    "code_name": "PeleLMeX",
+    "lineage_info": {
+      "evolved_from": "PeleLM",
+      "description": "PeleLMeX is the modernized successor to PeleLM."
+    },
+    "chunk_parent": 2,
+    "chunk_index": 2
+  },
+  {
+    "code_name": "incflo",
+    "lineage_info": {
+      "description": "incflo is an AMReX incompressible flow application."
+    },
+    "chunk_parent": 3,
+    "chunk_index": 3
+  },
+  {
+    "code_name": "WarpX",
+    "lineage_info": {
+      "description": "WarpX is an AMReX-based electromagnetic PIC solver."
+    },
+    "chunk_parent": 4,
+    "chunk_index": 4
+  },
+  {
+    "code_name": "ERF",
+    "lineage_info": {
+      "description": "ERF is an AMReX atmospheric and weather modeling solver."
+    },
+    "chunk_parent": 5,
+    "chunk_index": 5
+  },
+  {
+    "code_name": "REMORA",
+    "lineage_info": {
+      "related": [
+        "ERF"
+      ],
+      "description": "REMORA shares setup patterns with ERF and specializes them for ocean/coastal circulation."
+    },
+    "chunk_parent": 6,
+    "chunk_index": 6
+  }
+]

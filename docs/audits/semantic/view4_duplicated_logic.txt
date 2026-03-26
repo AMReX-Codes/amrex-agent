@@ -1,0 +1,36 @@
+[B1.1]	Graph Topology Change
+[B3.2-01]	Missing Solver Family Case Coverage
+[UNNUMBERED-003]	Complexity Budget: File Size
+[UNNUMBERED-003]	v26.05 Required Capability
+[UNNUMBERED-023]	Use case to artifact mapping
+[UNNUMBERED-024]	Use case references artifact
+[UNNUMBERED-031]	Camera-ready and node contract alignment
+[UNNUMBERED-047]	Unattended Execution Robust Edge Handling
+[UNNUMBERED-053]	Alternative Rejection Reasons Comprehensive
+[UNNUMBERED-060]	Story 4 Baseline Selection Reasoning Visibility
+[UNNUMBERED-082]	Jamie Story 2 (Token Usage Per User)
+[UNNUMBERED-094]	Camera-ready Benchmark Pipeline
+[UNNUMBERED-103]	Strategy Logged with Alternatives
+UNNUMBERED-111	Tier 1 Blocking + Retrieval Retry
+UNNUMBERED-112	Tier 2 Warning + UQ Recommendation
+UNNUMBERED-124	Nodes Read/Write Declared State Fields Only
+[UNNUMBERED-138]	Retry count and max_retries stop
+[UNNUMBERED-143]	JSONL metrics persistence
+[UNNUMBERED-152]	A2A error propagation with retry guidance
+[UNNUMBERED-168]	Per-Solver Timeout Enforcement
+[UNNUMBERED-175]	User-Facing Response Must Include Reasoning/Evidence/Next Steps
+[UNNUMBERED-187]	Response Includes Trigger Criteria + Fallback
+[UNNUMBERED-208]	Index Metadata Includes Source Paths, Build Date, Chunk Policy
+[UNNUMBERED-210]	Chunking Policy, No Truncation, Embedding Cache Hits
+[UNNUMBERED-216]	Fallback Path Reason Logging
+[UNNUMBERED-224]	Rationale Contains Keywords/Overrides
+[UNNUMBERED-227]	Strategy Comparison from Benchmark Metrics
+[UNNUMBERED-231]	Tier-1 Physics Validator Constraint Example
+[UNNUMBERED-236]	Error Taxonomy Normalization
+UNNUMBERED-252	Concurrency Limits + WAL + Deployment Validation
+UNNUMBERED-261	Inheritance Contracts + Backoff Policies + Metrics
+[UNNUMBERED-265]	Summary-to-artifact traceability
+[UNNUMBERED-278]	Required CSV and raw metrics outputs
+[UNNUMBERED-279]	Deployment prerequisites/config/verification docs
+[UNNUMBERED-283]	Criterion-to-benchmark-and-test linkage
+[UNNUMBERED-284]	Success criteria map to measurable artifact/test
