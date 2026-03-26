@@ -6,7 +6,6 @@ Uses the tested pattern from 02_llm_qa_notebook.md
 """
 
 import logging
-import re
 from pathlib import Path
 
 from amrex_tools import dict_to_pele_inputs, parse_pele_inputs
@@ -361,9 +360,6 @@ class InputWriterService:
 
         # Ensure output directory exists
         output_dir = Path(output_dir)
-        from src.utils.write_policy import ensure_write_allowed
-
-        ensure_write_allowed(output_dir, self.config, purpose="input_writer.apply_plan")
         output_dir.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -481,8 +477,7 @@ class InputWriterService:
                                 strategy=strategy,
                                 excluded_files=[],
                                 available_files=inputs_candidates,
-                                config=self.config,
-                                user_prompt=user_prompt,
+                                config=self.config
                             )
                             if selected:
                                 selected_inputs_path = str(selected)
@@ -599,7 +594,6 @@ class InputWriterService:
                     solver_config,
                     schema_dir,
                     repo_path,
-                    runtime_config=self.config,
                 )
                 logger.debug(f"Loading schema from: {schema_path}")
 
@@ -915,8 +909,8 @@ class InputWriterService:
             templates_index = f"{code_lower}_input_templates"
 
             results = self.embeddings.retrieve_faiss(
-                search_query,
                 templates_index,
+                search_query,
                 topk=50
             )
 
