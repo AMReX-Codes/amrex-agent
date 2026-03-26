@@ -118,7 +118,11 @@ If you want users to download prebuilt indices, publish the FAISS directory with
 
 Build a manifest:
 ```bash
-python database/scripts/build_faiss_manifest.py --faiss-root database/faiss --output database/faiss/manifest.json
+python database/scripts/build_faiss_manifest.py \
+    --faiss-root database/faiss \
+    --output database/faiss/manifest.json \
+    --embedding-provider cborg \
+    --embedding-model text-embedding-3-small
 ```
 
 Download published artifacts:

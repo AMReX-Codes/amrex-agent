@@ -71,3 +71,72 @@ def test_ensure_faiss_indices_downloads_missing(monkeypatch, tmp_path):
 
     assert downloaded == 1
     assert (tmp_path / "level1" / "index.faiss").read_bytes() == b"payload"
+
+
+def test_validate_manifest_metadata_accepts_legacy_without_version(caplog):
+    manifest = {"files": [{"path": "index.faiss"}]}
+
+    faiss_artifacts._validate_manifest_metadata(manifest)
+
+    assert "missing version metadata" in caplog.text
+
+
+def test_validate_manifest_metadata_requires_timestamp_for_versioned_manifest():
+    manifest = {"version": "1.0.0", "files": [{"path": "index.faiss"}]}
+
+    try:
+        faiss_artifacts._validate_manifest_metadata(manifest)
+    except RuntimeError as exc:
+        assert "missing valid generated_at/timestamp" in str(exc)
+    else:
+        raise AssertionError("Expected RuntimeError for missing timestamp")
+
+
+def test_validate_manifest_metadata_requires_embedding_model_for_v2():
+    manifest = {
+        "version": "2.0",
+        "generated_at": "2026-03-10T00:00:00Z",
+        "files": [{"path": "index.faiss"}],
+    }
+
+    try:
+        faiss_artifacts._validate_manifest_metadata(manifest)
+    except RuntimeError as exc:
+        assert "missing embedding_model" in str(exc)
+    else:
+        raise AssertionError("Expected RuntimeError for missing embedding_model")
+
+
+def test_validate_manifest_embedding_compatibility_rejects_v2_mismatch():
+    manifest = {
+        "version": "2.0",
+        "generated_at": "2026-03-10T00:00:00Z",
+        "embedding_model": "model-a",
+        "files": [{"path": "index.faiss"}],
+    }
+
+    try:
+        faiss_artifacts._validate_manifest_embedding_compatibility(
+            manifest,
+            expected_embedding_model="model-b",
+        )
+    except RuntimeError as exc:
+        assert "does not match configured model" in str(exc)
+    else:
+        raise AssertionError("Expected RuntimeError for versioned manifest model mismatch")
+
+
+def test_validate_manifest_embedding_compatibility_warns_on_legacy_mismatch(caplog):
+    manifest = {
+        "version": "1.0",
+        "generated_at": "2026-03-10T00:00:00Z",
+        "embedding_model": "model-a",
+        "files": [{"path": "index.faiss"}],
+    }
+
+    faiss_artifacts._validate_manifest_embedding_compatibility(
+        manifest,
+        expected_embedding_model="model-b",
+    )
+
+    assert "Accepting legacy manifest." in caplog.text

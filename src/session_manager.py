@@ -22,19 +22,119 @@ def _get_store_functions():
     return _get_session_context, _persist_session_context
 
 
+B4_IMPLEMENTATION_SEQUENCE = (
+    "overview",
+    "graph_topology_addition",
+    "paper_parser_service",
+    "validation_manifest_schema",
+    "paper_validator_mode_1",
+    "paper_validator_mode_2",
+    "new_cli_arguments",
+    "implementation_sequencing",
+)
+INHERITANCE_COST_REDUCTION_TARGET = 0.60
+
+
+def _normalize_sequence_step(step: str) -> str:
+    return step.strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def _coerce_non_negative_number(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        numeric = float(value)
+        return numeric if numeric >= 0 else None
+    return None
+
+
+def evaluate_inheritance_cost_reduction(context: dict[str, Any]) -> dict[str, Any] | None:
+    """
+    Evaluate inheritance planning-cost savings and target compliance.
+
+    Expected context keys:
+    - independent_planning_cost_usd
+    - inherited_planning_cost_usd
+    """
+    independent = _coerce_non_negative_number(context.get("independent_planning_cost_usd"))
+    inherited = _coerce_non_negative_number(context.get("inherited_planning_cost_usd"))
+    if independent is None or inherited is None or independent == 0:
+        return None
+
+    reduction_ratio = (independent - inherited) / independent
+    return {
+        "independent_planning_cost_usd": independent,
+        "inherited_planning_cost_usd": inherited,
+        "cost_reduction_ratio": reduction_ratio,
+        "cost_reduction_percent": reduction_ratio * 100,
+        "target_reduction_ratio": INHERITANCE_COST_REDUCTION_TARGET,
+        "target_reduction_percent": INHERITANCE_COST_REDUCTION_TARGET * 100,
+        "target_met": reduction_ratio >= INHERITANCE_COST_REDUCTION_TARGET,
+    }
+
+
+def is_b4_implementation_sequence_complete(context: dict[str, Any]) -> bool:
+    """
+    Return True when validation_manifest includes the full staged B4 sequence.
+
+    Supported manifest shapes:
+    - {"b4_implementation_sequence": [...]}
+    - {"b4": {"implementation_sequence": [...]}}
+    - {"sessions": {"b4": {"implementation_sequence": [...]}}}
+    """
+    manifest = context.get("validation_manifest")
+    if not isinstance(manifest, dict):
+        return False
+
+    sequence: Any = manifest.get("b4_implementation_sequence")
+    if sequence is None:
+        b4_entry = manifest.get("b4")
+        if isinstance(b4_entry, dict):
+            sequence = b4_entry.get("implementation_sequence")
+    if sequence is None:
+        sessions = manifest.get("sessions")
+        if isinstance(sessions, dict):
+            b4_session = sessions.get("b4")
+            if isinstance(b4_session, dict):
+                sequence = b4_session.get("implementation_sequence")
+
+    if not isinstance(sequence, list) or any(not isinstance(step, str) for step in sequence):
+        return False
+
+    normalized_required = {_normalize_sequence_step(step) for step in B4_IMPLEMENTATION_SEQUENCE}
+    normalized_sequence = {_normalize_sequence_step(step) for step in sequence}
+    if normalized_required - normalized_sequence:
+        return False
+
+    positions = {_normalize_sequence_step(step): idx for idx, step in enumerate(sequence)}
+    ordered_required = [_normalize_sequence_step(step) for step in B4_IMPLEMENTATION_SEQUENCE]
+    if any(positions[ordered_required[i]] >= positions[ordered_required[i + 1]] for i in range(len(ordered_required) - 1)):
+        return False
+
+    return True
+
+
 def merge_session_context(
     *,
     session_id: str | None,
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
     """Merge persisted session context with call arguments."""
+    context = dict(arguments)
     if not session_id:
-        return dict(arguments)
+        evaluation = evaluate_inheritance_cost_reduction(context)
+        if evaluation is not None:
+            context["inheritance_cost_reduction"] = evaluation
+        return context
+
     get_session_context, _ = _get_store_functions()
     context = get_session_context(session_id)
     context.update(arguments)
     if "steps" not in arguments:
         context.pop("steps", None)
+    evaluation = evaluate_inheritance_cost_reduction(context)
+    if evaluation is not None:
+        context["inheritance_cost_reduction"] = evaluation
     return context
 
 

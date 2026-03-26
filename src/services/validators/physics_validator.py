@@ -28,6 +28,7 @@ class PhysicsValidator:
 
     This keeps validators universal (Q5) while rules are solver-specific.
     """
+    INJECTED_ERROR_CATCH_RATE_THRESHOLD = 0.90
 
     def __init__(self, config: AMReXAgentConfig):
         """Initialize validator with app config."""
@@ -129,7 +130,69 @@ class PhysicsValidator:
                 parameter=None
             ))
 
+        injected_error_violation = self._validate_injected_error_catch_rate(plan)
+        if injected_error_violation is not None:
+            violations.append(injected_error_violation)
+
         return violations
+
+    def _validate_injected_error_catch_rate(self, plan: dict[str, Any]) -> RuleViolation | None:
+        """Enforce Gate 6 threshold when injected-error benchmark data is supplied."""
+        benchmark = plan.get("injected_error_benchmark")
+        if not benchmark:
+            return None
+
+        total, caught = self._extract_injected_error_counts(benchmark)
+        if total <= 0 or caught < 0 or caught > total:
+            return RuleViolation(
+                rule_name="InjectedPhysicsErrorCatchRate",
+                severity="error",
+                message=(
+                    "Invalid injected_error_benchmark payload: expected non-zero "
+                    "total_injected with 0 <= caught <= total."
+                ),
+                suggested_fix=(
+                    "Provide valid benchmark counts via total_injected/caught "
+                    "or results with caught booleans."
+                ),
+            )
+
+        catch_rate = caught / total
+        if catch_rate >= self.INJECTED_ERROR_CATCH_RATE_THRESHOLD:
+            return None
+
+        return RuleViolation(
+            rule_name="InjectedPhysicsErrorCatchRate",
+            severity="critical",
+            message=(
+                f"Injected physics error catch rate {catch_rate:.1%} is below "
+                f"required {self.INJECTED_ERROR_CATCH_RATE_THRESHOLD:.0%} ({caught}/{total})."
+            ),
+            suggested_fix=(
+                "Improve physics-rule coverage until injected benchmark catch rate "
+                "meets or exceeds 90%."
+            ),
+        )
+
+    def _extract_injected_error_counts(self, benchmark: Any) -> tuple[int, int]:
+        """Normalize benchmark payload into (total_injected, caught_count)."""
+        if not isinstance(benchmark, dict):
+            return 0, -1
+
+        total = benchmark.get("total_injected")
+        caught = benchmark.get("caught")
+        if isinstance(total, int) and isinstance(caught, int):
+            return total, caught
+
+        results = benchmark.get("results")
+        if not isinstance(results, list):
+            return 0, -1
+
+        caught_count = 0
+        for result in results:
+            if isinstance(result, dict) and result.get("caught") is True:
+                caught_count += 1
+        return len(results), caught_count
 
     def _merge_config(self, baseline: dict, modifications: list) -> dict:
         """
