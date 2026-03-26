@@ -25,6 +25,8 @@ def evaluate_candidate_vs_baseline(
         "category_guardrail": candidate.get("category_min_weighted_score", 0.0) >= category_floor,
         "non_erf_sanity_tolerance": candidate.get("non_erf_sanity_weighted_score", 0.0)
         >= (baseline.get("non_erf_sanity_weighted_score", 0.0) - sanity_regression_tolerance),
+        "explainability_gate": bool(candidate.get("explainability_pass", True))
+        and float(candidate.get("explainability_mean_score", 1.0)) >= 0.9,
     }
     return {"accepted": all(checks.values()), "checks": checks}
 

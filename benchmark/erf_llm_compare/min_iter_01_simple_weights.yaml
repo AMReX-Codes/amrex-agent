@@ -1,0 +1,10 @@
+# Minimal simple-strategy tuning candidate focused on squall-line routing.
+indexing_strategy: simple
+inputs_file_strategy: newest
+
+# Raise domain signal and reduce path/metrics bias that can over-favor windfarm dev tests.
+simple_weight_kb_relevance: 0.25
+simple_weight_metrics: 0.05
+simple_weight_path_heuristics: 0.03
+simple_weight_domain_specific: 0.67
+simple_weight_faiss_semantic: 0.15

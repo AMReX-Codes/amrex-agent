@@ -12,6 +12,7 @@ Related solvers: PeleC, PeleLMeX, ERF, WarpX, incflo.
 """
 
 import logging
+import re
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -301,6 +302,58 @@ Return JSON with your working and results:
             ),
         },
     }
+
+    @classmethod
+    def get_viz_variable_catalog(cls, repo_root: Path | None = None) -> list[dict[str, Any]]:
+        """
+        Build PeleLMeX visualization variable catalog from live setup sources.
+        """
+        if repo_root:
+            root = Path(repo_root)
+        else:
+            root = Path(__file__).resolve().parents[2].parent / "PeleLMeX"
+
+        setup = root / "Source" / "PeleLMeX_Setup.cpp"
+        if not setup.exists():
+            return []
+
+        try:
+            text = setup.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            return []
+
+        names: list[str] = []
+        names.extend(
+            re.findall(r'stateComponents\.emplace_back\([^,]+,\s*"([^"]+)"\)', text)
+        )
+        names.extend(re.findall(r'derive_lst\.add\(\s*"([^"]+)"', text))
+
+        aliases = {
+            "temp": ["temperature"],
+            "pressure": ["pres"],
+            "mag_vel": ["velocity", "speed", "magnitude velocity"],
+            "mag_vort": ["vorticity", "vort", "vorticity magnitude"],
+            "vorticity": ["vorticity components"],
+            "z_velocity": ["vertical velocity", "w velocity"],
+        }
+
+        catalog: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        source_ref = str(setup)
+        for name in names:
+            if name in seen:
+                continue
+            seen.add(name)
+            catalog.append(
+                {
+                    "name": name,
+                    "aliases": aliases.get(name, []),
+                    "units": None,
+                    "description": None,
+                    "source": source_ref,
+                }
+            )
+        return catalog
 
     @classmethod
     def analysis_error_patterns(cls) -> list[dict[str, str]]:

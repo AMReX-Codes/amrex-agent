@@ -420,6 +420,14 @@ class AMReXAgentConfig(BaseModel):
             "derive a central ERF build directory (Exec/<group>)."
         ),
     )
+    erf_central_build_dir: Optional[Path] = Field(
+        default_factory=lambda: _repo_path_from_env("ERF_CENTRAL_BUILD_DIR", "ERF/Exec/RegTests"),
+        description=(
+            "Optional ERF central build directory used for executable lookup/compile "
+            "fallbacks (for example: ERF/Exec/CanonicalFlows). "
+            "Defaults to ERF/Exec/RegTests unless overridden by ERF_CENTRAL_BUILD_DIR."
+        ),
+    )
 
     # Plasma/Accelerator (very well documented)
     warpx_repo_path: Optional[Path] = Field(
@@ -616,7 +624,7 @@ class AMReXAgentConfig(BaseModel):
         description="Simple strategy baseline weight: FAISS semantic bucket."
     )
     simple_case_hint_min_total: float = Field(
-        default=0.30,
+        default=0.00,
         ge=0.0,
         description=(
             "Simple strategy threshold gate for LLM-selected case promotion: "
@@ -624,11 +632,19 @@ class AMReXAgentConfig(BaseModel):
         ),
     )
     simple_case_hint_max_gap: float = Field(
-        default=0.06,
+        default=0.14,
         ge=0.0,
         description=(
             "Simple strategy threshold gate for LLM-selected case promotion: "
             "maximum allowed score gap between top candidate and hinted case."
+        ),
+    )
+    simple_case_hint_score_boost: float = Field(
+        default=0.20,
+        ge=0.0,
+        description=(
+            "Simple strategy score boost applied to the LLM-selected case hint "
+            "before threshold comparison."
         ),
     )
 

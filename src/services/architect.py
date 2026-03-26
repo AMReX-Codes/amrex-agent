@@ -749,6 +749,127 @@ class ArchitectService:
 
         logger.info("Selected solver: %s (confidence: %.2f)", code_name, confidence)
 
+        # Flatness guard: if top solver scores are too close, avoid hard-locking
+        # on a potentially wrong solver family.
+        top2_margin = None
+        if len(results) > 1:
+            runner_up_score = float(results[1].get("score") or 0.0)
+            top2_margin = confidence - runner_up_score
+
+        flat_enabled = self._config_bool("level0_flat_disambiguation_enabled", True)
+        flat_margin_threshold = self._config_float("level0_flat_margin_threshold", 0.08)
+        is_flat = (
+            flat_enabled
+            and top2_margin is not None
+            and top2_margin <= flat_margin_threshold
+        )
+
+        if is_flat:
+            logger.warning(
+                "Level0 near-tie detected (top1=%.3f, top2=%.3f, margin=%.3f <= %.3f); "
+                "attempting solver disambiguation.",
+                confidence,
+                float(results[1].get("score") or 0.0),
+                float(top2_margin or 0.0),
+                flat_margin_threshold,
+            )
+
+            switched_by_flat_disambiguation = False
+
+            # Prefer deterministic case-name evidence before additional LLM calls.
+            flat_min_hits = self._config_int("level0_flat_min_metadata_hits", 3)
+            flat_case_threshold = self._config_float("level0_flat_case_match_threshold", 0.90)
+            case_name_candidate = self._find_level2_case_name_candidate(
+                prompt=query,
+                min_metadata_hits=flat_min_hits,
+            )
+            if case_name_candidate:
+                candidate_confidence = float(case_name_candidate.get("match_confidence", 0.0))
+                candidate_solver_name = case_name_candidate.get("solver")
+                if (
+                    candidate_confidence >= flat_case_threshold
+                    and candidate_solver_name in self.code_configs
+                    and candidate_solver_name != code_name
+                ):
+                    logger.info(
+                        "[Level0 flat disambiguation] Switching solver %s -> %s "
+                        "(case=%s, confidence=%.2f)",
+                        code_name,
+                        candidate_solver_name,
+                        case_name_candidate.get("repo_path") or case_name_candidate.get("case_name"),
+                        candidate_confidence,
+                    )
+                    code_name = candidate_solver_name
+                    confidence = max(confidence, candidate_confidence)
+                    switched_by_flat_disambiguation = True
+                    for alt in alternatives:
+                        if alt.get("code") == code_name:
+                            alt["selected"] = True
+                            alt["selection_source"] = "level0_flat_case_override"
+                            alt["selection_reason"] = (
+                                "Selected via case-name disambiguation after near-tie Level0 routing result"
+                            )
+                            alt["rejection_reason"] = None
+                        else:
+                            alt["selected"] = False
+                            alt["rejection_reason"] = (
+                                "Rejected after near-tie Level0 routing; case-name disambiguation selected "
+                                "a different solver"
+                            )
+                    if not any(alt.get("code") == code_name for alt in alternatives):
+                        alternatives.insert(
+                            0,
+                            {
+                                "code": code_name,
+                                "score": confidence,
+                                "selected": True,
+                                "selection_source": "level0_flat_case_override",
+                                "selection_reason": (
+                                    "Selected via case-name disambiguation after near-tie Level0 routing result"
+                                ),
+                                "rejection_reason": None,
+                            },
+                        )
+
+            # If deterministic disambiguation cannot resolve the near-tie, use LLM.
+            if not switched_by_flat_disambiguation and self.llm_client:
+                logger.info("Using LLM to resolve near-tie Level0 solver routing")
+                try:
+                    llm_code_name, _ = self.cases.find_best_match(query, self.llm_client)
+                    if llm_code_name in self.code_configs:
+                        logger.info("LLM selected solver: %s", llm_code_name)
+                        code_name = llm_code_name
+                        confidence = max(confidence, 0.8)
+                        for alt in alternatives:
+                            if alt.get("code") == code_name:
+                                alt["selected"] = True
+                                alt["selection_source"] = "llm_flat_disambiguation"
+                                alt["selection_reason"] = (
+                                    "Selected by LLM disambiguation after near-tie Level0 routing result"
+                                )
+                                alt["rejection_reason"] = None
+                            else:
+                                alt["selected"] = False
+                                alt["rejection_reason"] = (
+                                    "LLM disambiguation selected a different solver after near-tie Level0 result"
+                                )
+                        if not any(alt.get("code") == code_name for alt in alternatives):
+                            alternatives.insert(
+                                0,
+                                {
+                                    "code": code_name,
+                                    "score": confidence,
+                                    "selected": True,
+                                    "selection_source": "llm_flat_disambiguation",
+                                    "selection_reason": (
+                                        "Selected by LLM disambiguation after near-tie Level0 routing result"
+                                    ),
+                                    "rejection_reason": None,
+                                },
+                            )
+                except Exception as e:
+                    logger.warning("LLM near-tie disambiguation failed: %s", e)
+
         # LLM fallback for low-confidence results
         if confidence < confidence_threshold:
             logger.warning(f"Low confidence ({confidence:.2f} < {confidence_threshold})")
@@ -1893,6 +2014,11 @@ class ArchitectService:
         3. Build baseline dict for simple pipeline
         4. Return plan with 0 modifications
         """
+        if code_name not in self.code_configs:
+            raise ValueError(f"No config found for override solver {code_name}")
+
+        solver_config = self.code_configs[code_name]
+
         # Extract requirements (solver forced to override)
         requirements = self._extract_requirements(user_prompt)
         requirements['solver'] = code_name
@@ -3814,39 +3940,7 @@ Answer with the solver name and brief justification."""
         Args:
             weights: Scoring approach weights (default: balanced)
         """
-        # === PART 1: Setup Weights ===
-
-        if weights is None:
-            # Config-driven defaults for 5-bucket scoring system.
-            # These are the primary tuning knobs for simple strategy runs.
-            weights = {
-                'kb_relevance': self._config_float("simple_weight_kb_relevance", 0.40),
-                'metrics': self._config_float("simple_weight_metrics", 0.25),
-                'path_heuristics': self._config_float("simple_weight_path_heuristics", 0.10),
-                'domain_specific': self._config_float("simple_weight_domain_specific", 0.25),
-                'faiss_semantic': self._config_float(
-                    "simple_weight_faiss_semantic",
-                    self.config.faiss_semantic_weight,
-                ),
-            }
-
-        # Normalize to sum to 1.0
-        total = sum(weights.values())
-        weights = {k: v/total for k, v in weights.items()}
-
-        # Determine if using FAISS (5-bucket) or traditional (4-bucket)
-        num_buckets = 5 if weights.get('faiss_semantic', 0) > 0 and self.embeddings and self.embeddings.indices_available() else 4
-
-        logger.debug(f" Baseline selection with {num_buckets} scoring approaches")
-        weights_msg = (f"       Weights: KB={weights['kb_relevance']:.0%}, "
-                       f"Metrics={weights['metrics']:.0%}, "
-                       f"Path={weights['path_heuristics']:.0%}, "
-                       f"Domain={weights['domain_specific']:.0%}")
-        if num_buckets == 5:
-            weights_msg += f", FAISS={weights.get('faiss_semantic', 0):.0%}"
-        logger.debug(weights_msg)
-
-        # === Get code and cases (keep existing logic) ===
+        # === PART 1: Get code and cases (keep existing logic) ===
 
         # Stage 1: LLM picks CODE (and optionally a case hint)
         llm_case_hint: str | None = None
@@ -3882,6 +3976,58 @@ Answer with the solver name and brief justification."""
 
         logger.debug(f" Scoring {len(case_list)} {code_name} cases...")
 
+        # === PART 2: Setup Weights ===
+        precomputed_kb_scores: dict[str, float] = {}
+        if weights is None:
+            precomputed_kb_scores = self._score_kb_relevance_batch(
+                case_list, user_prompt, requirements, code_name
+            )
+            kb_signal_weak = self._is_kb_signal_weak(case_list, precomputed_kb_scores)
+
+            # Config-driven defaults for 5-bucket scoring system.
+            # These are the primary tuning knobs for simple strategy runs.
+            weights = {
+                'kb_relevance': self._config_float("simple_weight_kb_relevance", 0.40),
+                'metrics': self._config_float("simple_weight_metrics", 0.25),
+                'path_heuristics': self._config_float("simple_weight_path_heuristics", 0.10),
+                'domain_specific': self._config_float("simple_weight_domain_specific", 0.25),
+                'faiss_semantic': self._config_float(
+                    "simple_weight_faiss_semantic",
+                    self.config.faiss_semantic_weight,
+                ),
+            }
+
+            # If KB signal is weak/flat for this prompt+code, pivot to retrieval-heavy
+            # scoring so semantic/path matching can dominate over noisy heuristics.
+            if kb_signal_weak:
+                weights = {
+                    'kb_relevance': 0.12,
+                    'metrics': 0.04,
+                    'path_heuristics': 0.02,
+                    'domain_specific': 0.02,
+                    'faiss_semantic': 0.80,
+                }
+                logger.info(
+                    "Using retrieval-heavy simple-weight profile due to weak KB signal (code=%s)",
+                    code_name,
+                )
+
+        # Normalize to sum to 1.0
+        total = sum(weights.values())
+        weights = {k: v/total for k, v in weights.items()}
+
+        # Determine if using FAISS (5-bucket) or traditional (4-bucket)
+        num_buckets = 5 if weights.get('faiss_semantic', 0) > 0 and self.embeddings and self.embeddings.indices_available() else 4
+
+        logger.debug(f" Baseline selection with {num_buckets} scoring approaches")
+        weights_msg = (f"       Weights: KB={weights['kb_relevance']:.0%}, "
+                       f"Metrics={weights['metrics']:.0%}, "
+                       f"Path={weights['path_heuristics']:.0%}, "
+                       f"Domain={weights['domain_specific']:.0%}")
+        if num_buckets == 5:
+            weights_msg += f", FAISS={weights.get('faiss_semantic', 0):.0%}"
+        logger.debug(weights_msg)
+
         # === Get code definition and repo path ONCE ===
         code_def = self.cases.get_code_info(code_name)
         repo_path = code_def.local_path if code_def else None
@@ -3889,11 +4035,12 @@ Answer with the solver name and brief justification."""
 
         # === KB Batch Scoring (ONE query for all cases) ===
 
-        kb_scores = {}
+        kb_scores = precomputed_kb_scores
         if weights['kb_relevance'] > 0:
-            kb_scores = self._score_kb_relevance_batch(
-                case_list, user_prompt, requirements, code_name
-            )
+            if not kb_scores:
+                kb_scores = self._score_kb_relevance_batch(
+                    case_list, user_prompt, requirements, code_name
+                )
 
         # === PART 1: Build scoring matrix (skeleton) ===
 
@@ -3983,15 +4130,19 @@ Answer with the solver name and brief justification."""
             if hint_entry:
                 winner_total = float(scoring_matrix[0].get("total", 0.0))
                 hint_total = float(hint_entry.get("total", 0.0))
+                hint_boost = self._config_float("simple_case_hint_score_boost", 0.20)
+                effective_hint_total = hint_total + hint_boost
                 min_total = self._config_float("simple_case_hint_min_total", 0.30)
                 max_gap = self._config_float("simple_case_hint_max_gap", 0.06)
-                gap = winner_total - hint_total
+                gap = winner_total - effective_hint_total
 
                 if hint_total >= min_total and gap <= max_gap and scoring_matrix[0] is not hint_entry:
                     logger.info(
-                        "Promoting LLM case hint '%s' (score=%.3f, winner=%.3f, gap=%.3f, min_total=%.3f, max_gap=%.3f)",
+                        "Promoting LLM case hint '%s' (raw=%.3f, boost=%.3f, effective=%.3f, winner=%.3f, gap=%.3f, min_total=%.3f, max_gap=%.3f)",
                         llm_case_hint,
                         hint_total,
+                        hint_boost,
+                        effective_hint_total,
                         winner_total,
                         gap,
                         min_total,
@@ -4208,6 +4359,23 @@ If uncertain, still return numeric scores for all candidates."""
                         return 0.5
 
         return 0.2  # Default low
+
+    @staticmethod
+    def _is_kb_signal_weak(case_list: list[str], kb_scores: dict[str, float]) -> bool:
+        """Return True when KB scores are too flat/low to trust for ranking."""
+        if not case_list or not kb_scores:
+            return True
+
+        values = [float(kb_scores.get(case, 0.0)) for case in case_list]
+        if not values:
+            return True
+
+        max_score = max(values)
+        min_score = min(values)
+        spread = max_score - min_score
+        informative_ratio = sum(1 for value in values if value >= 0.35) / len(values)
+
+        return max_score < 0.45 or spread < 0.10 or informative_ratio < 0.05
 
     def _score_kb_relevance(self,
                            case_path: str,
@@ -4781,9 +4949,9 @@ If uncertain, still return numeric scores for all candidates."""
 
         # === Score combination with weights ===
         weights = {
-            'names': 0.70,      # Fast name/directory matching
-            'structure': 0.15,  # High-level descriptions
-            'details': 0.10     # Detailed semantic content
+            'names': 0.80,      # Favor explicit case-name/path alignment
+            'structure': 0.12,  # High-level descriptions
+            'details': 0.08,    # Detailed semantic content
         }
 
         scores = {}

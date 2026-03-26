@@ -136,7 +136,8 @@ class InputsFileSelector:
         strategy: str = "smallest",
         excluded_files: list[str] = None,
         available_files: list[Path] = None,
-        config: Any | None = None
+        config: Any | None = None,
+        user_prompt: str | None = None,
     ) -> Path | None:
         """
         Select best inputs file from case directory.
@@ -199,7 +200,12 @@ class InputsFileSelector:
             strategy = "smallest"
 
         if strategy == "llm_compare":
-            selected = cls._select_with_llm(case_dir, candidates, config=config)
+            selected = cls._select_with_llm(
+                case_dir,
+                candidates,
+                config=config,
+                user_prompt=user_prompt,
+            )
             if selected:
                 logger.info(f"Selected inputs file: {selected.name} (strategy: llm_compare)")
                 _record_inputs_selection(
@@ -250,7 +256,8 @@ class InputsFileSelector:
         cls,
         case_dir: Path,
         candidates: list[Path],
-        config: Any | None = None
+        config: Any | None = None,
+        user_prompt: str | None = None,
     ) -> Path | None:
         if not config:
             logger.debug("LLM compare requested but no config provided")
@@ -275,12 +282,17 @@ class InputsFileSelector:
             prompt = (
                 "You are selecting the best inputs file for an AMReX case.\n"
                 "Case directory: {case_name}\n\n"
+                "Requested simulation prompt: {user_prompt}\n\n"
                 "Choose the file that most closely matches the case based on file name and header.\n"
                 "Prefer case-named .inp files over generic inputs.* when both are available.\n"
                 "Return ONLY the filename from the list below.\n\n"
                 "{candidates}\n"
             )
-        prompt = prompt.format(case_name=case_hint, candidates="\n\n".join(summaries))
+        prompt = prompt.format(
+            case_name=case_hint,
+            user_prompt=(user_prompt or "").strip(),
+            candidates="\n\n".join(summaries),
+        )
 
         try:
             from pydantic import BaseModel, Field

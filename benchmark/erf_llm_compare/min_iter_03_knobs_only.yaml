@@ -1,0 +1,22 @@
+# Knob-only candidate: semantic-first simple + path-dominant hierarchical.
+indexing_strategy: simple
+inputs_file_strategy: newest
+
+# Simple strategy: reduce heuristic bias, lean on semantic retrieval.
+simple_weight_kb_relevance: 0.20
+simple_weight_metrics: 0.00
+simple_weight_path_heuristics: 0.00
+simple_weight_domain_specific: 0.00
+simple_weight_faiss_semantic: 0.80
+
+# Hierarchical strategy: preserve the setting that already routes squall-line correctly.
+hierarchical_apply_path_adjustment: false
+hierarchical_candidate_pool_size: 100
+hierarchical_candidate_log_top_n: 30
+hierarchical_weight_path_hierarchy: 0.85
+hierarchical_weight_physics_parameters: 0.10
+hierarchical_weight_domain_models: 0.05
+hierarchical_weight_grid_specifications: 0.00
+hierarchical_weight_configuration_complexity: 0.00
+hierarchical_weight_development_activity: 0.00
+hierarchical_weight_resource_requirements: 0.00

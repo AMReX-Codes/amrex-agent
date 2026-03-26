@@ -26,5 +26,6 @@ mkdocs serve
 
 - `scripts/erf_benchmark/generate_prompt_matrix.py`
 - `scripts/erf_benchmark/make_splits.py`
+- `scripts/erf_benchmark/make_sanity_prompt_set.py`
 - `scripts/erf_benchmark/run_llm_compare_benchmark.py`
 - `scripts/erf_benchmark/compare_runs.py`

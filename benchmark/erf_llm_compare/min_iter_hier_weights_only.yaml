@@ -1,0 +1,18 @@
+# Pure hierarchical-weights tuning candidate (no path-adjustment heuristics).
+indexing_strategy: hierarchical
+inputs_file_strategy: newest
+
+# Keep this OFF so we evaluate weight effects cleanly.
+hierarchical_apply_path_adjustment: false
+hierarchical_candidate_pool_size: 100
+hierarchical_candidate_log_top_n: 30
+
+# Nuanced weights: downweight buckets that favored windfarm dev tests,
+# upweight physics/domain/path-hierarchy signal for squall-line semantics.
+hierarchical_weight_physics_parameters: 0.52
+hierarchical_weight_domain_models: 0.26
+hierarchical_weight_path_hierarchy: 0.16
+hierarchical_weight_grid_specifications: 0.03
+hierarchical_weight_configuration_complexity: 0.01
+hierarchical_weight_development_activity: 0.01
+hierarchical_weight_resource_requirements: 0.01

@@ -2286,6 +2286,25 @@ Set solver_confidence=1.0 and baseline_confidence=1.0 (already determined).
         return key_params
 
     @classmethod
+    def get_viz_variable_catalog(cls, repo_root: Path | None = None) -> list[dict[str, Any]]:
+        """
+        Return visualization-variable metadata discovered from solver sources.
+
+        Subclasses should override this to provide live source-derived entries.
+        """
+        del repo_root
+        return []
+
+    @classmethod
+    def get_default_slice_axis(cls) -> str | None:
+        """
+        Return preferred default slice-normal axis for visualization.
+
+        Subclasses can override to encode solver-specific plotting preference.
+        """
+        return None
+
+    @classmethod
     def _resource_bytes_per_cell(cls, config: dict[str, Any]) -> int:
         return 200
 

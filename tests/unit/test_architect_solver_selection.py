@@ -320,8 +320,8 @@ class TestSolverDisambiguationAlternatives:
         architect.level0_searcher = Mock()
         architect.level0_searcher.search = Mock(
             return_value=[
-                {"code": "incflo", "score": 0.05},
-                {"code": "PeleLMeX", "score": 0.04},
+                {"code": "incflo", "score": 0.20},
+                {"code": "PeleLMeX", "score": 0.03},
             ]
         )
         architect.code_configs = {
@@ -333,7 +333,7 @@ class TestSolverDisambiguationAlternatives:
         architect.cases = Mock()
         architect.cases.find_best_match = Mock(return_value=("PeleC", "Exec/RegTests/PMF"))
 
-        selection = architect.select_solver(query, confidence_threshold=0.15)
+        selection = architect.select_solver(query, confidence_threshold=0.25)
 
         assert selection.code_name == "PeleC"
         assert selection.alternatives is not None
@@ -350,6 +350,82 @@ class TestSolverDisambiguationAlternatives:
         for item in rejected:
             assert "rejection_reason" in item
             assert "LLM fallback" in item["rejection_reason"]
+
+    def test_flat_level0_uses_llm_disambiguation(self, tmp_path):
+        query = "nonreacting jet in crossflow with adiabatic walls"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+        architect.level0_searcher = Mock()
+        architect.level0_searcher.search = Mock(
+            return_value=[
+                {"code": "PeleC", "score": 0.51},
+                {"code": "PeleLMeX", "score": 0.48},
+            ]
+        )
+        architect.code_configs = {
+            "PeleC": Mock(code_name="PeleC"),
+            "PeleLMeX": Mock(code_name="PeleLMeX"),
+        }
+        architect._find_level2_case_name_candidate = Mock(return_value=None)
+        architect.llm_client = Mock()
+        architect.cases = Mock()
+        architect.cases.find_best_match = Mock(
+            return_value=("PeleLMeX", "Exec/Production/JetInCrossflow")
+        )
+
+        selection = architect.select_solver(query)
+
+        assert selection.code_name == "PeleLMeX"
+        assert selection.alternatives is not None
+        selected = [item for item in selection.alternatives if item["selected"]]
+        assert len(selected) == 1
+        assert selected[0]["selection_source"] == "llm_flat_disambiguation"
+        architect.cases.find_best_match.assert_called_once_with(query, architect.llm_client)
+
+    def test_flat_level0_prefers_case_name_disambiguation_before_llm(self, tmp_path):
+        query = "jet in crossflow (jicf) with vitiated crossflow and adiabatic walls"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+        architect.level0_searcher = Mock()
+        architect.level0_searcher.search = Mock(
+            return_value=[
+                {"code": "PeleC", "score": 0.52},
+                {"code": "PeleLMeX", "score": 0.50},
+            ]
+        )
+        architect.code_configs = {
+            "PeleC": Mock(code_name="PeleC"),
+            "PeleLMeX": Mock(code_name="PeleLMeX"),
+        }
+        architect._find_level2_case_name_candidate = Mock(
+            return_value={
+                "solver": "PeleLMeX",
+                "repo_path": "Exec/Production/JetInCrossflow",
+                "match_confidence": 0.95,
+            }
+        )
+        architect.llm_client = Mock()
+        architect.cases = Mock()
+        architect.cases.find_best_match = Mock(
+            return_value=("PeleC", "Exec/RegTests/Sedov")
+        )
+
+        selection = architect.select_solver(query)
+
+        assert selection.code_name == "PeleLMeX"
+        assert selection.alternatives is not None
+        selected = [item for item in selection.alternatives if item["selected"]]
+        assert len(selected) == 1
+        assert selected[0]["selection_source"] == "level0_flat_case_override"
+        architect.cases.find_best_match.assert_not_called()
 
 
 # Architect Service: Solver Selection Marker
