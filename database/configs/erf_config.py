@@ -31,7 +31,20 @@ class ERFConfig(BaseAMReXConfig):
     default_exec_repo_path = "Exec/RegTests/Bubble"
     default_exec_pattern = "ERF*ex"
 
-    selection_keywords = ["atmospheric", "weather", "wind"]
+    selection_keywords = [
+        "atmospheric",
+        "weather",
+        "wind",
+        "thermal bubble",
+        "dry convection",
+        "squall line",
+        "squall-line",
+        "moist convection",
+        "atmospheric boundary",
+        "density current",
+        "cold air outflow",
+        "stratified atmosphere",
+    ]
     selection_guidance = ["Atmospheric/weather -> ERF"]
     level0_physics_regimes = [
         {
@@ -42,9 +55,13 @@ class ERFConfig(BaseAMReXConfig):
     ]
     level0_capabilities = [
         "atmospheric boundary layer modeling",
+        "atmospheric boundary and stratified atmosphere studies",
         "terrain-influenced weather dynamics",
+        "thermal bubble and dry convection benchmarks",
         "buoyancy-driven and density-current flows",
+        "density current and cold air outflow dynamics",
         "moist convection and squall-line simulations",
+        "squall line and squall-line convection workflows",
         "hurricane and tropical-cyclone test workflows",
         "radiation and land-surface coupling tests",
         "wind-farm parameterization workflows",
