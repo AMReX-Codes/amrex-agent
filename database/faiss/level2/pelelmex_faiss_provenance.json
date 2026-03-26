@@ -1,0 +1,12 @@
+{
+  "build_script": "build_all_indices.py",
+  "dependencies_commit": "9e7fb9f245c3ef363fc0cbd14960089247934157",
+  "embedding_dimension": null,
+  "embedding_model": "text-embedding-3-small",
+  "embedding_provider": "cborg",
+  "generated_at": "2026-03-11T23:32:31.489997+00:00",
+  "level": "2",
+  "repo_commit": "9e7fb9f245c3ef363fc0cbd14960089247934157",
+  "solver": "pelelmex",
+  "version": "1"
+}

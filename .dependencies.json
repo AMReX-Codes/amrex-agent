@@ -3,27 +3,27 @@
     "amrex": {
       "url": "https://github.com/AMReX-Codes/amrex.git",
       "branch": "development",
-      "commit": "33007cb7d8798b53082323275ae70ead3e1e9ffa"
+      "commit": "99914444329f6be784c6a153581c53bc60ae8937"
     },
     "pelec": {
       "url": "https://github.com/AMReX-Combustion/PeleC.git",
       "branch": "development",
-      "commit": "43b12b0a4f6199d04ab81baa14b41a1772e3dd5a"
+      "commit": "a6b4dff152c2cad2cf0edee58099eefffd2ba328"
     },
     "pelelmex": {
       "url": "https://github.com/baperry2/PeleLMeX.git",
-      "branch": "JICF-ModCon",
-      "commit": "7578f85da7bbc8f8e128bd2e02228787d7e30f03"
+      "branch": "jicf-modcon-update",
+      "commit": "9e7fb9f245c3ef363fc0cbd14960089247934157"
     },
     "erf": {
       "url": "https://github.com/erf-model/ERF.git",
-      "branch": "26.02",
-      "commit": "eb2717130c9f68cd5175388be721a30373343103"
+      "branch": "development",
+      "commit": "1df48173da427f57a8201e157518afa7fd2e73ee"
     },
     "remora": {
       "url": "https://github.com/AMReX-Codes/REMORA.git",
       "branch": "development",
-      "commit": "db65ce07f5c37f04f2801963ca59f5a4f8a4a884"
+      "commit": "ef9fd9cebb82a992cf0af3769f0216dce76a42c3"
     }
   }
 }

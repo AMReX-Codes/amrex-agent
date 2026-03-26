@@ -1,0 +1,12 @@
+{
+  "build_script": "build_all_indices.py",
+  "dependencies_commit": "1df48173da427f57a8201e157518afa7fd2e73ee",
+  "embedding_dimension": null,
+  "embedding_model": "text-embedding-3-small",
+  "embedding_provider": "cborg",
+  "generated_at": "2026-03-11T22:53:38.819203+00:00",
+  "level": "2",
+  "repo_commit": "1df48173da427f57a8201e157518afa7fd2e73ee",
+  "solver": "erf",
+  "version": "1"
+}

@@ -14,7 +14,7 @@
       "pelephysics": "ac521b352806e7da29673c64879a2f013d05fffa",
       "pelec": "a6b4dff152c2cad2cf0edee58099eefffd2ba328"
     },
-    "generated_at": "2026-03-10T10:43:34.829991+00:00"
+    "generated_at": "2026-03-12T11:11:43.864253+00:00"
   },
   "parameters": {
     "amr.regrid_on_restart": {

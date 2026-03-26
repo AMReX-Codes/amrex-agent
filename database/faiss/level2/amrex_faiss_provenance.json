@@ -1,0 +1,12 @@
+{
+  "build_script": "build_all_indices.py",
+  "dependencies_commit": "99914444329f6be784c6a153581c53bc60ae8937",
+  "embedding_dimension": null,
+  "embedding_model": "text-embedding-3-small",
+  "embedding_provider": "cborg",
+  "generated_at": "2026-03-11T23:59:26.554232+00:00",
+  "level": "2",
+  "repo_commit": "99914444329f6be784c6a153581c53bc60ae8937",
+  "solver": "amrex",
+  "version": "1"
+}
