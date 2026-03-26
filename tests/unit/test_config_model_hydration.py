@@ -259,9 +259,26 @@ class TestBuildConditionalFields:
         # Scenario B: EB enabled
         build_config_with_eb = {"AMREX_USE_EB": "TRUE"}
         ConfigWithEB = ConfigModelFactory.create_from_schema(schema, build_config_with_eb)
-        
+
         # Should have EB field
         assert "eb_sphere_radius" in ConfigWithEB.model_fields
+
+
+def test_enable_intent_extraction_defaults_false():
+    """enable_intent_extraction is False by default"""
+    from src.config import AMReXAgentConfig
+
+    cfg = AMReXAgentConfig()
+    assert cfg.enable_intent_extraction is False
+
+
+def test_enable_intent_extraction_can_be_set_true():
+    """enable_intent_extraction can be set True"""
+    from src.config import AMReXAgentConfig
+
+    cfg = AMReXAgentConfig()
+    cfg.enable_intent_extraction = True
+    assert cfg.enable_intent_extraction is True
 
 
 # Input Writer: Config Model Factory marker

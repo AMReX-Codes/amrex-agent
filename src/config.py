@@ -491,6 +491,10 @@ class AMReXAgentConfig(BaseModel):
         default=False,
         description="If True, use LLM assistance to refine retry guidance for inputs/baseline switching."
     )
+    enable_intent_extraction: bool = Field(
+        default=False,
+        description="Enable Intent Extraction node LLM parsing of prompt into structured simulation config."
+    )
 
     llm_gate_strategy: Literal[
         "off",

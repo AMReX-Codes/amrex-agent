@@ -1,7 +1,7 @@
 import json
 from types import SimpleNamespace
 
-from src.benchmark_runner import run_model_benchmark
+from src.benchmark_runner import _write_jsonl, run_model_benchmark
 
 
 def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) -> None:
@@ -37,3 +37,211 @@ def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) 
     assert record["model_id"] == "m1"
     assert record["prompt_id"] == "p1"
     assert record["run_directory"] is None
+
+
+def _read_first_jsonl(path):
+    return json.loads(path.read_text().splitlines()[0])
+
+
+def test_jsonl_contains_schema_valid_field(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert "schema_valid" in record
+    assert isinstance(record["schema_valid"], bool)
+
+
+def test_jsonl_contains_physics_valid_field(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert "physics_valid" in record
+    assert isinstance(record["physics_valid"], bool)
+
+
+def test_jsonl_contains_resource_valid_field(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert "resource_valid" in record
+    assert isinstance(record["resource_valid"], bool)
+
+
+def test_jsonl_schema_errors_empty_when_valid(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "schema_valid": True})
+    record = _read_first_jsonl(path)
+    assert record["schema_errors"] == []
+
+
+def test_jsonl_schema_errors_populated_when_invalid(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "schema_valid": False,
+            "review_analysis": {
+                "violations": [
+                    {"rule_name": "SchemaExistence", "message": "invalid parameter"},
+                ]
+            },
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["schema_errors"]
+    assert all(isinstance(item, str) for item in record["schema_errors"])
+
+
+def test_jsonl_physics_warnings_present(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert "physics_warnings" in record
+    assert isinstance(record["physics_warnings"], list)
+
+
+def test_jsonl_iteration_count_present(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "iteration": 2})
+    record = _read_first_jsonl(path)
+    assert "iteration_count" in record
+    assert isinstance(record["iteration_count"], int)
+
+
+def test_jsonl_reviewer_retry_count_present(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "retry_count": 1})
+    record = _read_first_jsonl(path)
+    assert "reviewer_retry_count" in record
+    assert isinstance(record["reviewer_retry_count"], int)
+
+
+def test_jsonl_converged_field_present(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert "converged" in record
+    assert isinstance(record["converged"], bool)
+
+
+def test_jsonl_wall_time_seconds_present(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "duration_seconds": 1.25})
+    record = _read_first_jsonl(path)
+    assert "wall_time_seconds" in record
+    assert isinstance(record["wall_time_seconds"], float)
+
+
+def test_jsonl_architect_time_seconds_present(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert "architect_time_seconds" in record
+    assert isinstance(record["architect_time_seconds"], float)
+
+
+def test_jsonl_llm_call_count_present(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert "llm_call_count" in record
+    assert isinstance(record["llm_call_count"], int)
+
+
+def test_jsonl_field_null_with_reason_when_unavailable(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert record["iteration_count"] is None
+    assert isinstance(record["iteration_count_unavailable_reason"], str)
+    assert record["reviewer_retry_count"] is None
+    assert isinstance(record["reviewer_retry_count_unavailable_reason"], str)
+
+
+def test_jsonl_no_new_required_field_breaks_existing(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1"})
+    record = _read_first_jsonl(path)
+    assert record["schema_valid"] is False
+    assert record["physics_valid"] is False
+    assert record["resource_valid"] is False
+    assert record["schema_errors"] == []
+    assert record["physics_warnings"] == []
+    assert record["converged"] is False
+
+
+def test_gate_approvals_written_to_jsonl(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {
+                "gate_approvals": [
+                    {"interface_path": "cli", "decision": "approved"},
+                    {"interface_path": "api", "decision": "rejected"},
+                ]
+            },
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approval_count"] == 2
+    assert isinstance(record["gate_approvals"], list)
+    assert all(isinstance(item, dict) for item in record["gate_approvals"])
+
+
+def test_gate_approvals_empty_writes_zero_count(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {"gate_approvals": []},
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approval_count"] == 0
+    assert record["gate_approvals"] == []
+
+
+def test_gate_approval_interface_path_preserved(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {
+                "gate_approvals": [{"interface_path": "cli", "decision": "approved"}]
+            },
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approvals"][0]["interface_path"] == "cli"
+
+
+def test_gate_approval_decision_preserved(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(
+        path,
+        {
+            "model_id": "m1",
+            "prompt_id": "p1",
+            "__graph_state": {
+                "gate_approvals": [{"interface_path": "cli", "decision": "approved"}]
+            },
+        },
+    )
+    record = _read_first_jsonl(path)
+    assert record["gate_approvals"][0]["decision"] == "approved"
+
+
+def test_gate_approvals_missing_from_state_safe(tmp_path):
+    path = tmp_path / "bench.jsonl"
+    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "__graph_state": {}})
+    record = _read_first_jsonl(path)
+    assert record["gate_approval_count"] == 0

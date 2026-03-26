@@ -51,6 +51,8 @@ class GraphState(TypedDict, total=False):
     config: AMReXAgentConfig         # Runtime configuration (paths, API keys)
     output_dir: Optional[str]        # Optional output directory override
     submit: Optional[Dict[str, Any]] # Submission settings (e.g., dry_run)
+    requested_plot_vars: Optional[List[str]]       # Prompt-extracted plot quantities
+    visualization_config: Optional[Dict[str, Any]] # Prompt-extracted visualization settings
 
     # ========================================
     # PLANNING PHASE (Architect outputs)
@@ -104,6 +106,9 @@ class GraphState(TypedDict, total=False):
     intent_extraction_applied: bool
     intent_extraction_error: Optional[str]
     intent_locked_fields: List[str]
+    clarification_needed: bool
+    clarification_questions: List[str]
+    clarification_context: Dict[str, Any]
     clarification_history: List[Dict[str, Any]]
     clarification_turns: int
     unresolved_level: Optional[int]
@@ -247,6 +252,9 @@ GRAPH_STATE_B1_B2_DEFAULTS: Dict[str, Any] = {
     "intent_extraction_applied": False,
     "intent_extraction_error": None,
     "intent_locked_fields": [],
+    "clarification_needed": False,
+    "clarification_questions": [],
+    "clarification_context": {},
     "clarification_history": [],
     "clarification_turns": 0,
     "unresolved_level": None,
