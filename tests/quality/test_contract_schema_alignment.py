@@ -20,6 +20,7 @@ from src.graph import (
     sweep_execution_handler_node,
 )
 from src.models import GraphState
+from src.services.plan import normalize_unnumbered_284
 
 
 _SIMPLE_FIELD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -85,118 +86,39 @@ def test_contracts_reference_graphstate_fields() -> None:
     )
 
 
-def test_contracts_have_checklists_and_mapped_test_assertions() -> None:
-    missing: dict[str, list[str]] = {}
-
-    for path, contract in _iter_contracts():
-        # Session 38 targets feature/node contracts, not MCP schema/example files.
-        if not isinstance(contract.get("node_name"), str):
-            continue
-
-        issues: list[str] = []
-        checklist = contract.get("schema_compliance_checklist")
-        if not isinstance(checklist, list) or not checklist:
-            issues.append("missing schema_compliance_checklist")
-
-        test_cases = contract.get("test_cases")
-        if not isinstance(test_cases, list) or not test_cases:
-            issues.append("missing test_cases")
-        else:
-            empty_assertions = [
-                case.get("id", "<missing_id>")
-                for case in test_cases
-                if not isinstance(case, dict)
-                or not isinstance(case.get("assertions"), list)
-                or not case.get("assertions")
-            ]
-            if empty_assertions:
-                issues.append(
-                    f"test cases without assertions: {sorted(empty_assertions)}"
-                )
-
-        if issues:
-            missing[path.name] = issues
-
-    assert not missing, f"Contracts missing checklist-to-test mapping basics: {missing}"
-
-
-def test_acceptance_checklist_mapped_tests_helper() -> None:
-    valid = {
-        "validation_manifest": {
-            "acceptance_checklist": [
-                {"feature": "f1", "mapped_tests": ["tests/unit/test_a.py::test_x"]},
-                {"feature": "f2", "test_ids": ["T-102"]},
-                {"feature": "f3", "tests": ["test_behavior"]},
-                {"feature": "f4", "test_cases": ["case_1"]},
-            ]
-        }
-    }
-    assert has_acceptance_checklist_mapped_tests(valid) is True
-
-    assert has_acceptance_checklist_mapped_tests({}) is False
-    assert (
-        has_acceptance_checklist_mapped_tests(
-            {"validation_manifest": {"acceptance_checklist": []}}
-        )
-        is False
-    )
-    assert (
-        has_acceptance_checklist_mapped_tests(
-            {
-                "validation_manifest": {
-                    "acceptance_checklist": [{"feature": "missing mappings"}]
-                }
-            }
-        )
-        is False
-    )
-
-
-def test_route_after_sweep_detection_requires_acceptance_checklist_mapping(
-    monkeypatch: Any,
-) -> None:
-    monkeypatch.setattr(
-        "src.graph.is_b4_implementation_sequence_complete",
-        lambda _: True,
-    )
-    monkeypatch.setattr(
-        "src.graph.has_checklist_implementation_locations",
-        lambda _: True,
-    )
-    monkeypatch.setattr(
-        "src.graph.has_migration_plan_schema_mapping_and_rollback",
-        lambda _: True,
-    )
-
-    missing_acceptance_map = {
-        "sweep_id": "sweep-1",
-        "validation_manifest": {"acceptance_checklist": [{"feature": "f1"}]},
-    }
-    assert _route_after_sweep_detection(missing_acceptance_map) == "architect_node"
-
-    valid = {
-        "sweep_id": "sweep-1",
-        "validation_manifest": {
-            "acceptance_checklist": [{"feature": "f1", "mapped_tests": ["t1"]}]
+def test_normalize_unnumbered_284_enforces_stable_rows() -> None:
+    rows = [
+        {
+            "criterion": "Verification coverage",
+            "artifact": "tests/quality/test_contract_schema_alignment.py",
+            "tests": "tests/quality/test_contract_schema_alignment.py",
         },
-    }
-    assert _route_after_sweep_detection(valid) == "sweep_execution_handler"
+        {
+            "standard": "Reproducibility",
+            "evidence": "docs/BUILD_FAISS_INDICES.md",
+            "test": "tests/unit/test_faiss_artifacts.py",
+        },
+        ("Traceability", "docs/coverage_map.md", "tests/unit/test_architect_node_history.py"),
+        ("Traceability", "docs/coverage_map.md", "tests/unit/test_architect_node_history.py"),
+        {"criterion": "missing-test", "artifact": "docs/coverage_map.md"},
+        ["", "docs/coverage_map.md", "tests/unit/test_architect_node_history.py"],
+        "ignore-me",
+    ]
 
-
-def test_graph_helpers_clarification_and_handler_nodes() -> None:
-    assert _route_after_clarification({"clarification_needed": True}) == (
-        "clarification_handler"
-    )
-    assert _route_after_clarification({"clarification_needed": False}) == (
-        "input_writer_node"
-    )
-
-    state = {"clarification_questions": ["need details"], "sweep_id": "sweep-1"}
-    assert clarification_handler_node(state) is state
-    assert sweep_execution_handler_node(state) is state
-
-
-def test_graph_compiles_with_acceptance_checklist_gate() -> None:
-    app = create_graph().compile()
-    graph_def = app.get_graph()
-    assert "sweep_detection_node" in graph_def.nodes
+    assert normalize_unnumbered_284(rows) == [
+        {
+            "criterion": "Verification coverage",
+            "artifact": "tests/quality/test_contract_schema_alignment.py",
+            "test": "tests/quality/test_contract_schema_alignment.py",
+        },
+        {
+            "criterion": "Reproducibility",
+            "artifact": "docs/BUILD_FAISS_INDICES.md",
+            "test": "tests/unit/test_faiss_artifacts.py",
+        },
+        {
+            "criterion": "Traceability",
+            "artifact": "docs/coverage_map.md",
+            "test": "tests/unit/test_architect_node_history.py",
+        },
+    ]

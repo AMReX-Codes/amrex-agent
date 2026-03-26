@@ -134,6 +134,11 @@ class TestArchitectOrchestration:
         # Verify reasoning indicates CBR
         if hasattr(plan, 'reasoning'):
             assert 'CBR' in plan.reasoning or 'Deterministic' in plan.reasoning
+        if hasattr(plan, "baseline_evidence_citations"):
+            assert plan.baseline_evidence_citations == [
+                {"citation_type": "baseline", "case": "Exec/RegTests/PMF"},
+                {"citation_type": "similar_case", "case": "PMF_HighRes"},
+            ]
     
     def test_low_baseline_confidence_triggers_llm(self, mock_architect):
         """

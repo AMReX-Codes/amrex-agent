@@ -68,7 +68,7 @@ class TestLevel0SolverSelection:
         # Assert
         assert solver_config is not None, "Should return a solver"
         assert solver_confidence is not None
-        architect.level0_searcher.search.assert_called_once_with(query, top_k=1)
+        architect.level0_searcher.search.assert_called_once_with(query, top_k=5)
         
         # Result should be either string name or Config class
         if isinstance(solver_config, str):
@@ -264,6 +264,92 @@ class TestLevel0ConfigMapping:
         assert hasattr(solver_config, 'additional_level2_indices') or \
                hasattr(solver_config, 'code_name'), \
                "Config should have expected attributes"
+
+
+class TestSolverDisambiguationAlternatives:
+    """Test structured alternatives and rejection rationale exposure."""
+
+    def test_structured_alternatives_include_rejection_rationale(self, tmp_path):
+        query = "combustion flow setup"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+        architect.code_configs = {
+            "PeleC": Mock(code_name="PeleC"),
+            "incflo": Mock(code_name="incflo"),
+            "PeleLMeX": Mock(code_name="PeleLMeX"),
+        }
+        architect.level0_searcher = Mock()
+        architect.level0_searcher.search = Mock(
+            return_value=[
+                {"code": "PeleC", "score": 0.90},
+                {"code": "incflo", "score": 0.70},
+                {"code": "PeleLMeX", "score": 0.65},
+            ]
+        )
+
+        selection = architect.select_solver(query)
+
+        assert selection.code_name == "PeleC"
+        assert selection.alternatives is not None
+        assert len(selection.alternatives) == 3
+
+        selected = [item for item in selection.alternatives if item["selected"]]
+        rejected = [item for item in selection.alternatives if not item["selected"]]
+
+        assert len(selected) == 1
+        assert selected[0]["code"] == "PeleC"
+        assert "selection_reason" in selected[0]
+
+        assert len(rejected) == 2
+        for item in rejected:
+            assert "rejection_reason" in item
+            assert item["rejection_reason"]
+
+    def test_llm_fallback_marks_level0_candidates_rejected(self, tmp_path):
+        query = "ambiguous flow regime"
+
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        mock_embedder = Mock()
+
+        architect = ArchitectService(mock_config, mock_embedder)
+        architect.level0_searcher = Mock()
+        architect.level0_searcher.search = Mock(
+            return_value=[
+                {"code": "incflo", "score": 0.05},
+                {"code": "PeleLMeX", "score": 0.04},
+            ]
+        )
+        architect.code_configs = {
+            "PeleC": Mock(code_name="PeleC"),
+            "incflo": Mock(code_name="incflo"),
+            "PeleLMeX": Mock(code_name="PeleLMeX"),
+        }
+        architect.llm_client = Mock()
+        architect.cases = Mock()
+        architect.cases.find_best_match = Mock(return_value=("PeleC", "Exec/RegTests/PMF"))
+
+        selection = architect.select_solver(query, confidence_threshold=0.15)
+
+        assert selection.code_name == "PeleC"
+        assert selection.alternatives is not None
+
+        selected = [item for item in selection.alternatives if item["selected"]]
+        rejected = [item for item in selection.alternatives if not item["selected"]]
+
+        assert len(selected) == 1
+        assert selected[0]["code"] == "PeleC"
+        assert selected[0]["selection_source"] == "llm_fallback"
+        assert "selection_reason" in selected[0]
+
+        assert rejected
+        for item in rejected:
+            assert "rejection_reason" in item
+            assert "LLM fallback" in item["rejection_reason"]
 
 
 # Architect Service: Solver Selection Marker

@@ -92,11 +92,22 @@ if not HAS_MCP:
     sys.exit(1)
 
 app = Server("pele-agent")
+MAX_CONCURRENT_TOOL_CALLS = 5
+_TOOL_CALL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_TOOL_CALLS)
 
 print("[MCP] AMReXAgent starting...", file=sys.stderr)
 print(f"[MCP] Environment: {config.environment}", file=sys.stderr)
 print(f"[MCP] FAISS DB path: {config.faiss_db_path}", file=sys.stderr)
 print(f"[MCP] Knowledge base path: {config.knowledge_base_path}", file=sys.stderr)
+
+
+def _invoke_tool_inline(fn: Any) -> bool:
+    """
+    Test harnesses monkeypatch invoke_tool with locally-defined callables.
+    Running those inline avoids occasional asyncio.to_thread deadlocks.
+    """
+    module_name = getattr(fn, "__module__", "")
+    return module_name == "__main__" or module_name.startswith("tests.")
 
 
 @app.list_tools()
@@ -117,14 +128,16 @@ async def call_tool(name: str, arguments: dict) -> Any:
         if "session_id" in context:
             session_id = str(context.get("session_id") or uuid.uuid4())
             context.pop("session_id", None)
-        return invoke_tool(
-            name,
-            context,
-            session_id=session_id,
-            surface="mcp",
-            # Do not accept caller_action from untrusted MCP payloads.
-            caller_action=None,
-        )
+        async with _TOOL_CALL_SEMAPHORE:
+            kwargs = {
+                "session_id": session_id,
+                "surface": "mcp",
+                # Do not accept caller_action from untrusted MCP payloads.
+                "caller_action": None,
+            }
+            if _invoke_tool_inline(invoke_tool):
+                return invoke_tool(name, context, **kwargs)
+            return await asyncio.to_thread(invoke_tool, name, context, **kwargs)
 
     except Exception as exc:
         import traceback

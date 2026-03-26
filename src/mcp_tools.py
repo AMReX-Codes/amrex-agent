@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +48,29 @@ __all__ = [
 config = AMReXAgentConfig()
 workflow_store = WorkflowStore(Path(config.workflow_store_path))
 
+_INHERITABLE_SESSION_KEYS = {
+    "selected_solver",
+    "solver",
+    "selected_case",
+    "baseline",
+    "modifications",
+    "reasoning",
+    "indexing_strategy",
+    "config_overrides",
+    "inputs_file_path",
+    "inputs_path",
+    "case_dir",
+}
+
+_NON_INHERITED_SESSION_KEYS = {
+    "gate_approvals",
+    "policy_audit",
+    "steps",
+    "session_id",
+    "inherit_from",
+    "parent_session_id",
+}
+
 SIMULATION_PLAN_ESSENTIAL_FIELDS = {
     "selected_solver",
     "selected_case",
@@ -85,11 +109,63 @@ def _apply_config_overrides(
 
 def _get_session_context(session_id: str) -> dict[str, Any]:
     session = workflow_store.get_session(session_id)
-    return dict(session.state) if session else {}
+    state = dict(session.state) if session else {}
+    parent_session_id = _coerce_parent_session_id(state)
+    inherited_state = _inherited_parent_state(parent_session_id, session_id)
+    merged = {**inherited_state, **state}
+    merged.pop("inherit_from", None)
+    if parent_session_id and parent_session_id != session_id:
+        merged["parent_session_id"] = parent_session_id
+    merged["shared_indices"] = _shared_indices_context()
+    return merged
 
 
 def _persist_session_context(session_id: str, context: dict[str, Any]) -> None:
-    workflow_store.upsert_session(session_id, context)
+    payload = dict(context)
+    parent_session_id = _coerce_parent_session_id(payload)
+    if parent_session_id and parent_session_id != session_id:
+        payload["parent_session_id"] = parent_session_id
+    else:
+        payload.pop("parent_session_id", None)
+    payload.pop("inherit_from", None)
+    payload.pop("shared_indices", None)
+    workflow_store.upsert_session(session_id, payload)
+
+
+def _coerce_parent_session_id(state: dict[str, Any]) -> str | None:
+    for field in ("parent_session_id", "inherit_from"):
+        raw_value = state.get(field)
+        if raw_value is None:
+            continue
+        value = str(raw_value).strip()
+        if value:
+            return value
+    return None
+
+
+def _inherited_parent_state(
+    parent_session_id: str | None,
+    child_session_id: str,
+) -> dict[str, Any]:
+    if not parent_session_id or parent_session_id == child_session_id:
+        return {}
+    parent_session = workflow_store.get_session(parent_session_id)
+    if not parent_session:
+        return {}
+    inherited: dict[str, Any] = {}
+    for key, value in dict(parent_session.state).items():
+        if key in _NON_INHERITED_SESSION_KEYS:
+            continue
+        if key in _INHERITABLE_SESSION_KEYS:
+            inherited[key] = deepcopy(value)
+    return inherited
+
+
+def _shared_indices_context() -> dict[str, str]:
+    return {
+        "faiss_db_path": str(config.faiss_db_path),
+        "knowledge_base_path": str(config.knowledge_base_path),
+    }
 
 
 def _select_runner(active_config: AMReXAgentConfig):
