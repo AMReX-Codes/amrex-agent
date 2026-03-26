@@ -5,6 +5,7 @@ from src.nodes.visualization_intent_node import (
     visualization_intent_node,
 )
 from src.services.viz_param_extractor import VizMappingCatalogUnavailableError
+from unittest.mock import patch
 
 
 def test_visualization_intent_model_defaults():
@@ -19,10 +20,28 @@ def test_visualization_intent_model_defaults():
 
 
 def test_build_visualization_intent_from_prompt_cadence():
-    model = build_visualization_intent(
-        prompt="show cloud water every 2 minutes",
-        solver_name="ERF",
-    )
+    class _MockConfig:
+        @classmethod
+        def get_viz_tier1_intents(cls):
+            return {"cloud_water": {"aliases": ["cloud water", "cloud_water"]}}
+
+        @classmethod
+        def build_viz_tier2_candidates(cls, repo_root=None):
+            del cls, repo_root
+            return {
+                "cloud_water": [
+                    {"name": "qc", "aliases": ["cloud_water", "cloud water"]},
+                ]
+            }
+
+    with patch(
+        "database.configs.registry.get_config_class",
+        lambda code_name: _MockConfig,
+    ):
+        model = build_visualization_intent(
+            prompt="show cloud water every 2 minutes",
+            solver_name="ERF",
+        )
     assert "qc" in model.requested_fields
     assert model.cadence_prompt_seconds == 120
     assert model.cadence_solver_time == 120.0
