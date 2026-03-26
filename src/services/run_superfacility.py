@@ -823,8 +823,7 @@ class SuperfacilityRunner:
         if monitor_job_flag:
             final_state = self.monitor(
                 job_id=job_result['job_id'],
-                method=job_result['method'],
-                walltime=walltime,
+                method=job_result['method']
             )
             job_result['final_state'] = final_state
 

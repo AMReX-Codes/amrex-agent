@@ -101,6 +101,24 @@ def _sync_complete_current_symlink(schema_dir: Path, group: SchemaGroup) -> None
     print(f"[OK] synced {current_link.name} -> {desired_target}")
 
 
+def _sync_complete_current_symlink(schema_dir: Path, group: SchemaGroup) -> None:
+    """Ensure <solver>_complete_current.json points at the newest complete schema."""
+    if group.kind != "complete" or not group.files:
+        return
+
+    newest = _select_newest(group.files)
+    current_link = schema_dir / f"{group.solver}_complete_current.json"
+    desired_target = newest.name
+
+    if current_link.is_symlink() and current_link.readlink().as_posix() == desired_target:
+        return
+
+    if current_link.exists() or current_link.is_symlink():
+        current_link.unlink()
+    current_link.symlink_to(desired_target)
+    print(f"[OK] synced {current_link.name} -> {desired_target}")
+
+
 def _rename_preserving_history(
     repo_root: Path,
     schema_dir: Path,
