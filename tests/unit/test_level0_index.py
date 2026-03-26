@@ -10,6 +10,7 @@ Architecture:
 - Integrates with Metadata Schema schema
 """
 import pytest
+import json
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock, MagicMock, patch
@@ -98,6 +99,35 @@ class TestLevel0TaxonomyStructure:
             assert 'PeleLMeX' in indexed_codes, "Should index PeleLMeX"
             
             print(f"\n✅ Indexed {len(indexed_codes)} codes: {indexed_codes}")
+
+    def test_level0_emits_loc_savings_report(self, tmp_path):
+        """
+        Given: Config-driven Level 0 framework builder
+        When:  Building Level 0 indices
+        Then:  Should emit automated LOC-savings metrics for reuse reporting
+        """
+        from database.indexing.level0_builder import Level0Builder
+
+        mock_embedder = Mock()
+        mock_embedder.embed_texts.return_value = [[0.1] * 384] * 20
+        mock_embedder.expand_documents.side_effect = lambda documents, metadata: (documents, metadata)
+
+        builder = Level0Builder(embedder=mock_embedder)
+        output_dir = tmp_path / "level0"
+        builder.build(output_dir=output_dir)
+
+        report_path = output_dir / "level0_loc_savings_report.json"
+        assert report_path.exists(), "Missing automated LOC-savings report"
+
+        report = json.loads(report_path.read_text())
+        assert report["metric_name"] == "level0_framework_reuse_loc_savings"
+        assert report["solver_count"] >= 1
+        assert report["subindex_count"] == 4
+        assert report["baseline_manual_loc"] >= report["framework_loc"]
+        assert report["estimated_loc_saved"] == (
+            report["baseline_manual_loc"] - report["framework_loc"]
+        )
+        assert 0.0 <= report["savings_ratio"] <= 1.0
     
     
     def test_level0_includes_cross_cutting_guidance(self, tmp_path):
@@ -395,7 +425,7 @@ class TestLevel0PerformanceRequirements:
     """Validate performance/concurrency requirements from PRD Section 13."""
     
     @pytest.mark.performance
-    def test_level0_query_latency(self):
+    def test_level0_faiss_retrieval_p95_latency(self):
         """
         Given: Level 0 index with all 4 sub-indices
         When:  Executing search query
@@ -404,6 +434,7 @@ class TestLevel0PerformanceRequirements:
         PRD: Section 13 FAISS retrieval latency <500ms
         """
         import time
+        from statistics import quantiles
         from database.indexing.level0_searcher import Level0Searcher
         
         # Skip if indices don't exist
