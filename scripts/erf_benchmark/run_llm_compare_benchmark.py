@@ -4,8 +4,10 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import random
 import re
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -164,10 +166,16 @@ def _scan_console_events(stdout: str, stderr: str, *, row_id: str, strategy: str
     return events
 
 
+def _is_rate_limited_response(stdout: str, stderr: str) -> bool:
+    text = f"{stdout}\n{stderr}".lower()
+    return "429" in text or "too many requests" in text or "rate limit" in text
+
+
 def _run_one(
     prompt: str,
     strategy: str,
     *,
+    output_root: Path | None = None,
     agent_config: Path | None = None,
     inputs_file_strategy: str = "llm_compare",
     verbose_cli: bool = False,
@@ -182,9 +190,26 @@ def _run_one(
     ]
     if agent_config:
         cmd.extend(["--config", str(agent_config)])
+    if output_root:
+        cmd.extend(["--output-dir", str(output_root)])
     if verbose_cli:
         cmd.extend(["--verbose"])
-    completed = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    completed: subprocess.CompletedProcess[str] | None = None
+    retry_delay = 2.0
+    rate_limit_retries = 0
+    max_rate_limit_retries = 5
+    while True:
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if rate_limit_retries >= max_rate_limit_retries:
+            break
+        if not _is_rate_limited_response(completed.stdout, completed.stderr):
+            break
+        rate_limit_retries += 1
+        print(f"[{strategy}] retrying after 429/rate-limit response; retry={rate_limit_retries} wait={retry_delay:.2f}s")
+        time.sleep(retry_delay)
+        retry_delay = min(60.0, (retry_delay * 2.0) + random.uniform(0.0, 1.0))
+
+    assert completed is not None
     payload: dict[str, Any] = {}
     parse_error = ""
     try:
@@ -200,6 +225,7 @@ def _run_one(
         "stderr_tail": _tail_lines(completed.stderr),
         "parse_error": parse_error,
         "run_directory": str(run_dir) if run_dir else "",
+        "rate_limit_retries": rate_limit_retries,
     }
     return payload, metrics, summary, console
 
@@ -223,6 +249,7 @@ def _run_strategy(
     rows: list[dict[str, Any]],
     strategy: str,
     *,
+    strategy_output_root: Path | None = None,
     agent_config: Path | None = None,
     inputs_file_strategy: str = "llm_compare",
     verbose_cli: bool = False,
@@ -232,46 +259,91 @@ def _run_strategy(
     console_rows: list[dict[str, Any]] = []
     events: list[dict[str, str]] = []
     explainability_rows: list[dict[str, Any]] = []
-    for row in rows:
-        payload, metrics, summary, console = _run_one(
-            row["prompt_text"],
-            strategy,
-            agent_config=agent_config,
-            inputs_file_strategy=inputs_file_strategy,
-            verbose_cli=verbose_cli,
-        )
-        console_rows.append({"row_id": row["row_id"], "strategy": strategy, **console})
-        row_events = _scan_console_events(console["stdout_tail"], console["stderr_tail"], row_id=row["row_id"], strategy=strategy)
-        events.extend(row_events)
-        if console["returncode"] != 0 or console["parse_error"] or not console["run_directory"]:
-            events.append({"row_id": row["row_id"], "strategy": strategy, "severity": "catastrophic", "reason": "cli_execution_failure"})
-            raise RuntimeError(f"Abort: catastrophic execution failure (strategy={strategy}, row_id={row['row_id']})")
-        unavailable = detect_llm_unavailable(
-            metrics,
-            summary,
-            workflow_payload=payload,
-            parser_signal=payload.get("llm_unavailable", False) is True,
-        )
-        if unavailable:
-            events.append({"row_id": row["row_id"], "strategy": strategy, "severity": "catastrophic", "reason": "llm_unavailable"})
-            raise RuntimeError(f"Abort: llm_unavailable fallback detected (strategy={strategy}, row_id={row['row_id']})")
-        selected_case = extract_selected_case(payload)
-        selected_inputs = extract_selected_inputs(payload)
-        predictions[row["row_id"]] = {"selected_case": selected_case, "selected_inputs": selected_inputs}
-        evidences.append({"row_id": row["row_id"], "strategy": strategy, "selected_case": predictions[row["row_id"]]["selected_case"], "selected_inputs": predictions[row["row_id"]]["selected_inputs"]})
-        llm_usage = [event for event in metrics if event.get("type") == "llm_usage"]
-        explainability_rows.extend(
-            build_call_records(
-                row=row,
-                strategy=strategy,
-                payload=payload,
-                llm_usage_events=llm_usage,
-                selected_case=selected_case,
-                selected_inputs=selected_inputs,
-                row_events=row_events,
-                unavailable=unavailable,
+    failed_rows = 0
+    failed_sentinel = "__FAILED_ROW__"
+    max_unavailable_attempts = 3
+    for row_idx, row in enumerate(rows):
+        attempt = 0
+        while True:
+            attempt += 1
+            payload, metrics, summary, console = _run_one(
+                row["prompt_text"],
+                strategy,
+                output_root=strategy_output_root,
+                agent_config=agent_config,
+                inputs_file_strategy=inputs_file_strategy,
+                verbose_cli=verbose_cli,
             )
-        )
+            console_rows.append({"row_id": row["row_id"], "strategy": strategy, "row_index": row_idx, "attempt": attempt, **console})
+            row_events = _scan_console_events(console["stdout_tail"], console["stderr_tail"], row_id=row["row_id"], strategy=strategy)
+            events.extend(row_events)
+            if console["returncode"] != 0 or console["parse_error"] or not console["run_directory"]:
+                events.append({"row_id": row["row_id"], "strategy": strategy, "severity": "catastrophic", "reason": "cli_execution_failure"})
+                raise RuntimeError(f"Abort: catastrophic execution failure (strategy={strategy}, row_id={row['row_id']})")
+            unavailable = detect_llm_unavailable(
+                metrics,
+                summary,
+                workflow_payload=payload,
+                parser_signal=payload.get("llm_unavailable", False) is True,
+            )
+            if unavailable:
+                prompt_id = str(row.get("prompt_id") or row["row_id"])
+                events.append(
+                    {
+                        "row_id": row["row_id"],
+                        "strategy": strategy,
+                        "severity": "error",
+                        "reason": "llm_unavailable",
+                        "row_index": str(row_idx),
+                        "prompt_id": prompt_id,
+                        "attempt": str(attempt),
+                    }
+                )
+                print(f"[{strategy}] llm_unavailable row_index={row_idx} prompt_id={prompt_id} attempt={attempt}/{max_unavailable_attempts}")
+                if attempt < max_unavailable_attempts:
+                    continue
+                failed_rows += 1
+                predictions[row["row_id"]] = {"selected_case": failed_sentinel, "selected_inputs": failed_sentinel}
+                evidences.append(
+                    {
+                        "row_id": row["row_id"],
+                        "strategy": strategy,
+                        "selected_case": failed_sentinel,
+                        "selected_inputs": failed_sentinel,
+                    }
+                )
+                llm_usage = [event for event in metrics if event.get("type") == "llm_usage"]
+                explainability_rows.extend(
+                    build_call_records(
+                        row=row,
+                        strategy=strategy,
+                        payload=payload,
+                        llm_usage_events=llm_usage,
+                        selected_case=failed_sentinel,
+                        selected_inputs=failed_sentinel,
+                        row_events=row_events,
+                        unavailable=True,
+                    )
+                )
+                break
+            selected_case = extract_selected_case(payload)
+            selected_inputs = extract_selected_inputs(payload)
+            predictions[row["row_id"]] = {"selected_case": selected_case, "selected_inputs": selected_inputs}
+            evidences.append({"row_id": row["row_id"], "strategy": strategy, "selected_case": predictions[row["row_id"]]["selected_case"], "selected_inputs": predictions[row["row_id"]]["selected_inputs"]})
+            llm_usage = [event for event in metrics if event.get("type") == "llm_usage"]
+            explainability_rows.extend(
+                build_call_records(
+                    row=row,
+                    strategy=strategy,
+                    payload=payload,
+                    llm_usage_events=llm_usage,
+                    selected_case=selected_case,
+                    selected_inputs=selected_inputs,
+                    row_events=row_events,
+                    unavailable=False,
+                )
+            )
+            break
         print(f"[{strategy}] row={row['row_id']} warnings={sum(1 for e in events if e['severity']=='warning')} errors={sum(1 for e in events if e['severity']!='warning')}")
     scored = score_rows(rows, predictions)
     return {
@@ -281,6 +353,7 @@ def _run_strategy(
         "console_rows": console_rows,
         "events": events,
         "explainability_rows": explainability_rows,
+        "failed_rows": failed_rows,
     }
 
 
@@ -288,6 +361,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run ERF llm_compare benchmark.")
     parser.add_argument("--prompt-matrix", type=Path, default=Path("benchmark/erf_llm_compare/prompt_matrix.jsonl"))
     parser.add_argument("--out-dir", type=Path, default=None)
+    parser.add_argument("--strategy", choices=["simple", "hierarchical"], default=None)
     parser.add_argument("--max-rows", type=int, default=0)
     parser.add_argument("--verbose-cli", action="store_true")
     parser.add_argument("--explainability-threshold", type=float, default=0.9)
@@ -295,27 +369,35 @@ def main() -> int:
     parser.add_argument("--inputs-file-strategy", type=str, default="llm_compare")
     args = parser.parse_args()
 
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_dir = args.out_dir or Path(f"benchmark/erf_llm_compare/runs/{run_id}")
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    out_dir = args.out_dir or Path(f"benchmark/erf_llm_compare/runs/{run_id}_benchmark")
+    strategy_roots: dict[str, Path]
+    if args.out_dir:
+        strategy_roots = {
+            "simple": args.out_dir / "simple",
+            "hierarchical": args.out_dir / "hierarchical",
+        }
+    else:
+        base = Path("benchmark/erf_llm_compare/runs")
+        strategy_roots = {
+            "simple": base / f"{run_id}_simple",
+            "hierarchical": base / f"{run_id}_hierarchical",
+        }
     rows = _load_jsonl(args.prompt_matrix)
     if args.max_rows > 0:
         rows = rows[: args.max_rows]
 
+    selected_strategies = [args.strategy] if args.strategy else ["simple", "hierarchical"]
     strategy_runs = [
         _run_strategy(
             rows,
-            "simple",
+            strategy,
+            strategy_output_root=strategy_roots[strategy],
             agent_config=args.agent_config,
             inputs_file_strategy=args.inputs_file_strategy,
             verbose_cli=args.verbose_cli,
-        ),
-        _run_strategy(
-            rows,
-            "hierarchical",
-            agent_config=args.agent_config,
-            inputs_file_strategy=args.inputs_file_strategy,
-            verbose_cli=args.verbose_cli,
-        ),
+        )
+        for strategy in selected_strategies
     ]
     results_rows: list[dict[str, Any]] = []
     category_rows: list[dict[str, Any]] = []
@@ -342,13 +424,26 @@ def main() -> int:
                     }
                 )
 
+    runs_by_strategy = {item["strategy"]: item for item in strategy_runs}
+    simple_scored = runs_by_strategy["simple"]["scored"]["weighted_score"] if "simple" in runs_by_strategy else 0.0
+    hier_scored = runs_by_strategy["hierarchical"]["scored"]["weighted_score"] if "hierarchical" in runs_by_strategy else 0.0
+    simple_failed = runs_by_strategy["simple"]["failed_rows"] if "simple" in runs_by_strategy else 0
+    hier_failed = runs_by_strategy["hierarchical"]["failed_rows"] if "hierarchical" in runs_by_strategy else 0
+    score_count = len(runs_by_strategy) if runs_by_strategy else 1
+
     summary = {
-        "simple_weighted_score": strategy_runs[0]["scored"]["weighted_score"],
-        "hierarchical_weighted_score": strategy_runs[1]["scored"]["weighted_score"],
+        "simple_weighted_score": simple_scored,
+        "hierarchical_weighted_score": hier_scored,
+        "simple_failed_rows": simple_failed,
+        "hierarchical_failed_rows": hier_failed,
     }
-    summary["holdout_weighted_score"] = round((summary["simple_weighted_score"] + summary["hierarchical_weighted_score"]) / 2.0, 6)
+    summary["total_failed_rows"] = summary["simple_failed_rows"] + summary["hierarchical_failed_rows"]
+    summary["holdout_weighted_score"] = round((summary["simple_weighted_score"] + summary["hierarchical_weighted_score"]) / score_count, 6)
     summary["paraphrase_weighted_score"] = summary["holdout_weighted_score"]
     summary["category_min_weighted_score"] = min((r["weighted_score"] for r in category_rows), default=0.0)
+    # NOTE: non_erf_sanity_weighted_score uses holdout score as placeholder.
+    # Dedicated non-ERF split execution is deferred to follow-on benchmarking.
+    # The 20-row non_erf_sanity.jsonl file exists and is reserved for that pass.
     summary["non_erf_sanity_weighted_score"] = summary["holdout_weighted_score"]
     summary.update(summarize_explainability(explainability_rows, threshold=args.explainability_threshold))
 

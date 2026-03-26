@@ -139,14 +139,14 @@ def test_score_faiss_semantic_batch_combines_indices(tmp_path):
     )
 
     expected_pmf = (
-        0.70 * math.exp(-0.0) +
-        0.15 * math.exp(-1.0) +
-        0.10 * math.exp(-2.0)
+        0.80 * math.exp(-0.0) +
+        0.12 * math.exp(-1.0) +
+        0.08 * math.exp(-2.0)
     )
     expected_sedov = (
-        0.70 * math.exp(-1.0) +
-        0.15 * math.exp(-0.0) +
-        0.10 * 0.0
+        0.80 * math.exp(-1.0) +
+        0.12 * math.exp(-0.0) +
+        0.08 * 0.0
     )
 
     assert scores["Exec/RegTests/PMF"] == pytest.approx(expected_pmf, rel=1e-3)
@@ -185,7 +185,7 @@ def test_score_faiss_semantic_batch_handles_partial_indices(tmp_path):
         code_name="PeleC",
     )
 
-    assert scores["Exec/RegTests/PMF"] == pytest.approx(0.70 * math.exp(-0.0))
+    assert scores["Exec/RegTests/PMF"] == pytest.approx(0.80 * math.exp(-0.0))
 
 
 def test_extract_requirements_defers_knowledge_init(tmp_path, monkeypatch):

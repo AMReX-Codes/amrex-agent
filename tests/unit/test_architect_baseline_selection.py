@@ -565,7 +565,7 @@ class TestHierarchicalWeightsFromConfig:
         assert result["weights_used"]["path_hierarchy"] == pytest.approx(0.0)
 
         called_kwargs = mock_searcher.search_all_cases.call_args.kwargs
-        assert called_kwargs["top_k"] == 5
+        assert called_kwargs["top_k"] == 100
         assert called_kwargs["weights"]["physics_parameters"] == pytest.approx(0.6)
 
     def test_select_baseline_uses_defaults_when_config_weights_invalid(self, tmp_path):
