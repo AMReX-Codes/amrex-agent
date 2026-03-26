@@ -413,3 +413,27 @@ class TestProviderDependencyRiskFallback:
 
         assert "Unknown LLM provider: opneai" in str(exc_info.value)
         mock_openai_class.assert_not_called()
+
+    @patch("openai.OpenAI")
+    def test_amsc_i2_provider_uses_openai_compatible_aliases(self, mock_openai_class, monkeypatch):
+        """
+        Given: amsc-i2 selected with AMSC_I2_* environment aliases
+        When:  get_llm_client is called
+        Then:  it should initialize an OpenAI-compatible client and set default model
+        """
+        monkeypatch.setenv("AMSC_I2_API_KEY", "amsc-key")
+        monkeypatch.setenv("AMSC_I2_BASE_URL", "https://example-amsc/v1")
+        monkeypatch.delenv("LITELLM_MODEL", raising=False)
+
+        mock_client = MagicMock()
+        mock_openai_class.return_value = mock_client
+        config = AMReXAgentConfig(llm_provider="amsc-i2", llm_model=None)
+
+        result = get_llm_client(config)
+
+        mock_openai_class.assert_called_once_with(
+            api_key="amsc-key",
+            base_url="https://example-amsc/v1",
+        )
+        assert config.llm_model == "claude-sonnet-4-5"
+        assert unwrap_llm_client(result) == mock_client

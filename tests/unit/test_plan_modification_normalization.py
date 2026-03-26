@@ -46,6 +46,30 @@ def test_create_from_rag_uses_normalized_modifications() -> None:
     assert plan.modifications == [("max_step", 5)]
 
 
+def test_create_from_rag_normalizes_null_modifications_to_empty_list() -> None:
+    baseline_result = {
+        "selected_case": {"case": "Exec/CaseA", "metadata": {"repo_path": "Exec/CaseA"}},
+        "confidence": 0.9,
+        "candidates": [],
+    }
+    cbr_plan = {
+        "modifications": None,
+        "confidence": 0.7,
+        "reasoning": "",
+        "similar_cases": ["CaseA"],
+    }
+
+    plan = SimulationPlanFactory.create_from_rag(
+        solver_name="PeleC",
+        baseline_result=baseline_result,
+        cbr_plan=cbr_plan,
+        docs=[],
+        user_prompt="run a short test",
+    )
+
+    assert plan.modifications == []
+
+
 def test_from_dict_normalizes_list_modifications() -> None:
     hydrated = SimulationPlanFactory.from_dict(
         {

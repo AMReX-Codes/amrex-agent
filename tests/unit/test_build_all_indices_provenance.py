@@ -96,3 +96,47 @@ def test_build_all_provenance_and_session_manifest_merge(
     keys = {(entry["level"], entry["solver"]) for entry in entries}
     assert ("1", "erf") in keys
     assert ("2", "pelec") in keys
+
+
+def test_session_manifest_keeps_distinct_embedding_configurations(tmp_path: Path) -> None:
+    root_output = tmp_path / "faiss"
+    session_path = build_all_indices._write_build_session_manifest(
+        root_output_dir=root_output,
+        new_entries=[
+            {
+                "level": "1",
+                "solver": "erf",
+                "embedding_provider": "cborg",
+                "embedding_model": "lbl/nomic-embed-text",
+                "manifest_path": "level1/erf_cborg_manifest.json",
+            }
+        ],
+    )
+    assert session_path.exists()
+
+    build_all_indices._write_build_session_manifest(
+        root_output_dir=root_output,
+        new_entries=[
+            {
+                "level": "1",
+                "solver": "erf",
+                "embedding_provider": "openai",
+                "embedding_model": "text-embedding-3-large",
+                "manifest_path": "level1/erf_openai_manifest.json",
+            }
+        ],
+    )
+
+    data = json.loads(session_path.read_text(encoding="utf-8"))
+    entries = data["entries"]
+    matching = [
+        entry
+        for entry in entries
+        if entry.get("level") == "1" and entry.get("solver") == "erf"
+    ]
+    providers_models = {
+        (entry.get("embedding_provider"), entry.get("embedding_model"))
+        for entry in matching
+    }
+    assert ("cborg", "lbl/nomic-embed-text") in providers_models
+    assert ("openai", "text-embedding-3-large") in providers_models

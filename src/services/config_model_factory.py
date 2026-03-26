@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, TypedDict, Union
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
+from src.services.schema_staleness import apply_mismatch_policy, check_schema_staleness
 
 
 class ParameterMapping(BaseModel):
@@ -1759,7 +1760,8 @@ If no match exists, set "to": null."""
         cls,
         solver_config: Any,
         schema_dir: Path,
-        repo_path: Path
+        repo_path: Path,
+        runtime_config: Any | None = None,
     ) -> Path:
         """
         Dynamically resolve schema path using configured strategy.
@@ -1801,6 +1803,57 @@ If no match exists, set "to": null."""
             except Exception as exc:
                 logger.debug("Failed to read schema metadata from %s: %s", schema_path, exc)
             return {}
+
+        def _repo_paths_from_runtime_config(config_obj: Any | None) -> dict[str, Path]:
+            if config_obj is None:
+                return {}
+
+            repo_paths: dict[str, Path] = {}
+            repositories = getattr(config_obj, "repositories", {})
+            if isinstance(repositories, dict):
+                for name, path in repositories.items():
+                    if not isinstance(name, str):
+                        continue
+                    if isinstance(path, Path):
+                        repo_paths[name.lower()] = path
+                    elif isinstance(path, str):
+                        repo_paths[name.lower()] = Path(path)
+
+            for attr_name in dir(config_obj):
+                if not attr_name.endswith("_repo_path"):
+                    continue
+                value = getattr(config_obj, attr_name, None)
+                if value is None:
+                    continue
+                key = attr_name[:-len("_repo_path")].lower()
+                if isinstance(value, Path):
+                    repo_paths.setdefault(key, value)
+                elif isinstance(value, str):
+                    repo_paths.setdefault(key, Path(value))
+
+            solver_code = getattr(solver_config, "code_name", None)
+            if isinstance(solver_code, str) and solver_code.strip():
+                repo_paths.setdefault(solver_code.strip().lower(), repo_path)
+            repo_paths.setdefault(repo_path.name.lower(), repo_path)
+            return repo_paths
+
+        def _apply_staleness_policy(selected_schema: Path) -> Path:
+            if runtime_config is None:
+                return selected_schema
+            policy = str(
+                getattr(runtime_config, "database_mismatch_policy", "warn_continue")
+            ).strip()
+            report = check_schema_staleness(
+                schema_path=selected_schema,
+                repo_paths=_repo_paths_from_runtime_config(runtime_config),
+            )
+            apply_mismatch_policy(
+                report=report,
+                policy=policy,
+                solver=str(getattr(solver_config, "code_name", repo_path.name)),
+                solver_path=repo_path,
+            )
+            return selected_schema
 
         def _commit_matches(expected: str, actual: str) -> bool:
             if not expected or not actual:
@@ -1849,7 +1902,7 @@ If no match exists, set "to": null."""
                             "Found exact schema match via filename hash: %s",
                             candidate.name
                         )
-                        return candidate
+                        return _apply_staleness_policy(candidate)
 
             expected_commits = _get_dependency_commits()
             expected_version = getattr(solver_config, "schema_version", None)
@@ -1869,7 +1922,7 @@ If no match exists, set "to": null."""
                         break
                 if all_match:
                     logger.debug("Found exact schema match via metadata: %s", candidate.name)
-                    return candidate
+                    return _apply_staleness_policy(candidate)
 
             logger.warning("No exact schema metadata match found; rebuilding schema.")
             from database.scripts.build_schema import SchemaBuilder
@@ -1888,7 +1941,7 @@ If no match exists, set "to": null."""
             builder.scan_source_code(source_dirs, solver_config=scan_config)
             new_schema_path = builder.save(schema_dir, solver_name=solver_name)
             logger.debug("Built schema: %s", new_schema_path.name)
-            return new_schema_path
+            return _apply_staleness_policy(new_schema_path)
 
         # STRATEGY: TAG (Reproducibility - specific version)
         elif strategy == 'tag':
@@ -1897,7 +1950,7 @@ If no match exists, set "to": null."""
 
             if target_file.exists():
                 logger.debug(f"Found tagged schema: {tag}")
-                return target_file
+                return _apply_staleness_policy(target_file)
 
             raise FileNotFoundError(
                 f"Schema tag '{tag}' not found for {solver_name}. "
@@ -1921,7 +1974,7 @@ If no match exists, set "to": null."""
             # Return most recently modified
             latest = max(matches, key=lambda p: p.stat().st_mtime)
             logger.debug(f"Using newest schema: {latest.name}")
-            return latest
+            return _apply_staleness_policy(latest)
 
     @staticmethod
     def _get_git_hash(repo_path: Path) -> str:

@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import json
 import time
+from types import SimpleNamespace
 
 class TestSchemaResolutionBasic:
     """Test basic schema path resolution (newest strategy)."""
@@ -148,6 +149,72 @@ class TestSchemaResolutionBasic:
         )
         
         assert result == schema_file
+
+
+class TestSchemaStalenessPolicyIntegration:
+    def test_resolve_schema_path_applies_mismatch_policy_when_runtime_config_provided(self, tmp_path):
+        from src.services.config_model_factory import ConfigModelFactory
+
+        schema_dir = tmp_path / "schemas"
+        schema_dir.mkdir()
+        schema_file = schema_dir / "amrex_schema_abc123.json"
+        schema_file.write_text('{"parameters": {}}')
+
+        solver_config = Mock()
+        solver_config.code_name = "AMReX"
+        solver_config.schema_strategy = "newest"
+        solver_config.schema_pattern = "amrex_schema_*.json"
+
+        runtime_config = SimpleNamespace(
+            database_mismatch_policy="warn_continue",
+            repositories={"AMReX": tmp_path},
+        )
+        fake_report = SimpleNamespace(is_stale=False)
+
+        with patch(
+            "src.services.config_model_factory.check_schema_staleness",
+            return_value=fake_report,
+        ) as mock_check, patch(
+            "src.services.config_model_factory.apply_mismatch_policy",
+            return_value=SimpleNamespace(proceed=True, rebuild_triggered=False),
+        ) as mock_apply:
+            result = ConfigModelFactory.resolve_schema_path(
+                solver_config,
+                schema_dir,
+                tmp_path,
+                runtime_config=runtime_config,
+            )
+
+        assert result == schema_file
+        mock_check.assert_called_once()
+        mock_apply.assert_called_once()
+        assert mock_apply.call_args.kwargs["policy"] == "warn_continue"
+
+    def test_resolve_schema_path_skips_mismatch_policy_without_runtime_config(self, tmp_path):
+        from src.services.config_model_factory import ConfigModelFactory
+
+        schema_dir = tmp_path / "schemas"
+        schema_dir.mkdir()
+        schema_file = schema_dir / "amrex_schema_abc123.json"
+        schema_file.write_text('{"parameters": {}}')
+
+        solver_config = Mock()
+        solver_config.code_name = "AMReX"
+        solver_config.schema_strategy = "newest"
+        solver_config.schema_pattern = "amrex_schema_*.json"
+
+        with patch("src.services.config_model_factory.check_schema_staleness") as mock_check, patch(
+            "src.services.config_model_factory.apply_mismatch_policy"
+        ) as mock_apply:
+            result = ConfigModelFactory.resolve_schema_path(
+                solver_config,
+                schema_dir,
+                tmp_path,
+            )
+
+        assert result == schema_file
+        mock_check.assert_not_called()
+        mock_apply.assert_not_called()
 
 
 class TestSchemaResolutionExactStrategy:

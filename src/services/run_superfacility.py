@@ -6,6 +6,7 @@ This is ONE way to run - alternatives: run_local.py, run_container.py.
 """
 
 import logging
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,35 @@ from src.services.run_superfacility_tools import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _walltime_to_seconds(walltime: str | None) -> int | None:
+    if not walltime:
+        return None
+    parts = str(walltime).split(":")
+    if len(parts) != 3:
+        return None
+    try:
+        hours, minutes, seconds = [int(value) for value in parts]
+    except ValueError:
+        return None
+    return max(0, hours) * 3600 + max(0, minutes) * 60 + max(0, seconds)
+
+
+def _monitor_max_polls_for_walltime(
+    walltime: str | None,
+    poll_interval: int,
+    default_max_polls: int,
+) -> int:
+    if poll_interval <= 0:
+        return default_max_polls
+    walltime_seconds = _walltime_to_seconds(walltime)
+    if walltime_seconds is None:
+        return default_max_polls
+    grace_polls = 6
+    required = int(math.ceil(walltime_seconds / poll_interval)) + grace_polls
+    return max(default_max_polls, required)
+
 
 class SuperfacilityRunner:
     """Execute AMReX codes on NERSC via Superfacility API.
@@ -124,6 +154,8 @@ class SuperfacilityRunner:
 
         if compiled_target is None:
             checked = ", ".join(str(path) for path in compile_targets)
+            if self._is_erf_context(case_dir):
+                raise RuntimeError(f"No ERF executable found. Checked paths: {checked}")
             raise RuntimeError(f"Compilation failed in all targets: {checked}")
 
         # Find the newly compiled executable
@@ -189,11 +221,6 @@ class SuperfacilityRunner:
 
     def _derive_erf_central_build_dir(self, case_dir: Path) -> Path | None:
         """Derive ERF central build directory (Exec/<group>) from a case path."""
-        configured = getattr(self.config, "erf_central_build_dir", None)
-        if configured:
-            configured_path = Path(os.path.expandvars(str(configured))).expanduser()
-            return configured_path
-
         case_path = Path(case_dir).resolve()
 
         repo_root = getattr(self.config, "erf_repo_path", None)
@@ -220,13 +247,37 @@ class SuperfacilityRunner:
             return None
         return repo_path / "Exec" / relative_case.parts[1]
 
+    def _configured_erf_central_build_dir(self) -> Path | None:
+        configured = getattr(self.config, "erf_central_build_dir", None)
+        if not configured:
+            return None
+        return Path(os.path.expandvars(str(configured))).expanduser()
+
+    def _erf_central_build_candidates(self, case_dir: Path) -> list[Path]:
+        """Return ordered central-build candidates (case-derived first)."""
+        candidates: list[Path] = []
+        derived = self._derive_erf_central_build_dir(case_dir)
+        if derived:
+            candidates.append(derived)
+        configured = self._configured_erf_central_build_dir()
+        if configured:
+            candidates.append(configured)
+
+        unique: list[Path] = []
+        seen: set[str] = set()
+        for candidate in candidates:
+            key = str(Path(candidate).resolve())
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(Path(candidate))
+        return unique
+
     def _compile_targets(self, case_dir: Path) -> list[Path]:
         """Return ordered compile targets for the selected solver."""
         targets: list[Path] = []
         if self._is_erf_context(case_dir):
-            central_build_dir = self._derive_erf_central_build_dir(case_dir)
-            if central_build_dir:
-                targets.append(central_build_dir)
+            targets.extend(self._erf_central_build_candidates(case_dir))
         targets.append(case_dir)
 
         unique_targets: list[Path] = []
@@ -261,8 +312,9 @@ class SuperfacilityRunner:
             if configured_path.is_file():
                 return configured_path, checked_paths
 
-        central_build_dir = self._derive_erf_central_build_dir(Path(case_dir))
-        if central_build_dir and central_build_dir not in checked_paths:
+        for central_build_dir in self._erf_central_build_candidates(Path(case_dir)):
+            if central_build_dir in checked_paths:
+                continue
             checked_paths.append(central_build_dir)
             exe = self._find_exe_in_dir(central_build_dir, require_mpi, require_cuda)
             if exe:
@@ -670,7 +722,8 @@ class SuperfacilityRunner:
                 job_id: str,
                 method: str = 'sbatch',
                 poll_interval: int = 10,
-                max_polls: int = 30) -> str:
+                max_polls: int = 30,
+                walltime: str | None = None) -> str:
         """
         Monitor job until completion or timeout.
 
@@ -686,6 +739,8 @@ class SuperfacilityRunner:
             Seconds between checks.
         max_polls : int, optional
             Maximum number of checks.
+        walltime : str or None, optional
+            HH:MM:SS requested walltime used to scale max polls.
 
         Returns
         -------
@@ -693,12 +748,17 @@ class SuperfacilityRunner:
             Final job state.
         """
         logger.debug(f"\n[INFO] Monitoring job {job_id} (method: {method})...")
+        resolved_max_polls = _monitor_max_polls_for_walltime(
+            walltime=walltime,
+            poll_interval=poll_interval,
+            default_max_polls=max_polls,
+        )
 
         state = monitor_job(
             job_id=job_id,
             method=method,
             poll_interval=poll_interval,
-            max_polls=max_polls,
+            max_polls=resolved_max_polls,
             config=self.config.model_dump() if hasattr(self.config, "model_dump") else None,
         )
 

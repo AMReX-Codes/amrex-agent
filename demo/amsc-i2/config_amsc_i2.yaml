@@ -1,6 +1,7 @@
 # AmSC i2 API Configuration
 # American Science Cloud - i2 LiteLLM API
 llm_provider: amsc-i2
+litellm_base_url: https://<your-amsc-i2-endpoint>/v1
 
 # Model selection (see provider docs for available models)
 # claude-sonnet-4-5: Latest Sonnet (alias)

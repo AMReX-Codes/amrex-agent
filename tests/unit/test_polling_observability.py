@@ -107,3 +107,24 @@ def test_monitor_job_sfapi_client_import_fallback_logs_api_method(monkeypatch, c
     assert len(poll_messages) == 1
     assert "method=api" in poll_messages[0]
     assert "outcome=FAILED" in poll_messages[0]
+
+
+def test_monitor_job_logs_poll_exceptions(monkeypatch, caplog):
+    def fake_run(_cmd, capture_output=True, text=True):
+        raise RuntimeError("squeue boom")
+
+    times = iter([400.0, 400.012])
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+    monkeypatch.setattr("time.sleep", lambda _seconds: None)
+    monkeypatch.setattr("time.perf_counter", lambda: next(times))
+
+    with caplog.at_level(logging.WARNING, logger="src.services.run_superfacility_tools"):
+        state = monitor_job(job_id="777", method="sbatch", poll_interval=0, max_polls=1)
+
+    assert state == "RUNNING"
+    warning_messages = [record.message for record in caplog.records if "outcome=exception" in record.message]
+    assert len(warning_messages) == 1
+    assert "method=sbatch" in warning_messages[0]
+    assert "job_id=777" in warning_messages[0]
+    assert "error=squeue boom" in warning_messages[0]

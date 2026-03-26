@@ -241,7 +241,8 @@ class TestPolling:
 
         poll_child_status(child, Mock(return_value={"status": "not-a-status"}))
 
-        assert child.status == ChildJobStatus.submitted
+        assert child.status == ChildJobStatus.failed
+        assert child.failure_reason == "poll returned unknown/unmappable status"
 
     def test_polling_unchanged_status_does_not_fail_early(self):
         spec = _spec([1, 2])

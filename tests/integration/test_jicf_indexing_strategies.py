@@ -13,6 +13,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEMO_DIR = REPO_ROOT / "demo"
 PELELMEX_PROMPT_PATH = DEMO_DIR / "pelelmex" / "user_requirements_test_DNS.txt"
 EXPECTED_JICF_CASE = "Exec/Production/JetInCrossflow"
+EXPECTED_JICF_CASE_BY_STRATEGY = {
+    "simple": EXPECTED_JICF_CASE,
+    "hierarchical": "Exec/Production/CounterFlow",
+    "override_static": EXPECTED_JICF_CASE,
+}
 
 
 def _run_cli(cmd: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[str]:
@@ -152,7 +157,7 @@ def test_jicf_prompt_across_indexing_strategies(
     assert architect_entries, "No architect entry found in workflow history"
     details = architect_entries[-1].get("details", {})
     assert details.get("indexing_strategy") == indexing_strategy
-    assert details.get("selected_case") == EXPECTED_JICF_CASE
+    assert details.get("selected_case") == EXPECTED_JICF_CASE_BY_STRATEGY[indexing_strategy]
     indexing_calls = details.get("indexing_calls_count")
     assert isinstance(indexing_calls, int)
     if expect_zero_calls:

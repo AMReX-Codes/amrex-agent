@@ -16,6 +16,7 @@ References:
 
 import pytest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, MagicMock, patch
 from typing import Dict, List
 
@@ -475,6 +476,44 @@ class TestPriorityCaseBoost:
         assert result['selected_case']['score'] > 0.38
         assert result['selected_case'].get('score_bonus', 0) > 0
 
+    def test_priority_case_boost_ignores_empty_case_paths(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        architect = ArchitectService(mock_config, Mock())
+
+        solver_config = Mock()
+        solver_config.priority_cases = ["Exec/RegTests/PMF"]
+
+        candidates = [
+            {"case": "", "score": 0.5, "metadata": {"repo_path": ""}},
+            {"case": None, "score": 0.4, "metadata": {}},
+        ]
+
+        boosted = architect._apply_priority_case_boost(candidates, solver_config)
+        assert boosted[0].get("score_bonus", 0.0) == 0.0
+        assert boosted[1].get("score_bonus", 0.0) == 0.0
+
+
+def test_solver_family_labels_handles_malformed_regime_alias_types(tmp_path):
+    mock_config = Mock()
+    mock_config.faiss_db_path = tmp_path
+    architect = ArchitectService(mock_config, Mock())
+
+    solver_config = Mock()
+    solver_config.code_name = "ERF"
+    solver_config.level0_physics_regimes = [
+        {"family": "Atmospheric", "aliases": ["weather", 42, None, {"bad": "shape"}]},
+        {"family": None, "aliases": "mesoscale"},
+        "boundary layer",
+        17,
+    ]
+
+    labels = architect._solver_family_labels(solver_config)
+    assert "atmospheric" in labels
+    assert "weather" in labels
+    assert "mesoscale" in labels
+    assert "boundarylayer" in labels
+
 
 class TestRejectedAlternatives:
     """Ensure non-selected candidates include explicit rejection rationale."""
@@ -600,6 +639,50 @@ class TestHierarchicalWeightsFromConfig:
         assert result["weights_used"]["physics_parameters"] == pytest.approx(0.30)
         assert result["weights_used"]["grid_specifications"] == pytest.approx(0.20)
         assert result["weights_used"]["resource_requirements"] == pytest.approx(0.05)
+
+
+def test_select_baseline_simple_zero_sum_weights_falls_back_to_defaults(tmp_path, monkeypatch):
+    mock_config = Mock()
+    mock_config.faiss_db_path = tmp_path
+    mock_config.faiss_semantic_weight = 0.0
+    mock_config.simple_weight_kb_relevance = 0.0
+    mock_config.simple_weight_metrics = 0.0
+    mock_config.simple_weight_path_heuristics = 0.0
+    mock_config.simple_weight_domain_specific = 0.0
+    mock_config.simple_weight_faiss_semantic = 0.0
+
+    mock_embedder = Mock()
+    mock_embedder.indices_available.return_value = False
+    architect = ArchitectService(mock_config, mock_embedder)
+
+    monkeypatch.setattr(
+        architect.cases,
+        "list_all_cases",
+        lambda: {"PeleC": ["Exec/RegTests/PMF"]},
+    )
+    monkeypatch.setattr(
+        architect.cases,
+        "get_code_info",
+        lambda _code_name: SimpleNamespace(local_path=tmp_path),
+    )
+    monkeypatch.setattr(
+        architect,
+        "_score_kb_relevance_batch",
+        lambda *_args, **_kwargs: {"Exec/RegTests/PMF": 0.8},
+    )
+    monkeypatch.setattr(architect, "_is_kb_signal_weak", lambda *_args, **_kwargs: False)
+    monkeypatch.setattr(architect, "_score_metrics", lambda *_args, **_kwargs: (0.5, {}))
+    monkeypatch.setattr(architect, "_score_path_heuristics", lambda *_args, **_kwargs: (0.5, {}))
+    monkeypatch.setattr(architect, "_score_combustion_domain", lambda *_args, **_kwargs: (0.5, {}))
+
+    result = architect._select_baseline(
+        user_prompt="pmf baseline",
+        requirements={"solver": "PeleC"},
+    )
+
+    assert result is not None
+    assert abs(sum(result["weights_used"].values()) - 1.0) < 1e-9
+    assert result["weights_used"]["kb_relevance"] > 0.0
 
 
 # Architect Service: Baseline Selection Marker

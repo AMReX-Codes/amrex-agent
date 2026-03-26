@@ -136,6 +136,36 @@ def test_erf_finds_executable_in_derived_central_build_dir(tmp_path):
     assert Path(exe_path) == central_exe
 
 
+def test_erf_fallback_prefers_case_group_over_configured_regtests(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "ABL" / "Scaling" / "Perlmutter"
+    case_dir.mkdir(parents=True)
+
+    regtests_dir = repo_root / "Exec" / "RegTests"
+    regtests_dir.mkdir(parents=True)
+    regtests_exe = regtests_dir / "ERF3d.gnu.TEST.MPI.CUDA.ex"
+    regtests_exe.write_text("regtests")
+
+    abl_dir = repo_root / "Exec" / "ABL"
+    abl_dir.mkdir(parents=True, exist_ok=True)
+    abl_exe = abl_dir / "ERF3d.gnu.TEST.MPI.CUDA.ex"
+    abl_exe.write_text("abl")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        superfacility_account="acct",
+        erf_executable_path=None,
+        erf_repo_path=repo_root,
+        erf_central_build_dir=regtests_dir,
+    )
+    runner = SuperfacilityRunner(config)
+
+    exe, checked = runner._resolve_erf_executable_fallbacks(case_dir=case_dir, require_mpi=True, require_cuda=True)
+    assert exe == abl_exe
+    assert checked[1] == abl_dir
+
+
 def test_non_erf_compile_failure_raises(tmp_path, monkeypatch):
     case_dir = tmp_path / "case"
     case_dir.mkdir()
@@ -337,6 +367,21 @@ def test_monitor_proxies_to_monitor_job(tmp_path, monkeypatch):
     config = SimpleNamespace(default_solver="PeleC", output_dir=tmp_path, superfacility_account="acct")
     runner = SuperfacilityRunner(config)
     assert runner.monitor("job123", method="api") == "COMPLETED"
+
+
+def test_monitor_scales_max_polls_from_walltime(tmp_path, monkeypatch):
+    captured = {}
+
+    def _fake_monitor_job(**kwargs):
+        captured.update(kwargs)
+        return "COMPLETED"
+
+    monkeypatch.setattr("src.services.run_superfacility.monitor_job", _fake_monitor_job)
+    config = SimpleNamespace(default_solver="PeleC", output_dir=tmp_path, superfacility_account="acct")
+    runner = SuperfacilityRunner(config)
+
+    assert runner.monitor("job123", method="api", poll_interval=10, max_polls=30, walltime="01:00:00") == "COMPLETED"
+    assert captured["max_polls"] > 30
 
 
 def test_find_or_compile_returns_existing_exe_without_compile(tmp_path):
@@ -548,6 +593,32 @@ def test_run_simulation_combines_setup_submit_and_monitor(tmp_path, monkeypatch)
     result = runner.run_simulation(case_dir=tmp_path / "case", monitor_job_flag=True)
     assert result["job_id"] == "42"
     assert result["final_state"] == "COMPLETED"
+
+
+def test_run_simulation_passes_walltime_to_monitor(tmp_path, monkeypatch):
+    config = SimpleNamespace(default_solver="PeleC", output_dir=tmp_path, superfacility_account="acct")
+    runner = SuperfacilityRunner(config)
+    monitor_calls = []
+
+    monkeypatch.setattr(
+        runner,
+        "setup_job",
+        lambda **kwargs: {"run_dir": str(tmp_path / "run"), "files": {}, "inputs": "inputs", "executable": "x.ex"},
+    )
+    monkeypatch.setattr(
+        runner,
+        "submit",
+        lambda **kwargs: {"job_id": "42", "method": "api", "job_status": "queued"},
+    )
+    monkeypatch.setattr(
+        runner,
+        "monitor",
+        lambda **kwargs: monitor_calls.append(kwargs) or "COMPLETED",
+    )
+
+    result = runner.run_simulation(case_dir=tmp_path / "case", monitor_job_flag=True, walltime="00:42:00")
+    assert result["final_state"] == "COMPLETED"
+    assert monitor_calls and monitor_calls[0]["walltime"] == "00:42:00"
 
 
 def test_run_simulation_requires_default_solver_when_base_name_missing(tmp_path):

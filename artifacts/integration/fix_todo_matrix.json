@@ -1,0 +1,646 @@
+{
+  "rows": [
+    {
+      "slice": 1,
+      "title": "Add chronological stack slice 101",
+      "catchup_branch": "catchup_1_update_academy_gitignore_local",
+      "fix_branch": "fix_catchup_1_update_academy_gitignore_local",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] include_response_rationale no longer mislabels non-success payloads as successful responses",
+        "[DONE] [P2] Exception path now honors include_response_rationale envelope contract",
+        "[DONE] [P1] include_response_rationale no longer mislabels non-success payloads as successful responses"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 2,
+      "title": "Add chronological stack slice 102",
+      "catchup_branch": "catchup_2_update_schemas_use_erf",
+      "fix_branch": "fix_catchup_2_update_schemas_use_erf",
+      "review_counts": {
+        "P0": 1,
+        "P1": 0,
+        "P2": 4,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P2] Priority-case boost now ignores candidates with missing/empty case paths",
+        "[DONE] [P2] Level-0 regime parsing now handles malformed alias payload types robustly",
+        "[DONE] [P2] Priority-case boost now ignores candidates with missing/empty case paths"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 3,
+      "title": "Add chronological stack slice 103",
+      "catchup_branch": "catchup_3_merge_schemas_extend_metrics",
+      "fix_branch": "fix_catchup_3_merge_schemas_extend_metrics",
+      "review_counts": {
+        "P0": 3,
+        "P1": 4,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 9
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P0] LLM call-site enforcement fixed (direct chat.completions.create regression removed)",
+        "[DONE] [P1] Retry wrapper now retries transient transport errors (timeouts/connect failures)",
+        "[DONE] [P1] Job monitoring timeout behavior restored to walltime-aware polling"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 4,
+      "title": "Add chronological stack slice 104",
+      "catchup_branch": "catchup_4_merge_changes_maintainability_interactive",
+      "fix_branch": "fix_catchup_4_merge_changes_maintainability_interactive",
+      "review_counts": {
+        "P0": 1,
+        "P1": 0,
+        "P2": 4,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P2] include_response_rationale wrapper preserves non-success tool status values (no forced ok)",
+        "[DONE] [P2] Untrusted caller_action is stripped from MCP payload before dispatch/persistence",
+        "[DONE] [P2] include_response_rationale wrapper preserves non-success tool status values (no forced ok)"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 5,
+      "title": "Add chronological stack slice 105",
+      "catchup_branch": "catchup_5_add_agent_canonical_state",
+      "fix_branch": "fix_catchup_5_add_agent_canonical_state",
+      "review_counts": {
+        "P0": 1,
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "total_findings": 1
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 6,
+      "title": "Add chronological stack slice 106",
+      "catchup_branch": "catchup_6_wire_agent_sweep_detection",
+      "fix_branch": "fix_catchup_6_wire_agent_sweep_detection",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 2,
+        "P3": 2,
+        "total_findings": 7
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] Preconfirm gate approvals are now persisted from reviewer node execution paths",
+        "[DONE] [P2] Benchmark normalization now reports missing validation data as unavailable instead of hard invalid",
+        "[DONE] [P3] create_graph clarification/sweep branches now re-enter workflow instead of hard-terminating at END"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 7,
+      "title": "Add chronological stack slice 107",
+      "catchup_branch": "catchup_7_merge_agent_hardening_tag",
+      "fix_branch": "fix_catchup_7_merge_agent_hardening_tag",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 4,
+        "P3": 0,
+        "total_findings": 7
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] Non-interactive clarification path no longer flags unresolved prompt when AI filled all missing required fields",
+        "[DONE] [P2] clarification_questions contract aligned: GraphState now declares list[dict] payloads",
+        "[DONE] [P2] Sweep polling now fail-fasts unknown/unmappable statuses instead of waiting for full timeout"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 8,
+      "title": "Add chronological stack slice 108",
+      "catchup_branch": "catchup_8_merge_agent_hardening_clarification",
+      "fix_branch": "fix_catchup_8_merge_agent_hardening_clarification",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 4,
+        "P3": 0,
+        "total_findings": 7
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] Clarification handler is now wired into runtime graph",
+        "[DONE] [P2] database_mismatch_policy + schema staleness checks are now enforced at schema resolution call sites",
+        "[DONE] [P2] Clarification handler now prioritizes human response when both human and AI responses exist"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 9,
+      "title": "Add chronological stack slice 109",
+      "catchup_branch": "catchup_9_add_agent_sweep_mcp",
+      "fix_branch": "fix_catchup_9_add_agent_sweep_mcp",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] sweep_id path handling now rejects traversal-style identifiers",
+        "[DONE] [P2] get_sweep_results now resolves summary path from requested sweep_id",
+        "[DONE] [P1] sweep_id path handling now rejects traversal-style identifiers"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 10,
+      "title": "Add chronological stack slice 110",
+      "catchup_branch": "catchup_10_merge_changes_sync",
+      "fix_branch": "fix_catchup_10_merge_changes_sync",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 9,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] Archived workflow sessions now reject non-noop writes under immutable guard",
+        "[DONE] [P2] Malformed manifest versions are now rejected for strict embedding-model enforcement",
+        "[DONE] [P1] Archived workflow sessions now reject non-noop writes under immutable guard"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "ERROR src.services.config_service:config_service.py:317 [ERROR] CBORG API connection failed: Connection error..",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 11,
+      "title": "Add chronological stack slice 111",
+      "catchup_branch": "catchup_11_finalize_tests_cleanup_conflict",
+      "fix_branch": "fix_catchup_11_finalize_tests_cleanup_conflict",
+      "review_counts": {
+        "P0": 1,
+        "P1": 4,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 7
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] --paper-source mode no longer fails at initialization due to empty prompt",
+        "[DONE] [P1] paper-validator CLI/topology regression tests pass on stacked fix branch",
+        "[DONE] [P2] src.graph paper-validator enablement now honors state-level paper flags"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 12,
+      "title": "Add chronological stack slice 112",
+      "catchup_branch": "catchup_12_merge_tests_wave1",
+      "fix_branch": "fix_catchup_12_merge_tests_wave1",
+      "review_counts": {
+        "P0": 1,
+        "P1": 4,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 7
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] create_from_rag now normalizes modifications: null to []",
+        "[DONE] [P1] Mode-2 paper validator targeted tests pass without branch-level failures",
+        "[DONE] [P2] Metrics aggregation now counts legacy success statuses (completed/success/succeeded/ok)"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 13,
+      "title": "Add chronological stack slice 113",
+      "catchup_branch": "catchup_13_merge_agent_wave1_step",
+      "fix_branch": "fix_catchup_13_merge_agent_wave1_step",
+      "review_counts": {
+        "P0": 3,
+        "P1": 0,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P0] Custom route token classes made hashable for LangGraph conditional routing",
+        "[DONE] [P2] monitor_job polling exceptions now emit warning telemetry",
+        "[DONE] [P0] Custom route token classes made hashable for LangGraph conditional routing"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 14,
+      "title": "Add chronological stack slice 114",
+      "catchup_branch": "catchup_14_add_agent_faiss_provenance",
+      "fix_branch": "fix_catchup_14_add_agent_faiss_provenance",
+      "review_counts": {
+        "P0": 1,
+        "P1": 0,
+        "P2": 2,
+        "P3": 2,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P2] Session manifest merge keys preserve distinct embedding provider/model variants",
+        "[DONE] [P3] Added regression test for multi-model/provider session-manifest merge behavior",
+        "[DONE] [P2] Session manifest merge keys preserve distinct embedding provider/model variants"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 15,
+      "title": "Add chronological stack slice 115",
+      "catchup_branch": "catchup_15_rebuild_schemas_solver",
+      "fix_branch": "fix_catchup_15_rebuild_schemas_solver",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] *_complete_current.json no longer retargets to itself for complete-schema groups with 2+ files",
+        "[DONE] [P2] Complete-schema symlink target selection now uses deterministic tie-breaking",
+        "[DONE] [P1] *_complete_current.json no longer retargets to itself for complete-schema groups with 2+ files"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 16,
+      "title": "Add chronological stack slice 116",
+      "catchup_branch": "catchup_16_merge_agent_task_wt4",
+      "fix_branch": "fix_catchup_16_merge_agent_task_wt4",
+      "review_counts": {
+        "P0": 1,
+        "P1": 4,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 7
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] build_all_indices unit tests aligned to current helper API surface",
+        "[DONE] [P1] build_all_indices --mock no longer hard-fails when --provider is omitted",
+        "[DONE] [P2] --check mode now accepts direct-root manifest path as backward-compatible fallback"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 17,
+      "title": "Add chronological stack slice 117",
+      "catchup_branch": "catchup_17_update_schemas_erf_config",
+      "fix_branch": "fix_catchup_17_update_schemas_erf_config",
+      "review_counts": {
+        "P0": 1,
+        "P1": 4,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 7
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] Zero-sum simple baseline weights no longer crash baseline selection",
+        "[DONE] [P1] ERF unit tests now skip cleanly when sibling ERF repo is unavailable",
+        "[DONE] [P2] v26.05 capability-contract compliance checks are active (skip markers removed)"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 18,
+      "title": "Add chronological stack slice 118",
+      "catchup_branch": "catchup_18_add_agent_paper_reproduction",
+      "fix_branch": "fix_catchup_18_add_agent_paper_reproduction",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 2,
+        "P3": 0,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] ERF central build fallback now prioritizes case-derived Exec/<group> over default RegTests fallback",
+        "[DONE] [P2] Visualization config normalization preserves architect plot types and extra plot options",
+        "[DONE] [P1] ERF central build fallback now prioritizes case-derived Exec/<group> over default RegTests fallback"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    },
+    {
+      "slice": 19,
+      "title": "Add chronological stack slice 119",
+      "catchup_branch": "catchup_19_fix_tooling_per_solver",
+      "fix_branch": "fix_catchup_19_fix_tooling_per_solver",
+      "review_counts": {
+        "P0": 1,
+        "P1": 2,
+        "P2": 0,
+        "P3": 2,
+        "total_findings": 5
+      },
+      "quality": {
+        "unit_rc": 1,
+        "unit_cov": "55.91",
+        "full_rc": 1,
+        "full_cov": "57.81",
+        "full_failures": 10,
+        "full_errors": 0
+      },
+      "top_findings": [
+        "[DONE] [P1] Wrapper-level rate-limit retry now triggers only on failing runs, preventing duplicate reruns after internal recovery",
+        "[DONE] [P3] Wave follow-up command now points to existing scripts/paper/run_track2_waves.sh path",
+        "[DONE] [P1] Wrapper-level rate-limit retry now triggers only on failing runs, preventing duplicate reruns after internal recovery"
+      ],
+      "top_failing_tests": [
+        "ERROR src.nodes.input_writer_node:input_writer_node.py:235 Input writing failed",
+        "ERROR src.nodes.runner_node:runner_node.py:56 Input Writer did not complete successfully",
+        "FAILED tests/integration/l5_full_pipeline/test_full_graph.py::TestFullGraphExecution::test_happy_path_full_workflow",
+        "FAILED tests/integration/test_jicf_indexing_strategies.py::test_jicf_prompt_across_indexing_strategies[hierarchical]",
+        "FAILED tests/unit/test_build_all_indices_check.py::test_check_mode_does_not_build_indices"
+      ],
+      "status": "fixed_on_stacked_branch"
+    }
+  ]
+}

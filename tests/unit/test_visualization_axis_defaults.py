@@ -123,3 +123,56 @@ def test_build_vis_config_prioritizes_requested_over_plan_fields():
     assert fields[0] == "qc"
     assert "density" in fields
     assert "velocity_magnitude" not in fields
+
+
+def test_build_vis_config_preserves_plot_types_and_extra_options():
+    class _Backend:
+        @staticmethod
+        def get_field_list(_plotfile):
+            return ["Temp", "density", "pressure"]
+
+    class _VizService:
+        backend = _Backend()
+
+    vis_config = _build_vis_config(
+        plan={
+            "visualization": {
+                "plots": [
+                    {
+                        "type": "slice",
+                        "field": "Temp",
+                        "axis": "z",
+                        "colormap": "magma",
+                        "vmin": 200.0,
+                        "vmax": 1800.0,
+                    },
+                    {
+                        "type": "line",
+                        "field": "pressure",
+                        "lineout_axis": "x",
+                        "position": 0.5,
+                    },
+                ]
+            }
+        },
+        analysis_report={},
+        plotfiles=[Path("plt00001")],
+        viz_service=_VizService(),
+        prompt="render diagnostics",
+        solver_name="ERF",
+        inputs_file_path=None,
+        requested_plot_vars=None,
+    )
+
+    plots = vis_config.get("plots", [])
+    assert len(plots) == 2
+    assert plots[0]["type"] == "slice"
+    assert plots[0]["field"] == "Temp"
+    assert plots[0]["axis"] == "z"
+    assert plots[0]["colormap"] == "magma"
+    assert plots[0]["vmin"] == 200.0
+    assert plots[0]["vmax"] == 1800.0
+    assert plots[1]["type"] == "line"
+    assert plots[1]["field"] == "pressure"
+    assert plots[1]["lineout_axis"] == "x"
+    assert plots[1]["position"] == 0.5

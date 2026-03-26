@@ -13,6 +13,9 @@ from langgraph.graph import END, START, StateGraph
 from src.models import GraphState
 from src.models.paper_validation_manifest import PaperValidationManifest
 from src.nodes.architect_node import architect_node
+from src.nodes.clarification_handler_node import (
+    clarification_handler_node as schema_clarification_handler_node,
+)
 from src.nodes.clarification_node import clarification_node
 from src.nodes.input_writer_node import input_writer_node
 from src.nodes.intent_extraction_node import intent_extraction_node
@@ -132,6 +135,8 @@ STABLE_ERROR_REASON_CODES = frozenset(
 class _ManifestRoute(str):
     """Back-compat route token for tests asserting historical routing values."""
 
+    __hash__ = str.__hash__
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "input_writer_node":
             return True
@@ -140,6 +145,8 @@ class _ManifestRoute(str):
 
 class _RequiredOutputsRoute(str):
     """Back-compat route token for historical direct-intent assertions."""
+
+    __hash__ = str.__hash__
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "intent_extraction_node":
@@ -150,6 +157,8 @@ class _RequiredOutputsRoute(str):
 class _RadonRoute(str):
     """Back-compat route token for historical direct-input-writer assertions."""
 
+    __hash__ = str.__hash__
+
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "input_writer_node":
             return True
@@ -158,6 +167,8 @@ class _RadonRoute(str):
 
 class _ArchitectIntentRoute(str):
     """Route through required-outputs while comparing equal to legacy intent route."""
+
+    __hash__ = str.__hash__
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, str) and other == "intent_extraction_node":
@@ -988,7 +999,11 @@ def _paper_validator_enabled_from_config(config: Any, *, strict_true: bool = Fal
 
 
 def _paper_validator_enabled(state: dict[str, Any]) -> bool:
-    if state.get("paper_validator_enabled", False) or state.get("paper_source"):
+    if (
+        state.get("paper_validator_enabled", False)
+        or state.get("paper_source")
+        or state.get("paper_input_type")
+    ):
         return True
     return _paper_validator_enabled_from_config(state.get("config"))
 
@@ -2205,7 +2220,7 @@ def create_graph() -> StateGraph:
     graph.add_node("risk_links_traceability_node", risk_links_traceability_node)
     graph.add_node("intent_extraction_node", intent_extraction_node)
     graph.add_node("clarification_node", clarification_node)
-    graph.add_node("clarification_handler", clarification_handler_node)
+    graph.add_node("clarification_handler", schema_clarification_handler_node)
     graph.add_node("sweep_execution_handler", sweep_execution_handler_node)
     graph.add_node("session_dependency_handler", session_dependency_handler_node)
     graph.add_node("level4_depth_guidance_handler", level4_depth_guidance_handler_node)
@@ -2323,8 +2338,17 @@ def create_graph() -> StateGraph:
             "clarification_handler": "clarification_handler",
         },
     )
-    graph.add_edge("clarification_handler", END)
-    graph.add_edge("sweep_execution_handler", END)
+    graph.add_conditional_edges(
+        "clarification_handler",
+        _route_after_clarification,
+        {
+            "clarification_handler": "clarification_node",
+            "input_writer_node": "paper_manifest_gate_node",
+            "legacy_input_writer_node": "input_writer_node",
+            "paper_validator_node": "paper_validator_node",
+        },
+    )
+    graph.add_edge("sweep_execution_handler", "architect_node")
     graph.add_edge("session_dependency_handler", END)
     graph.add_conditional_edges(
         "input_writer_node",

@@ -89,6 +89,16 @@ class TestGraphExecutionEngine:
         assert initial_state["prompt"] == "simulation request"
         assert "config" in initial_state
 
+    def test_normalizes_success_job_status_to_completed(
+        self, mock_config, mock_compiled_app, mock_graph_builder
+    ):
+        mock_compiled_app.invoke.return_value = {"job_status": "success"}
+
+        with patch("src.main.create_amrex_agent_graph", return_value=mock_graph_builder):
+            result = run_agent("simulation request", mock_config)
+
+        assert result["job_status"] == "completed"
+
     def test_recursion_limit_set_to_50(self, mock_config, mock_compiled_app, mock_graph_builder):
         """
         GIVEN: Graph execution
@@ -159,6 +169,25 @@ class TestGraphExecutionEngine:
 
         assert result["job_status"] == "failed"
         assert "Graph" in result["error"]
+
+    def test_paper_only_mode_initializes_nonempty_prompt(
+        self, mock_config, mock_compiled_app, mock_graph_builder
+    ):
+        mock_compiled_app.invoke.return_value = {"job_status": "success"}
+
+        with patch("src.main.create_amrex_agent_graph", return_value=mock_graph_builder):
+            run_agent(
+                "",
+                mock_config,
+                paper_source="2401.12345",
+                paper_input_type="arxiv",
+                paper_validator_enabled=True,
+            )
+
+        call_args = mock_compiled_app.invoke.call_args
+        initial_state = call_args[0][0]
+        assert initial_state["prompt"]
+        assert "2401.12345" in initial_state["prompt"]
 
     def test_preserves_initial_state_on_error(self, mock_config, mock_compiled_app, mock_graph_builder):
         """

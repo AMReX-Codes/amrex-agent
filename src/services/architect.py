@@ -179,6 +179,7 @@ class ArchitectService:
                 solver_config,
                 self.config.amrex_agent_root / "database/schemas",
                 self.config.amrex_agent_root,
+                runtime_config=self.config,
             )
             schema = ConfigModelFactory.load_schema(schema_path)
         except Exception as exc:
@@ -192,6 +193,7 @@ class ArchitectService:
                 solver_config,
                 self.config.amrex_agent_root / "database/schemas",
                 self.config.amrex_agent_root,
+                runtime_config=self.config,
             )
             schema = ConfigModelFactory.load_schema(schema_path)
             if isinstance(schema, dict) and "parameters" in schema:
@@ -411,13 +413,45 @@ class ArchitectService:
         if not solver_config:
             return set()
         families: set[str] = set()
-        regimes = getattr(solver_config, "level0_physics_regimes", []) or []
+        regimes_raw = getattr(solver_config, "level0_physics_regimes", []) or []
+        if isinstance(regimes_raw, dict):
+            regimes = [regimes_raw]
+        elif isinstance(regimes_raw, (list, tuple, set)):
+            regimes = list(regimes_raw)
+        elif isinstance(regimes_raw, str):
+            regimes = [{"family": regimes_raw}]
+        else:
+            regimes = []
+
         for regime in regimes:
+            if isinstance(regime, str):
+                normalized = self._normalize_match_text(regime)
+                if normalized:
+                    families.add(normalized)
+                continue
+
             if not isinstance(regime, dict):
                 continue
+
             family = regime.get("family")
-            if family:
-                families.add(self._normalize_match_text(str(family)))
+            if isinstance(family, str) and family.strip():
+                families.add(self._normalize_match_text(family))
+
+            aliases = regime.get("aliases")
+            if isinstance(aliases, str):
+                aliases_iter = [aliases]
+            elif isinstance(aliases, (list, tuple, set)):
+                aliases_iter = list(aliases)
+            else:
+                aliases_iter = []
+
+            for alias in aliases_iter:
+                if not isinstance(alias, str):
+                    continue
+                normalized = self._normalize_match_text(alias)
+                if normalized:
+                    families.add(normalized)
+
         if not families:
             code_name = getattr(solver_config, "code_name", "") or ""
             if code_name:
@@ -1209,6 +1243,9 @@ class ArchitectService:
                 or ""
             )
             case_norm = str(case_path).strip().lower()
+            if not case_norm:
+                boosted.append(candidate)
+                continue
             base_score = float(candidate.get("score", 0.0))
             bonus = 0.0
 
@@ -3612,6 +3649,7 @@ CRITICAL: Use exact names only."""
                 solver_config,
                 schema_dir,
                 Path(repo_root or "."),
+                runtime_config=self.config,
             )
             schema = ConfigModelFactory.load_schema(schema_path)
             if isinstance(schema, dict) and "parameters" in schema:
@@ -4012,9 +4050,21 @@ Answer with the solver name and brief justification."""
                     code_name,
                 )
 
-        # Normalize to sum to 1.0
-        total = sum(weights.values())
-        weights = {k: v/total for k, v in weights.items()}
+        # Normalize to sum to 1.0; guard against zero-sum misconfiguration.
+        weights = self._normalize_weights(weights)
+        if not weights:
+            logger.warning(
+                "Simple baseline weights invalid or zero-sum; falling back to default simple profile"
+            )
+            weights = self._normalize_weights(
+                {
+                    "kb_relevance": 0.40,
+                    "metrics": 0.25,
+                    "path_heuristics": 0.10,
+                    "domain_specific": 0.25,
+                    "faiss_semantic": 0.50,
+                }
+            )
 
         # Determine if using FAISS (5-bucket) or traditional (4-bucket)
         num_buckets = 5 if weights.get('faiss_semantic', 0) > 0 and self.embeddings and self.embeddings.indices_available() else 4

@@ -789,7 +789,14 @@ def _run_check_mode(output: Path, provider_override: str | None = None) -> int:
             provider_override,
             str(getattr(runtime_config, "embedding_provider", "")).strip().lower() or None,
         )
-        faiss_root = _provider_output_root(output, effective_provider)
+        provider_root = _provider_output_root(output, effective_provider)
+        # Backward compatibility: accept either provider-scoped or flat manifest root.
+        if (provider_root / "build_session_manifest.json").exists():
+            faiss_root = provider_root
+        elif (output / "build_session_manifest.json").exists():
+            faiss_root = output
+        else:
+            faiss_root = provider_root
         exit_code, lines = run_manifest_provenance_check(
             faiss_root=faiss_root,
             config=runtime_config,
@@ -820,8 +827,12 @@ def main() -> int:
     # Create embedder
     embedder = create_embedder(use_real=not args.mock)
     detected_provider, _, _ = _extract_embedding_metadata(embedder)
+    provider_fallback = detected_provider
+    if provider_fallback is None and args.mock:
+        # Mock embedder has no service metadata; default to stable provider namespace.
+        provider_fallback = "openai"
     try:
-        effective_provider = _resolve_effective_provider(args.provider, detected_provider)
+        effective_provider = _resolve_effective_provider(args.provider, provider_fallback)
     except ValueError as exc:
         parser.error(str(exc))
 

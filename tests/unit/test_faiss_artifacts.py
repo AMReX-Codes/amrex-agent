@@ -107,6 +107,21 @@ def test_validate_manifest_metadata_requires_embedding_model_for_v2():
         raise AssertionError("Expected RuntimeError for missing embedding_model")
 
 
+def test_validate_manifest_metadata_rejects_malformed_version():
+    manifest = {
+        "version": "v2.0",
+        "generated_at": "2026-03-10T00:00:00Z",
+        "files": [{"path": "index.faiss"}],
+    }
+
+    try:
+        faiss_artifacts._validate_manifest_metadata(manifest)
+    except RuntimeError as exc:
+        assert "malformed version" in str(exc)
+    else:
+        raise AssertionError("Expected RuntimeError for malformed version")
+
+
 def test_validate_manifest_embedding_compatibility_rejects_v2_mismatch():
     manifest = {
         "version": "2.0",
@@ -140,3 +155,22 @@ def test_validate_manifest_embedding_compatibility_warns_on_legacy_mismatch(capl
     )
 
     assert "Accepting legacy manifest." in caplog.text
+
+
+def test_validate_manifest_embedding_compatibility_rejects_malformed_version():
+    manifest = {
+        "version": "v2.0",
+        "generated_at": "2026-03-10T00:00:00Z",
+        "embedding_model": "model-a",
+        "files": [{"path": "index.faiss"}],
+    }
+
+    try:
+        faiss_artifacts._validate_manifest_embedding_compatibility(
+            manifest,
+            expected_embedding_model="model-b",
+        )
+    except RuntimeError as exc:
+        assert "malformed version" in str(exc)
+    else:
+        raise AssertionError("Expected RuntimeError for malformed version")

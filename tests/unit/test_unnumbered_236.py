@@ -208,7 +208,11 @@ def test_reviewer_node_cancel_and_compilation_terminal_paths(monkeypatch, mock_c
     monkeypatch.setattr(
         reviewer_node_module,
         "run_preconfirm_gate",
-        lambda **_kwargs: {"action": "cancel", "history_entry": {"node": "preconfirm"}},
+        lambda **_kwargs: {
+            "action": "cancel",
+            "history_entry": {"node": "preconfirm"},
+            "approval_record": {"gate_type": "preconfirm", "decision": "rejected"},
+        },
     )
     canceled = reviewer_node_module.reviewer_node(
         {
@@ -220,11 +224,16 @@ def test_reviewer_node_cancel_and_compilation_terminal_paths(monkeypatch, mock_c
     assert canceled["mode"] == "terminal"
     assert "User canceled" in canceled["error"]
     assert canceled["workflow_history"][-1]["iteration"] == 1
+    assert canceled["gate_approvals"][-1]["gate_type"] == "preconfirm"
 
     monkeypatch.setattr(
         reviewer_node_module,
         "run_preconfirm_gate",
-        lambda **_kwargs: {"action": "proceed", "history_entry": None},
+        lambda **_kwargs: {
+            "action": "proceed",
+            "history_entry": None,
+            "approval_record": {"gate_type": "preconfirm", "decision": "approved"},
+        },
     )
     mock_config.preconfirm_gate = False
     compiled = reviewer_node_module.reviewer_node(
@@ -239,6 +248,7 @@ def test_reviewer_node_cancel_and_compilation_terminal_paths(monkeypatch, mock_c
     assert compiled["mode"] == "terminal"
     assert compiled["reviewer_failure_category"] == "compilation_failed"
     assert compiled["final_error_taxonomy"]["reason_code"] == "compilation_failed"
+    assert compiled["gate_approvals"][-1]["decision"] == "approved"
 
 
 def test_reviewer_node_schema_missing_terminal(monkeypatch, mock_config, tmp_path) -> None:

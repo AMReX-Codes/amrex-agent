@@ -1,0 +1,17 @@
+branch: fix_stack_main
+timestamp_utc: 2026-03-18T03:48:47
+report_dir: artifacts/integration/reports/fix_stack_main_20260318_034847
+
+unit_summary: 1663 passed, 31 skipped, 3 warnings
+full_summary: 1813 passed, 78 skipped, 10 xfailed, 11 warnings
+quality_summary: 20 passed, 1 skipped, 5 warnings
+integration_ladder_summary: 47 passed, 36 skipped, 92 deselected, 1 xfailed, 7 warnings
+
+unit_coverage_total: 56.82
+full_coverage_total: 58.63
+
+unit_junit: artifacts/integration/reports/fix_stack_main_20260318_034847/unit.junit.xml
+full_junit: artifacts/integration/reports/fix_stack_main_20260318_034847/full.junit.xml
+
+unit_html: artifacts/integration/reports/fix_stack_main_20260318_034847/htmlcov_unit/index.html
+full_html: artifacts/integration/reports/fix_stack_main_20260318_034847/htmlcov_full/index.html

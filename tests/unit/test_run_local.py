@@ -351,3 +351,33 @@ def test_derive_erf_central_dir_from_erf_path_without_repo_root(tmp_path):
     runner = LocalRunner(config)
     derived = runner._derive_erf_central_build_dir(erf_case)
     assert str(derived).endswith("/ERF/Exec/ABL")
+
+
+def test_resolve_erf_fallback_prefers_case_group_over_configured_regtests(tmp_path):
+    repo_root = tmp_path / "ERF"
+    case_dir = repo_root / "Exec" / "ABL" / "Scaling" / "Perlmutter"
+    case_dir.mkdir(parents=True)
+
+    regtests_dir = repo_root / "Exec" / "RegTests"
+    regtests_dir.mkdir(parents=True)
+    regtests_exe = regtests_dir / "ERF3d.gnu.TEST.MPI.ex"
+    regtests_exe.write_text("regtests")
+
+    abl_dir = repo_root / "Exec" / "ABL"
+    abl_dir.mkdir(parents=True, exist_ok=True)
+    abl_exe = abl_dir / "ERF3d.gnu.TEST.MPI.ex"
+    abl_exe.write_text("abl")
+
+    config = SimpleNamespace(
+        default_solver="ERF",
+        output_dir=tmp_path,
+        use_mpi=True,
+        erf_executable_path=None,
+        erf_repo_path=repo_root,
+        erf_central_build_dir=regtests_dir,
+    )
+    runner = LocalRunner(config)
+
+    exe, checked = runner._resolve_erf_executable_fallbacks(case_dir=case_dir)
+    assert exe == abl_exe
+    assert checked[1] == abl_dir

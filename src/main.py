@@ -37,6 +37,7 @@ from src.router_func import (
     route_after_runner,  # Phase 4
 )
 from src.services.viz_param_extractor import extract_viz_params_from_prompt
+from src.utils.job_status import normalize_job_status
 
 
 class RedactingFilter(logging.Filter):
@@ -1058,14 +1059,14 @@ def main(args: list[str] | None = None) -> None:
         if parsed_args.json:
             print(json.dumps(result, default=str, indent=2))
         else:
-            status = result.get("job_status", "unknown")
+            status = normalize_job_status(result.get("job_status"), default="unknown")
             if status == "completed":
                 logger.info("Workflow completed successfully")
             elif status == "failed":
                 logger.error(f"Workflow failed: {result.get('error', 'Unknown error')}")
 
         # Exit code based on status
-        if result.get("job_status") == "failed":
+        if normalize_job_status(result.get("job_status"), default="unknown") == "failed":
             sys.exit(1)
 
     except FileNotFoundError as e:
@@ -1120,6 +1121,9 @@ def initialize_state(
             prompt_content = f.read().strip()
     else:
         prompt_content = user_requirement.strip()
+
+    if not prompt_content and paper_validator_enabled and paper_source:
+        prompt_content = f"Paper reproduction request for source: {paper_source}"
 
     # 2. Validate prompt
     if not prompt_content and not paper_validator_enabled:
@@ -1309,7 +1313,8 @@ def run_agent(
         with metrics_extra(initial_state.get("metrics_context") or None):
             final_state = app.invoke(initial_state, run_config)
 
-        status = final_state.get("job_status", "unknown")
+        status = normalize_job_status(final_state.get("job_status"), default="unknown")
+        final_state["job_status"] = status
         logger.info("-" * 80)
         logger.info(f"Workflow complete. Status: {status}")
         logger.info("-" * 80)

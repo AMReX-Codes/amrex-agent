@@ -107,7 +107,7 @@ class GraphState(TypedDict, total=False):
     intent_extraction_error: Optional[str]
     intent_locked_fields: List[str]
     clarification_needed: bool
-    clarification_questions: List[str]
+    clarification_questions: List[Dict[str, Any]]
     clarification_context: Dict[str, Any]
     clarification_history: List[Dict[str, Any]]
     clarification_turns: int

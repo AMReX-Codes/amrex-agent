@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 STABLE_ERROR_TAXONOMY_VERSION = "v1"
+SUCCESS_JOB_STATUSES = frozenset({"completed", "success", "succeeded", "ok"})
 STABLE_ERROR_REASON_CODES = frozenset(
     {
         "feature_a_dependency_unverified",
@@ -30,6 +31,12 @@ STABLE_ERROR_REASON_CODES = frozenset(
         "tests_missing",
     }
 )
+
+
+def _is_success_status(status: Any) -> bool:
+    if not isinstance(status, str):
+        return False
+    return status.strip().lower() in SUCCESS_JOB_STATUSES
 
 
 def _iter_metric_files(path: Path) -> Iterable[Path]:
@@ -377,7 +384,7 @@ def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[
 
 def _summarize_items(items: list[dict[str, Any]], label: str, value: str) -> dict[str, Any]:
     total = len(items)
-    success = sum(1 for item in items if item.get("job_status") == "completed")
+    success = sum(1 for item in items if _is_success_status(item.get("job_status")))
     tokens_total = _avg([item.get("tokens_total") for item in items])
     tokens_input = _avg([item.get("tokens_total_input") for item in items])
     tokens_output = _avg([item.get("tokens_total_output") for item in items])

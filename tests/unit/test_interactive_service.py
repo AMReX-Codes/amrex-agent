@@ -167,7 +167,7 @@ def test_preconfirm_gate_writes_gate_approval_record(monkeypatch):
         SimpleNamespace(stdin=SimpleNamespace(isatty=lambda: True)),
     )
 
-    gate_utils.run_preconfirm_gate(
+    result = gate_utils.run_preconfirm_gate(
         node_name="architect_node",
         summary_lines=["preview"],
         options=[{"label": "Proceed", "value": "go"}],
@@ -178,3 +178,5 @@ def test_preconfirm_gate_writes_gate_approval_record(monkeypatch):
 
     assert len(state["gate_approvals"]) == 1
     assert state["gate_approvals"][0]["interface_path"] == "cli"
+    assert isinstance(result.get("approval_record"), dict)
+    assert result["approval_record"]["interface_path"] == "cli"

@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any, Dict, List, get_type_hints
 from unittest.mock import Mock
 
 import pytest
@@ -226,6 +227,11 @@ def test_new_fields_do_not_shadow_existing() -> None:
 
     graph_state_fields = set(GraphState.__annotations__.keys())
     assert NEW_FIELDS.issubset(graph_state_fields)
+
+
+def test_clarification_questions_schema_matches_dict_contract() -> None:
+    hints = get_type_hints(GraphState)
+    assert hints["clarification_questions"] == List[Dict[str, Any]]
 
 
 def test_list_fields_are_independent_instances(mock_config: Mock) -> None:

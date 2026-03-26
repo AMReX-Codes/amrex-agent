@@ -28,6 +28,7 @@ Provider specific:
 - `ALCF_CLUSTER`
 - `ALCF_BASE_URL`
 - `AMSC_I2_API_KEY`
+- `AMSC_I2_BASE_URL`
 - `ANTHROPIC_API_KEY`
 
 ## Config fields
@@ -41,7 +42,7 @@ These are defined in `src/config.py`.
 - `openai_api_key`, `openai_base_url`
 - `anthropic_api_key`
 - `pnnl_api_key`, `pnnl_base_url`, `pnnl_default_model`
-- `amsc_i2_api_key`, `amsc_i2_base_url`, `amsc_i2_default_model`
+- `litellm_api_key`, `litellm_base_url` (also used by `amsc-i2`)
 - `openai_vector_store_id`, `openai_vector_store_ids`
 
 ## Base URL overrides (explicit examples)
@@ -132,12 +133,16 @@ AmSC i2 (American Science Cloud):
 
 ```bash
 export AMSC_I2_API_KEY="..."
+export AMSC_I2_BASE_URL="https://<your-amsc-i2-endpoint>/v1"
 ```
 
 ```yaml
 llm_provider: amsc-i2
 llm_model: claude-sonnet-4-5
 ```
+
+`amsc-i2` uses the same OpenAI-compatible client path as `litellm` under the
+hood. `LITELLM_API_KEY` / `LITELLM_BASE_URL` can be used as equivalents.
 
 Hosted OpenAI vector store upload:
 

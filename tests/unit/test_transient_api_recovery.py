@@ -27,6 +27,11 @@ class _BadRequestError(Exception):
         self.status_code = 400
 
 
+class _TransportTimeoutError(Exception):
+    def __init__(self):
+        super().__init__("connection timed out")
+
+
 def test_compute_transient_api_recovery_rate_and_target_contract():
     assert compute_transient_api_recovery_rate([]) is None
     assert compute_transient_api_recovery_rate([True, False, True]) == pytest.approx(2 / 3)
@@ -85,3 +90,16 @@ def test_retry_wrapper_excludes_non_retryable_failures(monkeypatch):
     assert status["transient_recovery_observations"] == 0
     assert status["transient_recovery_rate"] is None
     assert status["transient_recovery_target_met"] is False
+
+
+def test_retry_wrapper_retries_transport_timeouts(monkeypatch):
+    completions = Mock(side_effect=[_TransportTimeoutError(), {"ok": True}])
+    wrapper = _LLMRetryCompletions(SimpleNamespace(create=completions), max_attempts=2)
+
+    monkeypatch.setattr("src.config.random.uniform", lambda _a, _b: 0.0)
+    monkeypatch.setattr("src.config.time.sleep", lambda _delay: None)
+
+    assert wrapper.create(model="x", messages=[]) == {"ok": True}
+    status = wrapper.get_transient_recovery_target_status()
+    assert status["transient_recovery_observations"] == 1
+    assert status["transient_recovery_successes"] == 1

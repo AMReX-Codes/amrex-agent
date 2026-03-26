@@ -88,3 +88,26 @@ Contract:
 | oracle_hard_pelelmex_jetincrossflow | tests/integration/test_oracle_benchmarks.py::test_oracle_gate_routing[oracle_hard_pelelmex_jetincrossflow] |
 | oracle_hard_incflo_benchmark_godunov | tests/integration/test_oracle_benchmarks.py::test_oracle_gate_routing[oracle_hard_incflo_benchmark_godunov] |
 | oracle_hard_warpx_laser_acceleration | tests/integration/test_oracle_benchmarks.py::test_oracle_gate_routing[oracle_hard_warpx_laser_acceleration] |
+
+## fix_stack_main validation snapshot (2026-03-18)
+
+Run artifacts:
+- `artifacts/integration/reports/fix_stack_main_20260318_034847/`
+
+Coverage totals:
+- Unit: `56.82%` (`unit.coverage.json`)
+- Full: `58.63%` (`full.coverage.json`)
+
+Gate summaries:
+- Unit suite: `1663 passed, 31 skipped, 3 warnings`
+- Full suite: `1813 passed, 78 skipped, 10 xfailed, 11 warnings`
+- Quality gate: `20 passed, 1 skipped, 5 warnings`
+- Integration ladder: `47 passed, 36 skipped, 92 deselected, 1 xfailed, 7 warnings`
+
+JUnit evidence (tracked):
+- `artifacts/integration/reports/fix_stack_main_20260318_034847/unit.junit.xml`
+- `artifacts/integration/reports/fix_stack_main_20260318_034847/full.junit.xml`
+
+Notes:
+- HTML coverage outputs and raw logs remain local artifacts and are not committed.
+- Coverage JSON is retained locally for metric extraction; JUnit XML is the canonical committed test evidence for this run.

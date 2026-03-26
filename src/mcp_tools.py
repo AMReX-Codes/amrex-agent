@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -20,6 +21,7 @@ from src.services.run_superfacility import SuperfacilityRunner
 from src.services.validation import ValidationService
 from src.services.visualization import VisualizationService
 from src.services.workflow_store import WorkflowStore
+from src.utils.job_status import normalize_job_status
 
 __all__ = [
     "config",
@@ -83,6 +85,8 @@ SIMULATION_PLAN_ESSENTIAL_FIELDS = {
     "cbr_confidence",
     "used_llm",
 }
+
+_SWEEP_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 def _filter_simulation_plan(plan_dict: dict[str, Any]) -> dict[str, Any]:
@@ -608,6 +612,7 @@ def mcp_run_simulation(payload: dict) -> dict:
             job_status = "queued"
         else:
             job_status = "unknown"
+    job_status = normalize_job_status(job_status, default="unknown")
 
     response = {
         "run_directory": setup_result.get("run_dir"),
@@ -649,9 +654,9 @@ def mcp_analyze_results(payload: dict) -> dict:
     status_map = {
         "success": "completed",
         "failed": "failed",
-        "unstable": "unstable",
+        "unstable": "failed",
     }
-    job_status = status_map.get(status, "failed")
+    job_status = normalize_job_status(status_map.get(status, "failed"), default="failed")
 
     return {
         "job_status": job_status,
@@ -763,6 +768,17 @@ def _sweeps_root() -> Path:
     return Path(config.output_dir) / "sweeps"
 
 
+def _normalize_sweep_id(raw_sweep_id: Any) -> str | None:
+    sweep_id = str(raw_sweep_id or "").strip()
+    if not sweep_id:
+        return None
+    if not _SWEEP_ID_PATTERN.fullmatch(sweep_id):
+        return None
+    if sweep_id in {".", ".."}:
+        return None
+    return sweep_id
+
+
 def _sweep_metadata_path(sweep_id: str) -> Path:
     return _sweeps_root() / sweep_id / "sweep_metadata.json"
 
@@ -779,16 +795,19 @@ def _load_json(path: Path) -> dict[str, Any] | None:
 
 def mcp_get_sweep_status(payload: dict) -> dict:
     """Return persisted sweep status from sweep_metadata.json."""
-    sweep_id = payload.get("sweep_id")
-    if not sweep_id:
+    raw_sweep_id = payload.get("sweep_id")
+    if raw_sweep_id in (None, ""):
         return {"error": "Missing sweep_id"}
+    sweep_id = _normalize_sweep_id(raw_sweep_id)
+    if not sweep_id:
+        return {"error": "Invalid sweep_id"}
 
-    metadata = _load_json(_sweep_metadata_path(str(sweep_id)))
+    metadata = _load_json(_sweep_metadata_path(sweep_id))
     if metadata is None:
         return {"error": f"Sweep metadata not found for {sweep_id}"}
 
     return {
-        "sweep_id": metadata.get("sweep_id", str(sweep_id)),
+        "sweep_id": sweep_id,
         "session_id": metadata.get("session_id"),
         "status": metadata.get("status", "unknown"),
         "created_at": metadata.get("created_at"),
@@ -825,7 +844,7 @@ def mcp_list_sweeps(payload: dict) -> dict:
             continue
         if metadata.get("session_id") != session_id:
             continue
-        sweep_id = str(metadata.get("sweep_id") or metadata_path.parent.name)
+        sweep_id = _normalize_sweep_id(metadata.get("sweep_id")) or metadata_path.parent.name
         sweep_ids.append(sweep_id)
 
     return {"session_id": session_id, "sweep_ids": sweep_ids}

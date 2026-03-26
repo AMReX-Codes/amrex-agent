@@ -684,6 +684,8 @@ class SimulationPlanFactory:
 
         # Extract modifications
         raw_modifications = cbr_plan.get('modifications', [])
+        if raw_modifications is None:
+            raw_modifications = []
         if _has_invalid_modification_entries(raw_modifications):
             # Strict validation path for malformed RAG outputs.
             SimulationPlan(

@@ -183,15 +183,25 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
         allow_cancel=True,
         auto_approve=auto_approve,
     )
+    gate_approvals_raw = state.get("gate_approvals", [])
+    gate_approvals = list(gate_approvals_raw) if isinstance(gate_approvals_raw, list) else []
+    approval_record = gate_result.get("approval_record")
+    if isinstance(approval_record, dict):
+        gate_approvals.append(approval_record)
+
+    def _with_gate_approvals(updates: dict[str, Any]) -> dict[str, Any]:
+        updates["gate_approvals"] = gate_approvals
+        return updates
+
     gate_entry = gate_result.get("history_entry")
     if gate_entry:
         gate_entry["iteration"] = iteration
     if gate_result["action"] == "cancel":
-        return {
+        return _with_gate_approvals({
             "mode": "terminal",
             "error": "User canceled at pre-confirm gate.",
             "workflow_history": state.get("workflow_history", []) + ([gate_entry] if gate_entry else []),
-        }
+        })
     retry_count = state.get("retry_count", 0)
     max_retries = state.get("max_retries", 3)
     workflow_history = state.get("workflow_history", [])
@@ -268,14 +278,14 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 }
             }
 
-            return {
+            return _with_gate_approvals({
                 "mode": "terminal",
                 "error": f"Parameter resolution failed after {max_retries} retries: {[p[0] for p in unresolved]}",
                 "errors_active": [f"Unresolved parameter: {p[0]}" for p in unresolved],
                 "workflow_history": workflow_history + [history_entry],
                 "reviewer_failure_category": taxonomy["category"],
                 "final_error_taxonomy": taxonomy,
-            }
+            })
 
         # Route back to architect with feedback
         logger.info(
@@ -299,7 +309,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             }
         }
 
-        return {
+        return _with_gate_approvals({
             # Control flow - back to architect
             "mode": "retry",
             "retry_count": retry_count + 1,
@@ -318,7 +328,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
 
             # Audit trail
             "workflow_history": workflow_history + [history_entry]
-        }
+        })
 
     # ========================================
     # COMPILATION FAILURE CHECK (terminal condition)
@@ -332,14 +342,14 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
             retry_count=retry_count,
             max_retries=max_retries,
         )
-        return {
+        return _with_gate_approvals({
             "mode": "terminal",
             "error": "Compilation failed - cannot proceed",
             "errors_active": ["Compilation failed for selected case"],
             "workflow_history": workflow_history,
             "reviewer_failure_category": taxonomy["category"],
             "final_error_taxonomy": taxonomy,
-        }
+        })
 
     # ========================================
     # PLAN VALIDATION
@@ -351,7 +361,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     # Handle no plan case
     if not plan:
         logger.warning("[WARN] No plan to review (skipping)")
-        return skip_review(state, "no plan")
+        return _with_gate_approvals(skip_review(state, "no plan"))
 
     # Get previous errors for progress tracking
     errors_previous = state.get("errors_active", [])
@@ -438,7 +448,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 schema_path = ConfigModelFactory.resolve_schema_path(
                     solver_config,
                     config.amrex_agent_root / "database/schemas",
-                    Path(config.repositories.get(solver_name, "."))
+                    Path(config.repositories.get(solver_name, ".")),
+                    runtime_config=config,
                 )
                 feedback = ConfigModelFactory.build_parameter_resolution_feedback(
                     unresolved_params=unresolved,
@@ -498,7 +509,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                             }
                         }
 
-                        return {
+                        return _with_gate_approvals({
                             "mode": "terminal",
                             "error": (
                                 "Parameter resolution stalled with unchanged unresolved parameters: "
@@ -508,7 +519,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                             "workflow_history": workflow_history + [history_entry],
                             "reviewer_failure_category": taxonomy["category"],
                             "final_error_taxonomy": taxonomy,
-                        }
+                        })
                 history_entry = {
                     "node": "reviewer",
                     "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -527,7 +538,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                     }
                 }
 
-                return {
+                return _with_gate_approvals({
                     "mode": "retry",
                     "retry_count": next_retry,
                     "iteration": iteration,
@@ -541,7 +552,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                     },
                     "errors_active": [f"Unresolved parameter: {p[0]}" for p in feedback["unresolved_parameters"]],
                     "workflow_history": workflow_history + [history_entry]
-                }
+                })
 
     if not errors_current and not schema_missing and not solver_unknown:
         approved = True
@@ -898,7 +909,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     logger.info("-" * 80)
     logger.info("Reviewer node complete")
     logger.info("-" * 80)
-    return updates
+    return _with_gate_approvals(updates)
 
 
 # Export for LangGraph

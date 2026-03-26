@@ -32,12 +32,7 @@ def _append_preconfirm_gate_approval(
     reason: str | None,
     selection: dict[str, Any] | None,
     details: dict[str, Any],
-) -> None:
-    if state is None:
-        return
-    approvals = state.setdefault("gate_approvals", [])
-    if not isinstance(approvals, list):
-        return
+) -> dict[str, Any]:
     record = GateApprovalRecord(
         gate_id=f"preconfirm-{uuid4().hex}",
         gate_type="preconfirm",
@@ -50,7 +45,13 @@ def _append_preconfirm_gate_approval(
             **details,
         },
     )
-    approvals.append(record.model_dump())
+    payload = record.model_dump()
+    if state is None:
+        return payload
+    approvals = state.setdefault("gate_approvals", [])
+    if isinstance(approvals, list):
+        approvals.append(payload)
+    return payload
 
 
 def run_preconfirm_gate(
@@ -73,7 +74,7 @@ def run_preconfirm_gate(
         }
     """
     if not enabled:
-        return {"action": "proceed", "selection": None, "history_entry": None}
+        return {"action": "proceed", "selection": None, "history_entry": None, "approval_record": None}
 
     options_metadata = _build_options_metadata(options)
     if not sys.stdin.isatty():
@@ -83,7 +84,7 @@ def run_preconfirm_gate(
             "allow_cancel": allow_cancel,
             "options": options_metadata,
         }
-        _append_preconfirm_gate_approval(
+        approval_record = _append_preconfirm_gate_approval(
             state,
             node_name=node_name,
             action="skipped",
@@ -94,6 +95,7 @@ def run_preconfirm_gate(
         return {
             "action": "skipped",
             "selection": None,
+            "approval_record": approval_record,
             "history_entry": _build_gate_history(
                 node_name,
                 "skipped",
@@ -109,7 +111,7 @@ def run_preconfirm_gate(
             "options_count": 0,
             "allow_cancel": allow_cancel,
         }
-        _append_preconfirm_gate_approval(
+        approval_record = _append_preconfirm_gate_approval(
             state,
             node_name=node_name,
             action="skipped",
@@ -120,6 +122,7 @@ def run_preconfirm_gate(
         return {
             "action": "skipped",
             "selection": None,
+            "approval_record": approval_record,
             "history_entry": _build_gate_history(
                 node_name,
                 "skipped",
@@ -138,7 +141,7 @@ def run_preconfirm_gate(
             "options": options_metadata,
             "selected_index": 1,
         }
-        _append_preconfirm_gate_approval(
+        approval_record = _append_preconfirm_gate_approval(
             state,
             node_name=node_name,
             action="proceed",
@@ -149,6 +152,7 @@ def run_preconfirm_gate(
         return {
             "action": "proceed",
             "selection": selection,
+            "approval_record": approval_record,
             "history_entry": _build_gate_history(
                 node_name,
                 "proceed",
@@ -186,7 +190,7 @@ def run_preconfirm_gate(
             "options": options_metadata,
             "choice": choice,
         }
-        _append_preconfirm_gate_approval(
+        approval_record = _append_preconfirm_gate_approval(
             state,
             node_name=node_name,
             action="cancel",
@@ -197,6 +201,7 @@ def run_preconfirm_gate(
         return {
             "action": "cancel",
             "selection": None,
+            "approval_record": approval_record,
             "history_entry": _build_gate_history(
                 node_name,
                 "cancel",
@@ -216,7 +221,7 @@ def run_preconfirm_gate(
             "selected_index": 1,
             "choice": "",
         }
-        _append_preconfirm_gate_approval(
+        approval_record = _append_preconfirm_gate_approval(
             state,
             node_name=node_name,
             action="proceed",
@@ -227,6 +232,7 @@ def run_preconfirm_gate(
         return {
             "action": "proceed",
             "selection": selection,
+            "approval_record": approval_record,
             "history_entry": _build_gate_history(
                 node_name,
                 "proceed",
@@ -248,7 +254,7 @@ def run_preconfirm_gate(
             "selected_index": 1,
             "choice": choice,
         }
-        _append_preconfirm_gate_approval(
+        approval_record = _append_preconfirm_gate_approval(
             state,
             node_name=node_name,
             action="proceed",
@@ -259,6 +265,7 @@ def run_preconfirm_gate(
         return {
             "action": "proceed",
             "selection": selection,
+            "approval_record": approval_record,
             "history_entry": _build_gate_history(
                 node_name,
                 "proceed",
@@ -278,7 +285,7 @@ def run_preconfirm_gate(
             "selected_index": selected_idx,
             "choice": choice,
         }
-        _append_preconfirm_gate_approval(
+        approval_record = _append_preconfirm_gate_approval(
             state,
             node_name=node_name,
             action="proceed",
@@ -289,6 +296,7 @@ def run_preconfirm_gate(
         return {
             "action": "proceed",
             "selection": selection,
+            "approval_record": approval_record,
             "history_entry": _build_gate_history(
                 node_name,
                 "proceed",
@@ -307,7 +315,7 @@ def run_preconfirm_gate(
         "selected_index": 1,
         "choice": choice,
     }
-    _append_preconfirm_gate_approval(
+    approval_record = _append_preconfirm_gate_approval(
         state,
         node_name=node_name,
         action="proceed",
@@ -318,6 +326,7 @@ def run_preconfirm_gate(
     return {
         "action": "proceed",
         "selection": selection,
+        "approval_record": approval_record,
         "history_entry": _build_gate_history(
             node_name,
             "proceed",

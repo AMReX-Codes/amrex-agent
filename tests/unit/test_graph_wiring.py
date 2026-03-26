@@ -247,6 +247,16 @@ class TestIntentClarificationWiring:
         graph_def = compiled_app.get_graph()
         assert "clarification_node" in graph_def.nodes
 
+    def test_clarification_handler_wired_to_schema_aware_node(self, graph_builder):
+        """
+        Given: graph builder internals
+        When:  inspecting clarification_handler runnable binding
+        Then:  it points to src.nodes.clarification_handler_node implementation
+        """
+        node_spec = graph_builder.nodes["clarification_handler"]
+        assert node_spec.runnable.func.__module__ == "src.nodes.clarification_handler_node"
+        assert node_spec.runnable.func.__name__ == "clarification_handler_node"
+
     def test_intent_extraction_runs_before_input_writer(self, compiled_app):
         """
         Given: graph execution order
@@ -304,6 +314,12 @@ class TestIntentClarificationWiring:
         """
         app = graph_builder.compile()
         assert app is not None
+
+    def test_clarification_handler_reenters_workflow(self, compiled_app):
+        graph_def = compiled_app.get_graph()
+        edges = {(edge.source, edge.target) for edge in graph_def.edges}
+        assert ("clarification_handler", "clarification_node") in edges
+        assert ("clarification_handler", "paper_manifest_gate_node") in edges
 
 
 class TestSweepWiring:
@@ -373,6 +389,11 @@ class TestSweepWiring:
         """
         app = graph_builder.compile()
         assert app is not None
+
+    def test_sweep_handler_routes_back_to_architect(self, compiled_app):
+        graph_def = compiled_app.get_graph()
+        edges = {(edge.source, edge.target) for edge in graph_def.edges}
+        assert ("sweep_execution_handler", "architect_node") in edges
 
     def test_oracle_paths_unaffected_by_sweep_wiring(self):
         """

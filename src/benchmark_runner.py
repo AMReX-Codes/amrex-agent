@@ -16,6 +16,8 @@ from types import SimpleNamespace
 import yaml
 from jsonschema import Draft202012Validator
 
+from src.utils.job_status import normalize_job_status
+
 DEFAULT_BENCHMARK_SEED = 1729
 
 
@@ -439,27 +441,49 @@ def _derive_validation_fields(payload: dict[str, Any], graph_state: dict[str, An
     )
 
     schema_valid = payload.get("schema_valid")
+    schema_reason = None
     if not isinstance(schema_valid, bool):
-        schema_valid = len(schema_errors) == 0 if violations else False
+        if violations:
+            schema_valid = len(schema_errors) == 0
+        else:
+            schema_valid = None
+            schema_reason = "validation_data_missing"
 
     physics_valid = payload.get("physics_valid")
+    physics_reason = None
     if not isinstance(physics_valid, bool):
-        physics_valid = (not has_physics_error) if violations else False
+        if violations:
+            physics_valid = not has_physics_error
+        else:
+            physics_valid = None
+            physics_reason = "validation_data_missing"
 
     resource_valid = payload.get("resource_valid")
+    resource_reason = None
     if not isinstance(resource_valid, bool):
-        resource_valid = (not has_resource_error) if violations else False
+        if violations:
+            resource_valid = not has_resource_error
+        else:
+            resource_valid = None
+            resource_reason = "validation_data_missing"
 
-    if schema_valid and not schema_errors:
+    if schema_valid is True and not schema_errors:
         schema_errors = []
 
-    return {
+    out = {
         "schema_valid": schema_valid,
         "physics_valid": physics_valid,
         "resource_valid": resource_valid,
         "schema_errors": schema_errors,
         "physics_warnings": physics_warnings or [],
     }
+    if schema_reason:
+        out["schema_valid_unavailable_reason"] = schema_reason
+    if physics_reason:
+        out["physics_valid_unavailable_reason"] = physics_reason
+    if resource_reason:
+        out["resource_valid_unavailable_reason"] = resource_reason
+    return out
 
 
 def _derive_iteration_fields(payload: dict[str, Any], graph_state: dict[str, Any]) -> dict[str, Any]:
@@ -1231,7 +1255,10 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
             selected_case = None
             if result_data:
                 run_directory = result_data.get("run_directory")
-                job_status = result_data.get("job_status")
+                job_status = normalize_job_status(
+                    result_data.get("job_status"),
+                    default="unknown",
+                )
                 selected_case = result_data.get("selected_case")
                 analysis_report = result_data.get("analysis_report")
 
@@ -1247,7 +1274,7 @@ def run_model_benchmark(config_path: Path, output_dir: Path, run_name: str | Non
                 "model_id": model_id,
                 "prompt_id": prompt_id,
                 "prompt_excerpt": prompt["prompt"][:200],
-                "job_status": job_status or "unknown",
+                "job_status": normalize_job_status(job_status, default="unknown"),
                 "analysis_status": (analysis_report or {}).get("status"),
                 "analysis_performance": (analysis_report or {}).get("performance"),
                 "analysis_issues": (analysis_report or {}).get("issues"),

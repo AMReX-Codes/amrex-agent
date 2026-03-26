@@ -95,6 +95,36 @@ def test_archived_session_is_immutable(tmp_path: Path):
         raise AssertionError("Expected ValueError for archived -> completed transition")
 
 
+def test_archived_session_rejects_non_noop_update(tmp_path: Path):
+    db_path = tmp_path / "workflow_store.db"
+    store = WorkflowStore(db_path)
+
+    session_id = "lifecycle-archived-non-noop"
+    store.upsert_session(session_id, {"status": "queued"})
+    store.upsert_session(session_id, {"archived": True})
+
+    try:
+        store.upsert_session(session_id, {"status": "archived", "new_field": "unexpected"})
+    except ValueError as exc:
+        assert "archived sessions are immutable" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for non-noop update on archived session")
+
+
+def test_archived_session_allows_noop_replay(tmp_path: Path):
+    db_path = tmp_path / "workflow_store.db"
+    store = WorkflowStore(db_path)
+
+    session_id = "lifecycle-archived-noop"
+    store.upsert_session(session_id, {"status": "queued"})
+    store.upsert_session(session_id, {"archived": True})
+
+    store.upsert_session(session_id, {"archived": True})
+    loaded = store.get_session(session_id)
+    assert loaded is not None
+    assert loaded.lifecycle_state == "archived"
+
+
 def test_sweep_state_persists_after_disconnect(tmp_path: Path):
     db_path = tmp_path / "workflow_store.db"
     store = WorkflowStore(db_path)
