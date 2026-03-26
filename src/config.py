@@ -304,7 +304,7 @@ class AMReXAgentConfig(BaseModel):
     """
     
     # === LLM Configuration ===
-    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm"] = Field(
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm", "amsc-i2"] = Field(
         default="cborg",
         description="LLM provider to use"
     )
