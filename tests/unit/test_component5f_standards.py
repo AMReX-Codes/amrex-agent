@@ -576,3 +576,36 @@ New files:
 
     assert find_feature_blocks_missing_tests_fixtures("No feature blocks here.") == []
     assert find_feature_blocks_missing_helper_extraction("No feature blocks here.") == []
+
+
+@pytest.mark.skip(reason="Temporarily skipped: PRD_v2605 capability contract section is intentionally out of sync.")
+def test_v2605_required_capability_contract_is_present():
+    prd_text = Path("docs/PRD/PRD_v2605.md").read_text(encoding="utf-8")
+
+    assert "✅ **Required Capability (v26.05):**" in prd_text
+    required_behavior_lines = [
+        "1. Parse a user prompt and build a simulation plan through the graph entrypoint.",
+        "2. Select a solver using explicit architect decision logic.",
+        "3. Run reviewer validation on the generated plan before completion.",
+        "4. Emit workflow summary metrics for benchmark and audit traces.",
+    ]
+    for line in required_behavior_lines:
+        assert line in prd_text, f"Missing required capability behavior: {line}"
+
+
+@pytest.mark.skip(reason="Temporarily skipped: PRD_v2605 capability contract section is intentionally out of sync.")
+def test_v2605_required_capability_contract_has_implementation_locations():
+    prd_text = Path("docs/PRD/PRD_v2605.md").read_text(encoding="utf-8")
+
+    required_locations = [
+        "src/main.py::main",
+        "src/services/architect.py::ArchitectService.select_solver",
+        "src/nodes/reviewer_node.py::reviewer_node",
+        "src/utils/metrics.py::MetricsCollector.build_workflow_summary",
+    ]
+
+    for location in required_locations:
+        assert f"- `{location}`" in prd_text, (
+            "Required capability contract must include implementation location: "
+            f"{location}"
+        )

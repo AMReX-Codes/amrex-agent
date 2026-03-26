@@ -65,28 +65,6 @@ def _build_final_error_taxonomy(
     )
 
 
-def _build_final_error_taxonomy(
-    *,
-    category: str,
-    reason: str,
-    retry_count: int,
-    max_retries: int,
-    unresolved_parameters: list[tuple[str, Any]] | None = None,
-) -> dict[str, Any]:
-    taxonomy = {
-        "stage": "reviewer",
-        "terminal": True,
-        "type": "retry_exhausted",
-        "category": category,
-        "reason": reason,
-        "retry_count": retry_count,
-        "max_retries": max_retries,
-    }
-    if unresolved_parameters:
-        taxonomy["unresolved_parameters"] = [p[0] for p in unresolved_parameters]
-    return taxonomy
-
-
 def get_architect_plan(state: GraphState) -> dict[str, Any] | None:
     """
     Resolve the architect plan from workflow history or state.

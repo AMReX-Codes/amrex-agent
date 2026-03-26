@@ -11,16 +11,12 @@ import re
 from pathlib import Path
 from typing import Any, Iterable, Set, get_type_hints
 
-from src.graph import (
-    _route_after_clarification,
-    _route_after_sweep_detection,
-    clarification_handler_node,
-    create_graph,
-    has_acceptance_checklist_mapped_tests,
-    sweep_execution_handler_node,
-)
 from src.models import GraphState
-from src.services.plan import normalize_unnumbered_284
+from src.services.plan import normalize_traceability_evidence_rows
+from src.graph import (
+    criterion_benchmark_test_linkage_valid,
+    normalize_unnumbered_284,
+)
 
 
 _SIMPLE_FIELD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -86,7 +82,7 @@ def test_contracts_reference_graphstate_fields() -> None:
     )
 
 
-def test_normalize_unnumbered_284_enforces_stable_rows() -> None:
+def test_normalize_traceability_evidence_rows_enforces_stable_rows() -> None:
     rows = [
         {
             "criterion": "Verification coverage",
@@ -105,7 +101,7 @@ def test_normalize_unnumbered_284_enforces_stable_rows() -> None:
         "ignore-me",
     ]
 
-    assert normalize_unnumbered_284(rows) == [
+    assert normalize_traceability_evidence_rows(rows) == [
         {
             "criterion": "Verification coverage",
             "artifact": "tests/quality/test_contract_schema_alignment.py",
@@ -122,3 +118,26 @@ def test_normalize_unnumbered_284_enforces_stable_rows() -> None:
             "test": "tests/unit/test_architect_node_history.py",
         },
     ]
+
+
+def test_criterion_linkage_requires_artifact_and_test_mapping() -> None:
+    state = {
+        "criterion_benchmark_test_linkage_required": True,
+        "success_criteria": ["Verification coverage", {"criterion": "Reproducibility"}],
+        "criterion_benchmark_test_matrix": [
+            {
+                "criterion": "Verification coverage",
+                "artifact": "tests/quality/test_contract_schema_alignment.py",
+                "test": "tests/quality/test_contract_schema_alignment.py",
+            }
+        ],
+    }
+
+    assert criterion_benchmark_test_linkage_valid(state) is False
+    assert state["criterion_benchmark_test_linkage_complete"] is False
+    assert state["criterion_benchmark_test_linkage_validation"]["missing_criteria"] == [
+        "Reproducibility"
+    ]
+    assert state["criterion_benchmark_test_linkage_validation"]["reason"] == (
+        "criteria_without_benchmark_or_test_mapping"
+    )

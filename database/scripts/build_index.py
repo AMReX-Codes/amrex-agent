@@ -277,6 +277,32 @@ def _extract_embedding_metadata(
     return provider, model_name, dimension
 
 
+def _resolve_effective_provider(
+    provider_arg: str | None,
+    embedding_arg: str | None,
+    config_provider: str | None,
+) -> str:
+    for candidate in (provider_arg, embedding_arg, config_provider):
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip().lower()
+    raise ValueError(
+        "Unable to determine embedding provider. Pass --provider or --embedding."
+    )
+
+
+def _resolve_output_dir(
+    output_arg: Path | None,
+    effective_provider: str,
+    code_name: str,
+    index_type: str,
+) -> Path:
+    if output_arg:
+        base_dir = output_arg / effective_provider
+    else:
+        base_dir = Path(__file__).parent.parent / "faiss" / effective_provider
+    return base_dir / f"{code_name}_{index_type}"
+
+
 def write_faiss_provenance_manifest(
     *,
     output_dir: Path,
@@ -916,6 +942,150 @@ def build_chemistry_index(
     logger.debug(f"[OK] Index saved to {output_dir}")
 
 
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Build FAISS indices for AMReX codes",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument(
+        '--config',
+        required=True,
+        choices=list(CONFIG_MAP.keys()),
+        help='Code configuration to use (pelec, pelelmex, amrex)',
+    )
+    parser.add_argument(
+        '--type',
+        required=True,
+        choices=['case_structure', 'case_details', 'input_templates', 'chemistry', 'case_names'],
+        help='Type of index to build',
+    )
+    parser.add_argument(
+        '--source',
+        type=Path,
+        help='Source directory to scan (required for case_* and input_templates types)',
+    )
+    parser.add_argument(
+        '--output',
+        type=Path,
+        help='Output directory for FAISS index (default: auto-generated from config and type)',
+    )
+    parser.add_argument(
+        '--embedding',
+        default='openai',
+        choices=['openai', 'huggingface', 'cborg'],
+        help='Embedding provider (default: openai)',
+    )
+    parser.add_argument(
+        '--embedding-model',
+        default='text-embedding-3-small',
+        help='Embedding model name (default: text-embedding-3-small for OpenAI)',
+    )
+    parser.add_argument(
+        '--provider',
+        help='Provider namespace for FAISS output layout (e.g., cborg, amsc)',
+    )
+    parser.add_argument(
+        '--max-cases',
+        type=int,
+        help='Maximum number of cases to process (for testing)',
+    )
+    parser.add_argument(
+        '--tokenize',
+        action='store_true',
+        help=(
+            'Enable foam-agent style tokenization (not recommended for modern semantic '
+            'embeddings like nomic-embed-text)'
+        ),
+    )
+    return parser
+
+
+def _resolve_source_dir(
+    args: argparse.Namespace,
+    code_config: type[BaseAMReXConfig],
+    config: Any,
+    agent_root: Path,
+) -> Path:
+    if args.source:
+        logger.info(f" Using source from argument: {args.source}")
+        return args.source
+
+    source_dir = config.repositories.get(code_config.code_name)
+    if source_dir and source_dir.exists():
+        logger.info(f" Using source from config: {source_dir}")
+        return source_dir
+
+    logger.debug(f"\n[ERROR] Source directory not found for {args.config}")
+    logger.debug(f"  Config path: {source_dir}")
+    logger.debug("\nOptions:")
+    logger.debug(f"  1. Provide --source /path/to/{args.config}")
+    logger.debug(f"  2. Set environment: export {args.config.upper()}_REPO_PATH=/path/to/repo")
+    logger.debug(f"  3. Clone repo to: {agent_root.parent / args.config}")
+    raise SystemExit(1)
+
+
+def _validate_case_source(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    if args.type not in ['case_structure', 'case_details', 'input_templates']:
+        return
+    if not args.source:
+        parser.error(f"--source is required for index type '{args.type}'")
+    if not args.source.exists():
+        parser.error(f"Source directory does not exist: {args.source}")
+
+
+def _run_index_builder(
+    *,
+    args: argparse.Namespace,
+    code_config: type[BaseAMReXConfig],
+    source_dir: Path,
+    output_dir: Path,
+    embedding_model: Any,
+    skip_tokenize: bool,
+) -> None:
+    builders = {
+        'case_structure': lambda: build_case_structure_index(
+            code_config,
+            source_dir,
+            output_dir,
+            embedding_model,
+            max_cases=args.max_cases,
+            skip_tokenize=skip_tokenize,
+        ),
+        'case_details': lambda: build_case_details_index(
+            code_config,
+            source_dir,
+            output_dir,
+            embedding_model,
+            max_cases=args.max_cases,
+            skip_tokenize=skip_tokenize,
+        ),
+        'input_templates': lambda: build_input_templates_index(
+            code_config,
+            source_dir,
+            output_dir,
+            embedding_model,
+            max_cases=args.max_cases,
+            skip_tokenize=skip_tokenize,
+        ),
+        'case_names': lambda: build_case_names_index(
+            code_config,
+            source_dir,
+            output_dir,
+            embedding_model,
+            max_cases=args.max_cases,
+            skip_tokenize=skip_tokenize,
+        ),
+        'chemistry': lambda: build_chemistry_index(
+            code_config,
+            output_dir,
+            embedding_model,
+            skip_tokenize=skip_tokenize,
+        ),
+    }
+    builders[args.type]()
+
+
 def main() -> None:
     """
     Run the FAISS index builder CLI.
@@ -936,137 +1106,45 @@ def main() -> None:
     logger.info(f" Environment: {config.environment}")
 
     # === STEP 2: Parse arguments ===
-    parser = argparse.ArgumentParser(
-        description="Build FAISS indices for AMReX codes",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
-    )
-
-    parser.add_argument(
-        '--config',
-        required=True,
-        choices=list(CONFIG_MAP.keys()),
-        help='Code configuration to use (pelec, pelelmex, amrex)'
-    )
-
-    parser.add_argument(
-        '--type',
-        required=True,
-        choices=['case_structure', 'case_details', 'input_templates', 'chemistry', 'case_names'],
-        help='Type of index to build'
-    )
-
-    parser.add_argument(
-        '--source',
-        type=Path,
-        help='Source directory to scan (required for case_* and input_templates types)'
-    )
-
-    parser.add_argument(
-        '--output',
-        type=Path,
-        help='Output directory for FAISS index (default: auto-generated from config and type)'
-    )
-
-    parser.add_argument(
-        '--embedding',
-        default='openai',
-        choices=['openai', 'huggingface', 'cborg'],
-        help='Embedding provider (default: openai)'
-    )
-
-    parser.add_argument(
-        '--embedding-model',
-        default='text-embedding-3-small',
-        help='Embedding model name (default: text-embedding-3-small for OpenAI)'
-    )
-
-    parser.add_argument(
-        '--max-cases',
-        type=int,
-        help='Maximum number of cases to process (for testing)'
-    )
-
-    parser.add_argument(
-    '--tokenize',
-    action='store_true',
-    help='Enable foam-agent style tokenization (not recommended for modern semantic embeddings like nomic-embed-text)'
-)
-
+    parser = _build_parser()
     args = parser.parse_args()
 
     # === STEP 3: Determine source directory ===
     code_config = CONFIG_MAP[args.config]
-
-    if args.source:
-        source_dir = args.source
-        logger.info(f" Using source from argument: {source_dir}")
-    else:
-        source_dir = config.repositories.get(code_config.code_name)
-
-        if not source_dir or not source_dir.exists():
-            logger.debug(f"\n[ERROR] Source directory not found for {args.config}")
-            logger.debug(f"  Config path: {source_dir}")
-            logger.debug("\nOptions:")
-            logger.debug(f"  1. Provide --source /path/to/{args.config}")
-            logger.debug(f"  2. Set environment: export {args.config.upper()}_REPO_PATH=/path/to/repo")
-            logger.debug(f"  3. Clone repo to: {agent_root.parent / args.config}")
-            sys.exit(1)
-
-        logger.info(f" Using source from config: {source_dir}")
+    source_dir = _resolve_source_dir(args, code_config, config, agent_root)
 
     skip_tokenize = not args.tokenize
 
     # Get code config
     code_config = CONFIG_MAP[args.config]
 
-    # Determine output directory
-    if args.output:
-        output_dir = args.output
-    else:
-        # Auto-generate: database/faiss/{code}_{type}
-        base_dir = Path(__file__).parent.parent / 'faiss'
-        output_dir = base_dir / f"{code_config.code_name.lower()}_{args.type}"
+    effective_provider = _resolve_effective_provider(
+        provider_arg=args.provider,
+        embedding_arg=args.embedding,
+        config_provider=getattr(config, "embedding_provider", None),
+    )
+    output_dir = _resolve_output_dir(
+        output_arg=args.output,
+        effective_provider=effective_provider,
+        code_name=code_config.code_name.lower(),
+        index_type=args.type,
+    )
 
     # Validate source for case-based indices
-    if args.type in ['case_structure', 'case_details', 'input_templates']:
-        if not args.source:
-            parser.error(f"--source is required for index type '{args.type}'")
-        if not args.source.exists():
-            parser.error(f"Source directory does not exist: {args.source}")
+    _validate_case_source(args, parser)
 
     # Get embedding model
+    embedding_provider = effective_provider
     embedding_model = get_embedding_model(args.embedding, args.embedding_model)
 
-    # Build index based on type
-    if args.type == 'case_structure':
-        build_case_structure_index(
-            code_config, source_dir, output_dir, embedding_model, max_cases=args.max_cases,
-            skip_tokenize=skip_tokenize
-        )
-
-    elif args.type == 'case_details':
-        build_case_details_index(
-            code_config, source_dir, output_dir, embedding_model, max_cases=args.max_cases,
-            skip_tokenize=skip_tokenize
-        )
-
-    elif args.type == 'input_templates':
-        build_input_templates_index(
-            code_config, source_dir, output_dir, embedding_model, max_cases=args.max_cases,
-            skip_tokenize=skip_tokenize
-        )
-    elif args.type == 'case_names':
-        build_case_names_index(
-            code_config,
-            source_dir,
-            output_dir,
-            embedding_model,
-            max_cases=args.max_cases,
-            skip_tokenize=skip_tokenize
-        )
-    elif args.type == 'chemistry':
-        build_chemistry_index(code_config, output_dir, embedding_model, skip_tokenize=skip_tokenize)
+    _run_index_builder(
+        args=args,
+        code_config=code_config,
+        source_dir=source_dir,
+        output_dir=output_dir,
+        embedding_model=embedding_model,
+        skip_tokenize=skip_tokenize,
+    )
 
     manifest_path = write_faiss_provenance_manifest(
         output_dir=output_dir,
@@ -1074,7 +1152,7 @@ def main() -> None:
         solver=args.config,
         level=args.type,
         source_dir=source_dir,
-        embedding_provider_arg=args.embedding,
+        embedding_provider_arg=embedding_provider,
         embedding_model_arg=args.embedding_model,
         build_script="build_index.py",
     )

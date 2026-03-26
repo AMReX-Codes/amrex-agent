@@ -1,0 +1,2 @@
+"""ERF benchmark script package."""
+

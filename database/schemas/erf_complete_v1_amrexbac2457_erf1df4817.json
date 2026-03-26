@@ -10055,39 +10055,6 @@
       "source_type": "header",
       "priority": "tier3",
       "description": null
-    },
-    "erf.rho_0": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 1.0,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.p_inf": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": null,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
-    },
-    "erf.T_0": {
-      "type": "Real",
-      "required": false,
-      "is_array": false,
-      "build_flags": [],
-      "default": 300.0,
-      "source_file": "Exec/RegTests/ERF_Prob.cpp",
-      "source_type": "manual",
-      "priority": "tier3",
-      "description": null
     }
   }
 }

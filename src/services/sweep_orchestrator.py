@@ -19,6 +19,10 @@ _TERMINAL_STATUSES = {
     ChildJobStatus.failed,
     ChildJobStatus.cancelled,
 }
+_TRANSIENT_FAILURE_HINTS = ("timeout", "timed out", "rate limit", "unavailable", "transient", "retry")
+_INPUT_FAILURE_HINTS = ("input", "unknown key", "unknown parameter", "schemaexistence", "parse")
+_BASELINE_FAILURE_HINTS = ("solver mismatch", "baseline", "missing file", "case missing")
+_SCHEMA_MISSING_HINTS = ("schema missing", "schemaloaderror")
 
 
 def _coerce_status(raw: Any) -> ChildJobStatus | None:
@@ -49,6 +53,71 @@ def _is_terminal(status: ChildJobStatus) -> bool:
 
 def _is_complete(parent: ParentSweepState) -> bool:
     return all(_is_terminal(child.status) for child in parent.children)
+
+
+def _classify_retry_guidance(failure_reasons: list[str]) -> dict[str, Any]:
+    """Map child failure reasons onto main-workflow retry-guidance contract."""
+    corpus = " ".join(reason.lower() for reason in failure_reasons if reason).strip()
+    guidance: dict[str, Any] = {
+        "inputs_base_action": "keep",
+        "inputs_reason": None,
+        "baseline_base_action": "keep",
+        "baseline_reason": None,
+    }
+    if not corpus:
+        guidance["inputs_reason"] = "child_workflow_failed"
+        guidance["baseline_reason"] = "child_workflow_failed"
+        return guidance
+
+    if any(token in corpus for token in _INPUT_FAILURE_HINTS):
+        guidance["inputs_base_action"] = "switch"
+        guidance["inputs_reason"] = "sweep_child_input_error"
+    elif any(token in corpus for token in _TRANSIENT_FAILURE_HINTS):
+        guidance["inputs_reason"] = "transient_child_failure_retry"
+
+    if any(token in corpus for token in _SCHEMA_MISSING_HINTS):
+        guidance["baseline_reason"] = "schema_missing_build_required"
+    elif any(token in corpus for token in _BASELINE_FAILURE_HINTS):
+        guidance["baseline_base_action"] = "switch"
+        guidance["baseline_reason"] = "schema_or_solver_mismatch"
+    elif any(token in corpus for token in _TRANSIENT_FAILURE_HINTS):
+        guidance["baseline_reason"] = "transient_child_failure_retry"
+
+    return guidance
+
+
+def _propagate_a2a_retry_guidance(parent: ParentSweepState) -> None:
+    """Attach child-failure context to sweep metadata for main-workflow retries."""
+    failed_children = []
+    for child in parent.children:
+        if child.status != ChildJobStatus.failed:
+            continue
+        failed_children.append(
+            {
+                "sweep_child_id": child.sweep_child_id,
+                "failure_reason": child.failure_reason or "child workflow failed",
+            }
+        )
+    if not failed_children:
+        return
+
+    failure_reasons = [entry["failure_reason"] for entry in failed_children]
+    retry_guidance = _classify_retry_guidance(failure_reasons)
+    retry_guidance.update(
+        {
+            "retry_recommended": True,
+            "failure_count": len(failed_children),
+            "failed_children": failed_children,
+        }
+    )
+
+    metadata = parent.sweep_spec.metadata
+    metadata["retry_guidance"] = retry_guidance
+    metadata["a2a_error"] = {
+        "type": "child_workflow_failure",
+        "message": "One or more sweep children failed.",
+        "failed_children": failed_children,
+    }
 
 
 def _advance_status(child: ChildWorkflowState, target: ChildJobStatus) -> bool:
@@ -221,6 +290,7 @@ def _poll_until_complete(
         if not _is_complete(parent):
             time.sleep(0.01)
 
+    _propagate_a2a_retry_guidance(parent)
     return parent
 
 
@@ -243,7 +313,7 @@ def update_parent_state(
             child.failure_reason = failure_reason
     elif _advance_status(child, new_status):
         if child.status == ChildJobStatus.failed:
-            child.failure_reason = failure_reason
+            child.failure_reason = failure_reason or child.failure_reason
 
     parent.completed_count = sum(1 for entry in parent.children if entry.status == ChildJobStatus.completed)
     parent.failed_count = sum(1 for entry in parent.children if entry.status == ChildJobStatus.failed)

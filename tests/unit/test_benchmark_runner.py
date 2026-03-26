@@ -9,6 +9,7 @@ from src.benchmark_runner import (
     _write_jsonl,
     run_model_benchmark,
 )
+from src import main as main_mod
 from src.utils import metrics as metrics_mod
 
 
@@ -521,3 +522,144 @@ def test_extract_usage_model_and_aggregates_cover_fallback_paths():
     )
     assert models == ["m1", "m2"]
     assert providers == ["p1", "p2"]
+
+
+def test_main_resolve_metrics_workflow_id_prefers_explicit_then_context_then_run_dir():
+    assert (
+        main_mod._resolve_metrics_workflow_id(
+            {"workflow_id": "wf-explicit", "run_directory": "/tmp/workflow-A"},
+            {"workflow_id": "wf-context"},
+        )
+        == "wf-explicit"
+    )
+    assert (
+        main_mod._resolve_metrics_workflow_id(
+            {"run_directory": "/tmp/workflow-B"},
+            {"workflow_id": "wf-context"},
+        )
+        == "wf-context"
+    )
+    assert (
+        main_mod._resolve_metrics_workflow_id(
+            {"run_directory": "/tmp/workflow-C"},
+            None,
+        )
+        == "workflow-C"
+    )
+    assert main_mod._resolve_metrics_workflow_id({}, None) == "unknown"
+
+
+def test_main_resolve_metrics_path_uses_stable_filename_and_run_dir(tmp_path):
+    config = SimpleNamespace(
+        metrics_filename="persisted.jsonl",
+        metrics_output_dir=tmp_path / "metrics_root",
+        output_dir=tmp_path / "output_root",
+    )
+    parsed_args = SimpleNamespace(output_dir=None)
+
+    base_path = main_mod._resolve_metrics_path({}, parsed_args, config)
+    assert base_path == (tmp_path / "metrics_root" / "persisted.jsonl")
+    assert base_path.parent.exists()
+
+    run_path = main_mod._resolve_metrics_path(
+        {"run_directory": str(tmp_path / "run_001")},
+        parsed_args,
+        config,
+    )
+    assert run_path == (tmp_path / "run_001" / "persisted.jsonl")
+
+
+def test_main_persist_metrics_jsonl_enforces_workflow_id_and_appends(tmp_path, monkeypatch):
+    collector = metrics_mod.MetricsCollector()
+    collector.record_event("initial", {"count": 1}, stage="architect")
+    monkeypatch.setattr(metrics_mod, "metrics_collector", collector)
+
+    config = SimpleNamespace(
+        metrics_enabled=True,
+        metrics_filename="metrics.jsonl",
+        metrics_output_dir=tmp_path,
+        output_dir=tmp_path,
+    )
+    parsed_args = SimpleNamespace(output_dir=None)
+    result = {"job_status": "ok", "iteration": 1, "run_directory": None}
+    context = {"workflow_id": "wf-ctx"}
+
+    path = main_mod._persist_metrics_jsonl(result, parsed_args, config, context)
+    assert path == (tmp_path / "metrics.jsonl")
+    first_write_lines = path.read_text().splitlines()
+    assert len(first_write_lines) == 2
+    assert all(json.loads(line)["workflow_id"] == "wf-ctx" for line in first_write_lines)
+
+    collector.record_event("followup", {"count": 2}, stage="runner")
+    main_mod._persist_metrics_jsonl(result, parsed_args, config, context)
+    second_write_lines = path.read_text().splitlines()
+    assert len(second_write_lines) > len(first_write_lines)
+    assert json.loads(second_write_lines[-1])["workflow_id"] == "wf-ctx"
+
+
+def test_run_benchmark_camera_ready_pipeline_writes_contract(tmp_path, monkeypatch):
+    from scripts import run_benchmark as run_benchmark_mod
+
+    run_dir = tmp_path / "bench_run"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "benchmark_runs.jsonl").write_text(
+        json.dumps(
+            {
+                "model_id": "m1",
+                "prompt_id": "p1",
+                "job_status": "completed",
+                "analysis_status": "success",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    def fake_run(cmd, *_args, **_kwargs):
+        from pathlib import Path
+
+        output_dir = Path(cmd[cmd.index("--output-dir") + 1])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "summary.csv").write_text(
+            "total_models,total_runs,completed_runs,failed_runs,skipped_runs\n1,1,1,0,0\n",
+            encoding="utf-8",
+        )
+        (output_dir / "by_model.csv").write_text(
+            (
+                "model_id,total_runs,success_rate,analysis_success_rate\n"
+                "m1,1,1.0,1.0\n"
+            ),
+            encoding="utf-8",
+        )
+        (output_dir / "generalization_by_solver.csv").write_text(
+            (
+                "solver,total_runs,success_rate,unique_models,unique_selected_cases\n"
+                "AMReX,1,1.0,1,1\n"
+            ),
+            encoding="utf-8",
+        )
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(run_benchmark_mod.subprocess, "run", fake_run)
+    report = run_benchmark_mod._run_camera_ready_pipeline(run_dir)
+
+    assert report["passes"] is True
+    assert (run_dir / "camera_ready_pipeline.json").exists()
+    assert (run_dir / "camera_ready" / "camera_ready_tables.md").exists()
+
+
+def test_run_benchmark_camera_ready_pipeline_raises_on_compare_failure(tmp_path, monkeypatch):
+    from scripts import run_benchmark as run_benchmark_mod
+
+    run_dir = tmp_path / "bench_run"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "benchmark_runs.jsonl").write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(
+        run_benchmark_mod.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(returncode=2, stdout="", stderr="failed"),
+    )
+
+    with pytest.raises(RuntimeError, match="failed"):
+        run_benchmark_mod._run_camera_ready_pipeline(run_dir)

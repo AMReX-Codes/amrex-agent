@@ -237,6 +237,50 @@ def normalize_unnumbered_023(modifications: Any) -> list[tuple[str, Any]]:
     return normalized
 
 
+def normalize_traceability_evidence_rows(rows: Any) -> list[dict[str, str]]:
+    """Normalize mixed checklist rows to stable criterion/artifact/test records."""
+    if not isinstance(rows, list):
+        return []
+
+    normalized: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    for row in rows:
+        criterion = artifact = test_name = ""
+
+        if isinstance(row, dict):
+            criterion = str(row.get("criterion") or row.get("standard") or "").strip()
+            artifact = str(row.get("artifact") or row.get("evidence") or "").strip()
+            test_name = str(row.get("test") or row.get("tests") or "").strip()
+        elif isinstance(row, (list, tuple)) and len(row) >= 3:
+            criterion = str(row[0]).strip()
+            artifact = str(row[1]).strip()
+            test_name = str(row[2]).strip()
+        else:
+            continue
+
+        if not criterion or not artifact or not test_name:
+            continue
+
+        key = (criterion, artifact, test_name)
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(
+            {
+                "criterion": criterion,
+                "artifact": artifact,
+                "test": test_name,
+            }
+        )
+
+    return normalized
+
+
+def normalize_unnumbered_284(rows: Any) -> list[dict[str, str]]:
+    """Backward-compatible alias for normalize_traceability_evidence_rows."""
+    return normalize_traceability_evidence_rows(rows)
+
 def _normalize_case_reference(case_entry: Any) -> str | None:
     """Extract a stable case reference string from mixed evidence values."""
     if isinstance(case_entry, str):
@@ -469,10 +513,6 @@ class SimulationPlan(BaseModel):
     - baseline_confidence: Level 2 (case selection: which example)
     - cbr_confidence: Level 3 (modification extraction quality)
 
-    Also records per-query retrieval telemetry for L0/L1/L2:
-    - confidence per level
-    - latency (ms) per level
-
     Reference: PRD Section 12.2.3
     """
 
@@ -590,39 +630,6 @@ class SimulationPlan(BaseModel):
         ]
         return "\n".join(lines)
 
-    def get_query_level_metrics(self) -> dict[str, dict[str, float | None]]:
-        """
-        Return explicit per-query confidence and latency for L0/L1/L2.
-
-        Returns
-        -------
-        dict[str, dict[str, float | None]]
-            Nested map for each retrieval level:
-            {
-              "L0": {"confidence": ..., "latency_ms": ...},
-              "L1": {"confidence": ..., "latency_ms": ...},
-              "L2": {"confidence": ..., "latency_ms": ...},
-            }
-        """
-        l0_confidence = self.level0_confidence
-        if l0_confidence is None:
-            l0_confidence = self.solver_confidence
-
-        return {
-            "L0": {
-                "confidence": l0_confidence,
-                "latency_ms": self.level0_latency_per_query_ms,
-            },
-            "L1": {
-                "confidence": self.level1_confidence,
-                "latency_ms": self.level1_latency_per_query_ms,
-            },
-            "L2": {
-                "confidence": self.baseline_confidence,
-                "latency_ms": self.level2_latency_per_query_ms,
-            },
-        }
-
 
 class SimulationPlanFactory:
     """
@@ -691,13 +698,27 @@ class SimulationPlanFactory:
         cbr_conf = cbr_plan.get('confidence', 0.0)
 
         # Build reasoning
-        reasoning = cbr_plan.get('reasoning', '')
+        raw_reasoning = cbr_plan.get('reasoning', '')
+        if isinstance(raw_reasoning, list):
+            reasoning = " ".join(str(item).strip() for item in raw_reasoning if str(item).strip())
+        elif raw_reasoning is None:
+            reasoning = ""
+        else:
+            reasoning = str(raw_reasoning)
         similar_cases = cbr_plan.get('similar_cases', [])
         if not reasoning:
             case_name = baseline_case.get('case', 'baseline')
             reasoning = f"CBR plan based on {case_name}"
             if similar_cases:
                 reasoning += f" (patterns from: {', '.join(similar_cases[:3])})"
+
+        weights_used = baseline_result.get("weights_used")
+        if isinstance(weights_used, dict) and weights_used:
+            weights_text = ", ".join(
+                f"{key}={float(value):.3f}"
+                for key, value in sorted(weights_used.items())
+            )
+            reasoning = f"{reasoning} Baseline weights: {weights_text}."
 
         baseline_evidence_citations = build_baseline_evidence_citations(
             baseline_case=baseline_case,
@@ -708,18 +729,13 @@ class SimulationPlanFactory:
             selected_solver=solver_name,
             selected_case=baseline_case.get('case',
                                            baseline_case.get('metadata', {}).get('repo_path', 'unknown')),
-            modifications=normalize_modifications(modifications),
+            modifications=modifications,
             reasoning=reasoning,
 
             # Confidence metrics
             solver_confidence=solver_confidence,
             baseline_confidence=baseline_conf,
             cbr_confidence=cbr_conf,
-            level0_confidence=solver_confidence,
-            level1_confidence=baseline_result.get("level1_confidence"),
-            level0_latency_per_query_ms=baseline_result.get("level0_latency_per_query_ms"),
-            level1_latency_per_query_ms=baseline_result.get("level1_latency_per_query_ms"),
-            level2_latency_per_query_ms=baseline_result.get("level2_latency_per_query_ms"),
 
             # Context
             prompt=user_prompt,
@@ -810,11 +826,6 @@ class SimulationPlanFactory:
             solver_confidence=0.8,  # Heuristic-based
             baseline_confidence=baseline_confidence,
             cbr_confidence=1.0 if modifications else 0.0,
-            level0_confidence=0.8,
-            level1_confidence=knowledge.get("level1_confidence") if isinstance(knowledge, dict) else None,
-            level0_latency_per_query_ms=knowledge.get("level0_latency_per_query_ms") if isinstance(knowledge, dict) else None,
-            level1_latency_per_query_ms=knowledge.get("level1_latency_per_query_ms") if isinstance(knowledge, dict) else None,
-            level2_latency_per_query_ms=knowledge.get("level2_latency_per_query_ms") if isinstance(knowledge, dict) else None,
 
             # Context
             prompt=user_prompt,
@@ -853,7 +864,7 @@ class SimulationPlanFactory:
         # Filter to known fields to avoid TypeErrors
         valid_fields = {k: v for k, v in data.items() if k in SimulationPlan.model_fields}
 
-        # Ensure modifications are normalized tuples.
+        # Ensure modifications are tuples, not lists
         if 'modifications' in valid_fields:
             valid_fields['modifications'] = normalize_unnumbered_023(valid_fields['modifications'])
 
@@ -903,11 +914,6 @@ class SimulationPlanFactory:
             'solver_confidence': old_dict.get('solver_confidence', 0.8),
             'baseline_confidence': old_dict.get('baseline_confidence', 0.5),
             'cbr_confidence': old_dict.get('cbr_confidence', 0.5),
-            'level0_confidence': old_dict.get('level0_confidence', old_dict.get('solver_confidence', 0.8)),
-            'level1_confidence': old_dict.get('level1_confidence'),
-            'level0_latency_per_query_ms': old_dict.get('level0_latency_per_query_ms'),
-            'level1_latency_per_query_ms': old_dict.get('level1_latency_per_query_ms'),
-            'level2_latency_per_query_ms': old_dict.get('level2_latency_per_query_ms'),
             'prompt': old_dict.get('prompt'),
             'requirements': old_dict.get('requirements'),
             'baseline': old_dict.get('baseline'),

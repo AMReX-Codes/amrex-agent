@@ -30,6 +30,37 @@ except ModuleNotFoundError:
 
 logger = logging.getLogger(__name__)
 
+UNNUMBERED_112_ID = "UNNUMBERED-112"
+TIER2_STABILITY_PARAMETERS = ("amr.max_level", "amr.blocking_factor")
+
+
+def normalize_unnumbered_112(
+    *,
+    missing_tier2_parameters: list[str] | set[str] | tuple[str, ...] | None = None,
+) -> dict[str, Any]:
+    """Normalize UNNUMBERED-112 Tier-2 warning and UQ recommendation output."""
+    missing = sorted(set(missing_tier2_parameters or []))
+    recommendations = [
+        {
+            "parameter": param_name,
+            "priority": "tier2",
+            "recommendation": "Include this stability control in the UQ sweep plan.",
+        }
+        for param_name in missing
+    ]
+    warning = (
+        f"Tier 2 stability parameters missing from schema: {missing}"
+        if missing
+        else None
+    )
+    return {
+        "criterion": UNNUMBERED_112_ID,
+        "status": "warning" if missing else "pass",
+        "warning": warning,
+        "missing_tier2_parameters": missing,
+        "uq_recommendations": recommendations,
+    }
+
 
 def _resolve_solver_config(repo_path: Path):
     """Resolve solver config class by repo name using registry."""
@@ -650,6 +681,8 @@ class SchemaBuilder:
         self.ifdef_stack = []  # Track nested #ifdef blocks
         self.parmparse_namespaces = {}  # Track ParmParse var → namespace
         self.declaration_map = None  # Populated during scan
+        self.unnumbered_112_result = normalize_unnumbered_112()
+        self.uq_recommendations: list[dict[str, str]] = []
 
     def scan_source_code(
         self,
@@ -756,8 +789,34 @@ class SchemaBuilder:
         else:
             print("  ⚠️  No solver_config or manual_schema_params")
 
+        self._emit_tier2_warning_uq_recommendation()
         self._log_non_blocking_tier34_issues()
         return self.schema
+
+    def _emit_tier2_warning_uq_recommendation(self) -> dict[str, Any]:
+        """Emit runtime Tier-2 warning channel and coupled UQ recommendations."""
+        missing = [
+            param_name
+            for param_name in TIER2_STABILITY_PARAMETERS
+            if param_name not in self.schema
+        ]
+        result = normalize_unnumbered_112(missing_tier2_parameters=missing)
+        self.unnumbered_112_result = result
+        self.uq_recommendations = list(result["uq_recommendations"])
+
+        if result["status"] == "warning":
+            logger.warning(
+                "Tier 2 warning channel (%s): %s | UQ recommendations=%s",
+                UNNUMBERED_112_ID,
+                result["warning"],
+                self.uq_recommendations,
+            )
+        else:
+            logger.info(
+                "Tier 2 warning channel (%s): all required stability parameters present.",
+                UNNUMBERED_112_ID,
+            )
+        return result
 
     def _log_non_blocking_tier34_issues(self) -> None:
         """
@@ -1414,7 +1473,7 @@ class SchemaBuilder:
     def _get_param_priority(self, param_name: str) -> str:
         """Assign priority tier to parameter."""
         tier1 = {"pelec.cfl", "amr.n_cell", "pelec.do_react"}
-        tier2 = {"amr.max_level", "amr.blocking_factor"}
+        tier2 = set(TIER2_STABILITY_PARAMETERS)
 
         if param_name in tier1:
             return "tier1"
