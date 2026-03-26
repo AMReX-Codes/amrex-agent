@@ -78,6 +78,47 @@ class RedactingFilter(logging.Filter):
         return True
 
 
+class PrivacyFilter(logging.Filter):
+    """Scrub log messages based on configured privacy mode."""
+
+    def __init__(self, config: AMReXAgentConfig):
+        super().__init__()
+        self._config = config
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            from src.utils.privacy import scrub_log_message
+
+            msg = record.getMessage()
+            scrubbed = scrub_log_message(msg, config=self._config)
+            if scrubbed != msg:
+                record.msg = scrubbed
+                record.args = ()
+        except Exception:
+            pass
+        return True
+
+
+_privacy_filter_installed = False
+
+
+def apply_privacy_log_filter(config: AMReXAgentConfig) -> None:
+    global _privacy_filter_installed
+    if _privacy_filter_installed:
+        return
+    from src.utils.privacy import get_privacy_mode
+
+    if get_privacy_mode(config) == "off":
+        return
+    privacy_filter = PrivacyFilter(config)
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers:
+        handler.addFilter(privacy_filter)
+    for name in ("httpx", "openai", "anthropic"):
+        logging.getLogger(name).addFilter(privacy_filter)
+    _privacy_filter_installed = True
+
+
 class ColorFormatter(logging.Formatter):
     """Optional ANSI color formatting for log levels."""
 
@@ -526,6 +567,13 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
         dest='mpi_ranks',
         help='Local run tasks (mpirun -np)'
     )
+    parser.add_argument(
+        '--benchmark-context',
+        type=str,
+        default=None,
+        dest='benchmark_context',
+        help='Optional JSON/YAML file with benchmark metadata to attach to metrics'
+    )
 
     return parser.parse_args(args)
 
@@ -595,6 +643,23 @@ def _warn_if_schema_missing(config: AMReXAgentConfig, baseline_override: str | N
     repo_arg = repo_root or "<path-to-repo>"
     schema_cmd = f"python database/scripts/build_schema.py {repo_arg} --solver {solver_flag}"
     logging.getLogger(__name__).warning("Schema missing for %s. Run: %s", solver_name, schema_cmd)
+
+
+def _load_benchmark_context(path: str | None) -> dict[str, Any] | None:
+    if not path:
+        return None
+    context_path = Path(path)
+    if not context_path.exists():
+        raise FileNotFoundError(f"Benchmark context file not found: {context_path}")
+    suffix = context_path.suffix.lower()
+    if suffix in {".yaml", ".yml"}:
+        import yaml
+        data = yaml.safe_load(context_path.read_text(encoding="utf-8"))
+    else:
+        data = json.loads(context_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("Benchmark context file must contain a JSON/YAML object.")
+    return data
 
 
 def main(args: list[str] | None = None) -> None:
@@ -674,6 +739,8 @@ def main(args: list[str] | None = None) -> None:
                 raise ValueError("--run-ntasks must be >= 1")
             config.mpi_ranks = parsed_args.mpi_ranks
 
+        apply_privacy_log_filter(config)
+
         _warn_if_schema_missing(config, getattr(parsed_args, "baseline_override", None))
 
         # Disable schema validator temporarily (modifications format issue)
@@ -686,7 +753,48 @@ def main(args: list[str] | None = None) -> None:
 
         # Run Agent
         logger.debug("Starting AMReXAgent workflow...")
-        result = run_agent(user_requirement, config)
+        benchmark_context = _load_benchmark_context(parsed_args.benchmark_context)
+        from src.utils.metrics import metrics_extra
+
+        with metrics_extra(benchmark_context):
+            result = run_agent(user_requirement, config)
+
+        # Save metrics JSONL (if enabled)
+        try:
+            from src.utils.metrics import metrics_collector, metrics_extra
+
+            if getattr(config, "metrics_enabled", True) and metrics_collector.events():
+                summary = metrics_collector.build_workflow_summary()
+                summary.update({
+                    "job_status": result.get("job_status", "unknown"),
+                    "iteration": result.get("iteration", 0),
+                    "run_directory": result.get("run_directory"),
+                })
+                with metrics_extra(benchmark_context):
+                    metrics_collector.record_event(
+                        "workflow_summary",
+                        summary,
+                        stage="workflow",
+                        node="main",
+                        iteration=result.get("iteration", 0),
+                    )
+                if 'run_directory' in result:
+                    run_dir = Path(result['run_directory'])
+                    metrics_path = run_dir / getattr(config, "metrics_filename", "metrics.jsonl")
+                else:
+                    base_dir = (
+                        Path(parsed_args.output_dir)
+                        if parsed_args.output_dir
+                        else (config.metrics_output_dir or config.output_dir)
+                    )
+                    base_dir.mkdir(parents=True, exist_ok=True)
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"metrics_{timestamp}.jsonl"
+                    metrics_path = base_dir / filename
+                metrics_collector.write_jsonl(str(metrics_path), config=config)
+                logger.info(f"Metrics saved to {metrics_path}")
+        except Exception as e:
+            logger.warning(f"Failed to save metrics JSONL: {e}")
 
         # Save workflow_history if requested
         if parsed_args.save_workflow:
@@ -699,8 +807,14 @@ def main(args: list[str] | None = None) -> None:
                     base_dir.mkdir(parents=True, exist_ok=True)
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     workflow_path = base_dir / f"workflow_history_{timestamp}.json"
+                from src.utils.privacy import sanitize_payload
+
+                workflow_payload = sanitize_payload(
+                    result.get('workflow_history', []),
+                    config=config,
+                )
                 with open(workflow_path, 'w') as f:
-                    json.dump(result.get('workflow_history', []), f, indent=2, default=str)
+                    json.dump(workflow_payload, f, indent=2, default=str)
                 logger.info(f"Workflow history saved to {workflow_path}")
             except Exception as e:
                 logger.warning(f"Failed to save workflow history: {e}")
@@ -710,67 +824,93 @@ def main(args: list[str] | None = None) -> None:
             run_dir = Path(result['run_directory'])
             transcript_path = run_dir / "agent_transcript.txt"
             try:
-                transcript_lines = ["=== Agent Transcript ===\n\n"]
-                transcript_lines.append(f"User Prompt:\n{user_requirement}\n\n")
-                transcript_lines.append("=" * 80 + "\n\n")
+                from src.utils.privacy import get_privacy_mode, scrub_text
 
-                for entry in result.get('workflow_history', []):
-                    if not isinstance(entry, dict):
-                        continue
-                    node = entry.get('node', 'unknown')
-                    action = entry.get('action', 'unknown')
-                    timestamp = entry.get('timestamp', '')
-                    details = entry.get('details', {})
+                privacy_mode = get_privacy_mode(config)
+                if privacy_mode == "strict":
+                    logger.info("Privacy mode strict: skipping transcript output.")
+                else:
+                    transcript_lines = ["=== Agent Transcript ===\n\n"]
+                    prompt_text = user_requirement
+                    if privacy_mode == "shared":
+                        prompt_text = scrub_text(
+                            prompt_text,
+                            mode=privacy_mode,
+                            salt=getattr(config, "privacy_hash_salt", None),
+                            config=config,
+                        ).text
+                    transcript_lines.append(f"User Prompt:\n{prompt_text}\n\n")
+                    transcript_lines.append("=" * 80 + "\n\n")
 
-                    transcript_lines.append(f"[{timestamp}] NODE: {node.upper()}\n")
-                    transcript_lines.append(f"ACTION: {action}\n")
+                    for entry in result.get('workflow_history', []):
+                        if not isinstance(entry, dict):
+                            continue
+                        node = entry.get('node', 'unknown')
+                        action = entry.get('action', 'unknown')
+                        timestamp = entry.get('timestamp', '')
+                        details = entry.get('details', {})
 
-                    if node == 'architect' and 'level0_routing' in details:
-                        routing = details['level0_routing']
-                        transcript_lines.append("  Level 0 Routing Decision:\n")
-                        transcript_lines.append(f"    Selected Code: {routing.get('selected_code')}\n")
-                        transcript_lines.append(f"    Confidence: {routing.get('confidence', 0):.2f}\n")
-                        transcript_lines.append(f"    Reasoning: {routing.get('reasoning')}\n")
+                        transcript_lines.append(f"[{timestamp}] NODE: {node.upper()}\n")
+                        transcript_lines.append(f"ACTION: {action}\n")
 
-                    if node == 'architect' and 'level2_cbr' in details:
-                        cbr = details['level2_cbr']
-                        match = cbr.get('top_match', {})
-                        transcript_lines.append("  Level 2 Case-Based Reasoning:\n")
-                        transcript_lines.append(f"    Best Match: {match.get('case_name')}\n")
-                        transcript_lines.append(f"    Path: {match.get('repo_path')}\n")
-                        transcript_lines.append(f"    Similarity: {match.get('similarity_score', 0):.2f}\n")
-                        transcript_lines.append(f"    Reason: {match.get('match_reason')}\n")
+                        if node == 'architect' and 'level0_routing' in details:
+                            routing = details['level0_routing']
+                            transcript_lines.append("  Level 0 Routing Decision:\n")
+                            transcript_lines.append(f"    Selected Code: {routing.get('selected_code')}\n")
+                            transcript_lines.append(f"    Confidence: {routing.get('confidence', 0):.2f}\n")
+                            transcript_lines.append(f"    Reasoning: {routing.get('reasoning')}\n")
 
-                    if node == 'architect' and 'modifications' in details:
-                        mods = details.get('modifications', [])
-                        if mods:
-                            transcript_lines.append(f"  Planned Modifications: {len(mods)} changes\n")
-                            for mod in mods[:3]:  # Show first 3
-                                if isinstance(mod, dict):
-                                    section = mod.get('section', '')
-                                    param = mod.get('parameter', '')
-                                    reason = mod.get('reason', '')
-                                    label = f"{section}.{param}".strip('.')
-                                    transcript_lines.append(f"    - {label}: {reason}\n")
-                                elif isinstance(mod, (list, tuple)) and len(mod) == 2:
-                                    param, value = mod
-                                    transcript_lines.append(f"    - {param} = {value}\n")
-                                else:
-                                    transcript_lines.append(f"    - {mod}\n")
+                        if node == 'architect' and 'level2_cbr' in details:
+                            cbr = details['level2_cbr']
+                            match = cbr.get('top_match', {})
+                            transcript_lines.append("  Level 2 Case-Based Reasoning:\n")
+                            transcript_lines.append(f"    Best Match: {match.get('case_name')}\n")
+                            transcript_lines.append(f"    Path: {match.get('repo_path')}\n")
+                            transcript_lines.append(f"    Similarity: {match.get('similarity_score', 0):.2f}\n")
+                            transcript_lines.append(f"    Reason: {match.get('match_reason')}\n")
 
-                    if node == 'analysis' and 'report' in details:
-                        report = details.get('report', {})
-                        transcript_lines.append("  Analysis Results:\n")
-                        transcript_lines.append(f"    Status: {report.get('status')}\n")
-                        if report.get('performance'):
-                            perf = report.get('performance', {})
-                            transcript_lines.append(f"    Performance: {perf.get('avg_cells_per_sec', 0):,.0f} cells/sec\n")
+                        if node == 'architect' and 'modifications' in details:
+                            mods = details.get('modifications', [])
+                            if mods:
+                                transcript_lines.append(f"  Planned Modifications: {len(mods)} changes\n")
+                                for mod in mods[:3]:  # Show first 3
+                                    if isinstance(mod, dict):
+                                        section = mod.get('section', '')
+                                        param = mod.get('parameter', '')
+                                        reason = mod.get('reason', '')
+                                        label = f"{section}.{param}".strip('.')
+                                        transcript_lines.append(f"    - {label}: {reason}\n")
+                                    elif isinstance(mod, (list, tuple)) and len(mod) == 2:
+                                        param, value = mod
+                                        transcript_lines.append(f"    - {param} = {value}\n")
+                                    else:
+                                        transcript_lines.append(f"    - {mod}\n")
 
-                    transcript_lines.append("\n")
+                        if node == 'analysis' and 'report' in details:
+                            report = details.get('report', {})
+                            transcript_lines.append("  Analysis Results:\n")
+                            transcript_lines.append(f"    Status: {report.get('status')}\n")
+                            if report.get('performance'):
+                                perf = report.get('performance', {})
+                                transcript_lines.append(
+                                    f"    Performance: {perf.get('avg_cells_per_sec', 0):,.0f} cells/sec\n"
+                                )
 
-                with open(transcript_path, 'w') as f:
-                    f.writelines(transcript_lines)
-                logger.info(f"Agent transcript saved to {transcript_path}")
+                        transcript_lines.append("\n")
+
+                    if privacy_mode == "shared":
+                        transcript_lines = [
+                        scrub_text(
+                            line,
+                            mode=privacy_mode,
+                            salt=getattr(config, "privacy_hash_salt", None),
+                            config=config,
+                        ).text
+                            for line in transcript_lines
+                        ]
+                    with open(transcript_path, 'w') as f:
+                        f.writelines(transcript_lines)
+                    logger.info(f"Agent transcript saved to {transcript_path}")
             except Exception as e:
                 logger.warning(f"Failed to save transcript: {e}")
 
@@ -828,8 +968,6 @@ def initialize_state(user_requirement: str, config: AMReXAgentConfig) -> dict[st
     dict
         Initialized graph state for the workflow.
     """
-    import os
-
     # 1. Load prompt (file or string)
     if os.path.exists(user_requirement) and os.path.isfile(user_requirement):
         with open(user_requirement) as f:
@@ -1001,7 +1139,10 @@ def run_agent(user_requirement: str, config: AMReXAgentConfig) -> dict[str, Any]
     try:
         from langgraph.errors import GraphRecursionError
 
-        final_state = app.invoke(initial_state, run_config)
+        from src.utils.metrics import metrics_extra
+
+        with metrics_extra(initial_state.get("metrics_context") or None):
+            final_state = app.invoke(initial_state, run_config)
 
         status = final_state.get("job_status", "unknown")
         logger.info("-" * 80)

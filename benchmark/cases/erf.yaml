@@ -1,0 +1,143 @@
+schema_version: "1.0"
+suite_id: "erf_scaling_v1"
+solver: "ERF"
+cases:
+  - id: "erf_density_current_strong"
+    solver: "ERF"
+    case_name: "DensityCurrent"
+    case_dir: "Exec/DryRegTests/DensityCurrent"
+    inputs: "inputs_amr"
+    description: "Classic density (gravity) current benchmark (Straka 1993)."
+    dimension: 3
+    physics: [density_current, stratification, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: false
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "128x256x128"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x384x256"
+          amr_levels: 0
+        - label: "L"
+          grid: "384x512x384"
+          amr_levels: 0
+    tags: [regtest, atmosphere]
+    status: "ready"
+
+  - id: "erf_abl_neutral_weak"
+    solver: "ERF"
+    case_name: "ABL-Neutral"
+    case_dir: "Exec/ABL"
+    inputs: "inputs_smagorinsky"
+    description: "Atmospheric boundary layer with turbulence scheme and MOST options."
+    dimension: 3
+    physics: [abl, turbulence, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x128"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x256"
+          amr_levels: 0
+    tags: [abl, turbulence]
+    status: "ready"
+
+  - id: "erf_abl_stable_weak"
+    solver: "ERF"
+    case_name: "ABL-Stable"
+    case_dir: "Exec/ABL"
+    inputs: "mrf_stable_gabls"
+    description: "Stable ABL configuration with hydrostatic sounding inputs."
+    dimension: 3
+    physics: [abl, stable, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x128"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x256"
+          amr_levels: 0
+    tags: [abl, stable]
+    status: "draft"
+
+  - id: "erf_abl_convective_weak"
+    solver: "ERF"
+    case_name: "ABL-Convective"
+    case_dir: "Exec/ABL"
+    inputs: "mrf_unstable"
+    description: "Unstable/convective ABL configuration with perturbations."
+    dimension: 3
+    physics: [abl, convection, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: true
+    novelty_tier: "config-extension"
+    scaling:
+      type: "weak"
+      sizes:
+        - label: "S"
+          grid: "128x128x64"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x128"
+          amr_levels: 0
+        - label: "L"
+          grid: "512x512x256"
+          amr_levels: 0
+    tags: [abl, convection]
+    status: "draft"
+
+  - id: "erf_taylor_green_strong"
+    solver: "ERF"
+    case_name: "TaylorGreenVortex"
+    case_dir: "Exec/DryRegTests/TaylorGreenVortex"
+    inputs: "inputs_advdiff"
+    description: "Taylor-Green vortex benchmark for advection/diffusion terms."
+    dimension: 3
+    physics: [turbulence, vortex, atmosphere]
+    difficulty_tier: "medium"
+    prompt_length_band: "medium"
+    concept_density: "medium"
+    specialized_knowledge: false
+    novelty_tier: "parameter-only"
+    scaling:
+      type: "strong"
+      sizes:
+        - label: "S"
+          grid: "128x128x128"
+          amr_levels: 0
+        - label: "M"
+          grid: "256x256x256"
+          amr_levels: 0
+        - label: "L"
+          grid: "384x384x384"
+          amr_levels: 0
+    tags: [regtest, turbulence]
+    status: "ready"

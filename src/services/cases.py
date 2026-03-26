@@ -402,39 +402,46 @@ class AMReXCasesService:
             case_match = None
             use_plain = False
             try:
-                import instructor
                 from pydantic import BaseModel, Field
-                from src.config import unwrap_llm_client, wrap_llm_client
+                from src.utils.llm_calls import LLMCallSpec, call_llm
 
                 class CaseSelection(BaseModel):
                     code: str = Field(description="Code name from the available list")
                     case: str = Field(description="Case path from the selected code")
 
-                base_client = unwrap_llm_client(llm_client)
-                client = instructor.from_openai(base_client)
-                client = wrap_llm_client(client, self.config)
-                result = client.chat.completions.create(
+                spec = LLMCallSpec(
                     model=self.config.llm_model,
                     response_model=CaseSelection,
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.1,
                     max_retries=2,
+                    purpose="case_selection",
+                    template_name="case_selection",
+                    template_source="solver_config",
                 )
-                code_match = result.code.strip()
-                case_match = result.case.strip()
-            except (ImportError, ModuleNotFoundError):
-                use_plain = True
+                result = call_llm(llm_client, spec, config=self.config)
+                if hasattr(result, "code") and hasattr(result, "case"):
+                    code_match = result.code.strip()
+                    case_match = result.case.strip()
+                else:
+                    use_plain = True
             except Exception as exc:
                 logger.warning("LLM structured selection failed: %s", exc)
                 use_plain = True
 
             if use_plain:
-                response = llm_client.chat.completions.create(
+                from src.utils.llm_calls import LLMCallSpec, call_llm
+
+                spec = LLMCallSpec(
                     model=self.config.llm_model,
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.1,
-                    max_tokens=100
+                    max_tokens=100,
+                    purpose="case_selection_plain",
+                    template_name="case_selection",
+                    template_source="solver_config",
                 )
+                response = call_llm(llm_client, spec, config=self.config)
 
                 content = response.choices[0].message.content.strip()
 

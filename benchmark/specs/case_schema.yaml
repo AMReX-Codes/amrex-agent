@@ -1,0 +1,158 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "Scaling Benchmark Case Suite"
+type: object
+additionalProperties: false
+required:
+  - schema_version
+  - suite_id
+  - solver
+  - cases
+properties:
+  schema_version:
+    type: string
+  suite_id:
+    type: string
+  solver:
+    type: string
+  cases:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - solver
+        - case_name
+        - case_dir
+        - inputs
+        - description
+        - dimension
+        - physics
+        - difficulty_tier
+        - prompt_length_band
+        - concept_density
+        - specialized_knowledge
+        - novelty_tier
+        - scaling
+        - tags
+      properties:
+        id:
+          type: string
+          minLength: 3
+        solver:
+          type: string
+          enum:
+            - PeleC
+            - PeleLMeX
+            - ERF
+            - REMORA
+        case_name:
+          type: string
+        case_dir:
+          type: string
+        inputs:
+          type: string
+        description:
+          type: string
+        dimension:
+          type: integer
+          enum: [2, 3]
+        physics:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        difficulty_tier:
+          type: string
+          enum: [easy, medium, hard]
+          description: "Derived from prompt length, concept density, and specialized knowledge."
+        prompt_length_band:
+          type: string
+          enum: [short, medium, long]
+          description: "Short: single sentence. Medium: 2-3 sentences. Long: multi-clause or multi-paragraph."
+        concept_density:
+          type: string
+          enum: [low, medium, high]
+          description: "Low: direct parameter tweaks. Medium: one term implies 2-3 dependent changes. High: multiple terms imply 4+ dependent changes."
+        specialized_knowledge:
+          type: boolean
+          description: "True if requires domain-specific mechanisms, EB, multiphase, or specialized turbulence."
+        novelty_tier:
+          type: string
+          enum:
+            - parameter-only
+            - config-extension
+            - code-touch
+            - build-dependent
+            - additional-runs
+          description: "Change distance from baseline: inputs-only → config → code → build → extra runs."
+        scaling:
+          type: object
+          additionalProperties: false
+          required:
+            - type
+            - sizes
+          properties:
+            type:
+              type: string
+              enum: [strong, weak]
+            sizes:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                additionalProperties: false
+                required:
+                  - label
+                  - grid
+                  - amr_levels
+                properties:
+                  label:
+                    type: string
+                  grid:
+                    type: string
+                  amr_levels:
+                    type: integer
+                    minimum: 0
+                  notes:
+                    type: string
+                  resources:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      ranks:
+                        type: integer
+                        minimum: 1
+                      nodes:
+                        type: integer
+                        minimum: 1
+                      gpus:
+                        type: integer
+                        minimum: 0
+                      walltime:
+                        type: string
+        tags:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        references:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [draft, ready, deprecated]
+        run:
+          type: object
+          additionalProperties: false
+          properties:
+            command:
+              type: string
+            working_dir:
+              type: string
+            env:
+              type: object
+              additionalProperties:
+                type: string

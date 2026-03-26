@@ -160,6 +160,8 @@ class InputsFileSelector:
             Selected inputs file path, or None if not found.
         """
         excluded_files = excluded_files or []
+        original_strategy = strategy
+        fallback_reason = None
 
         # Find candidate files (use provided or discover)
         if available_files:
@@ -185,16 +187,30 @@ class InputsFileSelector:
             selected = cls._select_override(case_dir, config)
             if selected:
                 logger.info(f"Selected inputs file: {selected.name} (strategy: override)")
+                _record_inputs_selection(
+                    strategy="override",
+                    original_strategy=original_strategy,
+                    selected=selected,
+                    candidates=candidates,
+                )
                 return selected
             # Fallback to smallest if override didn't resolve
+            fallback_reason = "override_unresolved"
             strategy = "smallest"
 
         if strategy == "llm_compare":
             selected = cls._select_with_llm(case_dir, candidates, config=config)
             if selected:
                 logger.info(f"Selected inputs file: {selected.name} (strategy: llm_compare)")
+                _record_inputs_selection(
+                    strategy="llm_compare",
+                    original_strategy=original_strategy,
+                    selected=selected,
+                    candidates=candidates,
+                )
                 return selected
             # LLM unavailable or failed → fallback to smallest
+            fallback_reason = "llm_unavailable"
             strategy = "smallest"
 
         # Score by strategy
@@ -209,6 +225,14 @@ class InputsFileSelector:
 
         selected = scored[0][1]
         logger.info(f"Selected inputs file: {selected.name} (strategy: {strategy}, score: {scored[0][0]:.2f})")
+        _record_inputs_selection(
+            strategy=strategy,
+            original_strategy=original_strategy,
+            selected=selected,
+            candidates=candidates,
+            fallback_reason=fallback_reason,
+            score=scored[0][0],
+        )
 
         return selected
 
@@ -259,33 +283,27 @@ class InputsFileSelector:
         prompt = prompt.format(case_name=case_hint, candidates="\n\n".join(summaries))
 
         try:
-            try:
-                import instructor
-                from pydantic import BaseModel, Field
-                from src.config import unwrap_llm_client, wrap_llm_client
+            from pydantic import BaseModel, Field
+            from src.utils.llm_calls import LLMCallSpec, call_llm
 
-                class InputsSelection(BaseModel):
-                    filename: str = Field(description="Selected inputs filename")
+            class InputsSelection(BaseModel):
+                filename: str = Field(description="Selected inputs filename")
 
-                base_client = unwrap_llm_client(client)
-                instr_client = instructor.from_openai(base_client)
-                instr_client = wrap_llm_client(instr_client, config)
-                result = instr_client.chat.completions.create(
-                    model=config.llm_model,
-                    response_model=InputsSelection,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.0,
-                    max_retries=2,
-                )
+            spec = LLMCallSpec(
+                model=config.llm_model,
+                response_model=InputsSelection,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_retries=2,
+                purpose="inputs_file_selection",
+                template_name="inputs_select",
+                template_source="solver_config.misc",
+            )
+            result = call_llm(client, spec, config=config)
+            if hasattr(result, "filename"):
                 content = result.filename.strip()
-            except (ImportError, ModuleNotFoundError):
-                response = client.chat.completions.create(
-                    model=config.llm_model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.0,
-                    max_tokens=50
-                )
-                content = response.choices[0].message.content.strip()
+            else:
+                content = result.choices[0].message.content.strip()
         except Exception as exc:
             logger.debug(f"LLM compare failed: {exc}")
             return None
@@ -313,3 +331,30 @@ class InputsFileSelector:
         if default_path.exists():
             return default_path
         return None
+
+
+def _record_inputs_selection(
+    *,
+    strategy: str,
+    original_strategy: str,
+    selected: Path,
+    candidates: list[Path],
+    fallback_reason: str | None = None,
+    score: float | None = None,
+) -> None:
+    try:
+        from src.utils.metrics import metrics_collector
+
+        metrics_collector.record_event(
+            "retrieval_strategy",
+            {
+                "strategy": strategy,
+                "original_strategy": original_strategy,
+                "fallback_reason": fallback_reason,
+                "selected": selected.name,
+                "candidate_count": len(candidates),
+                "score": score,
+            },
+        )
+    except Exception:
+        return

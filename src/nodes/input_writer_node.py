@@ -213,15 +213,18 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
         }
 
     try:
+        from src.utils.metrics import metrics_context
+
         # 2. Call service with individual parameters (per contract)
         # apply_plan() signature: selected_case, modifications, baseline, reasoning, output_dir
-        result = service.apply_plan(
-            selected_case=selected_case,
-            modifications=modifications,
-            baseline=baseline,
-            reasoning=reasoning,
-            output_dir=str(run_dir)  # Service physically creates this
-        )
+        with metrics_context("input_writer", node="input_writer", iteration=state.get("iteration", 0)):
+            result = service.apply_plan(
+                selected_case=selected_case,
+                modifications=modifications,
+                baseline=baseline,
+                reasoning=reasoning,
+                output_dir=str(run_dir)  # Service physically creates this
+            )
 
         logger.info(f"Files written to: {result.get('run_dir', 'unknown')}")
 
@@ -344,6 +347,13 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
 
     # Create history entry (per contract line 62-89)
     # Store full computation output in details (canonical path)
+    try:
+        from src.utils.metrics import metrics_collector
+
+        metrics_summary = metrics_collector.summarize_stage("input_writer", iteration=state.get("iteration", 0))
+    except Exception:
+        metrics_summary = {}
+
     history_entry = {
         "node": "input_writer",
         "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -368,6 +378,8 @@ def input_writer_node(state: GraphState) -> dict[str, Any]:
             "inputs_candidates": result.get("inputs_candidates", []),
         }
     }
+    if metrics_summary:
+        history_entry["details"]["metrics"] = metrics_summary
 
     new_history = workflow_history + [history_entry]
 

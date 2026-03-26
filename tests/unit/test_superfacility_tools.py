@@ -121,8 +121,12 @@ def test_resolve_remote_output_dir_prefers_shared_then_fallback(monkeypatch):
         fake_ensure_remote_directory_rest,
     )
     monkeypatch.setattr(
-        "src.services.run_superfacility_tools.find_nersc_clients",
-        lambda: {"token": "abc"},
+        "src.services.run_superfacility_tools._resolve_sfapi_key_path",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        "src.services.run_superfacility_tools._resolve_sfapi_credentials",
+        lambda: (None, None),
     )
 
     result = resolve_remote_output_dir(

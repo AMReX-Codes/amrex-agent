@@ -792,14 +792,11 @@ If no match exists, set "to": null."""
         schema_list = "\n".join(f"- {f}" for f in schema_fields[:150])
 
         try:
-            import instructor
-            from src.config import get_llm_client, unwrap_llm_client, wrap_llm_client
+            from src.config import get_llm_client
+            from src.utils.llm_calls import LLMCallSpec, call_llm
 
-            base_client = unwrap_llm_client(get_llm_client(config_service))
-            client = instructor.from_openai(base_client)
-            client = wrap_llm_client(client, config_service)
-
-            result = client.chat.completions.create(
+            client = get_llm_client(config_service)
+            spec = LLMCallSpec(
                 model=config_service.llm_model,
                 response_model=MappingExtraction,
                 messages=[{"role": "user", "content": prompt_template.format(
@@ -807,8 +804,12 @@ If no match exists, set "to": null."""
                     schema_list=schema_list,
                     format_hints=format_hints or "None provided"
                 )}],
-                temperature=0.1
+                temperature=0.1,
+                purpose="remap_failed_modifications",
+                template_name="remap",
+                template_source="solver_config",
             )
+            result = call_llm(client, spec, config=config_service)
 
             logger.debug(f"[Remap] LLM response: {len(result.mappings)} mappings")
 

@@ -286,6 +286,8 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             and getattr(config, "retry_guidance_use_llm", False)
         ):
             try:
+                from src.utils.metrics import metrics_context
+
                 from database.configs.base_amrex_config import BaseAMReXConfig
 
                 from src.config import get_llm_client
@@ -302,50 +304,55 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
                         analysis_issues="\n".join(issues) if issues else "none",
                     )
                     try:
-                        import instructor
+                        import json
                         from pydantic import BaseModel, Field
-                        from src.config import unwrap_llm_client, wrap_llm_client
+                        from src.utils.llm_calls import LLMCallSpec, call_llm
 
                         class RetryGuidance(BaseModel):
                             inputs_base_action: str = Field(description="keep or switch")
                             baseline_base_action: str = Field(description="keep or switch")
                             rationale: str | None = None
 
-                        base_client = unwrap_llm_client(llm_client)
-                        instr_client = instructor.from_openai(base_client)
-                        instr_client = wrap_llm_client(instr_client, config)
-                        parsed = instr_client.chat.completions.create(
+                        spec = LLMCallSpec(
                             model=config.llm_model,
                             response_model=RetryGuidance,
                             messages=[{"role": "user", "content": filled}],
                             temperature=0.0,
                             max_retries=2,
+                            purpose="retry_guidance",
+                            template_name="retry_guidance",
+                            template_source="base_config.misc",
                         )
-                        retry_guidance.update({
-                            "inputs_base_action": parsed.inputs_base_action or "keep",
-                            "baseline_base_action": parsed.baseline_base_action or "keep",
-                            "inputs_reason": parsed.rationale,
-                            "baseline_reason": parsed.rationale,
-                        })
-                    except (ImportError, ModuleNotFoundError):
-                        response = llm_client.chat.completions.create(
-                            model=config.llm_model,
-                            messages=[{"role": "user", "content": filled}],
-                            temperature=0.0,
-                            max_tokens=200,
-                        )
-                        content = response.choices[0].message.content.strip()
-                        import json
-                        parsed = json.loads(content)
-                        if isinstance(parsed, dict):
+                        with metrics_context("analysis", node="analysis", iteration=iteration):
+                            result = call_llm(llm_client, spec, config=config)
+                        if hasattr(result, "inputs_base_action"):
                             retry_guidance.update({
-                                "inputs_base_action": parsed.get("inputs_base_action", "keep"),
-                                "baseline_base_action": parsed.get("baseline_base_action", "keep"),
-                                "inputs_reason": parsed.get("rationale"),
-                                "baseline_reason": parsed.get("rationale"),
+                                "inputs_base_action": result.inputs_base_action or "keep",
+                                "baseline_base_action": result.baseline_base_action or "keep",
+                                "inputs_reason": result.rationale,
+                                "baseline_reason": result.rationale,
                             })
+                        else:
+                            content = result.choices[0].message.content.strip()
+                            parsed = json.loads(content)
+                            if isinstance(parsed, dict):
+                                retry_guidance.update({
+                                    "inputs_base_action": parsed.get("inputs_base_action", "keep"),
+                                    "baseline_base_action": parsed.get("baseline_base_action", "keep"),
+                                    "inputs_reason": parsed.get("rationale"),
+                                    "baseline_reason": parsed.get("rationale"),
+                                })
+                    except Exception as exc:
+                        logger.debug(f"Retry guidance LLM unavailable: {exc}")
             except Exception as exc:
                 logger.debug(f"Retry guidance LLM unavailable: {exc}")
+
+    try:
+        from src.utils.metrics import metrics_collector
+
+        metrics_summary = metrics_collector.summarize_stage("analysis", iteration=iteration)
+    except Exception:
+        metrics_summary = {}
 
     history_entry = {
         "node": "analysis",
@@ -365,6 +372,8 @@ def analysis_node(state: GraphState) -> dict[str, Any]:
             "retry_guidance": retry_guidance,
         }
     }
+    if metrics_summary:
+        history_entry["details"]["metrics"] = metrics_summary
 
     new_history = workflow_history + [history_entry]
 
