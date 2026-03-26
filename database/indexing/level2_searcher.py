@@ -145,7 +145,30 @@ class Level2Searcher:
         
         return results
     
-    def search_all_cases(self, query: str, top_k: int = 5) -> List[Dict]:
+    @classmethod
+    def _normalize_weights(cls, weights: Dict[str, float] | None) -> Dict[str, float]:
+        """Normalize candidate weights over known Level-2 keys."""
+        base = dict(cls.WEIGHTS)
+        if not isinstance(weights, dict):
+            return base
+        cleaned: Dict[str, float] = {}
+        for key in cls.WEIGHTS:
+            try:
+                value = float(weights.get(key, base[key]))
+            except (TypeError, ValueError):
+                value = base[key]
+            cleaned[key] = max(0.0, value)
+        total = sum(cleaned.values())
+        if total <= 0.0:
+            return base
+        return {key: value / total for key, value in cleaned.items()}
+
+    def search_all_cases(
+        self,
+        query: str,
+        top_k: int = 5,
+        weights: Dict[str, float] | None = None,
+    ) -> List[Dict]:
         """
         Search across all case metadata indices with weighted scoring.
         
@@ -156,14 +179,16 @@ class Level2Searcher:
         Returns:
             Combined and ranked results
         """
+        effective_weights = self._normalize_weights(weights)
+
         # Search each index
         index_results = {}
         for index_type in self.available_indices.keys():
             results = self._search_index(index_type, query, top_k=20)
             index_results[index_type] = results
-        
+
         # Combine scores by case
-        case_scores = self._combine_scores(index_results)
+        case_scores = self._combine_scores(index_results, effective_weights)
         
         # Sort and return top_k
         ranked = sorted(
@@ -188,7 +213,11 @@ class Level2Searcher:
             for case, info in filtered_ranked[:top_k]
         ]
     
-    def _combine_scores(self, index_results: Dict[str, List[Dict]]) -> Dict:
+    def _combine_scores(
+        self,
+        index_results: Dict[str, List[Dict]],
+        weights: Dict[str, float] | None = None,
+    ) -> Dict:
         """
         Combine scores from all indices using weights.
         
@@ -220,7 +249,7 @@ class Level2Searcher:
         # Compute weighted scores
         final_scores = {}
         for case, data in case_scores.items():
-            weighted = self._compute_weighted_score(data['scores'])
+            weighted = self._compute_weighted_score(data['scores'], weights=weights)
             
             final_scores[case] = {
                 'score': weighted,
@@ -230,11 +259,16 @@ class Level2Searcher:
         
         return final_scores
     
-    def _compute_weighted_score(self, scores: Dict[str, float]) -> float:
+    def _compute_weighted_score(
+        self,
+        scores: Dict[str, float],
+        weights: Dict[str, float] | None = None,
+    ) -> float:
         """Compute weighted score using PRD weights."""
+        resolved_weights = self._normalize_weights(weights)
         total = 0.0
-        for index_name, weight in self.WEIGHTS.items():
+        for index_name, weight in resolved_weights.items():
             score = scores.get(index_name, 0.0)
             total += score * weight
-        
+
         return total

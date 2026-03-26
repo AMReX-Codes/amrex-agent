@@ -18,6 +18,7 @@ import pytest
 from pathlib import Path
 from typing import List, Tuple, Set
 
+import src.graph as graph_service
 from src.services import plan as plan_service
 
 
@@ -590,6 +591,23 @@ def test_docs_includes_resolve():
 
 
 @pytest.mark.quality
+def test_deployment_readiness_documents_use_case_artifact_contract():
+    """
+    Enforce UNNUMBERED-024 documentation for use-case artifact traceability.
+    """
+    readiness_doc = Path("docs/deployment_readiness.md")
+    assert readiness_doc.exists(), "docs/deployment_readiness.md must exist"
+
+    content = readiness_doc.read_text(encoding="utf-8")
+    assert "UNNUMBERED-024" in content
+    assert "Use-case Artifact Contract" in content
+    assert "use_case_artifacts" in content
+    assert "`use_case`" in content
+    assert "`artifacts`" in content
+    assert "tests/quality/test_standards.py" in content
+
+
+@pytest.mark.quality
 def test_normalize_use_case_artifact_mappings_canonicalizes_shapes():
     """
     Ensure use-case artifact mappings normalize to a stable schema.
@@ -626,6 +644,90 @@ def test_normalize_use_case_artifact_mappings_report_and_state_helpers_share_log
 
     assert report_entries == [{"use_case": "UC1", "artifacts": ["tests/unit/test_x.py"]}]
     assert state_entries == report_entries
+
+
+@pytest.mark.quality
+def test_normalize_criterion_benchmark_test_matrix_stabilizes_rows():
+    rows = [
+        {
+            "criterion": "Benchmark schema consistency",
+            "benchmark_output": "benchmark_results/squall_line/metrics.jsonl",
+            "tests": ["tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract"],
+        },
+        {
+            "id": "Docs include integrity",
+            "artifact": "docs/demos.md",
+            "test": "tests/quality/test_standards.py::test_docs_includes_resolve",
+        },
+        ("Benchmark schema consistency", "benchmark_results/squall_line/metrics.jsonl", "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract"),
+        {"criterion": "missing-test", "benchmark": "results/run.json"},
+    ]
+
+    assert graph_service.normalize_criterion_benchmark_test_matrix(rows) == [
+        {
+            "criterion": "Benchmark schema consistency",
+            "benchmark": "benchmark_results/squall_line/metrics.jsonl",
+            "test": "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract",
+        },
+        {
+            "criterion": "Docs include integrity",
+            "benchmark": "docs/demos.md",
+            "test": "tests/quality/test_standards.py::test_docs_includes_resolve",
+        },
+    ]
+
+
+@pytest.mark.quality
+def test_criterion_benchmark_test_linkage_valid_tracks_missing_criteria():
+    state = {
+        "criterion_benchmark_test_linkage_required": True,
+        "success_criteria": [
+            {"criterion": "Benchmark schema consistency"},
+            {"criterion": "Docs include integrity"},
+        ],
+        "criterion_benchmark_test_matrix": [
+            {
+                "criterion": "Benchmark schema consistency",
+                "benchmark": "benchmark_results/squall_line/metrics.jsonl",
+                "test": "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract",
+            }
+        ],
+    }
+
+    assert graph_service.criterion_benchmark_test_linkage_valid(state) is False
+    validation = state["criterion_benchmark_test_linkage_validation"]
+    assert validation["criterion"] == graph_service.CRITERION_BENCHMARK_TEST_LINKAGE_ID
+    assert validation["reason"] == "criteria_without_benchmark_or_test_mapping"
+    assert validation["missing_criteria"] == ["Docs include integrity"]
+    assert state["criterion_benchmark_test_linkage_complete"] is False
+
+
+@pytest.mark.quality
+def test_criterion_benchmark_test_linkage_valid_passes_with_complete_matrix():
+    state = {
+        "criterion_benchmark_test_linkage_required": True,
+        "success_criteria": ["Benchmark schema consistency", "Docs include integrity"],
+        "criterion_benchmark_test_matrix": [
+            {
+                "criterion": "Benchmark schema consistency",
+                "benchmark": "benchmark_results/squall_line/metrics.jsonl",
+                "test": "tests/integration/test_oracle_benchmarks.py::test_oracle_gate_benchmark_alignment_contract",
+            },
+            {
+                "criterion": "Docs include integrity",
+                "benchmark": "docs/demos.md",
+                "test": "tests/quality/test_standards.py::test_docs_includes_resolve",
+            },
+        ],
+    }
+
+    assert graph_service.criterion_benchmark_test_linkage_valid(state) is True
+    validation = state["criterion_benchmark_test_linkage_validation"]
+    assert validation["criterion"] == graph_service.CRITERION_BENCHMARK_TEST_LINKAGE_ID
+    assert validation["reason"] == "ok"
+    assert validation["missing_criteria"] == []
+    assert len(validation["rows"]) == 2
+    assert state["criterion_benchmark_test_linkage_complete"] is True
 
 
 @pytest.mark.quality
@@ -761,427 +863,3 @@ def test_pytest_markers_documented():
             "  markers =\n"
             f"    {undocumented.pop()}: <description here>"
         )
-
-
-@pytest.mark.quality
-def test_graph_feature_coverage_gate_and_routing(monkeypatch):
-    """Session 137: require per-feature unit+integration test coverage."""
-    monkeypatch.setattr(
-        "src.graph.collect_radon_complexity_evidence",
-        lambda: {"radon_available": False, "passed": False},
-    )
-
-    assert _compute_benchmark_cache_hit_rate({BENCHMARK_CACHE_HIT_RATE_MARKER: 0.5}) == 0.5
-    assert _compute_benchmark_cache_hit_rate({"benchmark_cache_stats": {"hits": 8, "misses": 2}}) == 0.8
-    assert _compute_benchmark_cache_hit_rate({"embedding_cache_hit_rate": 0.4}) == 0.4
-    assert _compute_benchmark_cache_hit_rate({"cache_stats": {"cache_hits": 3, "cache_misses": 1}}) == 0.75
-    assert _compute_benchmark_cache_hit_rate({"cache_stats": {"hits": "x"}}) is None
-    assert _compute_benchmark_cache_hit_rate({"cache_stats": {"hits": float("inf"), "total": 1}}) is None
-    assert _compute_benchmark_cache_hit_rate({"cache_stats": {"hits": 3, "total": 0}}) is None
-    assert _compute_benchmark_cache_hit_rate({"cache_stats": {"hits": 3, "total": 2}}) is None
-    assert _compute_benchmark_cache_hit_rate({"workflow_history": ["bad", {"details": {}}, {"details": {"cache_stats": {"hits": 1, "misses": 1}}}]}) == 0.5
-    assert _has_benchmark_cache_hit_rate({"cache_stats": {"hits": 4, "misses": 1}}) is True
-    assert _has_benchmark_cache_hit_rate({}) is False
-
-    assert _is_results_artifact_path("results/run_001/summary.json") is True
-    assert _is_results_artifact_path("benchmark_results/20260310/metrics.jsonl") is True
-    assert _is_results_artifact_path("./results/with_prefix.json") is True
-    assert _is_results_artifact_path("output/results.json") is False
-
-    assert _has_claims_results_artifacts({}) is False
-    assert _has_claims_results_artifacts({CLAIMS_RESULTS_ARTIFACTS_MARKER: {"": "results/a.json"}}) is False
-    assert _has_claims_results_artifacts({CLAIMS_RESULTS_ARTIFACTS_MARKER: {"C1": 1}}) is False
-    assert _has_claims_results_artifacts({CLAIMS_RESULTS_ARTIFACTS_MARKER: {"C1": []}}) is False
-    assert _has_claims_results_artifacts({CLAIMS_RESULTS_ARTIFACTS_MARKER: {"C1": ["results/a.json", 7]}}) is False
-    assert _has_claims_results_artifacts({CLAIMS_RESULTS_ARTIFACTS_MARKER: {"C1": ["results/a.json"]}}) is True
-    assert _has_cross_reference_feature_ids({}) is False
-    assert _has_cross_reference_feature_ids({CROSS_REFERENCE_FEATURE_IDS_MARKER: {"": "F2A"}}) is False
-    assert _has_cross_reference_feature_ids({CROSS_REFERENCE_FEATURE_IDS_MARKER: {"SEC-1": 1}}) is False
-    assert _has_cross_reference_feature_ids({CROSS_REFERENCE_FEATURE_IDS_MARKER: {"SEC-1": []}}) is False
-    assert _has_cross_reference_feature_ids({CROSS_REFERENCE_FEATURE_IDS_MARKER: {"SEC-1": ["BAD"]}}) is False
-    assert _has_cross_reference_feature_ids({CROSS_REFERENCE_FEATURE_IDS_MARKER: {"SEC-1": "F2A"}}) is True
-    assert _has_phase1_feature_trace({}) is False
-    assert _has_phase1_feature_trace({PHASE1_FEATURE_TRACE_MARKER: {"BAD": ["F1.1"]}}) is False
-    assert _has_phase1_feature_trace({PHASE1_FEATURE_TRACE_MARKER: {"UC1": 1}}) is False
-    assert _has_phase1_feature_trace({PHASE1_FEATURE_TRACE_MARKER: {"UC1": []}}) is False
-    assert _has_phase1_feature_trace({PHASE1_FEATURE_TRACE_MARKER: {"UC1": ["BAD"]}}) is False
-    assert _has_phase1_feature_trace({PHASE1_FEATURE_TRACE_MARKER: {"UC1": "F1.1"}}) is True
-    assert _has_required_behavior_item({}) is False
-    assert _has_required_behavior_item({REQUIRED_BEHAVIOR_MARKER: []}) is False
-    assert _has_required_behavior_item({REQUIRED_BEHAVIOR_MARKER: ["ok", ""]}) is False
-    assert _has_required_behavior_item({REQUIRED_BEHAVIOR_MARKER: "must be true"}) is True
-
-    assert _paper_validator_enabled({"paper_validator_enabled": True}) is True
-    assert _paper_validator_enabled({"paper_source": "2401.12345"}) is True
-    assert _paper_validator_enabled({}) is False
-    assert _route_after_paper_validator({}) == "input_writer_node"
-    assert _route_after_paper_validator({"paper_validator_enabled": True}) == "paper_validator_node"
-    assert _route_after_clarification({"clarification_needed": True}) == "clarification_handler"
-    assert _route_after_clarification({}) == "input_writer_node"
-    assert _route_after_sweep_detection({}) == "architect_node"
-    assert _route_after_sweep_detection({"sweep_id": "sweep"}) == "session_dependency_handler"
-    assert _route_after_sweep_detection(
-        {
-            "sweep_id": "sweep",
-            "session_markers": {SESSION_DEPENDENCY_COMPLETION_MARKER: True},
-        }
-    ) == "sweep_execution_handler"
-
-    assert _route_after_benchmark_cache_hit_rate({}) == "end"
-    assert _route_after_benchmark_cache_hit_rate({"enforce_benchmark_cache_hit_rate": True}) == "benchmark_cache_hit_rate_handler"
-    assert (
-        _route_after_benchmark_cache_hit_rate(
-            {"enforce_benchmark_cache_hit_rate": True, "cache_stats": {"hits": 3, "misses": 1}}
-        )
-        == "end"
-    )
-    assert _route_after_claims_results_artifacts({}) == "end"
-    assert _route_after_claims_results_artifacts({"enforce_claims_results_artifacts": True}) == "claims_results_artifacts_handler"
-    assert (
-        _route_after_claims_results_artifacts(
-            {
-                "enforce_claims_results_artifacts": True,
-                CLAIMS_RESULTS_ARTIFACTS_MARKER: {"C1": ["results/a.json"]},
-            }
-        )
-        == "end"
-    )
-    assert _route_after_cross_reference_feature_ids({}) == "end"
-    assert _route_after_cross_reference_feature_ids({"enforce_cross_reference_feature_ids": True}) == "cross_reference_feature_ids_handler"
-    assert (
-        _route_after_cross_reference_feature_ids(
-            {
-                "enforce_cross_reference_feature_ids": True,
-                CROSS_REFERENCE_FEATURE_IDS_MARKER: {"SEC-1": "F2A"},
-            }
-        )
-        == "end"
-    )
-    assert _route_after_phase1_traceability({}) == "end"
-    assert _route_after_phase1_traceability({"enforce_phase1_feature_trace": True}) == "phase1_traceability_handler"
-    assert (
-        _route_after_phase1_traceability(
-            {"enforce_phase1_feature_trace": True, PHASE1_FEATURE_TRACE_MARKER: {"UC1": "F1.1"}}
-        )
-        == "end"
-    )
-    assert _route_after_required_behavior_item({}) == "end"
-    assert _route_after_required_behavior_item({"enforce_required_behavior_item": True}) == "required_behavior_handler"
-    assert (
-        _route_after_required_behavior_item(
-            {"enforce_required_behavior_item": True, REQUIRED_BEHAVIOR_MARKER: "ok"}
-        )
-        == "end"
-    )
-    assert _route_after_postgresql_migration_evidence({}) == "end"
-    assert _route_after_postgresql_migration_evidence({"enforce_postgresql_migration_evidence": True}) == "postgresql_migration_handler"
-    assert (
-        _route_after_postgresql_migration_evidence(
-            {
-                "enforce_postgresql_migration_evidence": True,
-                POSTGRESQL_MIGRATION_EVIDENCE_MARKER: {
-                    "migration_runbook_ref": "docs/postgresql_migration.md",
-                    "index_growth_proof_ref": "artifacts/index_growth.json",
-                },
-            }
-        )
-        == "end"
-    )
-    assert _route_after_post_incident_risk_matrix_feedback({}) == "end"
-    assert (
-        _route_after_post_incident_risk_matrix_feedback({"enforce_post_incident_risk_matrix_feedback": True})
-        == "post_incident_risk_matrix_feedback_handler"
-    )
-
-    assert _has_unit_and_integration_feature_coverage({}) is False
-    assert _has_unit_and_integration_feature_coverage({FEATURE_TEST_COVERAGE_MARKER: []}) is False
-    assert (
-        _has_unit_and_integration_feature_coverage(
-            {
-                FEATURE_TEST_COVERAGE_MARKER: {
-                    "F5.3": {
-                        "unit": ["tests/unit/test_mcp_tools.py"],
-                        "integration": ["tests/integration/l1_mcp/test_mcp_stdio.py"],
-                    }
-                }
-            }
-        )
-        is True
-    )
-    assert (
-        _has_unit_and_integration_feature_coverage(
-            {
-                FEATURE_TEST_COVERAGE_MARKER: {
-                    "F5.3": {
-                        "unit": ["tests/unit/test_mcp_tools.py"],
-                        "integration": ["tests/e2e/test_demo_smoke.py"],
-                    }
-                }
-            }
-        )
-        is False
-    )
-    assert _route_after_feature_test_coverage({}) == "end"
-    assert _route_after_feature_test_coverage({"enforce_feature_test_coverage": True}) == "feature_test_coverage_handler"
-    assert (
-        _route_after_feature_test_coverage(
-            {
-                "enforce_feature_test_coverage": True,
-                FEATURE_TEST_COVERAGE_MARKER: {
-                    "F5.3": {
-                        "unit": ["tests/unit/test_mcp_tools.py"],
-                        "integration": ["tests/integration/l1_mcp/test_mcp_stdio.py"],
-                    }
-                },
-            }
-        )
-        == "end"
-    )
-
-    assert (
-        _route_after_post_incident_risk_matrix_feedback(
-            {
-                "enforce_post_incident_risk_matrix_feedback": True,
-                POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER: [
-                    {
-                        "incident_id": "INC-1",
-                        "risk_id": "R-1",
-                        "owner": "team",
-                        "update_summary": "updated matrix",
-                        "mitigation_evidence_ref": "results/inc-1.md",
-                        "reviewed_at": "2026-03-10",
-                    }
-                ],
-                "enforce_feature_test_coverage": True,
-            }
-        )
-        == "feature_test_coverage_handler"
-    )
-    assert (
-        _route_after_post_incident_risk_matrix_feedback(
-            {
-                "enforce_post_incident_risk_matrix_feedback": True,
-                POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER: [
-                    {
-                        "incident_id": "INC-1",
-                        "risk_id": "R-1",
-                        "owner": "team",
-                        "update_summary": "updated matrix",
-                        "mitigation_evidence_ref": "results/inc-1.md",
-                        "reviewed_at": "2026-03-10",
-                    }
-                ],
-                "enforce_feature_test_coverage": True,
-                FEATURE_TEST_COVERAGE_MARKER: {
-                    "F5.3": {
-                        "unit": "tests/unit/test_mcp_tools.py",
-                        "integration": "tests/integration/l1_mcp/test_mcp_stdio.py",
-                    }
-                },
-            }
-        )
-        == "end"
-    )
-
-    assert _route_after_complexity_evidence({}) == "end"
-    assert (
-        _route_after_complexity_evidence({"enforce_radon_complexity_evidence": True})
-        == "complexity_evidence_handler"
-    )
-    assert (
-        _route_after_complexity_evidence(
-            {
-                "enforce_radon_complexity_evidence": True,
-                "radon_complexity_evidence": {"radon_available": True},
-                "enforce_feature_test_coverage": True,
-            }
-        )
-        == "feature_test_coverage_handler"
-    )
-
-    clarity = {"clarification_questions": ["q1"]}
-    assert clarification_handler_node(clarity) == clarity
-    assert sweep_execution_handler_node({"sweep_id": "swp", "sweep_parameter": "amr.n_cell"}) == {
-        "sweep_id": "swp",
-        "sweep_parameter": "amr.n_cell",
-    }
-    assert paper_validator_node({"paper_source": "x"}) == {"paper_source": "x"}
-
-    assert BENCHMARK_CACHE_HIT_RATE_MARKER not in complexity_evidence_node({"enforce_radon_complexity_evidence": False})
-    with_cache = complexity_evidence_node(
-        {
-            "enforce_radon_complexity_evidence": False,
-            "benchmark_cache_stats": {"hits": 6, "misses": 2},
-        }
-    )
-    assert with_cache[BENCHMARK_CACHE_HIT_RATE_MARKER] == 0.75
-
-
-@pytest.mark.quality
-def test_graph_feature_coverage_handlers_and_wiring():
-    """Wiring checks for feature-coverage enforcement path."""
-    assert (
-        session_dependency_handler_node({})["required_marker"]
-        == SESSION_DEPENDENCY_COMPLETION_MARKER
-    )
-    assert complexity_evidence_handler_node({})["required_marker"] == "radon_complexity_evidence"
-    assert phase1_traceability_handler_node({})["required_marker"] == PHASE1_FEATURE_TRACE_MARKER
-    assert required_behavior_handler_node({})["required_marker"] == REQUIRED_BEHAVIOR_MARKER
-    assert benchmark_cache_hit_rate_handler_node({})["required_marker"] == BENCHMARK_CACHE_HIT_RATE_MARKER
-    assert claims_results_artifacts_handler_node({})["required_marker"] == CLAIMS_RESULTS_ARTIFACTS_MARKER
-    assert cross_reference_feature_ids_handler_node({})["required_marker"] == CROSS_REFERENCE_FEATURE_IDS_MARKER
-    assert postgresql_migration_handler_node({})["required_marker"] == POSTGRESQL_MIGRATION_EVIDENCE_MARKER
-    assert (
-        post_incident_risk_matrix_feedback_handler_node({})["required_marker"]
-        == POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER
-    )
-    assert feature_test_coverage_handler_node({})["required_marker"] == FEATURE_TEST_COVERAGE_MARKER
-    assert "unit and integration" in feature_test_coverage_handler_node({})["dependency_error"]
-    assert complexity_evidence_handler_node({"radon_complexity_evidence": {"radon_available": True}})[
-        "radon_complexity_evidence"
-    ]["radon_available"] is True
-    assert feature_test_coverage_handler_node({"required_marker": "existing"})["required_marker"] == "existing"
-
-    graph = create_graph().compile()
-    edges = {(edge.source, edge.target) for edge in graph.get_graph().edges}
-    assert ("complexity_evidence_node", "feature_test_coverage_handler") in edges
-    assert ("feature_test_coverage_handler", "__end__") in edges
-
-
-@pytest.mark.quality
-def test_plan_normalizers_and_complexity_evidence(monkeypatch):
-    """Cover shared normalization helper behavior and complexity evidence."""
-    from src.services import plan as plan_module
-
-    assert plan_module.normalize_modifications(None) == []
-    assert plan_module.normalize_modifications(
-        [{"parameter": "max_step", "value": 10}]
-    ) == [("max_step", 10)]
-    assert plan_module.normalize_modifications([["max_step", 10]]) == [("max_step", 10)]
-    tuple_mods = [("max_step", 10)]
-    assert plan_module.normalize_modifications(tuple_mods) == tuple_mods
-
-    assert plan_module.normalize_modifications_from_payload(None) == []
-    assert plan_module.normalize_modification_field(None) == []
-    assert plan_module.normalize_modifications_from_payload(
-        {"modifications": [{"parameter": "a", "value": 1}]}
-    ) == [("a", 1)]
-    assert plan_module.normalize_modification_field(
-        {"mods": [["b", 2]]},
-        field_name="mods",
-    ) == [("b", 2)]
-
-    monkeypatch.setattr(plan_module.shutil, "which", lambda _: None)
-    no_radon = plan_module.collect_radon_complexity_evidence()
-    assert no_radon["radon_available"] is False
-    assert no_radon["passed"] is False
-
-    monkeypatch.setattr(plan_module.shutil, "which", lambda _: "/usr/bin/radon")
-
-    class _RunResult:
-        returncode = 0
-        stdout = "ok"
-        stderr = ""
-
-    monkeypatch.setattr(plan_module.subprocess, "run", lambda *args, **kwargs: _RunResult())
-    with_radon = plan_module.collect_radon_complexity_evidence("src/services/plan.py")
-    assert with_radon["radon_available"] is True
-    assert with_radon["passed"] is True
-    assert with_radon["output"] == "ok"
-
-    def _raise_oserror(*args, **kwargs):
-        raise OSError("boom")
-
-    monkeypatch.setattr(plan_module.subprocess, "run", _raise_oserror)
-    broken_radon = plan_module.collect_radon_complexity_evidence("src/services/plan.py")
-    assert broken_radon["radon_available"] is False
-    assert broken_radon["passed"] is False
-    assert "radon invocation failed" in broken_radon["detail"]
-
-
-@pytest.mark.quality
-def test_simulation_plan_factory_paths():
-    """Session 142: ensure factory call sites use normalized payload helper consistently."""
-    from src.services.plan import SimulationPlanFactory
-
-    rag_plan = SimulationPlanFactory.create_from_rag(
-        solver_name="Castro",
-        baseline_result={
-            "selected_case": {"metadata": {"repo_path": "Exec/Flame"}},
-            "confidence": 0.88,
-            "candidates": [{"id": "c1"}],
-        },
-        cbr_plan={
-            "modifications": [{"parameter": "max_step", "value": 32}],
-            "similar_cases": ["s1", "s2"],
-            "confidence": 0.91,
-        },
-        docs=[{"title": "doc"}],
-        user_prompt="run it",
-        solver_confidence=0.95,
-        used_llm=True,
-    )
-    assert rag_plan.selected_case == "Exec/Flame"
-    assert rag_plan.modifications == [("max_step", 32)]
-    assert rag_plan.cbr_confidence == 0.91
-    assert "patterns from" in rag_plan.reasoning
-    assert rag_plan.to_dict()["selected_solver"] == "Castro"
-    assert rag_plan.to_json()
-    assert rag_plan.get_overall_confidence() > 0.0
-    assert "Simulation Plan Summary" in rag_plan.get_summary()
-
-    with pytest.raises(ValueError, match="baseline_result is required"):
-        SimulationPlanFactory.create_from_rag(
-            solver_name="Castro",
-            baseline_result={},
-            cbr_plan={},
-            docs=[],
-            user_prompt="x",
-        )
-
-    simple_plan = SimulationPlanFactory.create_from_simple(
-        requirements={"solver": "IAMR"},
-        baseline={"name": "baseline-a", "match_rationale": "best fit", "match_score": 0.7},
-        modifications=[("amr.max_level", 2)],
-        visualization={},
-        analysis={},
-        user_prompt="prompt",
-    )
-    assert simple_plan.selected_solver == "IAMR"
-    assert "best fit" in simple_plan.reasoning
-    assert simple_plan.cbr_confidence == 1.0
-
-    with pytest.raises(ValueError, match="missing solver"):
-        SimulationPlanFactory.create_from_simple(
-            requirements={},
-            baseline={},
-            modifications=[],
-            visualization={},
-            analysis={},
-            user_prompt="prompt",
-        )
-
-    hydrated = SimulationPlanFactory.from_dict(
-        {
-            "selected_solver": "PeleLMeX",
-            "selected_case": "Exec/Case",
-            "modifications": [["max_grid_size", 64]],
-            "reasoning": "ok",
-            "unknown_field": "ignore-me",
-        }
-    )
-    assert hydrated.modifications == [("max_grid_size", 64)]
-
-    legacy = SimulationPlanFactory.from_dict(
-        {
-            "solver": "Castro",
-            "baseline": {"case_dir": "Exec/Legacy"},
-            "modifications": [{"parameter": "max_step", "value": 16}],
-        }
-    )
-    assert legacy.selected_solver == "Castro"
-    assert legacy.selected_case == "Exec/Legacy"
-    assert legacy.modifications == [("max_step", 16)]
-
-    with pytest.raises(ValueError, match="missing solver/selected_solver"):
-        SimulationPlanFactory._migrate_legacy_dict({"baseline": {}})

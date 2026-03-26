@@ -806,8 +806,8 @@ class InputWriterService:
             templates_index = f"{code_lower}_input_templates"
 
             results = self.embeddings.retrieve_faiss(
-                templates_index,
                 search_query,
+                templates_index,
                 topk=50
             )
 

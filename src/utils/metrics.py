@@ -39,6 +39,16 @@ _DEFAULT_PRICING_TABLE: dict[str, dict[str, Any]] = {
         "currency": "USD",
     },
 }
+_USER_METRIC_KEYS = (
+    "user_id",
+    "user",
+    "username",
+    "user_hash",
+    "actor",
+    "actor_id",
+    "principal",
+    "principal_id",
+)
 
 
 @contextmanager
@@ -223,6 +233,7 @@ class MetricsCollector:
         *,
         model: str | None = None,
         provider: str | None = None,
+        user: str | None = None,
     ) -> dict[str, Any] | None:
         usage = _extract_usage(response)
         if not usage:
@@ -232,6 +243,9 @@ class MetricsCollector:
             "provider": provider,
             **usage,
         }
+        resolved_user = _normalize_user_label(user) or _extract_user_label(_extra_var.get())
+        if resolved_user is not None:
+            payload["user"] = resolved_user
         return self.record_event("llm_usage", payload)
 
     def summarize_stage(self, stage: str, iteration: int | None = None) -> dict[str, Any]:
@@ -288,6 +302,15 @@ class MetricsCollector:
         tokens_total_input = llm_all.get("prompt_tokens", 0)
         tokens_total_output = llm_all.get("completion_tokens", 0)
         tokens_total = llm_all.get("total_tokens", 0)
+        tokens_by_user: dict[str, dict[str, int]] = {}
+        for user, metrics in llm_all.get("by_user", {}).items():
+            if not isinstance(metrics, dict):
+                continue
+            tokens_by_user[user] = {
+                "input": metrics.get("prompt_tokens", 0),
+                "output": metrics.get("completion_tokens", 0),
+                "total": metrics.get("total_tokens", 0),
+            }
 
         models, providers = _aggregate_models(events)
 
@@ -299,6 +322,8 @@ class MetricsCollector:
             "models": models,
             "providers": providers,
         }
+        if tokens_by_user:
+            summary["tokens_by_user"] = tokens_by_user
         if cost_by_stage_usd:
             summary["cost_by_stage_usd"] = cost_by_stage_usd
             summary["cost_total_usd"] = round(sum(cost_by_stage_usd.values()), 3)
@@ -367,6 +392,25 @@ def _extract_model(response: Any) -> str | None:
     return getattr(raw, "model", None) if raw else None
 
 
+def _normalize_user_label(value: Any) -> str | None:
+    if isinstance(value, str):
+        normalized = value.strip()
+        return normalized or None
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return str(value)
+    return None
+
+
+def _extract_user_label(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    for key in _USER_METRIC_KEYS:
+        normalized = _normalize_user_label(payload.get(key))
+        if normalized is not None:
+            return normalized
+    return None
+
+
 def _aggregate_llm_usage(events: list[dict[str, Any]]) -> dict[str, Any]:
     llm_events = [e for e in events if e.get("type") == "llm_usage"]
     if not llm_events:
@@ -377,11 +421,13 @@ def _aggregate_llm_usage(events: list[dict[str, Any]]) -> dict[str, Any]:
         "completion_tokens": 0,
         "total_tokens": 0,
         "by_model": {},
+        "by_user": {},
         "cost_usd": 0.0,
     }
     for event in llm_events:
         data = event.get("data", {})
         model = data.get("model") or "unknown"
+        user = _extract_user_label(data) or _extract_user_label(event.get("context")) or "unknown"
         prompt = data.get("prompt_tokens") or 0
         completion = data.get("completion_tokens") or 0
         total = data.get("total_tokens")
@@ -398,12 +444,23 @@ def _aggregate_llm_usage(events: list[dict[str, Any]]) -> dict[str, Any]:
         per_model["prompt_tokens"] += prompt
         per_model["completion_tokens"] += completion
         per_model["total_tokens"] += total
+        per_user = summary["by_user"].setdefault(
+            user,
+            {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "cost_usd": 0.0},
+        )
+        per_user["calls"] += 1
+        per_user["prompt_tokens"] += prompt
+        per_user["completion_tokens"] += completion
+        per_user["total_tokens"] += total
         cost_usd, _ = _calculate_cost_usd(data)
         if isinstance(cost_usd, (int, float)):
             summary["cost_usd"] += float(cost_usd)
             per_model["cost_usd"] += float(cost_usd)
+            per_user["cost_usd"] += float(cost_usd)
     for per_model in summary["by_model"].values():
         per_model["cost_usd"] = round(float(per_model["cost_usd"]), 3)
+    for per_user in summary["by_user"].values():
+        per_user["cost_usd"] = round(float(per_user["cost_usd"]), 3)
     summary["cost_usd"] = round(summary["cost_usd"], 3)
     return summary
 

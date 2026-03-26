@@ -147,6 +147,25 @@ pytest tests/unit
 Integration and demo tests live under `tests/integration` and `tests/e2e`.
 Some are intentionally skipped or require local solver repos.
 
+## ERF Benchmark (llm_compare)
+
+Design/source-of-truth:
+- `docs/benchmark_erf_llm_compare.md`
+
+Generate dataset and splits:
+
+```bash
+python scripts/erf_benchmark/generate_prompt_matrix.py --erf-root ../ERF
+python scripts/erf_benchmark/make_splits.py
+```
+
+Run benchmark and compare candidate vs baseline:
+
+```bash
+python scripts/erf_benchmark/run_llm_compare_benchmark.py --max-rows 10
+python scripts/erf_benchmark/compare_runs.py --baseline <baseline_summary.json> --candidate <candidate_summary.json>
+```
+
 ## MCP server
 
 AMReXAgent includes an MCP adapter in `mcp_server.py`.

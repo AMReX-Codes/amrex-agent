@@ -524,7 +524,7 @@ class EmbeddingService:
             index_name = query_spec['index']
             query = query_spec['query']
 
-            result = self.retrieve_faiss(index_name, query, topk=topk)
+            result = self.retrieve_faiss(query, index_name, topk=topk)
 
             all_results.extend(result['results'])
             combined_confidence *= result['confidence']

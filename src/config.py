@@ -2,6 +2,7 @@
 
 import os
 import random
+import shutil
 import time
 from pathlib import Path
 from typing import Optional, Dict, Literal, List, Any
@@ -154,6 +155,100 @@ def resolve_database_path(relative_path: str) -> Path:
         # Local development: relative to repo root
         repo_root = Path(__file__).parent.parent
         return repo_root / 'database' / relative_path
+
+
+def _has_flat_faiss_artifacts(faiss_root: Path) -> bool:
+    if not faiss_root.exists() or not faiss_root.is_dir():
+        return False
+    for child in faiss_root.iterdir():
+        if child.name in {"cborg", "amsc"}:
+            continue
+        return True
+    return False
+
+
+def _move_path(src: Path, dst: Path) -> None:
+    if not src.exists():
+        return
+    if not dst.exists():
+        src.rename(dst)
+        return
+    if src.is_file():
+        if not dst.exists():
+            src.rename(dst)
+        return
+
+    for child in src.iterdir():
+        target = dst / child.name
+        if target.exists():
+            continue
+        shutil.move(str(child), str(target))
+    try:
+        src.rmdir()
+    except OSError:
+        pass
+
+
+def migrate_flat_faiss_to_provider(
+    faiss_root: Path,
+    provider: str = "cborg",
+) -> bool:
+    if provider != "cborg":
+        return False
+    if not faiss_root.exists() or not faiss_root.is_dir():
+        return False
+
+    provider_root = faiss_root / provider
+    provider_root.mkdir(parents=True, exist_ok=True)
+
+    moved_static = _migrate_static_faiss_paths(faiss_root, provider_root)
+    moved_solver_dirs = _migrate_solver_faiss_dirs(faiss_root, provider_root)
+    return moved_static or moved_solver_dirs
+
+
+def _migrate_static_faiss_paths(faiss_root: Path, provider_root: Path) -> bool:
+    moved_any = False
+    for name in ("level0", "level1", "level2", "build_session_manifest.json"):
+        src = faiss_root / name
+        if not src.exists():
+            continue
+        _move_path(src, provider_root / name)
+        moved_any = True
+    return moved_any
+
+
+def _migrate_solver_faiss_dirs(faiss_root: Path, provider_root: Path) -> bool:
+    moved_any = False
+    for child in faiss_root.iterdir():
+        if child.name in {"cborg", "amsc"}:
+            continue
+        if not child.is_dir() or "_" not in child.name:
+            continue
+        _move_path(child, provider_root / child.name)
+        moved_any = True
+    return moved_any
+
+
+def resolve_faiss_db_path_for_provider(
+    faiss_root: Path,
+    provider: str | None,
+) -> Path:
+    provider_slug = (provider or "").strip().lower()
+    if not provider_slug:
+        return faiss_root
+
+    provider_root = faiss_root / provider_slug
+    if provider_root.exists():
+        return provider_root
+
+    if provider_slug == "cborg":
+        migrate_flat_faiss_to_provider(faiss_root, provider_slug)
+        if provider_root.exists():
+            return provider_root
+
+    if _has_flat_faiss_artifacts(faiss_root):
+        return faiss_root
+    return provider_root
 
 
 
@@ -316,6 +411,14 @@ class AMReXAgentConfig(BaseModel):
     erf_repo_path: Optional[Path] = Field(
         default_factory=lambda: _repo_path_from_env("ERF_REPO_PATH", "ERF"),
         description="Path to ERF repository (Energy Research and Forecasting)"
+    )
+    erf_executable_path: Optional[Path] = Field(
+        default=None,
+        description=(
+            "Optional explicit ERF executable path. "
+            "When unset, runners fall back to case-local search first, then "
+            "derive a central ERF build directory (Exec/<group>)."
+        ),
     )
 
     # Plasma/Accelerator (very well documented)
@@ -484,6 +587,85 @@ class AMReXAgentConfig(BaseModel):
         le=1.0,
         description="Weight for FAISS semantic scoring in architect service (co-primary with metrics). "
                     "Was 0.20 (hybrid), now 0.5 (FAISS-first architecture)."
+    )
+
+    # === Baseline Selection Weights (Benchmark Tuning) ===
+    simple_weight_kb_relevance: float = Field(
+        default=0.40,
+        ge=0.0,
+        description="Simple strategy baseline weight: knowledge-base relevance bucket."
+    )
+    simple_weight_metrics: float = Field(
+        default=0.25,
+        ge=0.0,
+        description="Simple strategy baseline weight: case metrics bucket."
+    )
+    simple_weight_path_heuristics: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Simple strategy baseline weight: path heuristics bucket."
+    )
+    simple_weight_domain_specific: float = Field(
+        default=0.25,
+        ge=0.0,
+        description="Simple strategy baseline weight: domain-specific bucket."
+    )
+    simple_weight_faiss_semantic: float = Field(
+        default=0.50,
+        ge=0.0,
+        description="Simple strategy baseline weight: FAISS semantic bucket."
+    )
+    simple_case_hint_min_total: float = Field(
+        default=0.30,
+        ge=0.0,
+        description=(
+            "Simple strategy threshold gate for LLM-selected case promotion: "
+            "minimum total score required for the hinted case."
+        ),
+    )
+    simple_case_hint_max_gap: float = Field(
+        default=0.06,
+        ge=0.0,
+        description=(
+            "Simple strategy threshold gate for LLM-selected case promotion: "
+            "maximum allowed score gap between top candidate and hinted case."
+        ),
+    )
+
+    hierarchical_weight_physics_parameters: float = Field(
+        default=0.30,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: physics_parameters index."
+    )
+    hierarchical_weight_grid_specifications: float = Field(
+        default=0.20,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: grid_specifications index."
+    )
+    hierarchical_weight_development_activity: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: development_activity index."
+    )
+    hierarchical_weight_configuration_complexity: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: configuration_complexity index."
+    )
+    hierarchical_weight_path_hierarchy: float = Field(
+        default=0.15,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: path_hierarchy index."
+    )
+    hierarchical_weight_domain_models: float = Field(
+        default=0.10,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: domain_models index."
+    )
+    hierarchical_weight_resource_requirements: float = Field(
+        default=0.05,
+        ge=0.0,
+        description="Hierarchical strategy baseline weight: resource_requirements index."
     )
 
     # === Indexing Strategy Configuration ===
@@ -889,6 +1071,13 @@ class AMReXAgentConfig(BaseModel):
         self.benchmark_environment_lockfile = resolved_lockfile
         if self.benchmark_require_lockfile and not resolved_lockfile.exists():
             raise ValueError(f"benchmark_environment_lockfile_missing: {resolved_lockfile}")
+
+        if "faiss_db_path" not in fields_set:
+            faiss_root = resolve_database_path("faiss")
+            self.faiss_db_path = resolve_faiss_db_path_for_provider(
+                faiss_root=faiss_root,
+                provider=self.embedding_provider,
+            )
 
         self.repositories = {
             'PeleC': self.pelec_repo_path,
