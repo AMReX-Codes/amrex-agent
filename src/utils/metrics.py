@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import time
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Iterator
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,25 @@ _iteration_var: ContextVar[int | None] = ContextVar("metrics_iteration", default
 _extra_var: ContextVar[dict[str, Any] | None] = ContextVar("metrics_extra", default=None)
 _stage_start_var: ContextVar[float | None] = ContextVar("metrics_stage_start", default=None)
 _node_start_var: ContextVar[float | None] = ContextVar("metrics_node_start", default=None)
+
+DEFAULT_P95_LATENCY_TARGET_MS = 500.0
+DEFAULT_MAX_CONCURRENCY = 8
+POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER = "post_incident_risk_matrix_feedback"
+_PRICING_PATH = Path(__file__).resolve().parents[2] / "database" / "pricing.yaml"
+_DEFAULT_PRICING_TABLE: dict[str, dict[str, Any]] = {
+    "gpt-4-turbo": {
+        "provider": "openai",
+        "input_cost_per_1k": 0.01,
+        "output_cost_per_1k": 0.03,
+        "currency": "USD",
+    },
+    "claude-3-5-sonnet-20250514": {
+        "provider": "anthropic",
+        "input_cost_per_1k": 0.003,
+        "output_cost_per_1k": 0.015,
+        "currency": "USD",
+    },
+}
 
 
 @contextmanager
@@ -58,6 +79,97 @@ def metrics_extra(extra: dict[str, Any] | None) -> Iterator[None]:
         yield
     finally:
         _extra_var.reset(token)
+
+
+def normalize_metrics_event_record(
+    payload: dict[str, Any],
+    *,
+    workflow_id: str | None = None,
+) -> dict[str, Any]:
+    """Normalize persisted metrics records for JSONL writes."""
+    normalized = dict(payload)
+    existing_workflow_id = normalized.get("workflow_id")
+    if not existing_workflow_id:
+        normalized["workflow_id"] = workflow_id or "unknown"
+    return normalized
+
+
+def _clean_text(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    return cleaned or None
+
+
+def normalize_post_incident_feedback_records(payload: Any) -> list[dict[str, str]]:
+    """Normalize post-incident risk matrix feedback payloads."""
+    if payload is None:
+        return []
+
+    if isinstance(payload, dict):
+        entries = [payload]
+    elif isinstance(payload, list):
+        entries = payload
+    else:
+        return []
+
+    normalized: list[dict[str, str]] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        record: dict[str, str] = {}
+        for key in (
+            "incident_id",
+            "risk_id",
+            "owner",
+            "update_summary",
+            "mitigation_evidence_ref",
+            "reviewed_at",
+        ):
+            text = _clean_text(entry.get(key))
+            if text is not None:
+                record[key] = text
+        if record:
+            normalized.append(record)
+    return normalized
+
+
+def has_post_incident_risk_matrix_feedback(payload: Any) -> bool:
+    """Return True when at least one complete risk-feedback record exists."""
+    required_fields = {
+        "incident_id",
+        "risk_id",
+        "owner",
+        "update_summary",
+        "mitigation_evidence_ref",
+        "reviewed_at",
+    }
+    normalized = normalize_post_incident_feedback_records(payload)
+    return any(required_fields.issubset(record) for record in normalized)
+
+
+def collect_post_incident_risk_matrix_feedback(state: dict[str, Any]) -> dict[str, Any]:
+    """Collect normalized feedback evidence for risk-matrix updates."""
+    payload = state.get(POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER)
+    if payload is None:
+        payload = state.get("risk_matrix_feedback")
+
+    feedback_records = normalize_post_incident_feedback_records(payload)
+    return {
+        "feedback_records": feedback_records,
+        "feedback_complete": has_post_incident_risk_matrix_feedback(payload),
+    }
+
+
+def _append_jsonl_record(path: str, payload: dict[str, Any], *, config: Any | None = None) -> None:
+    record = dict(payload)
+    if config is not None:
+        from src.utils.privacy import sanitize_payload
+
+        record = sanitize_payload(record, config=config)
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, default=str))
+        handle.write("\n")
 
 
 class MetricsCollector:
@@ -132,6 +244,9 @@ class MetricsCollector:
         validation_summary = _aggregate_validation(events)
         if validation_summary:
             summary["validation"] = validation_summary
+        performance_summary = _aggregate_performance(events)
+        if performance_summary:
+            summary["performance"] = performance_summary
         return summary
 
     def build_workflow_summary(self, stages: list[str] | None = None) -> dict[str, Any]:
@@ -144,6 +259,7 @@ class MetricsCollector:
 
         stage_summaries: dict[str, Any] = {}
         tokens_by_stage: dict[str, dict[str, int]] = {}
+        cost_by_stage_usd: dict[str, float] = {}
         for stage in stages:
             summary = self.summarize_stage(stage)
             if summary:
@@ -155,6 +271,9 @@ class MetricsCollector:
                     "output": llm.get("completion_tokens", 0),
                     "total": llm.get("total_tokens", 0),
                 }
+                cost = llm.get("cost_usd")
+                if isinstance(cost, (int, float)):
+                    cost_by_stage_usd[stage] = round(float(cost), 3)
 
         llm_all = _aggregate_llm_usage(events)
         tokens_total_input = llm_all.get("prompt_tokens", 0)
@@ -171,6 +290,9 @@ class MetricsCollector:
             "models": models,
             "providers": providers,
         }
+        if cost_by_stage_usd:
+            summary["cost_by_stage_usd"] = cost_by_stage_usd
+            summary["cost_total_usd"] = round(sum(cost_by_stage_usd.values()), 3)
         if stage_summaries:
             summary["stages"] = stage_summaries
         return summary
@@ -182,15 +304,8 @@ class MetricsCollector:
         if not self._events:
             return
         try:
-            with open(path, "w", encoding="utf-8") as handle:
-                for event in self._events:
-                    payload = event
-                    if config is not None:
-                        from src.utils.privacy import sanitize_payload
-
-                        payload = sanitize_payload(event, config=config)
-                    handle.write(json.dumps(payload, default=str))
-                    handle.write("\n")
+            for event in self._events:
+                _append_jsonl_record(path, normalize_metrics_event_record(event), config=config)
         except Exception as exc:
             logger.warning("Failed to write metrics JSONL to %s: %s", path, exc)
 
@@ -253,6 +368,7 @@ def _aggregate_llm_usage(events: list[dict[str, Any]]) -> dict[str, Any]:
         "completion_tokens": 0,
         "total_tokens": 0,
         "by_model": {},
+        "cost_usd": 0.0,
     }
     for event in llm_events:
         data = event.get("data", {})
@@ -267,13 +383,97 @@ def _aggregate_llm_usage(events: list[dict[str, Any]]) -> dict[str, Any]:
         summary["total_tokens"] += total
         per_model = summary["by_model"].setdefault(
             model,
-            {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "cost_usd": 0.0},
         )
         per_model["calls"] += 1
         per_model["prompt_tokens"] += prompt
         per_model["completion_tokens"] += completion
         per_model["total_tokens"] += total
+        cost_usd, _ = _calculate_cost_usd(data)
+        if isinstance(cost_usd, (int, float)):
+            summary["cost_usd"] += float(cost_usd)
+            per_model["cost_usd"] += float(cost_usd)
+    for per_model in summary["by_model"].values():
+        per_model["cost_usd"] = round(float(per_model["cost_usd"]), 3)
+    summary["cost_usd"] = round(summary["cost_usd"], 3)
     return summary
+
+
+def _load_pricing_table() -> dict[str, dict[str, Any]]:
+    if not _PRICING_PATH.exists():
+        return dict(_DEFAULT_PRICING_TABLE)
+
+    try:
+        import yaml  # type: ignore
+    except Exception:
+        return dict(_DEFAULT_PRICING_TABLE)
+
+    try:
+        loaded = yaml.safe_load(_PRICING_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("Failed to parse pricing table %s: %s", _PRICING_PATH, exc)
+        return dict(_DEFAULT_PRICING_TABLE)
+
+    if isinstance(loaded, dict):
+        models = loaded.get("models")
+        if isinstance(models, dict):
+            merged = dict(_DEFAULT_PRICING_TABLE)
+            for model_name, details in models.items():
+                if isinstance(model_name, str) and isinstance(details, dict):
+                    merged[model_name] = dict(details)
+            return merged
+
+    return dict(_DEFAULT_PRICING_TABLE)
+
+
+def _find_pricing_model(
+    model: str | None,
+    provider: str | None,
+    pricing_table: dict[str, dict[str, Any]],
+) -> str | None:
+    if model and model in pricing_table:
+        return model
+
+    if provider:
+        for candidate, details in pricing_table.items():
+            if isinstance(details, dict) and details.get("provider") == provider:
+                return candidate
+
+    return None
+
+
+def _calculate_cost_usd(
+    usage: dict[str, Any],
+    *,
+    pricing_table: dict[str, dict[str, Any]] | None = None,
+) -> tuple[float | None, str | None]:
+    table = pricing_table if pricing_table is not None else _load_pricing_table()
+    model = usage.get("model")
+    provider = usage.get("provider")
+    pricing_model = _find_pricing_model(model, provider, table)
+    if pricing_model is None:
+        return None, None
+
+    rates = table.get(pricing_model, {})
+    if rates.get("currency") != "USD":
+        return None, pricing_model
+
+    input_rate = rates.get("input_cost_per_1k")
+    output_rate = rates.get("output_cost_per_1k")
+    if not isinstance(input_rate, (int, float)) or not isinstance(output_rate, (int, float)):
+        return None, pricing_model
+
+    prompt_tokens = usage.get("prompt_tokens") or 0
+    completion_tokens = usage.get("completion_tokens") or 0
+    if not isinstance(prompt_tokens, (int, float)):
+        prompt_tokens = 0
+    if not isinstance(completion_tokens, (int, float)):
+        completion_tokens = 0
+
+    cost = ((float(prompt_tokens) / 1000.0) * float(input_rate)) + (
+        (float(completion_tokens) / 1000.0) * float(output_rate)
+    )
+    return round(cost, 6), pricing_model
 
 
 def _aggregate_retrieval(events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -310,6 +510,123 @@ def _aggregate_models(events: list[dict[str, Any]]) -> tuple[list[str], list[str
         if provider and provider not in providers:
             providers.append(provider)
     return models, providers
+
+
+def _to_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _to_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _percentile(values: list[float], percentile: float) -> float | None:
+    if not values:
+        return None
+    if percentile <= 0:
+        return min(values)
+    if percentile >= 100:
+        return max(values)
+    ordered = sorted(values)
+    rank = math.ceil((percentile / 100.0) * len(ordered))
+    index = min(max(rank - 1, 0), len(ordered) - 1)
+    return ordered[index]
+
+
+def _extract_latency_ms(payload: dict[str, Any]) -> float | None:
+    for field in ("latency_ms", "duration_ms", "elapsed_ms", "wall_time_ms"):
+        latency = _to_float(payload.get(field))
+        if latency is not None:
+            return latency
+    return None
+
+
+def _extract_concurrency(payload: dict[str, Any]) -> int | None:
+    for field in ("concurrency", "in_flight", "active_requests", "parallelism"):
+        concurrency = _to_int(payload.get(field))
+        if concurrency is not None:
+            return concurrency
+    return None
+
+
+def _aggregate_performance(events: list[dict[str, Any]]) -> dict[str, Any]:
+    latencies: list[float] = []
+    concurrencies: list[int] = []
+    latency_target = DEFAULT_P95_LATENCY_TARGET_MS
+    concurrency_limit = DEFAULT_MAX_CONCURRENCY
+    node_metrics: dict[str, dict[str, Any]] = {}
+
+    for event in events:
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        node = event.get("node") or "unknown"
+        per_node = node_metrics.setdefault(
+            node,
+            {"event_count": 0, "latencies_ms": [], "concurrencies": []},
+        )
+        per_node["event_count"] += 1
+
+        event_latency_target = _to_float(data.get("p95_target_ms"))
+        if event_latency_target is not None:
+            latency_target = min(latency_target, event_latency_target)
+
+        event_concurrency_limit = _to_int(data.get("max_concurrency"))
+        if event_concurrency_limit is not None:
+            concurrency_limit = min(concurrency_limit, event_concurrency_limit)
+
+        latency = _extract_latency_ms(data)
+        if latency is not None:
+            latencies.append(latency)
+            per_node["latencies_ms"].append(latency)
+
+        concurrency = _extract_concurrency(data)
+        if concurrency is not None:
+            concurrencies.append(concurrency)
+            per_node["concurrencies"].append(concurrency)
+
+    if not latencies and not concurrencies:
+        return {}
+
+    p95_latency_ms = _percentile(latencies, 95.0)
+    max_observed_concurrency = max(concurrencies) if concurrencies else None
+    summary: dict[str, Any] = {
+        "p95_latency_target_ms": latency_target,
+        "max_concurrency_limit": concurrency_limit,
+    }
+    if p95_latency_ms is not None:
+        summary["p95_latency_ms"] = p95_latency_ms
+        summary["p95_latency_ok"] = p95_latency_ms <= latency_target
+    if max_observed_concurrency is not None:
+        summary["max_observed_concurrency"] = max_observed_concurrency
+        summary["concurrency_ok"] = max_observed_concurrency <= concurrency_limit
+
+    per_node_summary: dict[str, dict[str, Any]] = {}
+    for node, metrics in node_metrics.items():
+        latencies_ms = metrics["latencies_ms"]
+        node_p95 = _percentile(latencies_ms, 95.0) if latencies_ms else None
+        node_max_concurrency = max(metrics["concurrencies"]) if metrics["concurrencies"] else None
+        node_summary: dict[str, Any] = {"event_count": metrics["event_count"]}
+        if node_p95 is not None:
+            node_summary["p95_latency_ms"] = node_p95
+            node_summary["p95_latency_ok"] = node_p95 <= latency_target
+        if node_max_concurrency is not None:
+            node_summary["max_observed_concurrency"] = node_max_concurrency
+            node_summary["concurrency_ok"] = node_max_concurrency <= concurrency_limit
+        per_node_summary[node] = node_summary
+    summary["per_node"] = per_node_summary
+
+    return summary
 
 
 def normalize_average_token_fields(row: dict[str, Any]) -> dict[str, float | None]:
@@ -380,3 +697,117 @@ def validate_risk_owner_status_updates(
         "failed_risks": failed_risks,
         "reason": "ok" if not failed_risks else "risk_owner_status_updates_not_met",
     }
+
+
+UNNUMBERED_185_ID = "UNNUMBERED-185"
+_BENCHMARK_REVIEW_KEYS = ("benchmark_reviews", "benchmark_findings", "benchmark_postmortems")
+_POSTMORTEM_REVIEW_KEYS = ("postmortem_reviews", "incident_postmortems", "retrospective_reviews")
+_RISK_UPDATE_KEYS = ("risk_register_updates", "new_risks", "risk_feedback_updates")
+
+
+def _state_list_entries(state: dict[str, Any], keys: tuple[str, ...]) -> list[dict[str, Any]]:
+    for key in keys:
+        value = state.get(key)
+        if isinstance(value, list):
+            entries = [entry for entry in value if isinstance(entry, dict)]
+            if entries:
+                return entries
+    return []
+
+
+def _normalized_risk_id(value: Any) -> str:
+    if not isinstance(value, str):
+        return ""
+    return value.strip().lower()
+
+
+def _extract_review_risk_ids(entries: list[dict[str, Any]]) -> set[str]:
+    risk_ids: set[str] = set()
+    for entry in entries:
+        for key in ("risk_id", "risk", "id"):
+            normalized = _normalized_risk_id(entry.get(key))
+            if normalized:
+                risk_ids.add(normalized)
+                break
+    return risk_ids
+
+
+def _extract_update_risk_ids(entries: list[dict[str, Any]]) -> set[str]:
+    risk_ids: set[str] = set()
+    for entry in entries:
+        normalized = _normalized_risk_id(entry.get("risk_id"))
+        if normalized:
+            risk_ids.add(normalized)
+            continue
+
+        risks = entry.get("risks")
+        if isinstance(risks, list):
+            for item in risks:
+                normalized = _normalized_risk_id(item)
+                if normalized:
+                    risk_ids.add(normalized)
+    return risk_ids
+
+
+def benchmark_postmortem_risk_feedback_passed(state: dict[str, Any]) -> bool:
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            if approval.get("decision") != "approved":
+                continue
+            details = approval.get("details", {})
+            if isinstance(details, dict) and details.get("criterion") == UNNUMBERED_185_ID:
+                return True
+
+    benchmark_reviews = _state_list_entries(state, _BENCHMARK_REVIEW_KEYS)
+    if not benchmark_reviews:
+        return False
+
+    postmortem_reviews = _state_list_entries(state, _POSTMORTEM_REVIEW_KEYS)
+    if not postmortem_reviews:
+        return False
+
+    review_risk_ids = _extract_review_risk_ids(benchmark_reviews)
+    review_risk_ids.update(_extract_review_risk_ids(postmortem_reviews))
+    if not review_risk_ids:
+        return False
+
+    risk_updates = _state_list_entries(state, _RISK_UPDATE_KEYS)
+    if not risk_updates:
+        return False
+
+    updated_risk_ids = _extract_update_risk_ids(risk_updates)
+    if not updated_risk_ids:
+        return False
+
+    return review_risk_ids.issubset(updated_risk_ids)
+
+
+def benchmark_postmortem_risk_feedback_failure_reason(state: dict[str, Any]) -> str:
+    if benchmark_postmortem_risk_feedback_passed(state):
+        return "benchmark_postmortem_risk_feedback_satisfied"
+
+    benchmark_reviews = _state_list_entries(state, _BENCHMARK_REVIEW_KEYS)
+    if not benchmark_reviews:
+        return "benchmark_reviews_missing"
+
+    postmortem_reviews = _state_list_entries(state, _POSTMORTEM_REVIEW_KEYS)
+    if not postmortem_reviews:
+        return "postmortem_reviews_missing"
+
+    review_risk_ids = _extract_review_risk_ids(benchmark_reviews)
+    review_risk_ids.update(_extract_review_risk_ids(postmortem_reviews))
+    if not review_risk_ids:
+        return "review_risks_missing"
+
+    risk_updates = _state_list_entries(state, _RISK_UPDATE_KEYS)
+    if not risk_updates:
+        return "risk_updates_missing"
+
+    updated_risk_ids = _extract_update_risk_ids(risk_updates)
+    if not updated_risk_ids:
+        return "risk_updates_missing"
+
+    return "risk_updates_incomplete"

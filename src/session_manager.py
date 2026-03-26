@@ -7,6 +7,7 @@ from typing import Any
 
 
 SESSION_DEPENDENCY_COMPLETION_MARKER = "session_dependency_complete"
+FEATURE_A_DEPENDENCY_ID = "feature_a_dependency_gate"
 
 
 @dataclass(frozen=True)
@@ -205,3 +206,56 @@ def is_session_dependency_complete(state: dict[str, Any]) -> bool:
         )
 
     return False
+
+
+def resolve_dependency_state(state: dict[str, Any]) -> dict[str, Any]:
+    """Return state enriched with persisted session context when available."""
+    session_id = state.get("session_id")
+    if not session_id:
+        return dict(state)
+    return merge_session_context(
+        session_id=str(session_id),
+        arguments=dict(state),
+    )
+
+
+def feature_a_dependency_passed(state: dict[str, Any]) -> bool:
+    """
+    Return True when Feature A verification marker is present and passing.
+
+    Supported marker surfaces:
+    - top-level bool `feature_a_verified` or `feature_a_verification_passed`
+    - gate approval record with details.criterion == FEATURE_A_DEPENDENCY_ID
+    """
+    explicit_marker = state.get("feature_a_verified")
+    if isinstance(explicit_marker, bool):
+        return explicit_marker
+
+    alt_marker = state.get("feature_a_verification_passed")
+    if isinstance(alt_marker, bool):
+        return alt_marker
+
+    approvals = state.get("gate_approvals", [])
+    if not isinstance(approvals, list):
+        return False
+
+    for approval in approvals:
+        if not isinstance(approval, dict):
+            continue
+        details = approval.get("details", {})
+        if not isinstance(details, dict):
+            continue
+        if details.get("criterion") != FEATURE_A_DEPENDENCY_ID:
+            continue
+        decision = str(approval.get("decision", "")).lower()
+        if decision in {"approved", "passed", "complete", "completed"}:
+            return True
+        return False
+    return False
+
+
+def feature_a_dependency_failure_reason(state: dict[str, Any]) -> str:
+    """Return a stable reason code when Feature A dependency gate fails."""
+    if feature_a_dependency_passed(state):
+        return "feature_a_dependency_satisfied"
+    return "feature_a_dependency_unverified"

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 import re
+import shutil
+import subprocess
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -13,20 +15,44 @@ from src.nodes.architect_node import architect_node
 from src.nodes.clarification_node import clarification_node
 from src.nodes.input_writer_node import input_writer_node
 from src.nodes.intent_extraction_node import intent_extraction_node
-from src.nodes.paper_validator_node import paper_validator_node
 from src.nodes.sweep_detection_node import sweep_detection_node
 from src.benchmark_runner import has_migration_plan_schema_mapping_and_rollback
 from src.services.plan import (
+    AMENDMENT_MODULE_LOC_ID,
+    GLOBAL_FUNCTION_COMPLEXITY_ID,
+    IMPL_TEST_SYNC_ID,
+    amendment_module_loc_failure_reason,
+    amendment_module_loc_passed,
+    global_function_complexity_failure_reason,
+    global_function_complexity_passed,
     has_checklist_implementation_locations,
+    impl_locations_tests_synced_failure_reason,
+    impl_locations_tests_synced_passed,
     validate_feature_blocks_tests_fixtures,
     validate_new_file_helper_extraction,
 )
+from src.services.workflow_store import (
+    POSTGRESQL_MIGRATION_EVIDENCE_MARKER,
+    collect_postgresql_migration_evidence,
+    has_postgresql_migration_index_growth_proof,
+)
 from src.session_manager import (
+    FEATURE_A_DEPENDENCY_ID,
     SESSION_DEPENDENCY_COMPLETION_MARKER,
+    feature_a_dependency_failure_reason,
+    feature_a_dependency_passed,
     is_b4_implementation_sequence_complete,
     is_session_dependency_complete,
+    resolve_dependency_state,
 )
-from src.utils.metrics import validate_risk_owner_status_updates
+from src.utils.metrics import (
+    POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER,
+    UNNUMBERED_185_ID,
+    benchmark_postmortem_risk_feedback_failure_reason,
+    benchmark_postmortem_risk_feedback_passed,
+    collect_post_incident_risk_matrix_feedback,
+    validate_risk_owner_status_updates,
+)
 
 
 _ACCEPTANCE_MAPPING_KEYS = (
@@ -35,6 +61,87 @@ _ACCEPTANCE_MAPPING_KEYS = (
     "test_cases",
     "test_ids",
 )
+
+PHASE1_FEATURE_TRACE_MARKER = "use_case_feature_trace"
+REQUIRED_BEHAVIOR_MARKER = "required_behavior"
+CLAIMS_RESULTS_ARTIFACTS_MARKER = "claims_results_artifacts"
+CROSS_REFERENCE_FEATURE_IDS_MARKER = "cross_reference_feature_ids"
+BENCHMARK_CACHE_HIT_RATE_MARKER = "benchmark_cache_hit_rate"
+FEATURE_TEST_COVERAGE_MARKER = "feature_test_coverage"
+_PHASE1_FEATURE_ID_RE = re.compile(r"^F[1-6](?:\.\d+|[A-Z])?$")
+_RESULT_ARTIFACT_PREFIXES = ("results/", "benchmark_results/")
+LEVEL4_DEPTH_GUIDANCE_ID = "UNNUMBERED-055"
+LEVEL4_BASELINE_MIN_LINES = 80
+LEVEL4_BASELINE_MAX_LINES = 120
+LEVEL4_EXPANDED_MIN_LINES = 500
+LEVEL4_EXPANDED_MAX_LINES = 1000
+LEVEL4_EXPANSION_FLAGS = (
+    "near_implementation",
+    "high_complexity",
+    "camera_ready_rigor",
+)
+PLAN_GENERATION_P95_ID = "UNNUMBERED-157"
+PLAN_GENERATION_P95_MAX_SECONDS = 180.0
+STABLE_ERROR_TAXONOMY_ID = "UNNUMBERED-238"
+STABLE_ERROR_TAXONOMY_VERSION = "v1"
+UC_ROW_TRACEABLE_ARTIFACT_ID = "UNNUMBERED-038"
+STABLE_ERROR_REASON_CODES = frozenset(
+    {
+        "feature_a_dependency_unverified",
+        "amendment_module_helper_extraction_missing",
+        "global_function_complexity_threshold_exceeded",
+        "level4_depth_guidance_missing",
+        "level4_depth_guidance_out_of_range",
+        "plan_generation_latency_missing",
+        "plan_generation_p95_exceeded",
+        "error_taxonomy_version_mismatch",
+        "error_taxonomy_reason_code_unknown",
+        "error_taxonomy_contract_invalid",
+        "uc_traceability_rows_missing",
+        "uc_traceable_artifact_missing",
+        "uc_traceable_artifact_stale",
+        "impl_tests_sync_missing",
+        "impl_locations_missing",
+        "tests_missing",
+    }
+)
+
+
+def collect_radon_complexity_evidence(
+    target: str = "src/services/plan.py",
+) -> dict[str, Any]:
+    """Collect radon complexity gate evidence for a target module."""
+    criterion = "radon_cc_max_C"
+    radon_bin = shutil.which("radon")
+    if not radon_bin:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": "radon missing in PATH",
+        }
+
+    cmd = [radon_bin, "cc", target, "-n", "C"]
+    try:
+        completed = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    except OSError as exc:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": f"radon invocation failed: {exc}",
+        }
+
+    output = (completed.stdout or "").strip()
+    return {
+        "criterion": criterion,
+        "radon_available": True,
+        "passed": completed.returncode == 0,
+        "exit_code": completed.returncode,
+        "output": output,
+        "error": (completed.stderr or "").strip(),
+        "command": cmd,
+    }
 
 
 def _normalize_test_mappings(value: Any) -> list[str]:
@@ -81,28 +188,260 @@ _FEATURE_BLOCK_HEADER_RE = re.compile(r"^##\s+\[([^\]]+)\]\s*(.+?)\s*$")
 _TESTS_FIXTURES_LINE_RE = re.compile(r"^tests/fixtures\s*:\s*(.+)$", re.IGNORECASE)
 
 
+def _extract_plan_generation_latency_seconds(entry: dict[str, Any]) -> float | None:
+    details = entry.get("details")
+    if not isinstance(details, dict):
+        return None
+
+    raw_latency = details.get("plan_generation_latency_seconds")
+    if isinstance(raw_latency, (int, float)) and raw_latency >= 0:
+        return float(raw_latency)
+
+    raw_latency_ms = details.get("plan_generation_latency_ms")
+    if isinstance(raw_latency_ms, (int, float)) and raw_latency_ms >= 0:
+        return float(raw_latency_ms) / 1000.0
+
+    return None
+
+
+def _collect_plan_generation_latencies_seconds(state: dict) -> list[float]:
+    direct_latencies = state.get("plan_generation_latencies_seconds")
+    if isinstance(direct_latencies, list):
+        values = [float(value) for value in direct_latencies if isinstance(value, (int, float))]
+        if values:
+            return values
+
+    workflow_history = state.get("workflow_history")
+    if not isinstance(workflow_history, list):
+        return []
+
+    latencies: list[float] = []
+    for entry in workflow_history:
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("node") != "architect":
+            continue
+        latency = _extract_plan_generation_latency_seconds(entry)
+        if latency is not None:
+            latencies.append(latency)
+    return latencies
+
+
+def _p95_seconds(samples: list[float]) -> float | None:
+    if not samples:
+        return None
+    ordered = sorted(samples)
+    rank = max(0, math.ceil(0.95 * len(ordered)) - 1)
+    return ordered[rank]
+
+
+def plan_generation_p95_passed(state: dict) -> bool:
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            if approval.get("decision") != "approved":
+                continue
+            details = approval.get("details", {})
+            if isinstance(details, dict) and details.get("criterion") == PLAN_GENERATION_P95_ID:
+                return True
+
+    p95_seconds = _p95_seconds(_collect_plan_generation_latencies_seconds(state))
+    return p95_seconds is not None and p95_seconds <= PLAN_GENERATION_P95_MAX_SECONDS
+
+
+def plan_generation_p95_failure_reason(state: dict) -> str:
+    if plan_generation_p95_passed(state):
+        return "plan_generation_p95_satisfied"
+
+    latencies = _collect_plan_generation_latencies_seconds(state)
+    if not latencies:
+        return "plan_generation_latency_missing"
+
+    return "plan_generation_p95_exceeded"
+
+
+def _error_reason_codes_from_gate_approvals(gate_approvals: list[Any]) -> list[str]:
+    reason_codes: list[str] = []
+    for approval in gate_approvals:
+        if not isinstance(approval, dict):
+            continue
+        details = approval.get("details")
+        if not isinstance(details, dict):
+            continue
+        reason_code = details.get("reason_code")
+        if isinstance(reason_code, str) and reason_code:
+            reason_codes.append(reason_code)
+    return reason_codes
+
+
+def _error_reason_codes_from_state(state: dict) -> list[str]:
+    reason_codes: set[str] = set()
+
+    errors_active = state.get("errors_active", [])
+    if isinstance(errors_active, list):
+        reason_codes.update(code for code in errors_active if isinstance(code, str) and code)
+
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        reason_codes.update(_error_reason_codes_from_gate_approvals(gate_approvals))
+
+    return sorted(reason_codes)
+
+
+def _error_taxonomy_contract_valid(state: dict) -> bool:
+    contract = state.get("error_taxonomy_contract")
+    if contract is None:
+        return True
+    if not isinstance(contract, dict):
+        return False
+
+    if contract.get("version") != STABLE_ERROR_TAXONOMY_VERSION:
+        return False
+
+    contract_codes = contract.get("reason_codes")
+    if not isinstance(contract_codes, list):
+        return False
+
+    normalized_codes = sorted(code for code in contract_codes if isinstance(code, str) and code)
+    return normalized_codes == sorted(STABLE_ERROR_REASON_CODES)
+
+
+def stable_error_taxonomy_passed(state: dict) -> bool:
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            if approval.get("decision") != "approved":
+                continue
+            details = approval.get("details", {})
+            if isinstance(details, dict) and details.get("criterion") == STABLE_ERROR_TAXONOMY_ID:
+                return True
+
+    taxonomy_version = state.get("error_taxonomy_version", STABLE_ERROR_TAXONOMY_VERSION)
+    if taxonomy_version != STABLE_ERROR_TAXONOMY_VERSION:
+        return False
+
+    reason_codes = _error_reason_codes_from_state(state)
+    if not all(code in STABLE_ERROR_REASON_CODES for code in reason_codes):
+        return False
+
+    return _error_taxonomy_contract_valid(state)
+
+
+def stable_error_taxonomy_failure_reason(state: dict) -> str:
+    if stable_error_taxonomy_passed(state):
+        return "error_taxonomy_satisfied"
+
+    taxonomy_version = state.get("error_taxonomy_version", STABLE_ERROR_TAXONOMY_VERSION)
+    if taxonomy_version != STABLE_ERROR_TAXONOMY_VERSION:
+        return "error_taxonomy_version_mismatch"
+
+    reason_codes = _error_reason_codes_from_state(state)
+    if any(code not in STABLE_ERROR_REASON_CODES for code in reason_codes):
+        return "error_taxonomy_reason_code_unknown"
+
+    if not _error_taxonomy_contract_valid(state):
+        return "error_taxonomy_contract_invalid"
+
+    return "error_taxonomy_contract_invalid"
+
+
+def _level4_expansion_enabled(state: dict, section: dict[str, Any]) -> bool:
+    if any(section.get(flag) is True for flag in LEVEL4_EXPANSION_FLAGS):
+        return True
+
+    context = state.get("level4_depth_context")
+    if isinstance(context, dict):
+        return any(context.get(flag) is True for flag in LEVEL4_EXPANSION_FLAGS)
+    return False
+
+
+def _level4_line_count_valid(state: dict, section: dict[str, Any]) -> bool:
+    line_count = section.get("line_count")
+    if not isinstance(line_count, int):
+        return False
+
+    if _level4_expansion_enabled(state, section):
+        return LEVEL4_EXPANDED_MIN_LINES <= line_count <= LEVEL4_EXPANDED_MAX_LINES
+    return LEVEL4_BASELINE_MIN_LINES <= line_count <= LEVEL4_BASELINE_MAX_LINES
+
+
+def level4_depth_guidance_passed(state: dict) -> bool:
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            if approval.get("decision") != "approved":
+                continue
+            details = approval.get("details", {})
+            if isinstance(details, dict) and details.get("criterion") == LEVEL4_DEPTH_GUIDANCE_ID:
+                return True
+
+    sections = state.get("level4_sections")
+    if not isinstance(sections, list) or not sections:
+        return False
+
+    for section in sections:
+        if not isinstance(section, dict):
+            return False
+        if not _level4_line_count_valid(state, section):
+            return False
+    return True
+
+
+def level4_depth_guidance_failure_reason(state: dict) -> str:
+    if level4_depth_guidance_passed(state):
+        return "level4_depth_guidance_satisfied"
+
+    sections = state.get("level4_sections")
+    if not isinstance(sections, list) or not sections:
+        return "level4_depth_guidance_missing"
+
+    return "level4_depth_guidance_out_of_range"
+
 def _route_after_clarification(state: dict) -> str:
     if state.get("clarification_needed", False):
         return "clarification_handler"
+    if _paper_validator_enabled(state):
+        return "paper_validator_node"
     return "input_writer_node"
 
 
 def _route_after_sweep_detection(state: dict) -> str:
-    if state.get("sweep_id") is None:
+    enforce_dependency_gate = state.get("enforce_feature_a_dependency_gate", False) is True
+    resolved_state = resolve_dependency_state(state) if enforce_dependency_gate else state
+    if enforce_dependency_gate and not feature_a_dependency_passed(resolved_state):
+        return "feature_a_dependency_handler"
+
+    if resolved_state.get("sweep_id") is None:
         return "architect_node"
 
-    if not is_session_dependency_complete(state):
+    session_gate_flag = resolved_state.get("enforce_session_dependency_gate")
+    session_gate_required = bool(resolved_state.get("session_dependency_required"))
+    # Preserve legacy behavior: sweeps execute by default unless the
+    # session-dependency gate is explicitly enabled/required.
+    if session_gate_flag is False and not session_gate_required:
+        enforce_session_gate = False
+    elif session_gate_required or session_gate_flag is True:
+        enforce_session_gate = True
+    else:
+        enforce_session_gate = False
+    if enforce_session_gate and not is_session_dependency_complete(resolved_state):
         return "session_dependency_handler"
 
     # Preserve existing sweep behavior unless a validation_manifest is present.
     # When manifest context exists, enforce additional quality gates.
-    manifest = state.get("validation_manifest")
+    manifest = resolved_state.get("validation_manifest")
     if isinstance(manifest, dict):
         if not (
-            is_b4_implementation_sequence_complete(state)
-            and has_checklist_implementation_locations(state)
-            and has_acceptance_checklist_mapped_tests(state)
-            and has_migration_plan_schema_mapping_and_rollback(state)
+            is_b4_implementation_sequence_complete(resolved_state)
+            and has_checklist_implementation_locations(resolved_state)
+            and has_acceptance_checklist_mapped_tests(resolved_state)
+            and has_migration_plan_schema_mapping_and_rollback(resolved_state)
         ):
             return "architect_node"
 
@@ -110,10 +449,303 @@ def _route_after_sweep_detection(state: dict) -> str:
 
 
 def _paper_validator_enabled(state: dict[str, Any]) -> bool:
+    if state.get("paper_validator_enabled", False) or state.get("paper_source"):
+        return True
     config = state.get("config")
     if isinstance(config, dict):
         return bool(config.get("paper_validator_enabled", False))
     return bool(getattr(config, "paper_validator_enabled", False))
+
+
+def _route_after_complexity_evidence(state: dict) -> str:
+    if not state.get("enforce_radon_complexity_evidence", False):
+        return _route_after_phase1_traceability(state)
+
+    evidence = state.get("radon_complexity_evidence")
+    if isinstance(evidence, dict) and evidence.get("radon_available", False):
+        return _route_after_phase1_traceability(state)
+    return "complexity_evidence_handler"
+
+
+def _has_phase1_feature_trace(state: dict) -> bool:
+    traceability = state.get(PHASE1_FEATURE_TRACE_MARKER)
+    if not isinstance(traceability, dict) or not traceability:
+        return False
+
+    for use_case_id, feature_ids in traceability.items():
+        if not isinstance(use_case_id, str) or not use_case_id.startswith("UC"):
+            return False
+
+        if isinstance(feature_ids, str):
+            normalized_feature_ids = [feature_ids]
+        elif isinstance(feature_ids, list):
+            normalized_feature_ids = feature_ids
+        else:
+            return False
+
+        if not normalized_feature_ids:
+            return False
+
+        for feature_id in normalized_feature_ids:
+            if not isinstance(feature_id, str) or not _PHASE1_FEATURE_ID_RE.match(feature_id):
+                return False
+
+    return True
+
+
+def _route_after_phase1_traceability(state: dict) -> str:
+    if not state.get("enforce_phase1_feature_trace", False):
+        return _route_after_required_behavior_item(state)
+    if _has_phase1_feature_trace(state):
+        return _route_after_required_behavior_item(state)
+    return "phase1_traceability_handler"
+
+
+def _has_required_behavior_item(state: dict) -> bool:
+    required_behavior = state.get(REQUIRED_BEHAVIOR_MARKER)
+    if isinstance(required_behavior, str):
+        return bool(required_behavior.strip())
+    if isinstance(required_behavior, list):
+        return bool(required_behavior) and all(
+            isinstance(item, str) and bool(item.strip()) for item in required_behavior
+        )
+    return False
+
+
+def _coerce_non_negative_float(value: Any) -> float | None:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(numeric) or numeric < 0:
+        return None
+    return numeric
+
+
+def _coerce_unit_interval_float(value: Any) -> float | None:
+    numeric = _coerce_non_negative_float(value)
+    if numeric is None or numeric > 1:
+        return None
+    return numeric
+
+
+def _extract_cache_stats_payload(state: dict[str, Any]) -> dict[str, Any] | None:
+    for key in ("benchmark_cache_stats", "embedding_cache_stats", "cache_stats"):
+        payload = state.get(key)
+        if isinstance(payload, dict):
+            return payload
+
+    workflow_history = state.get("workflow_history")
+    if not isinstance(workflow_history, list):
+        return None
+
+    for entry in reversed(workflow_history):
+        if not isinstance(entry, dict):
+            continue
+        details = entry.get("details")
+        if not isinstance(details, dict):
+            continue
+        for key in ("benchmark_cache_stats", "embedding_cache_stats", "cache_stats"):
+            payload = details.get(key)
+            if isinstance(payload, dict):
+                return payload
+    return None
+
+
+def _compute_benchmark_cache_hit_rate(state: dict[str, Any]) -> float | None:
+    direct_rate = _coerce_unit_interval_float(state.get(BENCHMARK_CACHE_HIT_RATE_MARKER))
+    if direct_rate is not None:
+        return direct_rate
+
+    for key in ("cache_hit_rate", "embedding_cache_hit_rate"):
+        direct_rate = _coerce_unit_interval_float(state.get(key))
+        if direct_rate is not None:
+            return direct_rate
+
+    cache_stats = _extract_cache_stats_payload(state)
+    if not isinstance(cache_stats, dict):
+        return None
+
+    hits = _coerce_non_negative_float(cache_stats.get("hits"))
+    if hits is None:
+        hits = _coerce_non_negative_float(cache_stats.get("cache_hits"))
+    if hits is None:
+        return None
+
+    total = _coerce_non_negative_float(cache_stats.get("total"))
+    if total is None:
+        total = _coerce_non_negative_float(cache_stats.get("requests"))
+    if total is None:
+        total = _coerce_non_negative_float(cache_stats.get("lookups"))
+    if total is None:
+        misses = _coerce_non_negative_float(cache_stats.get("misses"))
+        if misses is None:
+            misses = _coerce_non_negative_float(cache_stats.get("cache_misses"))
+        if misses is not None:
+            total = hits + misses
+
+    if total is None or total <= 0 or hits > total:
+        return None
+    return hits / total
+
+
+def _has_benchmark_cache_hit_rate(state: dict[str, Any]) -> bool:
+    return _compute_benchmark_cache_hit_rate(state) is not None
+
+
+def _route_after_required_behavior_item(state: dict) -> str:
+    if not state.get("enforce_required_behavior_item", False):
+        return _route_after_benchmark_cache_hit_rate(state)
+    if _has_required_behavior_item(state):
+        return _route_after_benchmark_cache_hit_rate(state)
+    return "required_behavior_handler"
+
+
+def _route_after_benchmark_cache_hit_rate(state: dict) -> str:
+    if not state.get("enforce_benchmark_cache_hit_rate", False):
+        return _route_after_claims_results_artifacts(state)
+    if _has_benchmark_cache_hit_rate(state):
+        return _route_after_claims_results_artifacts(state)
+    return "benchmark_cache_hit_rate_handler"
+
+
+def _is_results_artifact_path(path: str) -> bool:
+    normalized = path.strip().replace("\\", "/")
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized.startswith(_RESULT_ARTIFACT_PREFIXES)
+
+
+def _has_claims_results_artifacts(state: dict) -> bool:
+    claim_map = state.get(CLAIMS_RESULTS_ARTIFACTS_MARKER)
+    if not isinstance(claim_map, dict) or not claim_map:
+        return False
+
+    for claim_id, artifact_refs in claim_map.items():
+        if not isinstance(claim_id, str) or not claim_id.strip():
+            return False
+
+        if isinstance(artifact_refs, str):
+            normalized_artifact_refs = [artifact_refs]
+        elif isinstance(artifact_refs, list):
+            normalized_artifact_refs = artifact_refs
+        else:
+            return False
+
+        if not normalized_artifact_refs:
+            return False
+
+        for artifact_ref in normalized_artifact_refs:
+            if not isinstance(artifact_ref, str) or not _is_results_artifact_path(artifact_ref):
+                return False
+
+    return True
+
+
+def _route_after_claims_results_artifacts(state: dict) -> str:
+    if not state.get("enforce_claims_results_artifacts", False):
+        return _route_after_cross_reference_feature_ids(state)
+    if _has_claims_results_artifacts(state):
+        return _route_after_cross_reference_feature_ids(state)
+    return "claims_results_artifacts_handler"
+
+
+def _has_cross_reference_feature_ids(state: dict) -> bool:
+    cross_refs = state.get(CROSS_REFERENCE_FEATURE_IDS_MARKER)
+    if not isinstance(cross_refs, dict) or not cross_refs:
+        return False
+
+    for ref_id, feature_ids in cross_refs.items():
+        if not isinstance(ref_id, str) or not ref_id.strip():
+            return False
+
+        if isinstance(feature_ids, str):
+            normalized_feature_ids = [feature_ids]
+        elif isinstance(feature_ids, list):
+            normalized_feature_ids = feature_ids
+        else:
+            return False
+
+        if not normalized_feature_ids:
+            return False
+
+        for feature_id in normalized_feature_ids:
+            if not isinstance(feature_id, str) or not _PHASE1_FEATURE_ID_RE.match(feature_id):
+                return False
+
+    return True
+
+
+def _route_after_cross_reference_feature_ids(state: dict) -> str:
+    if not state.get("enforce_cross_reference_feature_ids", False):
+        return _route_after_postgresql_migration_evidence(state)
+    if _has_cross_reference_feature_ids(state):
+        return _route_after_postgresql_migration_evidence(state)
+    return "cross_reference_feature_ids_handler"
+
+
+def _route_after_postgresql_migration_evidence(state: dict) -> str:
+    if not state.get("enforce_postgresql_migration_evidence", False):
+        return _route_after_post_incident_risk_matrix_feedback(state)
+
+    evidence = collect_postgresql_migration_evidence(state)
+    if has_postgresql_migration_index_growth_proof(evidence):
+        return _route_after_post_incident_risk_matrix_feedback(state)
+    return "postgresql_migration_handler"
+
+
+def _route_after_post_incident_risk_matrix_feedback(state: dict) -> str:
+    if not state.get("enforce_post_incident_risk_matrix_feedback", False):
+        return _route_after_feature_test_coverage(state)
+
+    feedback = collect_post_incident_risk_matrix_feedback(state)
+    if feedback.get("feedback_complete", False):
+        return _route_after_feature_test_coverage(state)
+    return "post_incident_risk_matrix_feedback_handler"
+
+
+def _normalize_test_paths(test_paths: Any, required_prefix: str) -> bool:
+    if isinstance(test_paths, str):
+        normalized = [test_paths]
+    elif isinstance(test_paths, list):
+        normalized = test_paths
+    else:
+        return False
+
+    if not normalized:
+        return False
+
+    for path in normalized:
+        if not isinstance(path, str) or not path.startswith(required_prefix):
+            return False
+    return True
+
+
+def _has_unit_and_integration_feature_coverage(state: dict) -> bool:
+    coverage = state.get(FEATURE_TEST_COVERAGE_MARKER)
+    if not isinstance(coverage, dict) or not coverage:
+        return False
+
+    for feature_id, tests in coverage.items():
+        if not isinstance(feature_id, str) or not feature_id.strip():
+            return False
+        if not isinstance(tests, dict):
+            return False
+
+        if not _normalize_test_paths(tests.get("unit"), "tests/unit/"):
+            return False
+        if not _normalize_test_paths(tests.get("integration"), "tests/integration/"):
+            return False
+
+    return True
+
+
+def _route_after_feature_test_coverage(state: dict) -> str:
+    if not state.get("enforce_feature_test_coverage", False):
+        return "end"
+    if _has_unit_and_integration_feature_coverage(state):
+        return "end"
+    return "feature_test_coverage_handler"
 
 
 def _get_z_score(confidence_level: float) -> float:
@@ -207,13 +839,75 @@ def _build_strategy_confidence_report(state: dict[str, Any]) -> None:
 
 
 def _route_after_architect(state: dict[str, Any]) -> str:
+    if state.get("enforce_plan_generation_p95", False):
+        if not plan_generation_p95_passed(state):
+            return "plan_generation_p95_handler"
     _build_strategy_confidence_report(state)
     if _paper_validator_enabled(state):
         return "paper_validator_node"
     return "intent_extraction_node"
 
 
+def _paper_validator_mode2_enabled(state: dict) -> bool:
+    if state.get("paper_validator_enabled") is True:
+        return True
+
+    config = state.get("config")
+    if isinstance(config, dict):
+        return config.get("paper_validator_enabled", False) is True
+    return getattr(config, "paper_validator_enabled", False) is True
+
+
+def _route_after_input_writer(state: dict) -> str:
+    if state.get("enforce_level4_depth_guidance", False):
+        if not level4_depth_guidance_passed(state):
+            return "level4_depth_guidance_handler"
+    if state.get("enforce_amendment_module_loc", False):
+        if not amendment_module_loc_passed(state):
+            return "amendment_module_loc_handler"
+    if state.get("enforce_global_function_complexity", False):
+        if not global_function_complexity_passed(state):
+            return "global_function_complexity_handler"
+    if state.get("enforce_stable_error_taxonomy", False):
+        if not stable_error_taxonomy_passed(state):
+            return "stable_error_taxonomy_handler"
+    if state.get("enforce_uc_row_traceable_artifact", False):
+        if not uc_row_traceable_artifact_passed(state):
+            return "uc_row_traceable_artifact_handler"
+    if state.get("enforce_impl_locations_tests_sync", False):
+        if not impl_locations_tests_synced_passed(state):
+            return "impl_locations_tests_sync_handler"
+    if state.get("enforce_benchmark_postmortem_risk_feedback", False):
+        if not benchmark_postmortem_risk_feedback_passed(state):
+            return "benchmark_postmortem_risk_feedback_handler"
+    if _paper_validator_mode2_enabled(state) and isinstance(state.get("validation_manifest"), dict):
+        return "paper_validator_node"
+    if state.get("enforce_radon_complexity_evidence", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_phase1_feature_trace", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_required_behavior_item", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_benchmark_cache_hit_rate", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_claims_results_artifacts", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_cross_reference_feature_ids", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_postgresql_migration_evidence", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_post_incident_risk_matrix_feedback", False):
+        return "complexity_evidence_node"
+    if state.get("enforce_feature_test_coverage", False):
+        return "complexity_evidence_node"
+    return "end"
+
+
 def _route_after_paper_validator(state: dict[str, Any]) -> str:
+    # Compatibility mode: when called as a pre-validator router in tests.
+    if "paper_validation_passed" not in state and "validation_manifest" not in state:
+        return "paper_validator_node" if _paper_validator_enabled(state) else "input_writer_node"
+
     if not state.get("paper_validation_passed", False):
         return "end"
     # Respect explicit upstream gate failure even when markdown is present.
@@ -442,6 +1136,70 @@ def _risk_owner_status_updates_valid(state: dict[str, Any]) -> bool:
     return state["risk_owner_status_validation_complete"]
 
 
+def _uc_rows_from_state(state: dict) -> list[dict[str, Any]]:
+    candidate_keys = ("uc_rows", "uc_traceability_rows", "use_case_rows")
+    for key in candidate_keys:
+        rows = state.get(key)
+        if isinstance(rows, list):
+            return [row for row in rows if isinstance(row, dict)]
+    return []
+
+
+def _uc_row_has_traceable_artifact(row: dict[str, Any]) -> bool:
+    artifact_reference = row.get("artifact_link")
+    if not isinstance(artifact_reference, str) or not artifact_reference.strip():
+        return False
+
+    stale_markers = {"stale", "outdated", "expired"}
+    status = row.get("artifact_status")
+    if isinstance(status, str) and status.strip().lower() in stale_markers:
+        return False
+
+    if row.get("artifact_current") is False:
+        return False
+
+    return True
+
+
+def uc_row_traceable_artifact_passed(state: dict) -> bool:
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            if approval.get("decision") != "approved":
+                continue
+            details = approval.get("details", {})
+            if isinstance(details, dict) and details.get("criterion") == UC_ROW_TRACEABLE_ARTIFACT_ID:
+                return True
+
+    rows = _uc_rows_from_state(state)
+    if not rows:
+        return False
+    return all(_uc_row_has_traceable_artifact(row) for row in rows)
+
+
+def uc_row_traceable_artifact_failure_reason(state: dict) -> str:
+    if uc_row_traceable_artifact_passed(state):
+        return "uc_traceable_artifact_satisfied"
+
+    rows = _uc_rows_from_state(state)
+    if not rows:
+        return "uc_traceability_rows_missing"
+
+    for row in rows:
+        artifact_link = row.get("artifact_link")
+        if not isinstance(artifact_link, str) or not artifact_link.strip():
+            return "uc_traceable_artifact_missing"
+        status = row.get("artifact_status")
+        if isinstance(status, str) and status.strip().lower() in {"stale", "outdated", "expired"}:
+            return "uc_traceable_artifact_stale"
+        if row.get("artifact_current") is False:
+            return "uc_traceable_artifact_stale"
+
+    return "uc_traceable_artifact_missing"
+
+
 def clarification_handler_node(state: dict) -> dict:
     """
     Placeholder for B1c clarification response.
@@ -465,6 +1223,276 @@ def sweep_execution_handler_node(state: dict) -> dict:
     return state
 
 
+def feature_a_dependency_handler_node(state: dict) -> dict:
+    """Record a fail-closed dependency gate decision and route to END."""
+    resolved_state = resolve_dependency_state(state)
+    reason_code = feature_a_dependency_failure_reason(resolved_state)
+    gate_approvals = resolved_state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"dependency-{FEATURE_A_DEPENDENCY_ID}",
+            "gate_type": "dependency",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {"criterion": FEATURE_A_DEPENDENCY_ID, "reason_code": reason_code},
+        }
+    )
+    errors_active = resolved_state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "dependency_gate",
+        "mode": "terminal",
+    }
+
+
+def level4_depth_guidance_handler_node(state: dict) -> dict:
+    """Record a fail-closed level-4 depth guidance gate decision and route to END."""
+    reason_code = level4_depth_guidance_failure_reason(state)
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{LEVEL4_DEPTH_GUIDANCE_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {"criterion": LEVEL4_DEPTH_GUIDANCE_ID, "reason_code": reason_code},
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "depth_guidance_gate",
+        "mode": "terminal",
+    }
+
+
+def amendment_module_loc_handler_node(state: dict) -> dict:
+    """Record a fail-closed amendment module LOC/helper extraction gate decision."""
+    reason_code = amendment_module_loc_failure_reason(state)
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{AMENDMENT_MODULE_LOC_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {"criterion": AMENDMENT_MODULE_LOC_ID, "reason_code": reason_code},
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "amendment_structure_gate",
+        "mode": "terminal",
+    }
+
+
+def global_function_complexity_handler_node(state: dict) -> dict:
+    """Record a fail-closed global function complexity gate decision and route to END."""
+    reason_code = global_function_complexity_failure_reason(state)
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{GLOBAL_FUNCTION_COMPLEXITY_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {"criterion": GLOBAL_FUNCTION_COMPLEXITY_ID, "reason_code": reason_code},
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "complexity_gate",
+        "mode": "terminal",
+    }
+
+
+def plan_generation_p95_handler_node(state: dict) -> dict:
+    """Record a fail-closed planning latency gate decision and route to END."""
+    reason_code = plan_generation_p95_failure_reason(state)
+    p95_seconds = _p95_seconds(_collect_plan_generation_latencies_seconds(state))
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{PLAN_GENERATION_P95_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {
+                "criterion": PLAN_GENERATION_P95_ID,
+                "reason_code": reason_code,
+                "p95_seconds": p95_seconds,
+                "threshold_seconds": PLAN_GENERATION_P95_MAX_SECONDS,
+            },
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "planning_latency_gate",
+        "mode": "terminal",
+    }
+
+
+def stable_error_taxonomy_handler_node(state: dict) -> dict:
+    """Record a fail-closed taxonomy stability gate decision and route to END."""
+    reason_code = stable_error_taxonomy_failure_reason(state)
+    reason_codes = _error_reason_codes_from_state(state)
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{STABLE_ERROR_TAXONOMY_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {
+                "criterion": STABLE_ERROR_TAXONOMY_ID,
+                "reason_code": reason_code,
+                "taxonomy_version": state.get("error_taxonomy_version", STABLE_ERROR_TAXONOMY_VERSION),
+                "reason_codes": reason_codes,
+            },
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "error_taxonomy_gate",
+        "mode": "terminal",
+    }
+
+
+def uc_row_traceable_artifact_handler_node(state: dict) -> dict:
+    """Record a fail-closed UC traceability gate decision and route to END."""
+    reason_code = uc_row_traceable_artifact_failure_reason(state)
+    rows = _uc_rows_from_state(state)
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{UC_ROW_TRACEABLE_ARTIFACT_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {
+                "criterion": UC_ROW_TRACEABLE_ARTIFACT_ID,
+                "reason_code": reason_code,
+                "row_count": len(rows),
+            },
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "uc_traceability_gate",
+        "mode": "terminal",
+    }
+
+
+def impl_locations_tests_sync_handler_node(state: dict) -> dict:
+    """Record a fail-closed impl-location/test sync gate decision and route to END."""
+    reason_code = impl_locations_tests_synced_failure_reason(state)
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{IMPL_TEST_SYNC_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {"criterion": IMPL_TEST_SYNC_ID, "reason_code": reason_code},
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "impl_test_sync_gate",
+        "mode": "terminal",
+    }
+
+
+def benchmark_postmortem_risk_feedback_handler_node(state: dict) -> dict:
+    """Record a fail-closed benchmark/postmortem risk feedback gate decision."""
+    reason_code = benchmark_postmortem_risk_feedback_failure_reason(state)
+    gate_approvals = state.get("gate_approvals", [])
+    if not isinstance(gate_approvals, list):
+        gate_approvals = []
+    gate_approvals.append(
+        {
+            "gate_id": f"criterion-{UNNUMBERED_185_ID}",
+            "gate_type": "criterion",
+            "decision": "rejected",
+            "interface_path": "auto",
+            "details": {"criterion": UNNUMBERED_185_ID, "reason_code": reason_code},
+        }
+    )
+    errors_active = state.get("errors_active", [])
+    if not isinstance(errors_active, list):
+        errors_active = []
+    if reason_code not in errors_active:
+        errors_active.append(reason_code)
+    return {
+        "gate_approvals": gate_approvals,
+        "errors_active": errors_active,
+        "reviewer_failure_category": "benchmark_postmortem_risk_feedback_gate",
+        "mode": "terminal",
+    }
+
+
 def session_dependency_handler_node(state: dict) -> dict:
     """Record unmet session dependency marker before terminating workflow."""
     updated = dict(state)
@@ -476,18 +1504,181 @@ def session_dependency_handler_node(state: dict) -> dict:
     return updated
 
 
+def paper_validator_node(state: dict) -> dict:
+    """
+    Graph-level placeholder node for paper-validator topology wiring.
+
+    The concrete mode1 validation logic lives in `src.nodes.paper_validator_node`.
+    """
+    from src.nodes.paper_validator_node import paper_validator_node as mode1_paper_validator_node
+
+    return mode1_paper_validator_node(state)
+
+
+def complexity_evidence_node(state: dict) -> dict:
+    """Record radon complexity evidence when enforcement is enabled."""
+    updated = dict(state)
+    cache_hit_rate = _compute_benchmark_cache_hit_rate(updated)
+    if cache_hit_rate is not None:
+        updated[BENCHMARK_CACHE_HIT_RATE_MARKER] = cache_hit_rate
+
+    if not updated.get("enforce_radon_complexity_evidence", False):
+        return updated
+
+    if not isinstance(updated.get("radon_complexity_evidence"), dict):
+        updated["radon_complexity_evidence"] = collect_radon_complexity_evidence()
+    return updated
+
+
+def complexity_evidence_handler_node(state: dict) -> dict:
+    """Capture unmet radon complexity evidence requirements and halt."""
+    updated = dict(state)
+    if not isinstance(updated.get("radon_complexity_evidence"), dict):
+        updated["radon_complexity_evidence"] = collect_radon_complexity_evidence()
+    updated.setdefault(
+        "dependency_error",
+        "Radon complexity evidence is required before workflow completion.",
+    )
+    updated.setdefault("required_marker", "radon_complexity_evidence")
+    return updated
+
+
+def phase1_traceability_handler_node(state: dict) -> dict:
+    """Capture unmet use-case to Phase 1 feature-ID traceability requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Use case to Phase 1 feature-ID traceability is required before workflow completion.",
+    )
+    updated.setdefault("required_marker", PHASE1_FEATURE_TRACE_MARKER)
+    return updated
+
+
+def required_behavior_handler_node(state: dict) -> dict:
+    """Capture unmet required-behavior checklist requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Consistency checklist required behavior item is required before workflow completion.",
+    )
+    updated.setdefault("required_marker", REQUIRED_BEHAVIOR_MARKER)
+    return updated
+
+
+def benchmark_cache_hit_rate_handler_node(state: dict) -> dict:
+    """Capture unmet benchmark cache hit-rate observability requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Benchmark output must include cache hit rate before workflow completion.",
+    )
+    updated.setdefault("required_marker", BENCHMARK_CACHE_HIT_RATE_MARKER)
+    return updated
+
+
+def claims_results_artifacts_handler_node(state: dict) -> dict:
+    """Capture unmet claim-to-results artifact mapping requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Claims must map to results artifacts under results/ or benchmark_results/ before workflow completion.",
+    )
+    updated.setdefault("required_marker", CLAIMS_RESULTS_ARTIFACTS_MARKER)
+    return updated
+
+
+def cross_reference_feature_ids_handler_node(state: dict) -> dict:
+    """Capture unmet cross-reference to feature-ID mapping requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Cross-references must include owning feature IDs before workflow completion.",
+    )
+    updated.setdefault("required_marker", CROSS_REFERENCE_FEATURE_IDS_MARKER)
+    return updated
+
+
+def postgresql_migration_handler_node(state: dict) -> dict:
+    """Capture unmet PostgreSQL migration and index-growth proof requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        POSTGRESQL_MIGRATION_EVIDENCE_MARKER,
+        collect_postgresql_migration_evidence(updated),
+    )
+    updated.setdefault(
+        "dependency_error",
+        "PostgreSQL migration runbook and index growth proof are required before workflow completion.",
+    )
+    updated.setdefault("required_marker", POSTGRESQL_MIGRATION_EVIDENCE_MARKER)
+    return updated
+
+
+def post_incident_risk_matrix_feedback_handler_node(state: dict) -> dict:
+    """Capture unmet post-incident risk-matrix feedback requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER,
+        collect_post_incident_risk_matrix_feedback(updated),
+    )
+    updated.setdefault(
+        "dependency_error",
+        "Post-incident updates must feed back into the risk matrix before workflow completion.",
+    )
+    updated.setdefault("required_marker", POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER)
+    return updated
+
+
+def feature_test_coverage_handler_node(state: dict) -> dict:
+    """Capture unmet unit+integration feature-coverage requirements."""
+    updated = dict(state)
+    updated.setdefault(
+        "dependency_error",
+        "Each feature must include both unit and integration test coverage before workflow completion.",
+    )
+    updated.setdefault("required_marker", FEATURE_TEST_COVERAGE_MARKER)
+    return updated
+
+
 def create_graph() -> StateGraph:
     """Build graph with B1b/B1c graph wiring."""
     graph = StateGraph(GraphState)
 
     graph.add_node("sweep_detection_node", sweep_detection_node)
+    graph.add_node("feature_a_dependency_handler", feature_a_dependency_handler_node)
     graph.add_node("architect_node", architect_node)
+    graph.add_node("plan_generation_p95_handler", plan_generation_p95_handler_node)
     graph.add_node("paper_validator_node", paper_validator_node)
     graph.add_node("intent_extraction_node", intent_extraction_node)
     graph.add_node("clarification_node", clarification_node)
     graph.add_node("clarification_handler", clarification_handler_node)
     graph.add_node("sweep_execution_handler", sweep_execution_handler_node)
     graph.add_node("session_dependency_handler", session_dependency_handler_node)
+    graph.add_node("level4_depth_guidance_handler", level4_depth_guidance_handler_node)
+    graph.add_node("amendment_module_loc_handler", amendment_module_loc_handler_node)
+    graph.add_node("global_function_complexity_handler", global_function_complexity_handler_node)
+    graph.add_node("stable_error_taxonomy_handler", stable_error_taxonomy_handler_node)
+    graph.add_node("uc_row_traceable_artifact_handler", uc_row_traceable_artifact_handler_node)
+    graph.add_node("impl_locations_tests_sync_handler", impl_locations_tests_sync_handler_node)
+    graph.add_node(
+        "benchmark_postmortem_risk_feedback_handler",
+        benchmark_postmortem_risk_feedback_handler_node,
+    )
+    graph.add_node("complexity_evidence_node", complexity_evidence_node)
+    graph.add_node("complexity_evidence_handler", complexity_evidence_handler_node)
+    graph.add_node("phase1_traceability_handler", phase1_traceability_handler_node)
+    graph.add_node("required_behavior_handler", required_behavior_handler_node)
+    graph.add_node("benchmark_cache_hit_rate_handler", benchmark_cache_hit_rate_handler_node)
+    graph.add_node("claims_results_artifacts_handler", claims_results_artifacts_handler_node)
+    graph.add_node(
+        "cross_reference_feature_ids_handler",
+        cross_reference_feature_ids_handler_node,
+    )
+    graph.add_node("postgresql_migration_handler", postgresql_migration_handler_node)
+    graph.add_node(
+        "post_incident_risk_matrix_feedback_handler",
+        post_incident_risk_matrix_feedback_handler_node,
+    )
+    graph.add_node("feature_test_coverage_handler", feature_test_coverage_handler_node)
     graph.add_node("input_writer_node", input_writer_node)
 
     graph.add_edge(START, "sweep_detection_node")
@@ -497,23 +1688,29 @@ def create_graph() -> StateGraph:
         {
             "architect_node": "architect_node",
             "sweep_execution_handler": "sweep_execution_handler",
+            "feature_a_dependency_handler": "feature_a_dependency_handler",
             "session_dependency_handler": "session_dependency_handler",
         },
     )
+    graph.add_edge("feature_a_dependency_handler", END)
     graph.add_conditional_edges(
         "architect_node",
         _route_after_architect,
         {
             "paper_validator_node": "paper_validator_node",
+            "plan_generation_p95_handler": "plan_generation_p95_handler",
             "intent_extraction_node": "intent_extraction_node",
         },
     )
+    graph.add_edge("plan_generation_p95_handler", END)
     graph.add_conditional_edges(
         "paper_validator_node",
         _route_after_paper_validator,
         {
             "intent_extraction_node": "intent_extraction_node",
             "end": END,
+            "paper_validator_node": "paper_validator_node",
+            "input_writer_node": "input_writer_node",
         },
     )
     graph.add_edge("intent_extraction_node", "clarification_node")
@@ -522,12 +1719,60 @@ def create_graph() -> StateGraph:
         _route_after_clarification,
         {
             "input_writer_node": "input_writer_node",
+            "paper_validator_node": "paper_validator_node",
             "clarification_handler": "clarification_handler",
         },
     )
     graph.add_edge("clarification_handler", END)
     graph.add_edge("sweep_execution_handler", END)
     graph.add_edge("session_dependency_handler", END)
-    graph.add_edge("input_writer_node", END)
+    graph.add_conditional_edges(
+        "input_writer_node",
+        _route_after_input_writer,
+        {
+            "level4_depth_guidance_handler": "level4_depth_guidance_handler",
+            "amendment_module_loc_handler": "amendment_module_loc_handler",
+            "global_function_complexity_handler": "global_function_complexity_handler",
+            "stable_error_taxonomy_handler": "stable_error_taxonomy_handler",
+            "uc_row_traceable_artifact_handler": "uc_row_traceable_artifact_handler",
+            "impl_locations_tests_sync_handler": "impl_locations_tests_sync_handler",
+            "benchmark_postmortem_risk_feedback_handler": "benchmark_postmortem_risk_feedback_handler",
+            "paper_validator_node": "paper_validator_node",
+            "complexity_evidence_node": "complexity_evidence_node",
+            "end": END,
+        },
+    )
+    graph.add_edge("level4_depth_guidance_handler", END)
+    graph.add_edge("amendment_module_loc_handler", END)
+    graph.add_edge("global_function_complexity_handler", END)
+    graph.add_edge("stable_error_taxonomy_handler", END)
+    graph.add_edge("uc_row_traceable_artifact_handler", END)
+    graph.add_edge("impl_locations_tests_sync_handler", END)
+    graph.add_edge("benchmark_postmortem_risk_feedback_handler", END)
+    graph.add_conditional_edges(
+        "complexity_evidence_node",
+        _route_after_complexity_evidence,
+        {
+            "end": END,
+            "complexity_evidence_handler": "complexity_evidence_handler",
+            "phase1_traceability_handler": "phase1_traceability_handler",
+            "required_behavior_handler": "required_behavior_handler",
+            "benchmark_cache_hit_rate_handler": "benchmark_cache_hit_rate_handler",
+            "claims_results_artifacts_handler": "claims_results_artifacts_handler",
+            "cross_reference_feature_ids_handler": "cross_reference_feature_ids_handler",
+            "postgresql_migration_handler": "postgresql_migration_handler",
+            "post_incident_risk_matrix_feedback_handler": "post_incident_risk_matrix_feedback_handler",
+            "feature_test_coverage_handler": "feature_test_coverage_handler",
+        },
+    )
+    graph.add_edge("complexity_evidence_handler", END)
+    graph.add_edge("phase1_traceability_handler", END)
+    graph.add_edge("required_behavior_handler", END)
+    graph.add_edge("benchmark_cache_hit_rate_handler", END)
+    graph.add_edge("claims_results_artifacts_handler", END)
+    graph.add_edge("cross_reference_feature_ids_handler", END)
+    graph.add_edge("postgresql_migration_handler", END)
+    graph.add_edge("post_incident_risk_matrix_feedback_handler", END)
+    graph.add_edge("feature_test_coverage_handler", END)
 
     return graph

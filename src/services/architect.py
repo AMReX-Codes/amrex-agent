@@ -50,6 +50,15 @@ class ModificationExtraction(BaseModel):
 
 logger = logging.getLogger(__name__)
 
+ROUTER_REASON_CODES = {
+    "hierarchical_primary": "hierarchical_primary",
+    "simple_primary": "simple_primary",
+    "simple_fallback": "simple_fallback",
+    "override_static": "override_static",
+    "override_hierarchical": "override_hierarchical",
+    "override_simple": "override_simple",
+}
+
 
 
 @dataclass
@@ -597,7 +606,33 @@ class ArchitectService:
         analysis = dict(plan.analysis or {})
         analysis["router_mapping"] = mapping
         plan.analysis = analysis
+        requirements = dict(plan.requirements or {})
+        router_branch, reason_code = ArchitectService._router_requirements_from_mapping(mapping)
+        requirements["router_branch"] = router_branch
+        requirements["router_reason_code"] = reason_code
+        plan.requirements = requirements
         return plan
+
+    @staticmethod
+    def _router_requirements_from_mapping(mapping: dict[str, Any]) -> tuple[str, str]:
+        strategy = str(mapping.get("strategy") or "simple")
+        baseline_override = bool(mapping.get("baseline_override_active"))
+        fallback_to = mapping.get("fallback_to")
+
+        if baseline_override:
+            if strategy == "override_static":
+                return "override_static", ROUTER_REASON_CODES["override_static"]
+            if strategy == "hierarchical":
+                return "hierarchical", ROUTER_REASON_CODES["override_hierarchical"]
+            return "simple", ROUTER_REASON_CODES["override_simple"]
+
+        if fallback_to == "simple":
+            return "simple", ROUTER_REASON_CODES["simple_fallback"]
+
+        if strategy == "hierarchical":
+            return "hierarchical", ROUTER_REASON_CODES["hierarchical_primary"]
+
+        return "simple", ROUTER_REASON_CODES["simple_primary"]
 
     def select_solver(self, query: str, confidence_threshold: float = 0.15) -> tuple:
         """

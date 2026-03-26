@@ -19,14 +19,24 @@ Usage:
     confidence = plan.get_overall_confidence()
 """
 
+import ast
 import logging
 import re
+import shutil
+import subprocess
 from typing import Any
 
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
+GLOBAL_FUNCTION_COMPLEXITY_ID = "global_function_complexity"
+GLOBAL_FUNCTION_COMPLEXITY_DEFAULT_THRESHOLD = 10
+AMENDMENT_MODULE_LOC_ID = "UNNUMBERED-003-01"
+AMENDMENT_MODULE_MAX_LOC = 100
+USE_CASE_ARTIFACT_MAPPING_ID = "UNNUMBERED-024"
+IMPL_TEST_SYNC_ID = "UNNUMBERED-052"
+CAMERA_READY_PHASE_MAPPING_ID = "UNNUMBERED-094"
 _IMPLEMENTATION_LOCATION_KEYS = (
     "implementation_locations",
     "implementation_location",
@@ -34,6 +44,110 @@ _IMPLEMENTATION_LOCATION_KEYS = (
     "files",
     "services",
 )
+_FEATURE_BLOCK_HEADER_RE = re.compile(r"^##\s+\[[^\]]+\]\s+.+$")
+_TESTS_FIXTURES_LINE_RE = re.compile(r"^tests/fixtures\s*:\s*(.+)$", re.IGNORECASE)
+_HELPER_EXTRACTION_LINE_RE = re.compile(r"^helper\s+extraction\s*:\s*(.+)$", re.IGNORECASE)
+_LARGE_LOC_RE = re.compile(r"\b([1-9]\d{2,})\s*loc\b", re.IGNORECASE)
+_NEW_FILES_SECTION_RE = re.compile(r"^new\s+files\s*:\s*$", re.IGNORECASE)
+_SECTION_HEADER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 /_-]*:\s*$")
+
+
+def _has_invalid_modification_entries(payload: Any) -> bool:
+    """Return True when payload contains unsupported modification entry shapes."""
+    if not isinstance(payload, list):
+        return True
+
+    for entry in payload:
+        if isinstance(entry, tuple) and len(entry) == 2:
+            continue
+        if isinstance(entry, list) and len(entry) == 2:
+            continue
+        if isinstance(entry, dict) and entry.get("parameter") is not None:
+            continue
+        return True
+    return False
+
+
+def _normalize_modifications_for_plan(payload: list[Any]) -> list[tuple[str, Any]]:
+    normalized: list[tuple[str, Any]] = []
+    for entry in payload:
+        if isinstance(entry, tuple) and len(entry) == 2:
+            normalized.append((str(entry[0]), entry[1]))
+        elif isinstance(entry, list) and len(entry) == 2:
+            normalized.append((str(entry[0]), entry[1]))
+        elif isinstance(entry, dict):
+            normalized.append((str(entry.get("parameter", "")), entry.get("value", "")))
+    return normalized
+
+
+def collect_radon_complexity_evidence(
+    target: str = "src/services/plan.py",
+) -> dict[str, Any]:
+    """Collect radon complexity gate evidence for a target module."""
+    criterion = "radon_cc_max_C"
+    radon_bin = shutil.which("radon")
+    if not radon_bin:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": "radon missing in PATH",
+        }
+
+    cmd = [radon_bin, "cc", target, "-n", "C"]
+    try:
+        completed = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    except OSError as exc:
+        return {
+            "criterion": criterion,
+            "radon_available": False,
+            "passed": False,
+            "detail": f"radon invocation failed: {exc}",
+        }
+
+    output = (completed.stdout or "").strip()
+    return {
+        "criterion": criterion,
+        "radon_available": True,
+        "passed": completed.returncode == 0,
+        "exit_code": completed.returncode,
+        "output": output,
+        "error": (completed.stderr or "").strip(),
+        "command": cmd,
+    }
+
+
+def normalize_modifications(payload: Any) -> list[tuple[str, Any]]:
+    """Normalize modifications into (parameter, value) tuples."""
+    if payload is None:
+        return []
+    if not isinstance(payload, list):
+        raise ValueError("modifications must be a list")
+
+    normalized: list[tuple[str, Any]] = []
+    for entry in payload:
+        if isinstance(entry, tuple):
+            if len(entry) != 2:
+                raise ValueError("tuple modification entries must have length 2")
+            normalized.append((str(entry[0]), entry[1]))
+            continue
+
+        if isinstance(entry, list):
+            if len(entry) != 2:
+                raise ValueError("list modification entries must have length 2")
+            normalized.append((str(entry[0]), entry[1]))
+            continue
+
+        if isinstance(entry, dict):
+            parameter = entry.get("parameter")
+            if parameter is None:
+                raise ValueError("dict modification entries must include 'parameter'")
+            normalized.append((str(parameter), entry.get("value")))
+            continue
+
+        raise ValueError("unsupported modification entry shape")
+
+    return normalized
 
 
 def _extract_checklist_entries(manifest: dict[str, Any]) -> list[Any] | None:
@@ -80,14 +194,7 @@ def _entry_has_locations(entry: dict[str, Any]) -> bool:
 
 
 def has_checklist_implementation_locations(context: dict[str, Any]) -> bool:
-    """
-    Validate that each consistency checklist item includes implementation pointers.
-
-    Supported manifest checklist shapes:
-    - {"consistency_checklist": [...]}
-    - {"checklist": [...]}
-    - {"consistency": {"checklist": [...]}}
-    """
+    """Validate consistency checklist entries include implementation pointers."""
     manifest = context.get("validation_manifest")
     if not isinstance(manifest, dict):
         return False
@@ -105,33 +212,120 @@ def has_checklist_implementation_locations(context: dict[str, Any]) -> bool:
     return True
 
 
-_FEATURE_BLOCK_HEADER_RE = re.compile(r"^##\s+\[[^\]]+\]\s+.+$")
-_TESTS_FIXTURES_LINE_RE = re.compile(r"^tests/fixtures\s*:\s*(.+)$", re.IGNORECASE)
-_HELPER_EXTRACTION_LINE_RE = re.compile(r"^helper\s+extraction\s*:\s*(.+)$", re.IGNORECASE)
-_LARGE_LOC_RE = re.compile(r"\b([1-9]\d{2,})\s*loc\b", re.IGNORECASE)
-_NEW_FILES_SECTION_RE = re.compile(r"^new\s+files\s*:\s*$", re.IGNORECASE)
-_SECTION_HEADER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 /_-]*:\s*$")
+def normalize_unnumbered_003(
+    missing_items: list[str],
+    result_key_prefix: str,
+    missing_key: str,
+    missing_reason: str,
+) -> dict[str, Any]:
+    passed = not missing_items
+    return {
+        f"{result_key_prefix}_passed": passed,
+        f"{result_key_prefix}_reason": "ok" if passed else missing_reason,
+        missing_key: [] if passed else missing_items,
+    }
 
 
-def normalize_modifications(payload: Any) -> list[tuple[str, Any]]:
-    """Normalize mixed modification payloads into (parameter, value) tuples."""
-    if not isinstance(payload, list):
-        return []
+def find_feature_blocks_missing_tests_fixtures(markdown_text: str) -> list[str]:
+    missing: list[str] = []
+    current_header: str | None = None
+    current_has_mapping = False
 
-    normalized: list[tuple[str, Any]] = []
-    for entry in payload:
-        if isinstance(entry, tuple) and len(entry) == 2:
-            normalized.append((str(entry[0]), entry[1]))
+    for raw_line in markdown_text.splitlines():
+        line = raw_line.strip()
+        if _FEATURE_BLOCK_HEADER_RE.match(line):
+            if current_header is not None and not current_has_mapping:
+                missing.append(current_header)
+            current_header = line
+            current_has_mapping = False
             continue
-        if isinstance(entry, list) and len(entry) == 2:
-            normalized.append((str(entry[0]), entry[1]))
+
+        if current_header is None:
             continue
-        if isinstance(entry, dict):
-            parameter = entry.get("parameter")
-            if parameter is None:
-                continue
-            normalized.append((str(parameter), entry.get("value")))
-    return normalized
+
+        match = _TESTS_FIXTURES_LINE_RE.match(line)
+        if match and match.group(1).strip():
+            current_has_mapping = True
+
+    if current_header is not None and not current_has_mapping:
+        missing.append(current_header)
+
+    return missing
+
+
+def validate_feature_blocks_tests_fixtures(markdown_text: str) -> dict[str, Any]:
+    missing = find_feature_blocks_missing_tests_fixtures(markdown_text)
+    return normalize_unnumbered_003(
+        missing_items=missing,
+        result_key_prefix="feature_blocks_validation",
+        missing_key="feature_blocks_missing_tests_fixtures",
+        missing_reason="missing_tests_fixtures_mapping",
+    )
+
+
+def _split_feature_blocks(markdown_text: str) -> list[tuple[str, list[str]]]:
+    blocks: list[tuple[str, list[str]]] = []
+    current_header: str | None = None
+    current_lines: list[str] = []
+
+    for raw_line in markdown_text.splitlines():
+        line = raw_line.strip()
+        if _FEATURE_BLOCK_HEADER_RE.match(line):
+            if current_header is not None:
+                blocks.append((current_header, current_lines))
+            current_header = line
+            current_lines = []
+            continue
+        if current_header is not None:
+            current_lines.append(line)
+
+    if current_header is not None:
+        blocks.append((current_header, current_lines))
+
+    return blocks
+
+
+def _declares_large_new_file(block_lines: list[str]) -> bool:
+    in_new_files_section = False
+    for line in block_lines:
+        if _NEW_FILES_SECTION_RE.match(line):
+            in_new_files_section = True
+            continue
+        if in_new_files_section and _SECTION_HEADER_RE.match(line):
+            in_new_files_section = False
+            continue
+        if in_new_files_section and _LARGE_LOC_RE.search(line):
+            return True
+    return False
+
+
+def _has_helper_extraction_documented(block_lines: list[str]) -> bool:
+    for line in block_lines:
+        match = _HELPER_EXTRACTION_LINE_RE.match(line)
+        if not match:
+            continue
+        value = match.group(1).strip().lower()
+        if value and value not in {"none", "n/a", "na"}:
+            return True
+    return False
+
+
+def find_feature_blocks_missing_helper_extraction(markdown_text: str) -> list[str]:
+    missing: list[str] = []
+    for header, block_lines in _split_feature_blocks(markdown_text):
+        if _declares_large_new_file(block_lines) and not _has_helper_extraction_documented(block_lines):
+            missing.append(header)
+    return missing
+
+
+def validate_new_file_helper_extraction(markdown_text: str) -> dict[str, Any]:
+    missing = find_feature_blocks_missing_helper_extraction(markdown_text)
+    return normalize_unnumbered_003(
+        missing_items=missing,
+        result_key_prefix="new_file_helper_extraction_validation",
+        missing_key="new_file_helper_extraction_missing",
+        missing_reason="missing_helper_extraction_for_large_new_file",
+    )
 
 
 class SimulationPlan(BaseModel):
@@ -184,10 +378,6 @@ class SimulationPlan(BaseModel):
     # === Solver Selection Trace (Level-0 / Level-2 override observability) ===
     level0_solver: str | None = None
     level0_confidence: float | None = None
-    level1_confidence: float | None = None
-    level0_latency_per_query_ms: float | None = None
-    level1_latency_per_query_ms: float | None = None
-    level2_latency_per_query_ms: float | None = None
     level2_override_applied: bool = False
     level2_override_solver: str | None = None
     level2_override_case: str | None = None
@@ -353,7 +543,16 @@ class SimulationPlanFactory:
         baseline_conf = baseline_result.get('confidence', 0.0)
 
         # Extract modifications
-        modifications = normalize_modifications(cbr_plan.get('modifications', []))
+        raw_modifications = cbr_plan.get('modifications', [])
+        if _has_invalid_modification_entries(raw_modifications):
+            # Strict validation path for malformed RAG outputs.
+            SimulationPlan(
+                selected_solver=solver_name,
+                selected_case="unknown",
+                modifications=raw_modifications,
+                reasoning=cbr_plan.get('reasoning', ''),
+            )
+        modifications = _normalize_modifications_for_plan(raw_modifications)
 
         # Extract CBR confidence
         cbr_conf = cbr_plan.get('confidence', 0.0)
@@ -498,10 +697,7 @@ class SimulationPlanFactory:
             data = SimulationPlanFactory._migrate_legacy_dict(data)
 
         # Filter to known fields to avoid TypeErrors
-        valid_fields = {
-            k: v for k, v in data.items()
-            if k in SimulationPlan.model_fields
-        }
+        valid_fields = {k: v for k, v in data.items() if k in SimulationPlan.model_fields}
 
         # Ensure modifications are normalized tuples.
         if 'modifications' in valid_fields:
@@ -564,135 +760,480 @@ class SimulationPlanFactory:
         }
 
 
-def find_feature_blocks_missing_tests_fixtures(markdown_text: str) -> list[str]:
-    """
-    Return feature block headers that do not include a Tests/Fixtures mapping line.
+_CYCLOMATIC_NODES = (
+    ast.If,
+    ast.For,
+    ast.AsyncFor,
+    ast.While,
+    ast.With,
+    ast.AsyncWith,
+    ast.Try,
+    ast.ExceptHandler,
+    ast.IfExp,
+    ast.BoolOp,
+    ast.Match,
+)
 
-    A feature block is treated as any markdown section header matching:
-    ``## [ID] Title``.
-    """
-    missing: list[str] = []
-    current_header: str | None = None
-    current_has_mapping = False
 
-    for raw_line in markdown_text.splitlines():
-        line = raw_line.strip()
-        if _FEATURE_BLOCK_HEADER_RE.match(line):
-            if current_header is not None and not current_has_mapping:
-                missing.append(current_header)
-            current_header = line
-            current_has_mapping = False
+def _cyclomatic_complexity(node: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
+    complexity = 1
+    for child in ast.walk(node):
+        if isinstance(child, ast.BoolOp):
+            complexity += max(0, len(child.values) - 1)
             continue
-
-        if current_header is None:
-            continue
-
-        match = _TESTS_FIXTURES_LINE_RE.match(line)
-        if match and match.group(1).strip():
-            current_has_mapping = True
-
-    if current_header is not None and not current_has_mapping:
-        missing.append(current_header)
-
-    return missing
+        if isinstance(child, _CYCLOMATIC_NODES):
+            complexity += 1
+    return complexity
 
 
-def validate_feature_blocks_tests_fixtures(markdown_text: str) -> dict[str, Any]:
-    """Validate that every feature block includes a non-empty Tests/Fixtures line."""
-    missing = find_feature_blocks_missing_tests_fixtures(markdown_text)
-    return normalize_unnumbered_003(
-        missing_items=missing,
-        result_key_prefix="feature_blocks_validation",
-        missing_key="feature_blocks_missing_tests_fixtures",
-        missing_reason="missing_tests_fixtures_mapping",
-    )
-
-
-def normalize_unnumbered_003(
-    missing_items: list[str],
-    result_key_prefix: str,
-    missing_key: str,
-    missing_reason: str,
+def build_global_complexity_report(
+    module_source: str,
+    threshold: int = GLOBAL_FUNCTION_COMPLEXITY_DEFAULT_THRESHOLD,
 ) -> dict[str, Any]:
     """
-    Build a normalized pass/fail payload for UNNUMBERED-003 style validators.
+    Build a per-function complexity report from Python source text.
 
-    This keeps validation response shapes consistent across call sites.
+    Returns a dict that can be persisted on graph state under
+    ``global_complexity_report``.
     """
-    passed = not missing_items
+    tree = ast.parse(module_source)
+    functions: list[dict[str, Any]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            score = _cyclomatic_complexity(node)
+            functions.append(
+                {
+                    "name": node.name,
+                    "lineno": node.lineno,
+                    "complexity": score,
+                    "threshold": threshold,
+                    "passes": score <= threshold,
+                }
+            )
+
+    violations = [
+        function for function in functions if function["complexity"] > function["threshold"]
+    ]
     return {
-        f"{result_key_prefix}_passed": passed,
-        f"{result_key_prefix}_reason": "ok" if passed else missing_reason,
-        missing_key: [] if passed else missing_items,
+        "criterion": GLOBAL_FUNCTION_COMPLEXITY_ID,
+        "threshold": threshold,
+        "functions": functions,
+        "violations": violations,
+        "passes": not violations,
     }
 
 
-def _split_feature_blocks(markdown_text: str) -> list[tuple[str, list[str]]]:
-    blocks: list[tuple[str, list[str]]] = []
-    current_header: str | None = None
-    current_lines: list[str] = []
+def global_function_complexity_passed(state: dict[str, Any]) -> bool:
+    """Return whether global complexity criterion is satisfied."""
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            if details.get("criterion") != GLOBAL_FUNCTION_COMPLEXITY_ID:
+                continue
+            return approval.get("decision") == "approved"
 
-    for raw_line in markdown_text.splitlines():
-        line = raw_line.strip()
-        if _FEATURE_BLOCK_HEADER_RE.match(line):
-            if current_header is not None:
-                blocks.append((current_header, current_lines))
-            current_header = line
-            current_lines = []
-            continue
-        if current_header is not None:
-            current_lines.append(line)
-
-    if current_header is not None:
-        blocks.append((current_header, current_lines))
-
-    return blocks
-
-
-def _declares_large_new_file(block_lines: list[str]) -> bool:
-    in_new_files_section = False
-    for line in block_lines:
-        if _NEW_FILES_SECTION_RE.match(line):
-            in_new_files_section = True
-            continue
-        if in_new_files_section and _SECTION_HEADER_RE.match(line):
-            in_new_files_section = False
-            continue
-        if in_new_files_section and _LARGE_LOC_RE.search(line):
-            return True
+    report = state.get("global_complexity_report")
+    if isinstance(report, dict):
+        if isinstance(report.get("passes"), bool):
+            return report["passes"]
+        violations = report.get("violations", [])
+        if isinstance(violations, list):
+            return len(violations) == 0
     return False
 
 
-def _has_helper_extraction_documented(block_lines: list[str]) -> bool:
-    for line in block_lines:
-        match = _HELPER_EXTRACTION_LINE_RE.match(line)
-        if not match:
+def global_function_complexity_failure_reason(state: dict[str, Any]) -> str:
+    """Return reason code for global complexity gate decision."""
+    if global_function_complexity_passed(state):
+        return "global_function_complexity_satisfied"
+    return "global_function_complexity_threshold_exceeded"
+
+
+def _amendment_modules_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    modules = report.get("modules", [])
+    if not isinstance(modules, list):
+        return []
+
+    amendment_modules: list[dict[str, Any]] = []
+    for module in modules:
+        if not isinstance(module, dict):
             continue
-        value = match.group(1).strip().lower()
-        if value and value not in {"none", "n/a", "na"}:
-            return True
+        if module.get("is_amendment_module") is True:
+            amendment_modules.append(module)
+    return amendment_modules
+
+
+def normalize_use_case_artifact_mappings(raw: Any) -> list[dict[str, Any]]:
+    """
+    Normalize use-case artifact mappings into a canonical shape.
+
+    Canonical entry:
+    - use_case: str
+    - artifacts: list[str]
+    """
+    if isinstance(raw, dict):
+        for key in ("use_cases", "mappings", "entries", "items"):
+            candidate = raw.get(key)
+            if isinstance(candidate, list):
+                raw = candidate
+                break
+        else:
+            raw = [raw]
+
+    if not isinstance(raw, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+
+        use_case = entry.get("use_case") or entry.get("usecase") or entry.get("id")
+        if not isinstance(use_case, str) or not use_case.strip():
+            continue
+
+        artifacts_raw = (
+            entry.get("artifacts")
+            or entry.get("artifact")
+            or entry.get("references")
+            or entry.get("evidence")
+        )
+
+        if isinstance(artifacts_raw, str):
+            artifacts = [artifacts_raw.strip()] if artifacts_raw.strip() else []
+        elif isinstance(artifacts_raw, list):
+            artifacts = [
+                item.strip()
+                for item in artifacts_raw
+                if isinstance(item, str) and item.strip()
+            ]
+        else:
+            artifacts = []
+
+        normalized.append(
+            {
+                "use_case": use_case.strip(),
+                "artifacts": artifacts,
+            }
+        )
+    return normalized
+
+
+def _use_case_artifact_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = report.get("use_case_artifacts")
+    return normalize_use_case_artifact_mappings(mappings)
+
+
+def _use_case_artifact_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = state.get("use_case_artifacts")
+    return normalize_use_case_artifact_mappings(mappings)
+
+
+def normalize_feature_test_mappings(raw: Any) -> list[dict[str, Any]]:
+    """Normalize implementation-location to tests mappings into a canonical shape."""
+    if isinstance(raw, dict):
+        for key in ("feature_mappings", "feature_blocks", "features", "entries", "items"):
+            candidate = raw.get(key)
+            if isinstance(candidate, list):
+                raw = candidate
+                break
+        else:
+            raw = [raw]
+
+    if not isinstance(raw, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+
+        feature_id = entry.get("feature_id") or entry.get("feature") or entry.get("id")
+        if not isinstance(feature_id, str) or not feature_id.strip():
+            continue
+
+        impl_raw = (
+            entry.get("implementation_locations")
+            or entry.get("impl_locations")
+            or entry.get("implementation")
+            or entry.get("locations")
+        )
+        if isinstance(impl_raw, str):
+            implementation_locations = [impl_raw.strip()] if impl_raw.strip() else []
+        elif isinstance(impl_raw, list):
+            implementation_locations = [
+                item.strip() for item in impl_raw if isinstance(item, str) and item.strip()
+            ]
+        else:
+            implementation_locations = []
+
+        tests_raw = (
+            entry.get("tests")
+            or entry.get("test_locations")
+            or entry.get("test_files")
+            or entry.get("fixtures")
+        )
+        if isinstance(tests_raw, str):
+            tests = [tests_raw.strip()] if tests_raw.strip() else []
+        elif isinstance(tests_raw, list):
+            tests = [item.strip() for item in tests_raw if isinstance(item, str) and item.strip()]
+        else:
+            tests = []
+
+        normalized.append(
+            {
+                "feature_id": feature_id.strip(),
+                "implementation_locations": implementation_locations,
+                "tests": tests,
+            }
+        )
+    return normalized
+
+
+def normalize_camera_ready_phase_mappings(raw: Any) -> list[dict[str, Any]]:
+    """
+    Normalize camera-ready benchmark pipeline phase mappings into canonical shape.
+
+    Canonical entry:
+    - phase_id: str
+    - implementation_locations: list[str]
+    - tests: list[str]
+    """
+    if isinstance(raw, dict):
+        for key in ("pipeline_phases", "phases", "entries", "items"):
+            candidate = raw.get(key)
+            if isinstance(candidate, list):
+                raw = candidate
+                break
+        else:
+            raw = [raw]
+
+    if not isinstance(raw, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+
+        phase_id = entry.get("phase_id") or entry.get("phase") or entry.get("id")
+        if not isinstance(phase_id, str) or not phase_id.strip():
+            continue
+
+        impl_raw = (
+            entry.get("implementation_locations")
+            or entry.get("implementation")
+            or entry.get("impl_locations")
+            or entry.get("locations")
+        )
+        if isinstance(impl_raw, str):
+            implementation_locations = [impl_raw.strip()] if impl_raw.strip() else []
+        elif isinstance(impl_raw, list):
+            implementation_locations = [
+                item.strip() for item in impl_raw if isinstance(item, str) and item.strip()
+            ]
+        else:
+            implementation_locations = []
+
+        tests_raw = (
+            entry.get("tests")
+            or entry.get("test_locations")
+            or entry.get("test_files")
+            or entry.get("coverage")
+        )
+        if isinstance(tests_raw, str):
+            tests = [tests_raw.strip()] if tests_raw.strip() else []
+        elif isinstance(tests_raw, list):
+            tests = [item.strip() for item in tests_raw if isinstance(item, str) and item.strip()]
+        else:
+            tests = []
+
+        normalized.append(
+            {
+                "phase_id": phase_id.strip(),
+                "implementation_locations": implementation_locations,
+                "tests": tests,
+            }
+        )
+    return normalized
+
+
+def _camera_ready_phase_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = report.get("camera_ready_pipeline")
+    return normalize_camera_ready_phase_mappings(mappings)
+
+
+def _camera_ready_phase_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+    for key in ("camera_ready_pipeline", "benchmark_pipeline", "pipeline_phases"):
+        entries = normalize_camera_ready_phase_mappings(state.get(key))
+        if entries:
+            return entries
+    return []
+
+
+def _feature_test_mapping_entries_from_report(report: dict[str, Any]) -> list[dict[str, Any]]:
+    mappings = report.get("feature_mappings")
+    return normalize_feature_test_mappings(mappings)
+
+
+def _feature_test_mapping_entries_from_state(state: dict[str, Any]) -> list[dict[str, Any]]:
+    for key in ("feature_mappings", "feature_blocks", "implementation_test_sync"):
+        entries = normalize_feature_test_mappings(state.get(key))
+        if entries:
+            return entries
+    return []
+
+
+def build_feature_test_mapping_report(feature_mappings: Any) -> dict[str, Any]:
+    """Build synchronization report for implementation locations and tests."""
+    entries = normalize_feature_test_mappings(feature_mappings)
+    violations: list[dict[str, Any]] = []
+
+    for entry in entries:
+        if not entry["implementation_locations"]:
+            violations.append({**entry, "reason_code": "impl_locations_missing"})
+            continue
+        if not entry["tests"]:
+            violations.append({**entry, "reason_code": "tests_missing"})
+
+    return {
+        "criterion": IMPL_TEST_SYNC_ID,
+        "feature_mappings": entries,
+        "violations": violations,
+        "passes": bool(entries) and not violations,
+    }
+
+
+def impl_locations_tests_synced_passed(state: dict[str, Any]) -> bool:
+    """Return whether implementation locations and tests are in sync."""
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            if details.get("criterion") != IMPL_TEST_SYNC_ID:
+                continue
+            return approval.get("decision") == "approved"
+
+    report = state.get("impl_locations_tests_sync_report")
+    if isinstance(report, dict):
+        if isinstance(report.get("passes"), bool):
+            return report["passes"]
+        violations = report.get("violations")
+        if isinstance(violations, list):
+            return len(violations) == 0
+        return bool(_feature_test_mapping_entries_from_report(report))
+
+    entries = _feature_test_mapping_entries_from_state(state)
+    if not entries:
+        return False
+    return all(entry["implementation_locations"] and entry["tests"] for entry in entries)
+
+
+def impl_locations_tests_synced_failure_reason(state: dict[str, Any]) -> str:
+    """Return reason code for implementation-location/test synchronization gate."""
+    if impl_locations_tests_synced_passed(state):
+        return "impl_locations_tests_synced_satisfied"
+
+    report = state.get("impl_locations_tests_sync_report")
+    if isinstance(report, dict):
+        violations = report.get("violations")
+        if isinstance(violations, list):
+            for violation in violations:
+                if not isinstance(violation, dict):
+                    continue
+                reason_code = violation.get("reason_code")
+                if reason_code in {"impl_locations_missing", "tests_missing"}:
+                    return reason_code
+
+    entries = _feature_test_mapping_entries_from_state(state)
+    if not entries:
+        return "impl_tests_sync_missing"
+
+    for entry in entries:
+        if not entry["implementation_locations"]:
+            return "impl_locations_missing"
+        if not entry["tests"]:
+            return "tests_missing"
+
+    return "impl_tests_sync_missing"
+
+
+def build_amendment_module_loc_report(
+    modules: list[dict[str, Any]],
+    max_loc: int = AMENDMENT_MODULE_MAX_LOC,
+) -> dict[str, Any]:
+    """
+    Build a report for amendment modules requiring helper extraction above a LOC cap.
+
+    ``modules`` entries should include:
+    - name (str)
+    - loc (int)
+    - is_amendment_module (bool)
+    - helper_extraction_documented (bool)
+    """
+    normalized_modules = [module for module in modules if isinstance(module, dict)]
+    violating_modules: list[dict[str, Any]] = []
+
+    for module in normalized_modules:
+        if module.get("is_amendment_module") is not True:
+            continue
+
+        loc = module.get("loc")
+        if not isinstance(loc, int):
+            violating_modules.append(module)
+            continue
+
+        if loc <= max_loc:
+            continue
+
+        if module.get("helper_extraction_documented") is not True:
+            violating_modules.append(module)
+
+    return {
+        "criterion": AMENDMENT_MODULE_LOC_ID,
+        "max_loc": max_loc,
+        "modules": normalized_modules,
+        "violations": violating_modules,
+        "passes": not violating_modules,
+    }
+
+
+def amendment_module_loc_passed(state: dict[str, Any]) -> bool:
+    """Return whether amendment module LOC/helper extraction criterion is satisfied."""
+    gate_approvals = state.get("gate_approvals", [])
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            if details.get("criterion") != AMENDMENT_MODULE_LOC_ID:
+                continue
+            return approval.get("decision") == "approved"
+
+    report = state.get("amendment_module_loc_report")
+    if isinstance(report, dict):
+        if isinstance(report.get("passes"), bool):
+            return report["passes"]
+        violations = report.get("violations")
+        if isinstance(violations, list):
+            return len(violations) == 0
+        return len(_amendment_modules_from_report(report)) == 0
     return False
 
 
-def find_feature_blocks_missing_helper_extraction(markdown_text: str) -> list[str]:
-    """
-    Return feature blocks that declare a new file >=100 LOC without helper extraction docs.
-    """
-    missing: list[str] = []
-    for header, block_lines in _split_feature_blocks(markdown_text):
-        if _declares_large_new_file(block_lines) and not _has_helper_extraction_documented(block_lines):
-            missing.append(header)
-    return missing
-
-
-def validate_new_file_helper_extraction(markdown_text: str) -> dict[str, Any]:
-    """
-    Validate helper extraction documentation for feature blocks with large new files.
-    """
-    missing = find_feature_blocks_missing_helper_extraction(markdown_text)
-    return normalize_unnumbered_003(
-        missing_items=missing,
-        result_key_prefix="new_file_helper_extraction_validation",
-        missing_key="new_file_helper_extraction_missing",
-        missing_reason="missing_helper_extraction_for_large_new_file",
-    )
+def amendment_module_loc_failure_reason(state: dict[str, Any]) -> str:
+    """Return reason code for amendment module LOC/helper extraction gate decision."""
+    if amendment_module_loc_passed(state):
+        return "amendment_module_loc_satisfied"
+    return "amendment_module_helper_extraction_missing"

@@ -218,6 +218,9 @@ __marimo__/
 # ============================================================================
 # These repos should be managed separately, not as submodules
 /amrex/
+
+# Local chunk/orchestrator helper scripts (worktree-specific)
+/scripts/commit*.sh
 /PeleC/
 /warpx/
 

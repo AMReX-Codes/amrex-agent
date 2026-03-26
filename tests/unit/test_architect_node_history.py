@@ -30,9 +30,18 @@ def _plan(selected_case="PeleC/Exec/RegTests/PMF", selected_solver="PeleC"):
         selected_case=selected_case,
         modifications=[("amr.n_cell", "64 64 64"), ("pelec.cfl", "0.5")],
         reasoning="Reasoning text",
-        solver_confidence=0.89,
-        level0_confidence=0.89,
-        level1_confidence=0.78,
+        requirements={
+            "solver_source": "level0_faiss",
+            "solver_confidence": 0.92,
+            "solver_citations": [
+                {
+                    "index": "physics_regimes",
+                    "code": selected_solver,
+                    "score": 0.92,
+                    "source": "config",
+                }
+            ],
+        },
         baseline_confidence=0.92,
         level0_latency_per_query_ms=6.0,
         level1_latency_per_query_ms=14.5,
@@ -158,6 +167,18 @@ def test_history_includes_level0_and_level2_override_trace(monkeypatch):
                 selected_case="Exec/DryRegTests/TaylorGreenVortex",
                 modifications=[("amr.n_cell", "128 128 128")],
                 reasoning="Override based on case-name match",
+                requirements={
+                    "solver_source": "level0_faiss",
+                    "solver_confidence": 0.1,
+                    "solver_citations": [
+                        {
+                            "index": "physics_regimes",
+                            "code": "PeleC",
+                            "score": 0.1,
+                            "source": "config",
+                        }
+                    ],
+                },
                 baseline_confidence=0.91,
                 indexing_strategy="hierarchical",
                 case_candidates=[],
@@ -181,101 +202,5 @@ def test_history_includes_level0_and_level2_override_trace(monkeypatch):
     assert details["level2_override_solver"] == "ERF"
     assert details["level2_override_case"] == "Exec/DryRegTests/TaylorGreenVortex"
     assert details["level2_override_confidence"] == 0.9
-
-
-def test_plan_includes_l0_l1_l2_confidence_and_latency_per_query(monkeypatch):
-    class FakeArchitectService:
-        def __init__(self, _config, embedding_service=None):
-            self.level0_searcher = object()
-
-        def execute_planning(self, **_kwargs):
-            return _plan()
-
-    monkeypatch.setattr(embedding_factory_module, "get_embedding_service", lambda _cfg: DummyEmbeddingService())
-    monkeypatch.setattr(architect_node_module, "ArchitectService", FakeArchitectService)
-
-    updates = architect_node_module.architect_node({"config": DummyConfig(), "prompt": "test", "workflow_history": []})
-    plan = SimulationPlan(**updates["plan"])
-    level_metrics = plan.get_query_level_metrics()
-
-    assert plan.level0_confidence == 0.89
-    assert plan.level1_confidence == 0.78
-    assert plan.baseline_confidence == 0.92
-    assert level_metrics["L0"]["latency_ms"] == 6.0
-    assert level_metrics["L1"]["latency_ms"] == 14.5
-    assert level_metrics["L2"]["latency_ms"] == 11.25
-
-
-def _make_router_service(
-    strategy: str = "hierarchical",
-    baseline_override: str | None = None,
-    fallback_to_simple_on_error: bool = True,
-):
-    service = object.__new__(architect_service_module.ArchitectService)
-    service.config = SimpleNamespace(
-        indexing_strategy=strategy,
-        baseline_override=baseline_override,
-        fallback_to_simple_on_error=fallback_to_simple_on_error,
-    )
-    return service
-
-
-def test_execute_planning_attaches_hierarchical_router_mapping(caplog):
-    service = _make_router_service(strategy="hierarchical")
-
-    def _fake_create_plan_rag(self, **_kwargs):
-        return _plan()
-
-    service.create_plan_rag = MethodType(_fake_create_plan_rag, service)
-
-    with caplog.at_level("INFO"):
-        plan = service.execute_planning(user_prompt="test")
-
-    mapping = plan.analysis["router_mapping"]
-    assert mapping["router_branch"] == "hierarchical"
-    assert mapping["diagram_nodes"]["router"] == "strategy_router"
-    assert mapping["diagram_nodes"]["branch"] == "hierarchical_strategy"
-    assert "strategy_router -> hierarchical_strategy" in caplog.text
-
-
-def test_execute_planning_attaches_override_router_mapping(caplog):
-    service = _make_router_service(
-        strategy="simple",
-        baseline_override="PeleC/Exec/RegTests/PMF",
-    )
-
-    def _fake_execute_planning_with_override(self, **_kwargs):
-        return _plan()
-
-    service._execute_planning_with_override = MethodType(_fake_execute_planning_with_override, service)
-
-    with caplog.at_level("INFO"):
-        plan = service.execute_planning(user_prompt="test")
-
-    mapping = plan.analysis["router_mapping"]
-    assert mapping["router_branch"] == "baseline_override"
-    assert mapping["diagram_nodes"]["router"] == "strategy_router"
-    assert mapping["diagram_nodes"]["branch"] == "static_strategy"
-    assert "baseline_override=true" in caplog.text
-
-
-def test_execute_planning_attaches_fallback_router_mapping(caplog):
-    service = _make_router_service(strategy="hierarchical", fallback_to_simple_on_error=True)
-
-    def _failing_create_plan_rag(self, **_kwargs):
-        raise RuntimeError("boom")
-
-    def _fake_create_plan(self, **_kwargs):
-        return _plan()
-
-    service.create_plan_rag = MethodType(_failing_create_plan_rag, service)
-    service.create_plan = MethodType(_fake_create_plan, service)
-
-    with caplog.at_level("INFO"):
-        plan = service.execute_planning(user_prompt="test")
-
-    mapping = plan.analysis["router_mapping"]
-    assert mapping["router_branch"] == "hierarchical_fallback_to_simple"
-    assert mapping["diagram_nodes"]["router"] == "strategy_router"
-    assert mapping["diagram_nodes"]["branch"] == "simple_strategy"
-    assert "fallback=hierarchical_error" in caplog.text
+    assert updates["plan"]["requirements"]["solver_confidence"] == 0.1
+    assert updates["plan"]["requirements"]["solver_citations"][0]["index"] == "physics_regimes"

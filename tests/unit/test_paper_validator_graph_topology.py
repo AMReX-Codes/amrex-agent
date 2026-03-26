@@ -36,7 +36,7 @@ def test_clarification_routes_to_writer_when_validator_disabled() -> None:
 def test_clarification_routes_to_paper_validator_when_enabled() -> None:
     assert _route_after_clarification(
         {"clarification_needed": False, "paper_validator_enabled": True}
-    ) == "input_writer_node"
+    ) == "paper_validator_node"
 
 
 def test_clarification_needed_routes_to_handler() -> None:
@@ -50,7 +50,12 @@ def test_no_sweep_routes_to_architect() -> None:
 
 def test_sweep_routes_to_dependency_handler_when_incomplete(monkeypatch) -> None:
     monkeypatch.setattr("src.graph.is_session_dependency_complete", lambda state: False)
-    assert _route_after_sweep_detection({"sweep_id": "sweep_001"}) == "session_dependency_handler"
+    assert (
+        _route_after_sweep_detection(
+            {"sweep_id": "sweep_001", "enforce_session_dependency_gate": True}
+        )
+        == "session_dependency_handler"
+    )
 
 
 def test_sweep_routes_to_execution_handler_when_complete(monkeypatch) -> None:

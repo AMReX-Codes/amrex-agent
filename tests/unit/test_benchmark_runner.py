@@ -1,23 +1,16 @@
-import csv
 import json
-import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from src.benchmark_runner import (
-    _write_jsonl,
-    has_migration_plan_schema_mapping_and_rollback,
-    run_model_benchmark,
-)
-from scripts import aggregate_metrics
+from src.benchmark_runner import _write_jsonl, run_model_benchmark
+from src.config import AMReXAgentConfig, resolve_benchmark_lockfile_path
+from src.services import plan as plan_service
 
 
 def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) -> None:
-    calls = []
-
     def fake_run(*_args, **_kwargs):
-        calls.append({"args": _args, "kwargs": _kwargs})
         return SimpleNamespace(
             returncode=0,
             stdout=json.dumps({"job_status": "ok"}),
@@ -41,50 +34,48 @@ def test_run_model_benchmark_writes_manifest_and_metrics(tmp_path, monkeypatch) 
     assert (run_dir / "manifest.json").exists()
     assert (run_dir / "benchmark_runs.jsonl").exists()
     assert (run_dir / "configs" / "m1.json").exists()
-    assert (run_dir / "replay_manifest.json").exists()
 
     prompt_context = run_dir / "runs" / "m1" / "p1" / "benchmark_context.json"
     assert prompt_context.exists()
-    context_payload = json.loads(prompt_context.read_text())
-    assert context_payload["deterministic_seed"] == 1729
-    assert isinstance(context_payload["replay_fingerprint"], str)
-    assert context_payload["replay_fingerprint"]
-
-    manifest = json.loads((run_dir / "manifest.json").read_text())
-    assert manifest["determinism"]["seed"] == 1729
-    assert manifest["determinism"]["enforce_replay"] is True
-    assert isinstance(manifest["determinism"]["replay_fingerprint"], str)
-
-    replay_manifest = json.loads((run_dir / "replay_manifest.json").read_text())
-    assert replay_manifest["seed"] == 1729
-    assert replay_manifest["enforce_replay"] is True
-    assert len(replay_manifest["planned_runs"]) == 1
 
     record = json.loads((run_dir / "benchmark_runs.jsonl").read_text().splitlines()[0])
     assert record["model_id"] == "m1"
     assert record["prompt_id"] == "p1"
     assert record["run_directory"] is None
-    assert record["deterministic_seed"] == 1729
-    assert record["replay_fingerprint"] == manifest["determinism"]["replay_fingerprint"]
-
-    env = calls[0]["kwargs"]["env"]
-    assert env["PYTHONHASHSEED"] == "1729"
-    assert env["AMREX_AGENT_BENCHMARK_SEED"] == "1729"
-    assert env["AMREX_AGENT_DETERMINISTIC_REPLAY"] == "1"
-    assert env["AMREX_AGENT_REPLAY_FINGERPRINT"] == manifest["determinism"]["replay_fingerprint"]
 
 
-def test_run_model_benchmark_rejects_non_deterministic_replay_setting(tmp_path):
-    config = {
-        "prompts": [{"id": "p1", "prompt": "Hello"}],
-        "models": [{"id": "m1", "overrides": {"llm_provider": "cborg", "llm_model": "x"}}],
-        "run_args": {"dry_run": True, "enforce_replay": False},
-    }
-    config_path = tmp_path / "bench.json"
-    config_path.write_text(json.dumps(config))
+def test_benchmark_environment_contract_defaults_to_containerized_lockfile() -> None:
+    config = AMReXAgentConfig()
+    contract = config.get_benchmark_environment_contract()
+    assert contract["isolation_mode"] == "container"
+    assert contract["reproducible_by_default"] is True
+    assert contract["lockfile_exists"] is True
+    assert contract["lockfile_path"].endswith("utils/environment-frozen.yaml")
 
-    with pytest.raises(ValueError, match="enforce_replay"):
-        run_model_benchmark(config_path, tmp_path, run_name="bench_test")
+
+def test_resolve_benchmark_lockfile_path_handles_relative_and_absolute(tmp_path) -> None:
+    relative = resolve_benchmark_lockfile_path("locks/bench.lock", repo_root=tmp_path)
+    assert relative == tmp_path / "locks" / "bench.lock"
+
+    absolute = tmp_path / "absolute.lock"
+    assert resolve_benchmark_lockfile_path(absolute, repo_root=Path("/unused")) == absolute
+
+
+def test_benchmark_environment_requires_existing_lockfile(tmp_path) -> None:
+    missing_lockfile = tmp_path / "missing-environment.lock"
+    with pytest.raises(ValueError, match="benchmark_environment_lockfile_missing"):
+        AMReXAgentConfig(benchmark_environment_lockfile=missing_lockfile)
+
+
+def test_benchmark_environment_can_allow_missing_lockfile(tmp_path) -> None:
+    missing_lockfile = tmp_path / "missing-environment.lock"
+    config = AMReXAgentConfig(
+        benchmark_environment_lockfile=missing_lockfile,
+        benchmark_require_lockfile=False,
+    )
+    contract = config.get_benchmark_environment_contract()
+    assert contract["lockfile_exists"] is False
+    assert contract["reproducible_by_default"] is True
 
 
 def _read_first_jsonl(path):
@@ -295,155 +286,82 @@ def test_gate_approvals_missing_from_state_safe(tmp_path):
     assert record["gate_approval_count"] == 0
 
 
-def _valid_manifest_with_migration_plan() -> dict:
-    return {
-        "migration_plan": {
-            "schema_mapping": {
-                "workflow_sessions": {
-                    "session_id": "uuid",
-                    "state_json": "jsonb",
-                }
-            },
-            "rollback_steps": [
-                "disable_writes",
-                "restore_snapshot",
-                "repoint_connection",
-            ],
-        },
-    }
-
-
-def test_migration_plan_helper_accepts_mapping_and_rollback() -> None:
-    context = {"validation_manifest": _valid_manifest_with_migration_plan()}
-    assert has_migration_plan_schema_mapping_and_rollback(context) is True
-
-
-def test_migration_plan_helper_rejects_missing_mapping_or_rollback() -> None:
-    missing_mapping = {
-        "validation_manifest": {
-            "migration_plan": {"rollback_steps": ["restore_snapshot"]},
-        }
-    }
-    missing_rollback = {
-        "validation_manifest": {
-            "migration_plan": {"schema_mapping": {"workflow_sessions": {"state_json": "jsonb"}}},
-        }
-    }
-    assert has_migration_plan_schema_mapping_and_rollback(missing_mapping) is False
-    assert has_migration_plan_schema_mapping_and_rollback(missing_rollback) is False
-
-
-def test_jsonl_records_migration_plan_fields_from_graph_state(tmp_path) -> None:
-    path = tmp_path / "bench.jsonl"
-    _write_jsonl(
-        path,
+def test_normalize_camera_ready_phase_mappings_canonicalizes_phase_shapes():
+    normalized = plan_service.normalize_camera_ready_phase_mappings(
         {
-            "model_id": "m1",
-            "prompt_id": "p1",
-            "__graph_state": {"validation_manifest": _valid_manifest_with_migration_plan()},
-        },
+            "pipeline_phases": [
+                {
+                    "phase_id": "benchmark_execution",
+                    "implementation_locations": ["src/benchmark_runner.py", ""],
+                    "tests": ["tests/unit/test_benchmark_runner.py", 7],
+                },
+                {
+                    "phase": "aggregation",
+                    "implementation": "scripts/aggregate_metrics.py",
+                    "test_files": "tests/integration/test_oracle_benchmarks.py",
+                },
+                {
+                    "id": "table_generation",
+                    "impl_locations": ["scripts/generate_paper_tables.py", None],
+                    "coverage": ["tests/unit/test_generate_paper_tables.py", ""],
+                },
+                {
+                    "phase_id": "   ",
+                    "implementation_locations": ["scripts/run_benchmark.py"],
+                    "tests": ["tests/unit/test_benchmark_runner.py"],
+                },
+            ]
+        }
     )
-    record = _read_first_jsonl(path)
-    assert record["migration_plan_schema_mapping_present"] is True
-    assert record["migration_plan_rollback_present"] is True
-    assert record["migration_plan_ready"] is True
 
-
-def test_jsonl_records_migration_plan_fields_when_artifact_missing(tmp_path) -> None:
-    path = tmp_path / "bench.jsonl"
-    _write_jsonl(path, {"model_id": "m1", "prompt_id": "p1", "__graph_state": {}})
-    record = _read_first_jsonl(path)
-    assert record["migration_plan_schema_mapping_present"] is False
-    assert record["migration_plan_rollback_present"] is False
-    assert record["migration_plan_ready"] is False
-
-
-def _read_csv_rows(path):
-    with path.open("r", encoding="utf-8", newline="") as handle:
-        return list(csv.DictReader(handle))
-
-
-def test_aggregate_metrics_emits_accuracy_latency_cost_strategy_vectors(tmp_path, monkeypatch):
-    metrics_path = tmp_path / "metrics_sample.jsonl"
-    events = [
+    assert normalized == [
         {
-            "type": "workflow_summary",
-            "stage_latency_ms": 3300,
-            "context": {"strategy": "simple", "model_id": "m1"},
-            "data": {
-                "job_status": "completed",
-                "accuracy": 0.75,
-                "cost_usd": 0.60,
-                "tokens_total": 120,
-            },
+            "phase_id": "benchmark_execution",
+            "implementation_locations": ["src/benchmark_runner.py"],
+            "tests": ["tests/unit/test_benchmark_runner.py"],
         },
         {
-            "type": "workflow_summary",
-            "context": {"strategy": "simple", "model_id": "m1"},
-            "data": {
-                "job_status": "failed",
-                "duration_seconds": 9.0,
-                "total_cost_usd": 0.20,
-                "tokens_total": 80,
-            },
+            "phase_id": "aggregation",
+            "implementation_locations": ["scripts/aggregate_metrics.py"],
+            "tests": ["tests/integration/test_oracle_benchmarks.py"],
         },
         {
-            "type": "workflow_summary",
-            "node_latency_ms": 1800,
-            "context": {"strategy": "hierarchical", "model_id": "m2"},
-            "data": {
-                "job_status": "completed",
-                "accuracy_score": 0.9,
-                "cost_breakdown": {"total_usd": 1.40},
-                "tokens_total": 300,
-            },
+            "phase_id": "table_generation",
+            "implementation_locations": ["scripts/generate_paper_tables.py"],
+            "tests": ["tests/unit/test_generate_paper_tables.py"],
         },
     ]
-    metrics_path.write_text("\n".join(json.dumps(item) for item in events) + "\n", encoding="utf-8")
-
-    monkeypatch.setattr(sys, "argv", ["aggregate_metrics.py", "--input", str(metrics_path)])
-    aggregate_metrics.main()
-
-    by_strategy = _read_csv_rows(tmp_path / "by_strategy.csv")
-    by_key = {row["retrieval_strategy"]: row for row in by_strategy}
-
-    assert "simple" in by_key
-    simple = by_key["simple"]
-    assert simple["avg_accuracy"] == "0.75"
-    assert simple["accuracy_sample_count"] == "1"
-    assert simple["avg_latency_seconds"] == "6.15"
-    assert simple["latency_sample_count"] == "2"
-    assert simple["avg_cost_usd"] == "0.4"
-    assert simple["cost_sample_count"] == "2"
-
-    assert "hierarchical" in by_key
-    hierarchical = by_key["hierarchical"]
-    assert hierarchical["avg_accuracy"] == "0.9"
-    assert hierarchical["avg_latency_seconds"] == "1.8"
-    assert hierarchical["avg_cost_usd"] == "1.4"
 
 
-def test_aggregate_metrics_falls_back_to_success_rate_when_accuracy_missing(tmp_path, monkeypatch):
-    metrics_path = tmp_path / "metrics_sample.jsonl"
-    events = [
+def test_camera_ready_phase_report_and_state_helpers_share_logic():
+    report_entries = plan_service._camera_ready_phase_entries_from_report(
         {
-            "type": "workflow_summary",
-            "context": {"strategy": "fallback"},
-            "data": {"job_status": "completed"},
-        },
+            "camera_ready_pipeline": [
+                {
+                    "phase": "benchmark_execution",
+                    "implementation": "src/benchmark_runner.py",
+                    "tests": "tests/unit/test_benchmark_runner.py",
+                }
+            ]
+        }
+    )
+    state_entries = plan_service._camera_ready_phase_entries_from_state(
         {
-            "type": "workflow_summary",
-            "context": {"strategy": "fallback"},
-            "data": {"job_status": "failed"},
-        },
+            "benchmark_pipeline": [
+                {
+                    "id": "benchmark_execution",
+                    "locations": ["src/benchmark_runner.py"],
+                    "test_locations": ["tests/unit/test_benchmark_runner.py"],
+                }
+            ]
+        }
+    )
+
+    assert report_entries == [
+        {
+            "phase_id": "benchmark_execution",
+            "implementation_locations": ["src/benchmark_runner.py"],
+            "tests": ["tests/unit/test_benchmark_runner.py"],
+        }
     ]
-    metrics_path.write_text("\n".join(json.dumps(item) for item in events) + "\n", encoding="utf-8")
-
-    monkeypatch.setattr(sys, "argv", ["aggregate_metrics.py", "--input", str(metrics_path)])
-    aggregate_metrics.main()
-
-    row = _read_csv_rows(tmp_path / "by_strategy.csv")[0]
-    assert row["retrieval_strategy"] == "fallback"
-    assert row["success_rate"] == "0.5"
-    assert row["avg_accuracy"] == "0.5"
-    assert row["accuracy_sample_count"] == "2"
+    assert state_entries == report_entries

@@ -29,6 +29,8 @@ class Level0Searcher:
         'code_lineage': 0.2,
         'cross_cutting_guidance': 0.1,
     }
+    INDEX_GROWTH_MIN_INDICES = 100
+    MAX_ACCURACY_DRIFT = 0.02
     
     def __init__(self, index_dir: Path, embedder=None):
         """
@@ -257,3 +259,54 @@ class Level0Searcher:
             total += score * weight
         
         return total
+
+    def _count_index_entries(self) -> int:
+        """Estimate corpus size from Level-0 sub-index populations.
+
+        We use the maximum sub-index size instead of the sum because the same
+        logical corpus is represented in multiple sub-indices with different
+        facets/metadata.
+        """
+        max_count = 0
+        for index_name in self.WEIGHTS:
+            self._load_index(index_name)
+            index = self.indices.get(index_name)
+            if index is not None and hasattr(index, "ntotal"):
+                max_count = max(max_count, int(index.ntotal))
+        return max_count
+
+    def evaluate_index_growth_accuracy_drift(
+        self,
+        baseline_accuracy: float,
+        current_accuracy: float,
+        index_count: Optional[int] = None,
+    ) -> Dict:
+        """
+        Evaluate the 100+ index growth gate with a max 2% accuracy drop.
+
+        Baseline/current values are expected as ratios in [0.0, 1.0].
+        """
+        for label, value in (
+            ("baseline_accuracy", baseline_accuracy),
+            ("current_accuracy", current_accuracy),
+        ):
+            if value < 0.0 or value > 1.0:
+                raise ValueError(f"{label} must be between 0.0 and 1.0")
+
+        observed_index_count = int(index_count if index_count is not None else self._count_index_entries())
+        accuracy_drop = max(0.0, float(baseline_accuracy) - float(current_accuracy))
+        gate_active = observed_index_count >= self.INDEX_GROWTH_MIN_INDICES
+        drift_within_target = accuracy_drop <= self.MAX_ACCURACY_DRIFT
+        passed = (not gate_active) or drift_within_target
+
+        return {
+            "index_count": observed_index_count,
+            "baseline_accuracy": float(baseline_accuracy),
+            "current_accuracy": float(current_accuracy),
+            "accuracy_drop": accuracy_drop,
+            "max_allowed_accuracy_drop": self.MAX_ACCURACY_DRIFT,
+            "min_index_growth_threshold": self.INDEX_GROWTH_MIN_INDICES,
+            "gate_active": gate_active,
+            "drift_within_target": drift_within_target,
+            "passed": passed,
+        }

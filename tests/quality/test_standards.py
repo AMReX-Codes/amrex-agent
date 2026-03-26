@@ -18,53 +18,7 @@ import pytest
 from pathlib import Path
 from typing import List, Tuple, Set
 
-from src.graph import (
-    BENCHMARK_CACHE_HIT_RATE_MARKER,
-    CLAIMS_RESULTS_ARTIFACTS_MARKER,
-    CROSS_REFERENCE_FEATURE_IDS_MARKER,
-    FEATURE_TEST_COVERAGE_MARKER,
-    PHASE1_FEATURE_TRACE_MARKER,
-    REQUIRED_BEHAVIOR_MARKER,
-    _compute_benchmark_cache_hit_rate,
-    _has_benchmark_cache_hit_rate,
-    _has_claims_results_artifacts,
-    _has_cross_reference_feature_ids,
-    _has_phase1_feature_trace,
-    _has_required_behavior_item,
-    _has_unit_and_integration_feature_coverage,
-    _is_results_artifact_path,
-    _paper_validator_enabled,
-    _route_after_benchmark_cache_hit_rate,
-    _route_after_claims_results_artifacts,
-    _route_after_clarification,
-    _route_after_complexity_evidence,
-    _route_after_cross_reference_feature_ids,
-    _route_after_feature_test_coverage,
-    _route_after_paper_validator,
-    _route_after_phase1_traceability,
-    _route_after_post_incident_risk_matrix_feedback,
-    _route_after_postgresql_migration_evidence,
-    _route_after_required_behavior_item,
-    _route_after_sweep_detection,
-    benchmark_cache_hit_rate_handler_node,
-    claims_results_artifacts_handler_node,
-    clarification_handler_node,
-    complexity_evidence_handler_node,
-    complexity_evidence_node,
-    create_graph,
-    cross_reference_feature_ids_handler_node,
-    feature_test_coverage_handler_node,
-    paper_validator_node,
-    phase1_traceability_handler_node,
-    post_incident_risk_matrix_feedback_handler_node,
-    postgresql_migration_handler_node,
-    required_behavior_handler_node,
-    session_dependency_handler_node,
-    sweep_execution_handler_node,
-)
-from src.services.workflow_store import POSTGRESQL_MIGRATION_EVIDENCE_MARKER
-from src.session_manager import SESSION_DEPENDENCY_COMPLETION_MARKER
-from src.utils.metrics import POST_INCIDENT_RISK_MATRIX_FEEDBACK_MARKER
+from src.services import plan as plan_service
 
 
 # Configuration
@@ -633,6 +587,45 @@ def test_docs_includes_resolve():
             missing.append(rel_path)
 
     assert not missing, f"Missing include targets in {docs_page}: {missing}"
+
+
+@pytest.mark.quality
+def test_normalize_use_case_artifact_mappings_canonicalizes_shapes():
+    """
+    Ensure use-case artifact mappings normalize to a stable schema.
+    """
+    normalized = plan_service.normalize_use_case_artifact_mappings(
+        {
+            "use_cases": [
+                {"use_case": "UC1", "artifacts": ["tests/unit/test_a.py", ""]},
+                {"usecase": "UC2", "artifact": "tests/integration/test_b.py"},
+                {"id": "UC3", "references": ["tests/e2e/test_c.py", 5]},
+                {"id": "   ", "artifacts": ["tests/unit/test_d.py"]},
+            ]
+        }
+    )
+
+    assert normalized == [
+        {"use_case": "UC1", "artifacts": ["tests/unit/test_a.py"]},
+        {"use_case": "UC2", "artifacts": ["tests/integration/test_b.py"]},
+        {"use_case": "UC3", "artifacts": ["tests/e2e/test_c.py"]},
+    ]
+
+
+@pytest.mark.quality
+def test_normalize_use_case_artifact_mappings_report_and_state_helpers_share_logic():
+    """
+    Verify both call sites reuse the same normalization behavior.
+    """
+    report_entries = plan_service._use_case_artifact_entries_from_report(
+        {"use_case_artifacts": [{"use_case": "UC1", "artifact": "tests/unit/test_x.py"}]}
+    )
+    state_entries = plan_service._use_case_artifact_entries_from_state(
+        {"use_case_artifacts": [{"use_case": "UC1", "artifact": "tests/unit/test_x.py"}]}
+    )
+
+    assert report_entries == [{"use_case": "UC1", "artifacts": ["tests/unit/test_x.py"]}]
+    assert state_entries == report_entries
 
 
 @pytest.mark.quality

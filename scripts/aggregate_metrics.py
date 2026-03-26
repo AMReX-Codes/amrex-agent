@@ -9,8 +9,27 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
-
-_SUCCESS_STATUSES = {"completed", "success", "succeeded", "ok"}
+STABLE_ERROR_TAXONOMY_VERSION = "v1"
+STABLE_ERROR_REASON_CODES = frozenset(
+    {
+        "feature_a_dependency_unverified",
+        "amendment_module_helper_extraction_missing",
+        "global_function_complexity_threshold_exceeded",
+        "level4_depth_guidance_missing",
+        "level4_depth_guidance_out_of_range",
+        "plan_generation_latency_missing",
+        "plan_generation_p95_exceeded",
+        "error_taxonomy_version_mismatch",
+        "error_taxonomy_reason_code_unknown",
+        "error_taxonomy_contract_invalid",
+        "uc_traceability_rows_missing",
+        "uc_traceable_artifact_missing",
+        "uc_traceable_artifact_stale",
+        "impl_tests_sync_missing",
+        "impl_locations_missing",
+        "tests_missing",
+    }
+)
 
 
 def _iter_metric_files(path: Path) -> Iterable[Path]:
@@ -36,7 +55,12 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
     model_id = context.get("model_id") or (models[0] if models else "unknown")
     provider = context.get("provider") or (providers[0] if providers else None)
     strategy = context.get("strategy") or data.get("strategy") or _extract_strategy(data)
-    job_status = data.get("job_status")
+    taxonomy_version = data.get("error_taxonomy_version")
+    if not isinstance(taxonomy_version, str) or not taxonomy_version:
+        taxonomy_version = STABLE_ERROR_TAXONOMY_VERSION
+
+    reason_codes = _collect_error_reason_codes(data)
+    unknown_reason_codes = [code for code in reason_codes if code not in STABLE_ERROR_REASON_CODES]
 
     return {
         "model_id": model_id,
@@ -48,10 +72,7 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
         "difficulty_tier": context.get("difficulty_tier") or data.get("difficulty_tier"),
         "novelty_tier": context.get("novelty_tier") or data.get("novelty_tier"),
         "retrieval_strategy": strategy,
-        "job_status": job_status,
-        "accuracy": _extract_accuracy(data),
-        "latency_seconds": _extract_latency_seconds(event, data),
-        "cost_usd": _extract_cost_usd(data),
+        "job_status": data.get("job_status"),
         "iteration": data.get("iteration"),
         "run_directory": data.get("run_directory"),
         "selected_case": context.get("selected_case"),
@@ -60,53 +81,15 @@ def _record_from_event(event: dict[str, Any], source: Path) -> dict[str, Any]:
         "tokens_total": data.get("tokens_total"),
         "tokens_by_stage": data.get("tokens_by_stage"),
         "stages": data.get("stages"),
+        "error_taxonomy_version": taxonomy_version,
+        "error_reason_codes": reason_codes,
+        "error_reason_code_count": len(reason_codes),
+        "error_reason_codes_unknown": unknown_reason_codes,
+        "error_taxonomy_stable": (
+            taxonomy_version == STABLE_ERROR_TAXONOMY_VERSION and not unknown_reason_codes
+        ),
         "source": str(source),
     }
-
-
-def _extract_accuracy(data: dict[str, Any]) -> float | None:
-    direct = _as_score(data.get("accuracy"))
-    if direct is not None:
-        return direct
-
-    for key in ("accuracy_score", "success_rate"):
-        value = _as_score(data.get(key))
-        if value is not None:
-            return value
-
-    for key in ("is_correct", "correct", "success", "converged"):
-        value = data.get(key)
-        if isinstance(value, bool):
-            return 1.0 if value else 0.0
-
-    return None
-
-
-def _extract_latency_seconds(event: dict[str, Any], data: dict[str, Any]) -> float | None:
-    for key in ("wall_time_seconds", "duration_seconds", "latency_seconds"):
-        value = _as_float(data.get(key))
-        if value is not None:
-            return value
-
-    for key in ("stage_latency_ms", "node_latency_ms"):
-        value = _as_float(event.get(key))
-        if value is not None:
-            return round(value / 1000.0, 3)
-    return None
-
-
-def _extract_cost_usd(data: dict[str, Any]) -> float | None:
-    for key in ("cost_usd", "total_cost_usd"):
-        value = _as_float(data.get(key))
-        if value is not None:
-            return value
-
-    cost_breakdown = data.get("cost_breakdown")
-    if isinstance(cost_breakdown, dict):
-        value = _as_float(cost_breakdown.get("total_usd"))
-        if value is not None:
-            return value
-    return None
 
 
 def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
@@ -131,6 +114,28 @@ def _extract_strategy(data: dict[str, Any]) -> str | None:
     return None
 
 
+def _collect_error_reason_codes(data: dict[str, Any]) -> list[str]:
+    reason_codes: set[str] = set()
+
+    errors_active = data.get("errors_active")
+    if isinstance(errors_active, list):
+        reason_codes.update(code for code in errors_active if isinstance(code, str) and code)
+
+    gate_approvals = data.get("gate_approvals")
+    if isinstance(gate_approvals, list):
+        for approval in gate_approvals:
+            if not isinstance(approval, dict):
+                continue
+            details = approval.get("details")
+            if not isinstance(details, dict):
+                continue
+            reason_code = details.get("reason_code")
+            if isinstance(reason_code, str) and reason_code:
+                reason_codes.add(reason_code)
+
+    return sorted(reason_codes)
+
+
 def _write_csv(path: Path, rows: list[dict[str, Any]], headers: list[str]) -> None:
     if not rows:
         return
@@ -139,6 +144,68 @@ def _write_csv(path: Path, rows: list[dict[str, Any]], headers: list[str]) -> No
         writer.writeheader()
         for row in rows:
             writer.writerow({key: row.get(key) for key in headers})
+
+
+def _read_csv_rows(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def _format_percent(value: str | float | int | None) -> str:
+    if isinstance(value, str):
+        try:
+            numeric = float(value)
+        except ValueError:
+            return "N/A"
+    elif isinstance(value, (int, float)):
+        numeric = float(value)
+    else:
+        return "N/A"
+    return f"{numeric * 100:.2f}%"
+
+
+def _generate_strategy_table_text(summary_rows: list[dict[str, str]], strategy_rows: list[dict[str, str]]) -> str:
+    overall = summary_rows[0] if summary_rows else {}
+    lines = [
+        "# Strategy Comparison",
+        "",
+        f"Overall runs: {overall.get('total_runs', '0')}",
+        f"Overall success rate: {_format_percent(overall.get('success_rate'))}",
+        "",
+        "| Strategy | Success Rate | Success/Total | Avg Tokens (In/Out/Total) |",
+        "| --- | --- | --- | --- |",
+    ]
+
+    for row in strategy_rows:
+        strategy = row.get("retrieval_strategy", "unknown")
+        success_rate = _format_percent(row.get("success_rate"))
+        success_total = f"{row.get('success_runs', '0')}/{row.get('total_runs', '0')}"
+        avg_tokens = (
+            f"{row.get('avg_tokens_input', '0')}/"
+            f"{row.get('avg_tokens_output', '0')}/"
+            f"{row.get('avg_tokens_total', '0')}"
+        )
+        lines.append(f"| {strategy} | {success_rate} | {success_total} | {avg_tokens} |")
+
+    lines.extend(
+        [
+            "",
+            "Generated from `summary.csv` and `by_strategy.csv`.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _write_strategy_table_from_csvs(output_dir: Path) -> None:
+    summary_rows = _read_csv_rows(output_dir / "summary.csv")
+    strategy_rows = _read_csv_rows(output_dir / "by_strategy.csv")
+    if not summary_rows or not strategy_rows:
+        return
+    table_text = _generate_strategy_table_text(summary_rows, strategy_rows)
+    (output_dir / "strategy_comparison_table.md").write_text(table_text, encoding="utf-8")
 
 
 def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[dict[str, Any]]:
@@ -150,120 +217,71 @@ def _group_summary(records: list[dict[str, Any]], key: str, label: str) -> list[
     rows = []
     for value, items in sorted(grouped.items(), key=lambda item: item[0]):
         rows.append(_summarize_items(items, label, value))
-    if key == "retrieval_strategy":
-        rows = _add_naive_savings(rows, label)
+    if label == "retrieval_strategy":
+        _attach_naive_savings(rows)
     return rows
 
 
 def _summarize_items(items: list[dict[str, Any]], label: str, value: str) -> dict[str, Any]:
     total = len(items)
-    success = sum(1 for item in items if str(item.get("job_status") or "").lower() in _SUCCESS_STATUSES)
+    success = sum(1 for item in items if item.get("job_status") == "completed")
     tokens_total = _avg([item.get("tokens_total") for item in items])
     tokens_input = _avg([item.get("tokens_total_input") for item in items])
     tokens_output = _avg([item.get("tokens_total_output") for item in items])
-    accuracy_values = _number_values(items, "accuracy")
-    latency_values = _number_values(items, "latency_seconds")
-    cost_values = _number_values(items, "cost_usd")
-    if accuracy_values:
-        avg_accuracy = round(sum(accuracy_values) / len(accuracy_values), 4)
-        accuracy_sample_count = len(accuracy_values)
-    else:
-        avg_accuracy = round(success / total, 4) if total else 0.0
-        accuracy_sample_count = total
     return {
         label: value,
         "total_runs": total,
         "success_runs": success,
         "success_rate": round(success / total, 4) if total else 0.0,
-        "avg_accuracy": avg_accuracy,
-        "accuracy_sample_count": accuracy_sample_count,
-        "avg_latency_seconds": _avg(latency_values),
-        "latency_sample_count": len(latency_values),
-        "avg_cost_usd": _avg(cost_values),
-        "cost_sample_count": len(cost_values),
         "avg_tokens_total": tokens_total,
         "avg_tokens_input": tokens_input,
         "avg_tokens_output": tokens_output,
     }
 
 
-def _add_naive_savings(rows: list[dict[str, Any]], label: str) -> list[dict[str, Any]]:
-    naive_row = next((row for row in rows if row.get(label) == "naive"), None)
-    if naive_row is None:
-        for row in rows:
-            row.update(_empty_savings_fields())
-        return rows
-
-    baseline_total = _numeric_or_none(naive_row.get("avg_tokens_total"))
-    baseline_input = _numeric_or_none(naive_row.get("avg_tokens_input"))
-    baseline_output = _numeric_or_none(naive_row.get("avg_tokens_output"))
+def _attach_naive_savings(rows: list[dict[str, Any]]) -> None:
+    naive_row = next(
+        (row for row in rows if str(row.get("retrieval_strategy", "")).lower() == "naive"),
+        None,
+    )
+    naive_avg_total = naive_row.get("avg_tokens_total") if isinstance(naive_row, dict) else None
+    naive_avg_input = naive_row.get("avg_tokens_input") if isinstance(naive_row, dict) else None
+    naive_avg_output = naive_row.get("avg_tokens_output") if isinstance(naive_row, dict) else None
 
     for row in rows:
-        row.update({
-            "naive_avg_tokens_total": baseline_total,
-            "naive_avg_tokens_input": baseline_input,
-            "naive_avg_tokens_output": baseline_output,
-            "savings_tokens_total_vs_naive": _savings_abs(
-                baseline_total,
-                _numeric_or_none(row.get("avg_tokens_total")),
-            ),
-            "savings_tokens_input_vs_naive": _savings_abs(
-                baseline_input,
-                _numeric_or_none(row.get("avg_tokens_input")),
-            ),
-            "savings_tokens_output_vs_naive": _savings_abs(
-                baseline_output,
-                _numeric_or_none(row.get("avg_tokens_output")),
-            ),
-            "savings_tokens_total_pct_vs_naive": _savings_pct(
-                baseline_total,
-                _numeric_or_none(row.get("avg_tokens_total")),
-            ),
-            "savings_tokens_input_pct_vs_naive": _savings_pct(
-                baseline_input,
-                _numeric_or_none(row.get("avg_tokens_input")),
-            ),
-            "savings_tokens_output_pct_vs_naive": _savings_pct(
-                baseline_output,
-                _numeric_or_none(row.get("avg_tokens_output")),
-            ),
-        })
-
-    return rows
-
-
-def _empty_savings_fields() -> dict[str, None]:
-    return {
-        "naive_avg_tokens_total": None,
-        "naive_avg_tokens_input": None,
-        "naive_avg_tokens_output": None,
-        "savings_tokens_total_vs_naive": None,
-        "savings_tokens_input_vs_naive": None,
-        "savings_tokens_output_vs_naive": None,
-        "savings_tokens_total_pct_vs_naive": None,
-        "savings_tokens_input_pct_vs_naive": None,
-        "savings_tokens_output_pct_vs_naive": None,
-    }
-
-
-def _numeric_or_none(value: Any) -> float | None:
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    return None
-
-
-def _savings_abs(naive_avg: float | None, strategy_avg: float | None) -> float | None:
-    if naive_avg is None or strategy_avg is None:
-        return None
-    return round(naive_avg - strategy_avg, 2)
-
-
-def _savings_pct(naive_avg: float | None, strategy_avg: float | None) -> float | None:
-    if naive_avg is None or strategy_avg is None or naive_avg == 0:
-        return None
-    return round(((naive_avg - strategy_avg) / naive_avg) * 100, 2)
+        if isinstance(naive_avg_total, (int, float)):
+            avg_total = row.get("avg_tokens_total")
+            avg_input = row.get("avg_tokens_input")
+            avg_output = row.get("avg_tokens_output")
+            total_delta = (
+                round(float(naive_avg_total) - float(avg_total), 2)
+                if isinstance(avg_total, (int, float))
+                else None
+            )
+            pct_delta = (
+                round((total_delta / float(naive_avg_total)) * 100, 2)
+                if isinstance(total_delta, (int, float)) and float(naive_avg_total) > 0
+                else 0.0
+            )
+            row["naive_avg_tokens_total"] = round(float(naive_avg_total), 2)
+            row["savings_tokens_total_vs_naive"] = total_delta
+            row["savings_tokens_total_pct_vs_naive"] = pct_delta
+            row["savings_tokens_input_vs_naive"] = (
+                round(float(naive_avg_input) - float(avg_input), 2)
+                if isinstance(naive_avg_input, (int, float)) and isinstance(avg_input, (int, float))
+                else None
+            )
+            row["savings_tokens_output_vs_naive"] = (
+                round(float(naive_avg_output) - float(avg_output), 2)
+                if isinstance(naive_avg_output, (int, float)) and isinstance(avg_output, (int, float))
+                else None
+            )
+        else:
+            row["naive_avg_tokens_total"] = None
+            row["savings_tokens_total_vs_naive"] = None
+            row["savings_tokens_total_pct_vs_naive"] = None
+            row["savings_tokens_input_vs_naive"] = None
+            row["savings_tokens_output_vs_naive"] = None
 
 
 def _avg(values: list[Any]) -> float:
@@ -271,42 +289,6 @@ def _avg(values: list[Any]) -> float:
     if not filtered:
         return 0.0
     return round(sum(filtered) / len(filtered), 2)
-
-
-def _number_values(items: list[dict[str, Any]], key: str) -> list[float]:
-    values: list[float] = []
-    for item in items:
-        value = _as_float(item.get(key))
-        if value is not None:
-            values.append(value)
-    return values
-
-
-def _as_float(value: Any) -> float | None:
-    if value is None or isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    if isinstance(value, str):
-        text = value.strip()
-        if not text:
-            return None
-        try:
-            return float(text)
-        except ValueError:
-            return None
-    return None
-
-
-def _as_score(value: Any) -> float | None:
-    score = _as_float(value)
-    if score is None:
-        return None
-    if score < 0.0:
-        return 0.0
-    if score > 1.0:
-        return 1.0
-    return score
 
 
 def parse_args() -> argparse.Namespace:
@@ -341,12 +323,6 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
-        "avg_accuracy",
-        "accuracy_sample_count",
-        "avg_latency_seconds",
-        "latency_sample_count",
-        "avg_cost_usd",
-        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -360,12 +336,6 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
-        "avg_accuracy",
-        "accuracy_sample_count",
-        "avg_latency_seconds",
-        "latency_sample_count",
-        "avg_cost_usd",
-        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -377,12 +347,6 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
-        "avg_accuracy",
-        "accuracy_sample_count",
-        "avg_latency_seconds",
-        "latency_sample_count",
-        "avg_cost_usd",
-        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -394,24 +358,9 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
-        "avg_accuracy",
-        "accuracy_sample_count",
-        "avg_latency_seconds",
-        "latency_sample_count",
-        "avg_cost_usd",
-        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
-        "naive_avg_tokens_total",
-        "naive_avg_tokens_input",
-        "naive_avg_tokens_output",
-        "savings_tokens_total_vs_naive",
-        "savings_tokens_input_vs_naive",
-        "savings_tokens_output_vs_naive",
-        "savings_tokens_total_pct_vs_naive",
-        "savings_tokens_input_pct_vs_naive",
-        "savings_tokens_output_pct_vs_naive",
     ])
 
     by_difficulty = _group_summary(records, "difficulty_tier", "difficulty_tier")
@@ -420,12 +369,6 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
-        "avg_accuracy",
-        "accuracy_sample_count",
-        "avg_latency_seconds",
-        "latency_sample_count",
-        "avg_cost_usd",
-        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
@@ -437,16 +380,11 @@ def main() -> None:
         "total_runs",
         "success_runs",
         "success_rate",
-        "avg_accuracy",
-        "accuracy_sample_count",
-        "avg_latency_seconds",
-        "latency_sample_count",
-        "avg_cost_usd",
-        "cost_sample_count",
         "avg_tokens_total",
         "avg_tokens_input",
         "avg_tokens_output",
     ])
+    _write_strategy_table_from_csvs(output_dir)
     print(json.dumps({"output": str(output_path), "records": len(records)}, indent=2))
 
 
