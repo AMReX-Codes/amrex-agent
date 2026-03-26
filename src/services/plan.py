@@ -734,6 +734,13 @@ class SimulationPlanFactory:
         )
 
     @staticmethod
+    def _first_truthy(*values: Any) -> Any:
+        for value in values:
+            if value:
+                return value
+        return None
+
+    @staticmethod
     def create_from_simple(
         requirements: dict,
         baseline: dict,
@@ -769,12 +776,20 @@ class SimulationPlanFactory:
             Constructed plan.
         """
         # Extract solver
-        solver = baseline.get('code') or baseline.get('code_name') or requirements.get('solver')
+        solver = SimulationPlanFactory._first_truthy(
+            baseline.get('code'),
+            baseline.get('code_name'),
+            requirements.get('solver'),
+        )
         if not solver:
             raise ValueError("Cannot create plan: missing solver in both requirements and baseline")
 
         # Extract case path
-        case_path = baseline.get('case_dir', baseline.get('path', 'unknown'))
+        case_path = SimulationPlanFactory._first_truthy(
+            baseline.get('case_dir'),
+            baseline.get('path'),
+            'unknown',
+        )
 
         # Build reasoning
         case_name = baseline.get('name', 'unknown')
@@ -861,17 +876,21 @@ class SimulationPlanFactory:
         logger.debug("Migrating legacy plan dict to SimulationPlan schema")
 
         # Extract solver (multiple possible locations)
-        solver = (old_dict.get('selected_solver') or
-                 old_dict.get('solver') or
-                 old_dict.get('baseline', {}).get('code'))
+        solver = SimulationPlanFactory._first_truthy(
+            old_dict.get('selected_solver'),
+            old_dict.get('solver'),
+            old_dict.get('baseline', {}).get('code'),
+        )
         if not solver:
             raise ValueError("Cannot restore plan from dict: missing solver/selected_solver field")
 
         # Extract case path
-        case = (old_dict.get('selected_case') or
-               old_dict.get('baseline', {}).get('path') or
-               old_dict.get('baseline', {}).get('case_dir') or
-               'unknown')
+        case = SimulationPlanFactory._first_truthy(
+            old_dict.get('selected_case'),
+            old_dict.get('baseline', {}).get('path'),
+            old_dict.get('baseline', {}).get('case_dir'),
+            'unknown',
+        )
 
         # Extract modifications (ensure tuple format)
         mods = normalize_unnumbered_023(old_dict.get('modifications', []))

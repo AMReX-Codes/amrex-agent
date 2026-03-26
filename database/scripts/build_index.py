@@ -25,8 +25,11 @@ Pattern: Inspired by foam-agent's index building scripts but generalized for any
 """
 
 import argparse
+import json
 import logging
+import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -183,6 +186,136 @@ def _maybe_chunk_documents(documents: list[Document], embedding_model) -> list[D
         Document(page_content=text, metadata=meta)
         for text, meta in zip(chunked_texts, chunked_metas, strict=False)
     ]
+
+
+def _project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _iso_utc_now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def _safe_git_rev_parse_head(source_dir: Path | None) -> str | None:
+    if source_dir is None:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=source_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return None
+    commit = result.stdout.strip()
+    return commit or None
+
+
+def _load_dependencies_commit(solver: str, dependencies_path: Path | None = None) -> str | None:
+    dep_path = dependencies_path or (_project_root() / ".dependencies.json")
+    try:
+        payload = json.loads(dep_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return None
+    repos = payload.get("repos")
+    if not isinstance(repos, dict):
+        return None
+    entry = repos.get(solver) or repos.get(solver.lower())
+    if not isinstance(entry, dict):
+        return None
+    commit = entry.get("commit")
+    return commit if isinstance(commit, str) and commit.strip() else None
+
+
+def _extract_embedding_metadata(
+    embedding_model: Any,
+    embedding_provider_arg: str | None,
+    embedding_model_arg: str | None,
+) -> tuple[str | None, str | None, int | None]:
+    config = getattr(embedding_model, "config", None)
+    inner_embedding = getattr(embedding_model, "embeddings", embedding_model)
+
+    provider: str | None = None
+    model_name: str | None = None
+    dimension: int | None = None
+
+    if config is not None:
+        provider = getattr(config, "embedding_provider", None) or provider
+        model_name = getattr(config, "faiss_embedding_model", None) or model_name
+        raw_dim = (
+            getattr(config, "embedding_dimension", None)
+            or getattr(config, "faiss_embedding_dimension", None)
+        )
+        if isinstance(raw_dim, int):
+            dimension = raw_dim
+
+    for attr in ("provider", "embedding_provider"):
+        value = getattr(inner_embedding, attr, None)
+        if isinstance(value, str) and value.strip():
+            provider = value
+            break
+
+    for attr in ("model", "model_name"):
+        value = getattr(inner_embedding, attr, None)
+        if isinstance(value, str) and value.strip():
+            model_name = value
+            break
+
+    for attr in ("embedding_dimension", "dimension", "dimensions"):
+        value = getattr(inner_embedding, attr, None)
+        if isinstance(value, int):
+            dimension = value
+            break
+
+    if provider is None and embedding_provider_arg:
+        provider = embedding_provider_arg
+    if model_name is None and embedding_model_arg:
+        model_name = embedding_model_arg
+
+    return provider, model_name, dimension
+
+
+def write_faiss_provenance_manifest(
+    *,
+    output_dir: Path,
+    embedding_model: Any,
+    solver: str | None,
+    level: str | None,
+    source_dir: Path | None,
+    embedding_provider_arg: str | None,
+    embedding_model_arg: str | None,
+    build_script: str = "build_index.py",
+    dependencies_path: Path | None = None,
+    manifest_name: str = "faiss_provenance.json",
+) -> Path:
+    provider, model_name, dimension = _extract_embedding_metadata(
+        embedding_model=embedding_model,
+        embedding_provider_arg=embedding_provider_arg,
+        embedding_model_arg=embedding_model_arg,
+    )
+    payload = {
+        "version": "1",
+        "generated_at": _iso_utc_now(),
+        "embedding_model": model_name,
+        "embedding_provider": provider,
+        "embedding_dimension": dimension,
+        "solver": solver,
+        "level": level,
+        "repo_commit": _safe_git_rev_parse_head(source_dir),
+        "build_script": build_script,
+        "dependencies_commit": _load_dependencies_commit(
+            solver=solver or "",
+            dependencies_path=dependencies_path,
+        )
+        if solver
+        else None,
+    }
+    output_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = output_dir / manifest_name
+    manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return manifest_path
 
 
 
@@ -934,6 +1067,18 @@ def main() -> None:
         )
     elif args.type == 'chemistry':
         build_chemistry_index(code_config, output_dir, embedding_model, skip_tokenize=skip_tokenize)
+
+    manifest_path = write_faiss_provenance_manifest(
+        output_dir=output_dir,
+        embedding_model=embedding_model,
+        solver=args.config,
+        level=args.type,
+        source_dir=source_dir,
+        embedding_provider_arg=args.embedding,
+        embedding_model_arg=args.embedding_model,
+        build_script="build_index.py",
+    )
+    logger.debug(f"Provenance manifest written to: {manifest_path}")
 
     logger.debug("\n[OK] Index building complete!")
     logger.debug(f"Index location: {output_dir}")

@@ -744,23 +744,28 @@ def _route_after_sweep_detection(state: dict) -> str:
     return "sweep_execution_handler"
 
 
+def _paper_validator_enabled_from_config(config: Any, *, strict_true: bool = False) -> bool:
+    if isinstance(config, dict):
+        enabled = config.get("paper_validator_enabled", False)
+    else:
+        enabled = getattr(config, "paper_validator_enabled", False)
+    if strict_true:
+        return enabled is True
+    return bool(enabled)
+
+
 def _paper_validator_enabled(state: dict[str, Any]) -> bool:
     if state.get("paper_validator_enabled", False) or state.get("paper_source"):
         return True
-    config = state.get("config")
-    if isinstance(config, dict):
-        return bool(config.get("paper_validator_enabled", False))
-    return bool(getattr(config, "paper_validator_enabled", False))
+    return _paper_validator_enabled_from_config(state.get("config"))
 
 
 def _route_after_complexity_evidence(state: dict) -> str:
-    if not state.get("enforce_radon_complexity_evidence", False):
-        return _route_after_phase1_traceability(state)
-
-    evidence = state.get("radon_complexity_evidence")
-    if isinstance(evidence, dict) and evidence.get("radon_available", False):
-        return _route_after_phase1_traceability(state)
-    return "complexity_evidence_handler"
+    if state.get("enforce_radon_complexity_evidence", False):
+        evidence = state.get("radon_complexity_evidence")
+        if not (isinstance(evidence, dict) and evidence.get("radon_available", False)):
+            return "complexity_evidence_handler"
+    return _route_after_phase1_traceability(state)
 
 
 def _has_phase1_feature_trace(state: dict) -> bool:
@@ -790,11 +795,9 @@ def _has_phase1_feature_trace(state: dict) -> bool:
 
 
 def _route_after_phase1_traceability(state: dict) -> str:
-    if not state.get("enforce_phase1_feature_trace", False):
-        return _route_after_required_behavior_item(state)
-    if _has_phase1_feature_trace(state):
-        return _route_after_required_behavior_item(state)
-    return "phase1_traceability_handler"
+    if state.get("enforce_phase1_feature_trace", False) and not _has_phase1_feature_trace(state):
+        return "phase1_traceability_handler"
+    return _route_after_required_behavior_item(state)
 
 
 def _has_required_behavior_item(state: dict) -> bool:
@@ -890,19 +893,15 @@ def _has_benchmark_cache_hit_rate(state: dict[str, Any]) -> bool:
 
 
 def _route_after_required_behavior_item(state: dict) -> str:
-    if not state.get("enforce_required_behavior_item", False):
-        return _route_after_benchmark_cache_hit_rate(state)
-    if _has_required_behavior_item(state):
-        return _route_after_benchmark_cache_hit_rate(state)
-    return "required_behavior_handler"
+    if state.get("enforce_required_behavior_item", False) and not _has_required_behavior_item(state):
+        return "required_behavior_handler"
+    return _route_after_benchmark_cache_hit_rate(state)
 
 
 def _route_after_benchmark_cache_hit_rate(state: dict) -> str:
-    if not state.get("enforce_benchmark_cache_hit_rate", False):
-        return _route_after_claims_results_artifacts(state)
-    if _has_benchmark_cache_hit_rate(state):
-        return _route_after_claims_results_artifacts(state)
-    return "benchmark_cache_hit_rate_handler"
+    if state.get("enforce_benchmark_cache_hit_rate", False) and not _has_benchmark_cache_hit_rate(state):
+        return "benchmark_cache_hit_rate_handler"
+    return _route_after_claims_results_artifacts(state)
 
 
 def _is_results_artifact_path(path: str) -> bool:
@@ -939,11 +938,9 @@ def _has_claims_results_artifacts(state: dict) -> bool:
 
 
 def _route_after_claims_results_artifacts(state: dict) -> str:
-    if not state.get("enforce_claims_results_artifacts", False):
-        return _route_after_cross_reference_feature_ids(state)
-    if _has_claims_results_artifacts(state):
-        return _route_after_cross_reference_feature_ids(state)
-    return "claims_results_artifacts_handler"
+    if state.get("enforce_claims_results_artifacts", False) and not _has_claims_results_artifacts(state):
+        return "claims_results_artifacts_handler"
+    return _route_after_cross_reference_feature_ids(state)
 
 
 def _has_cross_reference_feature_ids(state: dict) -> bool:
@@ -973,31 +970,25 @@ def _has_cross_reference_feature_ids(state: dict) -> bool:
 
 
 def _route_after_cross_reference_feature_ids(state: dict) -> str:
-    if not state.get("enforce_cross_reference_feature_ids", False):
-        return _route_after_postgresql_migration_evidence(state)
-    if _has_cross_reference_feature_ids(state):
-        return _route_after_postgresql_migration_evidence(state)
-    return "cross_reference_feature_ids_handler"
+    if state.get("enforce_cross_reference_feature_ids", False) and not _has_cross_reference_feature_ids(state):
+        return "cross_reference_feature_ids_handler"
+    return _route_after_postgresql_migration_evidence(state)
 
 
 def _route_after_postgresql_migration_evidence(state: dict) -> str:
-    if not state.get("enforce_postgresql_migration_evidence", False):
-        return _route_after_post_incident_risk_matrix_feedback(state)
-
-    evidence = collect_postgresql_migration_evidence(state)
-    if has_postgresql_migration_index_growth_proof(evidence):
-        return _route_after_post_incident_risk_matrix_feedback(state)
-    return "postgresql_migration_handler"
+    if state.get("enforce_postgresql_migration_evidence", False):
+        evidence = collect_postgresql_migration_evidence(state)
+        if not has_postgresql_migration_index_growth_proof(evidence):
+            return "postgresql_migration_handler"
+    return _route_after_post_incident_risk_matrix_feedback(state)
 
 
 def _route_after_post_incident_risk_matrix_feedback(state: dict) -> str:
-    if not state.get("enforce_post_incident_risk_matrix_feedback", False):
-        return _route_after_feature_test_coverage(state)
-
-    feedback = collect_post_incident_risk_matrix_feedback(state)
-    if feedback.get("feedback_complete", False):
-        return _route_after_feature_test_coverage(state)
-    return "post_incident_risk_matrix_feedback_handler"
+    if state.get("enforce_post_incident_risk_matrix_feedback", False):
+        feedback = collect_post_incident_risk_matrix_feedback(state)
+        if not feedback.get("feedback_complete", False):
+            return "post_incident_risk_matrix_feedback_handler"
+    return _route_after_feature_test_coverage(state)
 
 
 def _normalize_test_paths(test_paths: Any, required_prefix: str) -> bool:
@@ -1037,11 +1028,9 @@ def _has_unit_and_integration_feature_coverage(state: dict) -> bool:
 
 
 def _route_after_feature_test_coverage(state: dict) -> str:
-    if not state.get("enforce_feature_test_coverage", False):
-        return "end"
-    if _has_unit_and_integration_feature_coverage(state):
-        return "end"
-    return "feature_test_coverage_handler"
+    if state.get("enforce_feature_test_coverage", False) and not _has_unit_and_integration_feature_coverage(state):
+        return "feature_test_coverage_handler"
+    return "end"
 
 
 def _get_z_score(confidence_level: float) -> float:
@@ -1147,99 +1136,129 @@ def _route_after_architect(state: dict[str, Any]) -> str:
 def _paper_validator_mode2_enabled(state: dict) -> bool:
     if state.get("paper_validator_enabled") is True:
         return True
-
-    config = state.get("config")
-    if isinstance(config, dict):
-        return config.get("paper_validator_enabled", False) is True
-    return getattr(config, "paper_validator_enabled", False) is True
+    return _paper_validator_enabled_from_config(state.get("config"), strict_true=True)
 
 
-def _route_after_input_writer(state: dict) -> str:
-    if state.get("enforce_level4_depth_guidance", False):
-        if not level4_depth_guidance_passed(state):
-            return "level4_depth_guidance_handler"
-    if state.get("enforce_amendment_module_loc", False):
-        if not amendment_module_loc_passed(state):
-            return "amendment_module_loc_handler"
-    if state.get("enforce_global_function_complexity", False):
-        if not global_function_complexity_passed(state):
-            return "global_function_complexity_handler"
-    if state.get("enforce_stable_error_taxonomy", False):
-        if not stable_error_taxonomy_passed(state):
-            return "stable_error_taxonomy_handler"
-    if state.get("enforce_uc_row_traceable_artifact", False):
-        if not uc_row_traceable_artifact_passed(state):
-            return "uc_row_traceable_artifact_handler"
-    if state.get("enforce_impl_locations_tests_sync", False):
-        if not impl_locations_tests_synced_passed(state):
-            return "impl_locations_tests_sync_handler"
-    if state.get("enforce_benchmark_postmortem_risk_feedback", False):
-        if not benchmark_postmortem_risk_feedback_passed(state):
-            return "benchmark_postmortem_risk_feedback_handler"
-    if _paper_validator_mode2_enabled(state) and isinstance(state.get("validation_manifest"), dict):
-        return "paper_validator_node"
-    if state.get("enforce_radon_complexity_evidence", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_phase1_feature_trace", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_required_behavior_item", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_benchmark_cache_hit_rate", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_claims_results_artifacts", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_cross_reference_feature_ids", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_postgresql_migration_evidence", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_post_incident_risk_matrix_feedback", False):
-        return "complexity_evidence_node"
-    if state.get("enforce_feature_test_coverage", False):
-        return "complexity_evidence_node"
-    return "end"
-
-
-def _route_after_paper_validator(state: dict[str, Any]) -> str:
+def _paper_validator_precheck_route(state: dict[str, Any]) -> str | None:
     # Compatibility mode: when called as a pre-validator router in tests.
     if "paper_validation_passed" not in state and "validation_manifest" not in state:
         return "paper_validator_node" if _paper_validator_enabled(state) else "input_writer_node"
+    return None
 
-    if not state.get("paper_validation_passed", False):
-        return "end"
+
+def _feature_blocks_validation_passes(state: dict[str, Any]) -> bool:
     # Respect explicit upstream gate failure even when markdown is present.
     if state.get("feature_blocks_validation_required", False):
         if state.get("feature_blocks_validation_passed") is False:
-            return "end"
+            return False
+
     feature_blocks_markdown = state.get("feature_blocks_markdown")
     if isinstance(feature_blocks_markdown, str):
         validation = validate_feature_blocks_tests_fixtures(feature_blocks_markdown)
         if not validation["feature_blocks_validation_passed"]:
-            return "end"
+            return False
         helper_validation = validate_new_file_helper_extraction(feature_blocks_markdown)
         state["new_file_helper_extraction_validation"] = helper_validation
         state["new_file_helper_extraction_validation_passed"] = helper_validation[
             "new_file_helper_extraction_validation_passed"
         ]
         if not helper_validation["new_file_helper_extraction_validation_passed"]:
-            return "end"
+            return False
     elif state.get("feature_blocks_validation_required", False):
         if not state.get("feature_blocks_validation_passed", False):
-            return "end"
+            return False
+
     if state.get("new_file_helper_extraction_validation_required", False):
         helper_ok = state.get("new_file_helper_extraction_validation_passed", False)
         if not helper_ok:
-            return "end"
+            return False
+    return True
+
+
+def _paper_validator_traceability_and_release_checks_pass(state: dict[str, Any]) -> bool:
     matrix_required = state.get("claim_evidence_matrix_required", False)
     matrix_complete = state.get("claim_evidence_matrix_complete", False)
     if matrix_required and not matrix_complete:
-        return "end"
+        return False
     if not _uc_summary_traceability_valid(state):
-        return "end"
+        return False
     if not _feature_fixture_mapping_valid(state):
-        return "end"
+        return False
     if not _risk_owner_status_updates_valid(state):
-        return "end"
+        return False
     if not _release_gate_criteria_valid(state):
+        return False
+    return True
+
+
+def _first_failed_input_writer_gate_handler(state: dict[str, Any]) -> str | None:
+    gate_checks: tuple[tuple[str, Callable[[dict[str, Any]], bool], str], ...] = (
+        ("enforce_level4_depth_guidance", level4_depth_guidance_passed, "level4_depth_guidance_handler"),
+        ("enforce_amendment_module_loc", amendment_module_loc_passed, "amendment_module_loc_handler"),
+        (
+            "enforce_global_function_complexity",
+            global_function_complexity_passed,
+            "global_function_complexity_handler",
+        ),
+        ("enforce_stable_error_taxonomy", stable_error_taxonomy_passed, "stable_error_taxonomy_handler"),
+        (
+            "enforce_uc_row_traceable_artifact",
+            uc_row_traceable_artifact_passed,
+            "uc_row_traceable_artifact_handler",
+        ),
+        (
+            "enforce_impl_locations_tests_sync",
+            impl_locations_tests_synced_passed,
+            "impl_locations_tests_sync_handler",
+        ),
+        (
+            "enforce_benchmark_postmortem_risk_feedback",
+            benchmark_postmortem_risk_feedback_passed,
+            "benchmark_postmortem_risk_feedback_handler",
+        ),
+    )
+    for flag_name, gate_fn, handler_name in gate_checks:
+        if state.get(flag_name, False) and not gate_fn(state):
+            return handler_name
+    return None
+
+
+def _requires_complexity_evidence_chain(state: dict[str, Any]) -> bool:
+    chain_flags = (
+        "enforce_radon_complexity_evidence",
+        "enforce_phase1_feature_trace",
+        "enforce_required_behavior_item",
+        "enforce_benchmark_cache_hit_rate",
+        "enforce_claims_results_artifacts",
+        "enforce_cross_reference_feature_ids",
+        "enforce_postgresql_migration_evidence",
+        "enforce_post_incident_risk_matrix_feedback",
+        "enforce_feature_test_coverage",
+    )
+    return any(state.get(flag, False) for flag in chain_flags)
+
+
+def _route_after_input_writer(state: dict) -> str:
+    failed_gate_handler = _first_failed_input_writer_gate_handler(state)
+    if failed_gate_handler is not None:
+        return failed_gate_handler
+    if _paper_validator_mode2_enabled(state) and isinstance(state.get("validation_manifest"), dict):
+        return "paper_validator_node"
+    if _requires_complexity_evidence_chain(state):
+        return "complexity_evidence_node"
+    return "end"
+
+
+def _route_after_paper_validator(state: dict[str, Any]) -> str:
+    precheck_route = _paper_validator_precheck_route(state)
+    if precheck_route is not None:
+        return precheck_route
+
+    if not state.get("paper_validation_passed", False):
+        return "end"
+    if not _feature_blocks_validation_passes(state):
+        return "end"
+    if not _paper_validator_traceability_and_release_checks_pass(state):
         return "end"
     return "intent_extraction_node"
 
