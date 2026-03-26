@@ -18,6 +18,51 @@ from src.services.reviewer import ReviewerOrchestrator
 from src.utils.gate import run_preconfirm_gate
 
 logger = logging.getLogger(__name__)
+_ERROR_TAXONOMY_VERSION = "v1"
+
+
+def _normalize_error_taxonomy(payload: dict[str, Any]) -> dict[str, Any]:
+    """Normalize reviewer terminal taxonomy payloads to a stable UNNUMBERED-236 shape."""
+    normalized = dict(payload) if isinstance(payload, dict) else {}
+    unresolved = normalized.get("unresolved_parameters")
+    if not isinstance(unresolved, list):
+        unresolved = []
+    normalized["unresolved_parameters"] = [str(p) for p in unresolved]
+
+    normalized["version"] = _ERROR_TAXONOMY_VERSION
+    normalized["stage"] = "reviewer"
+    normalized["terminal"] = bool(normalized.get("terminal", True))
+    normalized["type"] = str(normalized.get("type") or "retry_exhausted")
+    normalized["category"] = str(normalized.get("category") or "reviewer_terminal_failure")
+    reason_code = normalized.get("reason_code") or normalized.get("reason") or "unspecified"
+    normalized["reason_code"] = str(reason_code)
+    normalized["reason"] = str(reason_code)
+    normalized["retry_count"] = int(normalized.get("retry_count", 0))
+    normalized["max_retries"] = int(normalized.get("max_retries", 0))
+    return normalized
+
+
+def _build_final_error_taxonomy(
+    *,
+    category: str,
+    reason: str,
+    retry_count: int,
+    max_retries: int,
+    unresolved_parameters: list[tuple[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return _normalize_error_taxonomy(
+        {
+            "type": "retry_exhausted",
+            "terminal": True,
+            "version": _ERROR_TAXONOMY_VERSION,
+            "reason_code": reason,
+            "reason": reason,
+            "category": category,
+            "retry_count": retry_count,
+            "max_retries": max_retries,
+            "unresolved_parameters": [p[0] for p in unresolved_parameters or []],
+        }
+    )
 
 
 def _build_final_error_taxonomy(
@@ -303,11 +348,19 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
 
     if state.get("compilation_failed"):
         logger.error("Compilation failed in previous iteration - terminating")
+        taxonomy = _build_final_error_taxonomy(
+            category="compilation_failed",
+            reason="compilation_failed",
+            retry_count=retry_count,
+            max_retries=max_retries,
+        )
         return {
             "mode": "terminal",
             "error": "Compilation failed - cannot proceed",
             "errors_active": ["Compilation failed for selected case"],
-            "workflow_history": workflow_history
+            "workflow_history": workflow_history,
+            "reviewer_failure_category": taxonomy["category"],
+            "final_error_taxonomy": taxonomy,
         }
 
     # ========================================
@@ -441,6 +494,13 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 if last_schema_retry:
                     last_unresolved = last_schema_retry.get("details", {}).get("unresolved_parameters", [])
                     if last_unresolved == feedback["unresolved_parameters"]:
+                        taxonomy = _build_final_error_taxonomy(
+                            category="schema_resolution_stalled",
+                            reason="schema_resolution_stalled",
+                            retry_count=retry_count,
+                            max_retries=max_retries,
+                            unresolved_parameters=feedback["unresolved_parameters"],
+                        )
                         history_entry = {
                             "node": "reviewer",
                             "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -455,7 +515,8 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                                 "suggested_params": feedback["suggested_params"],
                                 "remap_mapping": remap_mapping,
                                 "remap_success_count": remap_success_count,
-                                "retry_count": retry_count
+                                "retry_count": retry_count,
+                                "final_error_taxonomy": taxonomy,
                             }
                         }
 
@@ -466,7 +527,9 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                                 f"{[p[0] for p in feedback['unresolved_parameters']]}"
                             ),
                             "errors_active": [f"Unresolved parameter: {p[0]}" for p in feedback["unresolved_parameters"]],
-                            "workflow_history": workflow_history + [history_entry]
+                            "workflow_history": workflow_history + [history_entry],
+                            "reviewer_failure_category": taxonomy["category"],
+                            "final_error_taxonomy": taxonomy,
                         }
                 history_entry = {
                     "node": "reviewer",
