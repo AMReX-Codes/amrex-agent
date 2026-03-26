@@ -104,12 +104,13 @@ class TestCLIInterface:
         """
         # Mock run_agent to return success
         with patch("src.main.run_agent") as mock_run:
-            mock_run.return_value = {
-                "job_status": "completed",
-                "mode": "proceed"
-            }
+            with patch("src.main._run_startup_preflight", return_value=None):
+                mock_run.return_value = {
+                    "job_status": "completed",
+                    "mode": "proceed"
+                }
 
-            main(["--prompt", "Test", "--output-dir", str(tmp_path)])
+                main(["--prompt", "Test", "--output-dir", str(tmp_path)])
 
     def test_main_failure_exit_code(self, tmp_path):
         """
@@ -120,16 +121,17 @@ class TestCLIInterface:
         Then: sys.exit(1)
         """
         with patch("src.main.run_agent") as mock_run:
-            mock_run.return_value = {
-                "job_status": "failed",
-                "error": "Test error",
-                "mode": "fail"
-            }
+            with patch("src.main._run_startup_preflight", return_value=None):
+                mock_run.return_value = {
+                    "job_status": "failed",
+                    "error": "Test error",
+                    "mode": "fail"
+                }
 
-            with pytest.raises(SystemExit) as exc_info:
-                main(["--prompt", "Test", "--output-dir", str(tmp_path)])
+                with pytest.raises(SystemExit) as exc_info:
+                    main(["--prompt", "Test", "--output-dir", str(tmp_path)])
 
-            assert exc_info.value.code == 1
+                assert exc_info.value.code == 1
 
     def test_json_output_format(self, tmp_path, capsys):
         """
@@ -142,19 +144,20 @@ class TestCLIInterface:
         import json
 
         with patch("src.main.run_agent") as mock_run:
-            mock_run.return_value = {
-                "job_status": "completed",
-                "job_id": "test_123"
-            }
+            with patch("src.main._run_startup_preflight", return_value=None):
+                mock_run.return_value = {
+                    "job_status": "completed",
+                    "job_id": "test_123"
+                }
 
-            main(["--prompt", "Test", "--output-dir", str(tmp_path), "--json"])
+                main(["--prompt", "Test", "--output-dir", str(tmp_path), "--json"])
 
-            captured = capsys.readouterr()
+                captured = capsys.readouterr()
 
-            # Verify valid JSON
-            output = json.loads(captured.out)
-            assert output["job_status"] == "completed"
-            assert output["job_id"] == "test_123"
+                # Verify valid JSON
+                output = json.loads(captured.out)
+                assert output["job_status"] == "completed"
+                assert output["job_id"] == "test_123"
 
     def test_main_uses_short_dns_prompt_file(self, tmp_path):
         """
@@ -169,13 +172,14 @@ class TestCLIInterface:
         assert prompt_path.exists(), f"Prompt file missing: {prompt_path}"
 
         with patch("src.main.run_agent") as mock_run:
-            mock_run.return_value = {
-                "job_status": "completed",
-                "mode": "proceed"
-            }
+            with patch("src.main._run_startup_preflight", return_value=None):
+                mock_run.return_value = {
+                    "job_status": "completed",
+                    "mode": "proceed"
+                }
 
-            main(["--prompt-path", str(prompt_path), "--output-dir", str(tmp_path), "--dry-run"])
+                main(["--prompt-path", str(prompt_path), "--output-dir", str(tmp_path), "--dry-run"])
 
-            assert mock_run.call_count == 1
-            passed_prompt = mock_run.call_args[0][0]
-            assert "50 steps" in passed_prompt
+                assert mock_run.call_count == 1
+                passed_prompt = mock_run.call_args[0][0]
+                assert "50 steps" in passed_prompt
