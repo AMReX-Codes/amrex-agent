@@ -182,6 +182,35 @@ CASE: <path>"""
     ]
     """Guidance lines used in solver-selection prompts."""
 
+    # === Level 0 Metadata (Indexing Engine: Level 0) ===
+    level0_physics_regimes: ClassVar[list[dict[str, Any]]] = []
+    """
+    Structured physics regime entries for Level 0 `physics_regimes`.
+
+    Entry shape:
+        {
+            "family": "Low Mach Flow",
+            "description": "Low speed incompressible/weakly compressible flow",
+            "aliases": ["incompressible", "low mach"]
+        }
+    """
+
+    level0_capabilities: ClassVar[list[str]] = []
+    """Solver-specific capability phrases for Level 0 `solver_capabilities`."""
+
+    level0_lineage: ClassVar[dict[str, Any]] = {}
+    """
+    Optional solver lineage metadata for Level 0 `code_lineage`.
+
+    Expected keys include: `description`, `evolved_from`, `related`.
+    """
+
+    level0_cross_cutting_guidance: ClassVar[list[str]] = []
+    """
+    Optional per-solver decision guidance lines for Level 0
+    `cross_cutting_guidance`.
+    """
+
     github_search_paths: ClassVar[list[str]] = ["Exec", "Examples"]
     """Repo paths used for GitHub case discovery."""
 

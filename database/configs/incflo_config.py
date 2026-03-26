@@ -48,6 +48,24 @@ class IncfloConfig(BaseAMReXConfig):
 
     selection_keywords = ["incompressible", "flow"]
     selection_guidance = ["Incompressible flow -> incflo"]
+    level0_physics_regimes = [
+        {
+            "family": "Low Mach Flow",
+            "description": "Incompressible and weakly compressible fluid flow",
+            "aliases": ["incompressible", "navier-stokes", "low speed flow"],
+        }
+    ]
+    level0_capabilities = [
+        "incompressible navier-stokes solver",
+        "godunov-based fluid dynamics",
+        "benchmark turbulent and channel-flow configurations",
+    ]
+    level0_lineage = {
+        "description": "incflo is an AMReX incompressible flow application.",
+    }
+    level0_cross_cutting_guidance = [
+        "Use incflo for non-reacting incompressible flow and canonical CFD benchmarks.",
+    ]
 
 
 

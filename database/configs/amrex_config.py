@@ -12,6 +12,26 @@ class AMReXConfig(BaseAMReXConfig):
     """Base AMReX configuration (no solver-specific metadata)."""
 
     code_name = "AMReX"
+    description = "AMReX framework reference and core AMR tutorials"
+    selection_keywords = ["amrex", "amrex tutorial", "amrex amrcore"]
+    selection_guidance = ["Framework/core AMR tutorial workflows -> AMReX"]
+    level0_physics_regimes = [
+        {
+            "family": "Framework Infrastructure",
+            "description": "Core AMReX AMR and framework-level reference workflows",
+            "aliases": ["framework", "core amr", "tutorial"],
+        }
+    ]
+    level0_capabilities = [
+        "amrex framework tutorials",
+        "amrcore reference advection tests",
+    ]
+    level0_lineage = {
+        "description": "AMReX is the base framework supporting solver applications.",
+    }
+    level0_cross_cutting_guidance = [
+        "Use AMReX for framework-centric AMR/tutorial requests without domain-specific physics requirements.",
+    ]
     github_org = "AMReX-Codes"
     github_repo = "amrex"
     default_baseline_dir = "Tests/Amr/Advection_AmrCore"

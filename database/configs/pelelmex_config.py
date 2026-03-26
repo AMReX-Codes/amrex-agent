@@ -106,7 +106,33 @@ class PeleLMeXConfig(BaseAMReXConfig):
     default_exec_repo_path = "Exec/RegTests/FlameSheet"
     default_exec_pattern = "PeleLMeX*ex"
 
+    selection_keywords = ["low mach", "incompressible combustion", "diffusion flame"]
     selection_guidance = ["Combustion/flames -> PeleC or PeleLMeX"]
+    level0_physics_regimes = [
+        {
+            "family": "Combustion",
+            "description": "Reacting low-speed combustion with detailed chemistry",
+            "aliases": ["reacting flow", "flame", "chemistry"],
+        },
+        {
+            "family": "Low Mach Flow",
+            "description": "Low Mach and incompressible-limit reacting flows",
+            "aliases": ["low mach", "incompressible limit", "diffusion dominated"],
+        },
+    ]
+    level0_capabilities = [
+        "low Mach number formulation",
+        "detailed chemical kinetics",
+        "diffusion-dominated combustion",
+        "flame dynamics with transport effects",
+    ]
+    level0_lineage = {
+        "evolved_from": "PeleLM",
+        "description": "PeleLMeX is the modernized successor to PeleLM.",
+    }
+    level0_cross_cutting_guidance = [
+        "Use PeleLMeX for low-Mach combustion where diffusion and detailed transport dominate.",
+    ]
     github_search_paths = ["Exec/RegTests", "Exec/Production"]
     case_path_markers = {"pelelmex", "pelelm"}
     is_pele_family = True

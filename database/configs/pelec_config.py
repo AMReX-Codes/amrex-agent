@@ -183,6 +183,31 @@ class PeleCConfig(BaseAMReXConfig):
 
     selection_keywords = ["flame", "combustion", "methane"]
     selection_guidance = ["Combustion/flames -> PeleC or PeleLMeX"]
+    level0_physics_regimes = [
+        {
+            "family": "Combustion",
+            "description": "Reacting flows, flames, detonations, and chemical kinetics",
+            "aliases": ["reacting flow", "flame", "detonation", "chemistry"],
+        },
+        {
+            "family": "Compressible Flow",
+            "description": "Compressible and shock-driven reacting flow physics",
+            "aliases": ["supersonic", "shock", "high mach", "compressible"],
+        },
+    ]
+    level0_capabilities = [
+        "compressible reacting flow",
+        "strong shock handling",
+        "detonation and flame propagation",
+        "detailed chemical kinetics",
+    ]
+    level0_lineage = {
+        "related": ["CNS", "Combustion"],
+        "description": "PeleC evolved from CNS for compressible reacting flows.",
+    }
+    level0_cross_cutting_guidance = [
+        "Use PeleC for compressible combustion, shock-coupled flames, and detonation-dominant scenarios.",
+    ]
     github_search_paths = ["Exec/RegTests", "Exec/Production"]
     case_path_markers = {"pelec"}
     is_pele_family = True

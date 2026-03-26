@@ -17,6 +17,7 @@ import time
 from typing import Any
 
 from langchain_community.vectorstores import FAISS
+from langchain_core.embeddings import Embeddings
 
 from .faiss_artifacts import ensure_faiss_indices
 from .vector_store_backends import OpenAIVectorStoreBackend
@@ -24,7 +25,7 @@ from .vector_store_backends import OpenAIVectorStoreBackend
 logger = logging.getLogger(__name__)
 
 
-class _CountingEmbeddings:
+class _CountingEmbeddings(Embeddings):
     def __init__(self, embeddings, record_call) -> None:
         self._embeddings = embeddings
         self._record_call = record_call
