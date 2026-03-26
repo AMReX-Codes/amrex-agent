@@ -1505,7 +1505,6 @@ def monitor_job(
                     from sfapi_client.compute import Machine
                 except Exception:
                     method = "api"
-                    poll_method = "api"
                 else:
                     with Client(client_id=client_id, secret=secret) as client:
                         perlmutter = client.compute(Machine.perlmutter)
@@ -1528,7 +1527,6 @@ def monitor_job(
                             state = state.value
                         if state:
                             state_str = str(state).upper()
-                            poll_outcome = state_str
                             if state_str not in ["RUNNING", "PENDING"]:
                                 outcome = str(state)
                                 logger.info(
@@ -1561,19 +1559,9 @@ def monitor_job(
                         (time.perf_counter() - poll_start) * 1000.0,
                     )
                     if state not in ["RUNNING", "PENDING"]:
-                        logger.info(
-                            "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
-                            poll_index,
-                            max_polls,
-                            poll_method,
-                            job_id,
-                            poll_outcome,
-                            (time.perf_counter() - poll_start) * 1000.0,
-                        )
                         return state
 
             else:
-                poll_method = "sbatch"
                 result = subprocess.run(
                     ["squeue", "-j", str(job_id), "-h", "-o", "%T"],
                     capture_output=True,
@@ -1598,29 +1586,10 @@ def monitor_job(
                     (time.perf_counter() - poll_start) * 1000.0,
                 )
                 if state not in ["RUNNING", "PENDING"]:
-                    logger.info(
-                        "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
-                        poll_index,
-                        max_polls,
-                        poll_method,
-                        job_id,
-                        poll_outcome,
-                        (time.perf_counter() - poll_start) * 1000.0,
-                    )
                     return state
 
-        except Exception as exc:
-            poll_outcome = f"ERROR:{type(exc).__name__}"
-
-        logger.info(
-            "Job poll %s/%s method=%s job_id=%s outcome=%s latency_ms=%.3f",
-            poll_index,
-            max_polls,
-            poll_method,
-            job_id,
-            poll_outcome,
-            (time.perf_counter() - poll_start) * 1000.0,
-        )
+        except Exception:
+            pass
 
         time.sleep(poll_interval)
 
