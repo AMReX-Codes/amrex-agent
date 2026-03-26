@@ -431,3 +431,100 @@ def test_mcp_generate_visualizations_success(mcp_server_module, monkeypatch, tmp
     assert result["visualization_status"] == "success"
     assert result["visualization_images"] == [str(image_path)]
     assert result["visualization_metadata"]["plotfile_count"] == 1
+
+
+def _write_sweep_metadata(
+    root: Path,
+    sweep_id: str,
+    session_id: str,
+    status: str,
+) -> Path:
+    sweep_dir = root / "sweeps" / sweep_id
+    sweep_dir.mkdir(parents=True, exist_ok=True)
+    metadata_path = sweep_dir / "sweep_metadata.json"
+    metadata_path.write_text(
+        (
+            "{"
+            f"\"sweep_id\": \"{sweep_id}\", "
+            f"\"session_id\": \"{session_id}\", "
+            f"\"status\": \"{status}\", "
+            "\"created_at\": \"2026-03-10T00:00:00Z\""
+            "}"
+        ),
+        encoding="utf-8",
+    )
+    return sweep_dir
+
+
+def test_get_sweep_status_reads_from_filesystem(tmp_path, mcp_server_module, monkeypatch):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+    _write_sweep_metadata(tmp_path, "sweep-1", "sess1", "running")
+    monkeypatch.setattr(
+        mcp_server_module,
+        "_SWEEP_REGISTRY",
+        {"sweep-1": {"status": "completed"}},
+        raising=False,
+    )
+
+    result = mcp_server_module.invoke_tool("get_sweep_status", {"sweep_id": "sweep-1"})
+
+    assert result["status"] == "running"
+
+
+def test_get_sweep_status_missing_returns_error(tmp_path, mcp_server_module, monkeypatch):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+
+    result = mcp_server_module.invoke_tool("get_sweep_status", {"sweep_id": "missing"})
+
+    assert "error" in result
+
+
+def test_get_sweep_results_returns_error_when_running(tmp_path, mcp_server_module, monkeypatch):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+    _write_sweep_metadata(tmp_path, "sweep-2", "sess1", "running")
+
+    result = mcp_server_module.invoke_tool("get_sweep_results", {"sweep_id": "sweep-2"})
+
+    assert "error" in result
+    assert "complete" in result["error"].lower()
+    assert "summary" not in result
+
+
+def test_get_sweep_results_returns_summary_when_complete(tmp_path, mcp_server_module, monkeypatch):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+    sweep_dir = _write_sweep_metadata(tmp_path, "sweep-3", "sess1", "complete")
+    summary_path = sweep_dir / "sweep_summary.json"
+    summary_path.write_text(
+        "{\"sweep_id\": \"sweep-3\", \"status\": \"complete\", \"metric\": 1.0}",
+        encoding="utf-8",
+    )
+
+    result = mcp_server_module.invoke_tool("get_sweep_results", {"sweep_id": "sweep-3"})
+
+    assert "error" not in result
+    assert result["sweep_id"] == "sweep-3"
+    assert result["status"] == "complete"
+    assert result["metric"] == 1.0
+
+
+def test_list_sweeps_returns_all_in_session(tmp_path, mcp_server_module, monkeypatch):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+    _write_sweep_metadata(tmp_path, "sweep-a", "sess1", "running")
+    _write_sweep_metadata(tmp_path, "sweep-b", "sess1", "complete")
+    _write_sweep_metadata(tmp_path, "sweep-c", "sess1", "failed")
+    _write_sweep_metadata(tmp_path, "sweep-x", "sess2", "complete")
+
+    result = mcp_server_module.invoke_tool("list_sweeps", {"session_id": "sess1"})
+
+    assert "error" not in result
+    assert sorted(result["sweep_ids"]) == ["sweep-a", "sweep-b", "sweep-c"]
+
+
+def test_list_sweeps_empty_session(tmp_path, mcp_server_module, monkeypatch):
+    monkeypatch.setattr(mcp_server_module.config, "output_dir", tmp_path)
+    _write_sweep_metadata(tmp_path, "sweep-x", "other", "complete")
+
+    result = mcp_server_module.invoke_tool("list_sweeps", {"session_id": "sess-empty"})
+
+    assert "error" not in result
+    assert result["sweep_ids"] == []
