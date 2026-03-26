@@ -651,7 +651,11 @@ class SchemaBuilder:
         self.parmparse_namespaces = {}  # Track ParmParse var → namespace
         self.declaration_map = None  # Populated during scan
 
-    def scan_source_code(self, source_dirs: list[str], solver_config=None):
+    def scan_source_code(
+        self,
+        source_dirs: list[str],
+        solver_config: Any | None = None,
+    ) -> dict[str, dict[str, Any]]:
         """
         Scan C++ files for ParmParse calls.
 
@@ -1304,15 +1308,16 @@ class SchemaBuilder:
         output_path = output_path / filename
 
         from datetime import datetime, timezone
-        output_data = {
-            "metadata": {
-                "solver": solver_name,
-                "schema_version": schema_version,
-                "repo_commit": commit_hash,
-                "generated_at": datetime.now(timezone.utc).isoformat()
-            },
-            "parameters": self.schema
+        # Keep legacy top-level parameter keys for compatibility while also
+        # writing wrapped metadata/parameters for newer consumers.
+        output_data = dict(self.schema)
+        output_data["metadata"] = {
+            "solver": solver_name,
+            "schema_version": schema_version,
+            "repo_commit": commit_hash,
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
+        output_data["parameters"] = self.schema
 
         # Save
         with open(output_path, 'w') as f:
@@ -2094,7 +2099,7 @@ def build_with_auto_compose(repo_path: Path, schema_dir: Path) -> Path:
         return built_schemas[0][1] if built_schemas else None
 
 
-def main():
+def main() -> None:
     """
     Run the schema generation CLI.
 

@@ -61,7 +61,7 @@ class Level2Builder:
                     return fallback
         return []
     
-    def build(self, repo_root: Path, output_dir: Path):
+    def build(self, repo_root: Path, output_dir: Path) -> None:
         """
         Build all 6 Level 2 sub-indices.
         

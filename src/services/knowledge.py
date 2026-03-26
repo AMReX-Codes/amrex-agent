@@ -427,7 +427,7 @@ LLM analysis:
             deduped.append(source)
         return deduped
 
-    def generate_questions_from_prompt(self, user_prompt: str, llm_client) -> list[str]:
+    def generate_questions_from_prompt(self, user_prompt: str, llm_client: Any) -> list[str]:
         """
         Use LLM to generate relevant questions from user prompt.
 

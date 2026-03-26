@@ -23,7 +23,7 @@ Usage:
 
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -345,7 +345,7 @@ def create_embeddings(
     config: object | None = None,
     enable_cache: bool = True,
     base_url: str | None = None,
-):
+) -> Any | None:
     """
     Create embeddings for any provider.
 

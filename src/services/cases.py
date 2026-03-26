@@ -347,7 +347,7 @@ class AMReXCasesService:
 
         return relative_paths
 
-    def find_best_match(self, user_prompt: str, llm_client,
+    def find_best_match(self, user_prompt: str, llm_client: Any,
                         prefer_quality: str = "excellent") -> tuple[str, str]:
         """
         Find best matching code and case.

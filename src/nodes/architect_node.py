@@ -418,6 +418,15 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             "local_path": str(Path(repo_path) / selected_case)
         }
 
+    level0_solver = getattr(plan_result, "level0_solver", None) or code_name
+    level0_confidence = getattr(plan_result, "level0_confidence", None)
+    if level0_confidence is None:
+        level0_confidence = getattr(plan_result, "solver_confidence", None)
+    level2_override_applied = bool(getattr(plan_result, "level2_override_applied", False))
+    level2_override_solver = getattr(plan_result, "level2_override_solver", None)
+    level2_override_case = getattr(plan_result, "level2_override_case", None)
+    level2_override_confidence = getattr(plan_result, "level2_override_confidence", None)
+
     # Determine action type based on feedback
     if parameter_resolution_feedback:
         action = "plan_created_with_parameter_remapping"
@@ -454,6 +463,12 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             "indexing_calls_detail": indexing_calls_detail,
             # Performance metrics
             "confidence_score": plan_result.baseline_confidence,
+            "level0_solver": level0_solver,
+            "level0_confidence": level0_confidence,
+            "level2_override_applied": level2_override_applied,
+            "level2_override_solver": level2_override_solver,
+            "level2_override_case": level2_override_case,
+            "level2_override_confidence": level2_override_confidence,
             # Parameter resolution context (if applicable)
             "parameter_resolution_applied": parameter_resolution_feedback is not None,
             "remapped_parameters": (

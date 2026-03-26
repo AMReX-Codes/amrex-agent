@@ -27,6 +27,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 from unittest.mock import Mock
 
 # Add parent to path for imports
@@ -77,7 +78,7 @@ def _resolve_repo_root(args_repo: Path | None, code_name: str | None):
     return None
 
 
-def create_embedder(use_real: bool = True):
+def create_embedder(use_real: bool = True) -> Any:
     """
     Create a real or mock embedder for indexing.
 
@@ -108,7 +109,7 @@ def create_embedder(use_real: bool = True):
             def __init__(self, service):
                 self.service = service
 
-            def embed_texts(self, texts):
+            def embed_texts(self, texts: list[str]) -> list[list[float]]:
                 """
                 Embed a list of texts using the configured service.
 
@@ -124,7 +125,11 @@ def create_embedder(use_real: bool = True):
                 """
                 return self.service.embed_texts(texts)
 
-            def expand_documents(self, documents, metadata=None):
+            def expand_documents(
+                self,
+                documents: list[str],
+                metadata: list[dict[str, Any]] | None = None,
+            ) -> tuple[list[str], list[dict[str, Any]]]:
                 return self.service.expand_documents(documents, metadata)
 
         if embedder.embeddings is None:
@@ -140,7 +145,7 @@ def create_embedder(use_real: bool = True):
         traceback.print_exc()
         return create_embedder(use_real=False)
 
-def build_level0(output_dir: Path, embedder):
+def build_level0(output_dir: Path, embedder: Any) -> int:
     """
     Build Level 0 indices (solver routing).
 
@@ -173,7 +178,12 @@ def build_level0(output_dir: Path, embedder):
     return len(indices)
 
 
-def build_level1(repo_root: Path, output_dir: Path, embedder, config_class=None):
+def build_level1(
+    repo_root: Path,
+    output_dir: Path,
+    embedder: Any,
+    config_class: type[BaseAMReXConfig] | None = None,
+) -> int:
     """
     Build Level 1 indices (documentation).
 
@@ -227,7 +237,12 @@ def build_level1(repo_root: Path, output_dir: Path, embedder, config_class=None)
     return len(indices)
 
 
-def build_level2(repo_root: Path, output_dir: Path, embedder, config_class=None):
+def build_level2(
+    repo_root: Path,
+    output_dir: Path,
+    embedder: Any,
+    config_class: type[BaseAMReXConfig] | None = None,
+) -> int:
     """
     Build Level 2 indices (case metadata).
 
@@ -287,7 +302,7 @@ def build_level2(repo_root: Path, output_dir: Path, embedder, config_class=None)
     return len(indices)
 
 
-def main():
+def main() -> None:
     """
     Run the multi-level index build CLI.
 

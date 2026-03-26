@@ -7,7 +7,7 @@ import logging
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
-from typing import Any
+from typing import Any, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def metrics_context(
     node: str | None = None,
     iteration: int | None = None,
     extra: dict[str, Any] | None = None,
-):
+) -> Iterator[None]:
     """Set metrics context for downstream instrumentation."""
     tokens = []
     tokens.append(_stage_var.set(stage))
@@ -42,7 +42,7 @@ def metrics_context(
 
 
 @contextmanager
-def metrics_extra(extra: dict[str, Any] | None):
+def metrics_extra(extra: dict[str, Any] | None) -> Iterator[None]:
     """Set metrics context extra fields without changing stage."""
     if extra is None:
         yield

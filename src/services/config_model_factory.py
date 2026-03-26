@@ -675,14 +675,14 @@ class ConfigModelFactory:
 
     @staticmethod
     def remap_failed_modifications(
-            failed_mods: list[tuple[str, any]],
+            failed_mods: list[tuple[str, Any]],
             config_model: BaseModel,
-            config_service,
+            config_service: Any,
             solver_config: type = None,  # e.g., BaseAMReXConfig subclass
             return_mapping: bool = False,
             return_details: bool = False,
             remap_strategy: str = "last_write",
-    ) -> list[tuple[str, any]]:
+    ) -> Any:
         """
         LLM pass to map semantic parameter names to schema fields.
 
@@ -1757,7 +1757,7 @@ If no match exists, set "to": null."""
     @classmethod
     def resolve_schema_path(
         cls,
-        solver_config,
+        solver_config: Any,
         schema_dir: Path,
         repo_path: Path
     ) -> Path:

@@ -86,7 +86,7 @@ def get_embedding_service(config: object) -> "EmbeddingService":
     return service
 
 
-def clear_embedding_service_cache():
+def clear_embedding_service_cache() -> None:
     """
     Clear the embedding service cache.
 
