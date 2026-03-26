@@ -318,8 +318,8 @@ class PeleKnowledgeService:
         # Query case details
         try:
             details_results = self.embeddings.retrieve_faiss(
-                question,  # Now a clean semantic query
                 details_index,
+                question,  # Now a clean semantic query
                 topk=topk
             )
             results.extend(details_results.get('results', []))
@@ -332,8 +332,8 @@ class PeleKnowledgeService:
         if any(keyword in question_lower for keyword in ['fuel', 'mechanism', 'chemistry', 'methane', 'hydrogen']):
             try:
                 chem_results = self.embeddings.retrieve_faiss(
-                    question,
                     chemistry_index,
+                    question,
                     topk=min(topk, 5)
                 )
                 results.extend(chem_results.get('results', []))
