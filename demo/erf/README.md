@@ -15,7 +15,7 @@ export ERF_REPO_PATH=/path/to/ERF
 bash demo/setup_demo_database.sh --code erf
 ```
 
-If `database/schemas` and `database/faiss` already contain the prebuilt ERF artifacts, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash in `.dependencies.json` with your local repo if you need to validate you’re on the same version.
+If `database/schemas` and `database/faiss` already contain the prebuilt ERF artifacts, you can skip this step. The `.dependencies.json` ERF pin remains the recommended commit for reproducible shared runs, but startup preflight does not block on pin mismatch when local schema and FAISS artifacts are valid for your current ERF commit.
 
 Auto-clone missing ERF repo (requires git + network):
 
@@ -52,6 +52,7 @@ Required behavior and fallback notes:
 - Auto-clone fallback: `bash demo/setup_demo_database.sh --code erf --clone-missing` clones missing ERF using `.dependencies.json`.
 - Rebuild/index repair: rerun ERF build commands when schema/index artifacts are stale or mismatched:
   - `bash demo/setup_demo_database.sh --code erf`
+- Commit mismatch behavior: preflight warns (does not block) when local artifacts are valid for current ERF HEAD; it blocks only when compatibility is not verified.
 - Non-interactive fail-fast: headless startup checks must return non-zero on blocking ERF repo/index/dependency issues.
 - CMake-default build note: ERF docs specify `CMAKE_BUILD_TYPE` default `Release` and Release should be preferred for ERF CMake builds.
 - Fallback when CMake is unavailable: use GNUmakefile builds (`make ... DEBUG=FALSE`) as the fallback route.
