@@ -54,6 +54,7 @@ def _as_path(value: Any) -> Path | None:
 
 
 def _erf_path(repo_root: Path, erf_repo_path: Any = None) -> Path:
+    repo_root = Path(repo_root)
     path = _as_path(erf_repo_path)
     if path is not None:
         return path
