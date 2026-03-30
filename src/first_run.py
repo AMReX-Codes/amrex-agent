@@ -376,14 +376,43 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
 
             schema_root = Path(kwargs.get("schema_root") or repo_root / "database" / "schemas")
             solver = str(kwargs.get("solver") or "erf").lower()
-            schema_candidates = sorted(schema_root.glob(f"{solver}_schema_*.json"))
-            schema_path = schema_candidates[-1] if schema_candidates else schema_root / f"{solver}_schema_latest.json"
+            schema_candidates: list[Path] = []
+            schema_patterns = (
+                f"{solver}_complete_current.json",
+                f"{solver.upper()}_complete_current.json",
+                f"{solver}_complete_*.json",
+                f"{solver.upper()}_complete_*.json",
+                f"{solver}_schema_*.json",
+                f"{solver.upper()}_schema_*.json",
+            )
+            seen: set[Path] = set()
+            for pattern in schema_patterns:
+                for candidate in sorted(schema_root.glob(pattern)):
+                    if candidate not in seen:
+                        seen.add(candidate)
+                        schema_candidates.append(candidate)
+
             schema_stale = False
-            try:
-                report = check_schema_staleness(schema_path, repo_paths={"erf": erf_repo_path})
-                schema_stale = bool(getattr(report, "is_stale", False))
-            except (OSError, ValueError, json.JSONDecodeError):
-                schema_stale = False
+            if not schema_candidates:
+                logger.warning(
+                    "Commit mismatch check could not find schema candidates under %s for solver=%s; "
+                    "treating schema staleness as unknown/non-stale for compatibility decision.",
+                    schema_root,
+                    solver,
+                )
+            else:
+                schema_path = schema_candidates[0]
+                try:
+                    report = check_schema_staleness(schema_path, repo_paths={"erf": erf_repo_path})
+                    schema_stale = bool(getattr(report, "is_stale", False))
+                except (OSError, ValueError, json.JSONDecodeError) as exc:
+                    logger.warning(
+                        "Commit mismatch check could not evaluate schema staleness from %s (%s); "
+                        "treating schema staleness as unknown/non-stale for compatibility decision.",
+                        schema_path,
+                        exc,
+                    )
+                    schema_stale = False
 
             compatibility_verified = indexed_for_actual_commit and not schema_stale
             severity = "warning" if compatibility_verified else "error"
