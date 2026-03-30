@@ -200,6 +200,35 @@ def _collect_indexed_commits(repo_root: Path, repo_name: str) -> set[str]:
     return commits
 
 
+def _find_schema_candidates(schema_root: Path, solver: str) -> list[Path]:
+    """
+    Return ordered, deduplicated schema candidates for staleness checks.
+
+    Priority: complete_current, then versioned complete files, then schema files.
+    Includes lower/upper solver variants. Returns [] if no matches or root missing.
+    """
+    if not schema_root.exists():
+        return []
+    solver_name = str(solver).lower()
+    schema_patterns = (
+        f"{solver_name}_complete_current.json",
+        f"{solver_name.upper()}_complete_current.json",
+        f"{solver_name}_complete_*.json",
+        f"{solver_name.upper()}_complete_*.json",
+        f"{solver_name}_schema_*.json",
+        f"{solver_name.upper()}_schema_*.json",
+    )
+    candidates: list[Path] = []
+    seen: set[Path] = set()
+    for pattern in schema_patterns:
+        for candidate in sorted(schema_root.glob(pattern)):
+            if candidate in seen:
+                continue
+            seen.add(candidate)
+            candidates.append(candidate)
+    return candidates
+
+
 def _detect_schema_staleness(**kwargs: Any) -> bool:
     schema_root = Path(kwargs.get("schema_root") or "")
     repo_root = Path(kwargs.get("repo_root") or ".")
@@ -376,21 +405,7 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
 
             schema_root = Path(kwargs.get("schema_root") or repo_root / "database" / "schemas")
             solver = str(kwargs.get("solver") or "erf").lower()
-            schema_candidates: list[Path] = []
-            schema_patterns = (
-                f"{solver}_complete_current.json",
-                f"{solver.upper()}_complete_current.json",
-                f"{solver}_complete_*.json",
-                f"{solver.upper()}_complete_*.json",
-                f"{solver}_schema_*.json",
-                f"{solver.upper()}_schema_*.json",
-            )
-            seen: set[Path] = set()
-            for pattern in schema_patterns:
-                for candidate in sorted(schema_root.glob(pattern)):
-                    if candidate not in seen:
-                        seen.add(candidate)
-                        schema_candidates.append(candidate)
+            schema_candidates = _find_schema_candidates(schema_root, solver)
 
             schema_stale = False
             if not schema_candidates:
