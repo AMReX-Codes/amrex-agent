@@ -584,6 +584,9 @@ def test_assess_compatibility_true_when_indexed_and_fresh(tmp_path, monkeypatch)
         "src.first_run.check_schema_staleness",
         lambda *a, **kw: type("R", (), {"is_stale": False})(),
     )
+    schema_root = tmp_path / "database" / "schemas"
+    schema_root.mkdir(parents=True)
+    (schema_root / "erf_complete_current.json").write_text("{}")
     erf_path = tmp_path / "erf"
     erf_path.mkdir()
 
@@ -606,6 +609,9 @@ def test_assess_compatibility_false_when_not_indexed(tmp_path, monkeypatch):
         "src.first_run.check_schema_staleness",
         lambda *a, **kw: type("R", (), {"is_stale": False})(),
     )
+    schema_root = tmp_path / "database" / "schemas"
+    schema_root.mkdir(parents=True)
+    (schema_root / "erf_complete_current.json").write_text("{}")
     erf_path = tmp_path / "erf"
     erf_path.mkdir()
 
@@ -627,6 +633,9 @@ def test_assess_compatibility_false_when_schema_stale(tmp_path, monkeypatch):
         "src.first_run.check_schema_staleness",
         lambda *a, **kw: type("R", (), {"is_stale": True})(),
     )
+    schema_root = tmp_path / "database" / "schemas"
+    schema_root.mkdir(parents=True)
+    (schema_root / "erf_complete_current.json").write_text("{}")
     erf_path = tmp_path / "erf"
     erf_path.mkdir()
 
@@ -657,7 +666,8 @@ def test_assess_compatibility_permissive_when_no_schema_candidates(
     erf_path.mkdir()
 
     from src.first_run import _assess_erf_commit_compatibility
-    # schema_root inside helper will find no candidates in tmp_path
+    # schema_root inside helper defaults to tmp_path/database/schemas
+    # and will find no candidates there.
     compatibility_verified, indexed, stale = _assess_erf_commit_compatibility(
         tmp_path, erf_path, "abc123"
     )
