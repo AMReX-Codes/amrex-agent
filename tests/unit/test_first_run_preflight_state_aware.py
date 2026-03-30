@@ -497,3 +497,171 @@ def test_mismatch_decision_matrix(
             f"[{case_id}|{status}] Expected severity={expected_sev!r}, "
             f"got={got_sev!r}.\nFull issue: {mismatch[0]}"
         )
+
+
+def test_find_schema_candidates_returns_priority_ordered_list(tmp_path):
+    """
+    _find_schema_candidates returns candidates in priority order:
+    erf_complete_current.json first, then versioned complete files,
+    then ERF_schema_*.json files. No duplicates.
+    """
+    schema_root = tmp_path / "schemas"
+    schema_root.mkdir()
+    (schema_root / "erf_complete_current.json").write_text("{}")
+    (schema_root / "ERF_schema_abc123.json").write_text("{}")
+    (schema_root / "erf_complete_v1_foo.json").write_text("{}")
+
+    from src.first_run import _find_schema_candidates
+    candidates = _find_schema_candidates(schema_root, "erf")
+
+    assert len(candidates) == len(set(candidates)), "duplicates present"
+    names = [c.name for c in candidates]
+    assert names[0] == "erf_complete_current.json", (
+        f"Expected complete_current first, got {names[0]!r}"
+    )
+
+
+def test_find_schema_candidates_returns_empty_for_missing_root(tmp_path):
+    """No crash when schema_root does not exist — returns empty list."""
+    from src.first_run import _find_schema_candidates
+    result = _find_schema_candidates(tmp_path / "nonexistent", "erf")
+    assert result == []
+
+
+def test_find_schema_candidates_case_variants_no_duplicates(tmp_path):
+    """
+    Files matching both upper and lower case patterns are not duplicated.
+    erf_complete_current.json and ERF_complete_current.json are distinct
+    files — both included, each once.
+    """
+    schema_root = tmp_path / "schemas"
+    schema_root.mkdir()
+    (schema_root / "erf_complete_current.json").write_text("{}")
+    (schema_root / "ERF_complete_current.json").write_text("{}")
+
+    from src.first_run import _find_schema_candidates
+    candidates = _find_schema_candidates(schema_root, "erf")
+    names = [c.name for c in candidates]
+    assert len(names) == len(set(names)), f"Duplicates in {names}"
+    assert len(names) == 2
+
+
+def test_assess_compatibility_returns_tuple_of_three_bools(
+    tmp_path, monkeypatch
+):
+    """
+    _assess_erf_commit_compatibility returns
+    (compatibility_verified: bool, indexed_for_actual: bool, schema_stale: bool)
+    — always a 3-tuple of bools regardless of input state.
+    """
+    monkeypatch.setattr(
+        "src.first_run._collect_indexed_commits",
+        lambda *a, **kw: {"abc123"},
+    )
+    monkeypatch.setattr(
+        "src.first_run.check_schema_staleness",
+        lambda *a, **kw: type("R", (), {"is_stale": False})(),
+    )
+    erf_path = tmp_path / "erf"
+    erf_path.mkdir()
+
+    from src.first_run import _assess_erf_commit_compatibility
+    result = _assess_erf_commit_compatibility(tmp_path, erf_path, "abc123")
+
+    assert isinstance(result, tuple) and len(result) == 3
+    assert all(isinstance(v, bool) for v in result), (
+        f"Expected all bool, got {[type(v) for v in result]}"
+    )
+
+
+def test_assess_compatibility_true_when_indexed_and_fresh(tmp_path, monkeypatch):
+    """compatibility_verified=True only when indexed AND not stale."""
+    monkeypatch.setattr(
+        "src.first_run._collect_indexed_commits",
+        lambda *a, **kw: {"abc123"},
+    )
+    monkeypatch.setattr(
+        "src.first_run.check_schema_staleness",
+        lambda *a, **kw: type("R", (), {"is_stale": False})(),
+    )
+    erf_path = tmp_path / "erf"
+    erf_path.mkdir()
+
+    from src.first_run import _assess_erf_commit_compatibility
+    compatibility_verified, indexed, stale = _assess_erf_commit_compatibility(
+        tmp_path, erf_path, "abc123"
+    )
+    assert compatibility_verified is True
+    assert indexed is True
+    assert stale is False
+
+
+def test_assess_compatibility_false_when_not_indexed(tmp_path, monkeypatch):
+    """compatibility_verified=False when SHA not in indexed set."""
+    monkeypatch.setattr(
+        "src.first_run._collect_indexed_commits",
+        lambda *a, **kw: {"other_sha"},
+    )
+    monkeypatch.setattr(
+        "src.first_run.check_schema_staleness",
+        lambda *a, **kw: type("R", (), {"is_stale": False})(),
+    )
+    erf_path = tmp_path / "erf"
+    erf_path.mkdir()
+
+    from src.first_run import _assess_erf_commit_compatibility
+    compatibility_verified, indexed, stale = _assess_erf_commit_compatibility(
+        tmp_path, erf_path, "abc123"
+    )
+    assert compatibility_verified is False
+    assert indexed is False
+
+
+def test_assess_compatibility_false_when_schema_stale(tmp_path, monkeypatch):
+    """compatibility_verified=False when schema is stale even if indexed."""
+    monkeypatch.setattr(
+        "src.first_run._collect_indexed_commits",
+        lambda *a, **kw: {"abc123"},
+    )
+    monkeypatch.setattr(
+        "src.first_run.check_schema_staleness",
+        lambda *a, **kw: type("R", (), {"is_stale": True})(),
+    )
+    erf_path = tmp_path / "erf"
+    erf_path.mkdir()
+
+    from src.first_run import _assess_erf_commit_compatibility
+    compatibility_verified, indexed, stale = _assess_erf_commit_compatibility(
+        tmp_path, erf_path, "abc123"
+    )
+    assert compatibility_verified is False
+    assert stale is True
+
+
+def test_assess_compatibility_permissive_when_no_schema_candidates(
+    tmp_path, monkeypatch
+):
+    """
+    When no schema candidates exist, schema_stale defaults to False
+    (permissive fallback) and a warning is logged.
+    Helper must not raise when schema_root has no matching files.
+    """
+    monkeypatch.setattr(
+        "src.first_run._collect_indexed_commits",
+        lambda *a, **kw: {"abc123"},
+    )
+    # Do NOT patch check_schema_staleness — it must not be called
+    # when no candidates exist. If it is called, it will raise on
+    # the empty path and the test will catch the regression.
+    erf_path = tmp_path / "erf"
+    erf_path.mkdir()
+
+    from src.first_run import _assess_erf_commit_compatibility
+    # schema_root inside helper will find no candidates in tmp_path
+    compatibility_verified, indexed, stale = _assess_erf_commit_compatibility(
+        tmp_path, erf_path, "abc123"
+    )
+    assert stale is False, (
+        "Permissive fallback: missing schema candidates must default stale=False"
+    )
+    assert compatibility_verified is True  # indexed=True, stale=False
