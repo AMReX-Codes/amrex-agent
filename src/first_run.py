@@ -369,6 +369,24 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
         if not actual_sha and not has_git_metadata:
             return {"issues": issues}
         if actual_sha and actual_sha != expected_sha:
+            indexed_commits = _collect_indexed_commits(repo_root, "erf")
+            indexed_for_actual_commit = actual_sha.lower() in {
+                str(commit).strip().lower() for commit in indexed_commits
+            }
+
+            schema_root = Path(kwargs.get("schema_root") or repo_root / "database" / "schemas")
+            solver = str(kwargs.get("solver") or "erf").lower()
+            schema_candidates = sorted(schema_root.glob(f"{solver}_schema_*.json"))
+            schema_path = schema_candidates[-1] if schema_candidates else schema_root / f"{solver}_schema_latest.json"
+            schema_stale = False
+            try:
+                report = check_schema_staleness(schema_path, repo_paths={"erf": erf_repo_path})
+                schema_stale = bool(getattr(report, "is_stale", False))
+            except (OSError, ValueError, json.JSONDecodeError):
+                schema_stale = False
+
+            compatibility_verified = indexed_for_actual_commit and not schema_stale
+            severity = "warning" if compatibility_verified else "error"
             rebuild_steps = [
                 "python -u database/scripts/build_schema.py \"$ERF_PATH\" --output database/schemas --auto-compose",
                 "python -u scripts/rename_schema_after_build.py --repo-root . --schemas-dir database/schemas --singleton-rename",
@@ -383,7 +401,7 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
             issues.append(
                 _issue(
                     ISSUE_ERF_COMMIT_MISMATCH,
-                    "error",
+                    severity,
                     (
                         "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF embeddings and inputs schema.\n"
                         "Rebuild sequence:\n"
@@ -394,6 +412,9 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
                     actual_commit=actual_sha,
                     repo_name="erf",
                     repo_path=str(erf_repo_path),
+                    compatibility_verified=compatibility_verified,
+                    indexed_for_actual_commit=indexed_for_actual_commit,
+                    schema_stale=schema_stale,
                 )
             )
     return {"issues": issues}

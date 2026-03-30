@@ -747,12 +747,17 @@ def _is_tty_session() -> bool:
 def _log_preflight_issues(issues: list[dict[str, Any]]) -> None:
     if not issues:
         return
-    logger.error("Startup readiness preflight found unresolved issues:")
+    has_blocking = any(str(issue.get("severity", "")).lower() == "error" for issue in issues)
+    if has_blocking:
+        logger.error("Startup readiness preflight found unresolved issues:")
+    else:
+        logger.warning("Startup readiness preflight found non-blocking issues:")
     for issue in issues:
         code = issue.get("code", "UNKNOWN")
         severity = str(issue.get("severity", "unknown")).upper()
         action = issue.get("suggested_action", "No suggested action provided.")
-        logger.error("  [%s] %s: %s", code, severity, action)
+        level = logging.ERROR if str(issue.get("severity", "")).lower() == "error" else logging.WARNING
+        logger.log(level, "  [%s] %s: %s | payload=%s", code, severity, action, issue)
 
 
 def _has_blocking_issues(issues: list[dict[str, Any]]) -> bool:
