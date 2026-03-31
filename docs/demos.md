@@ -6,10 +6,10 @@ This page mirrors the quickstart and demo READMEs directly so the docs stay in s
 
 Phase-3 prerequisite coverage for demos:
 
-- Zero-manual-setup path: sibling solver repos + `bash demo/setup_demo_database.sh` + run from repo root.
+- Zero-manual-setup path: sibling solver repos + `bash demo/setup_demo_database.sh --force-rebuild` + run from repo root.
 - Sibling repo autodetect: default lookup uses sibling repos (for example `../ERF`).
 - Auto-clone fallback: `--clone-missing` uses `.dependencies.json` pins when repos are absent.
-- Rebuild/index repair: rerun setup (or `--code <code>`) when schema/FAISS artifacts are stale or mismatched.
+- Rebuild/index repair: rerun setup (or `--code <code>`) when schema/FAISS artifacts are stale or mismatched; use `--force-rebuild` to avoid reusing stale artifacts after solver `HEAD` changes.
 - Commit mismatch behavior: preflight does not block when local schema and FAISS artifacts are valid for the current ERF commit.
 - Reproducibility note: `.dependencies.json` pinned commits remain the recommended baseline for shared runs.
 - Non-interactive fail-fast: headless startup checks should exit non-zero on blocking readiness issues.
