@@ -292,6 +292,16 @@ if should_process "remora"; then
 fi
 
 log ""
+log "[Step 1b/3] Syncing schema aliases..."
+log "============================================"
+if [[ -d "database/schemas" ]]; then
+  python -u scripts/rename_schema_after_build.py --repo-root . --schemas-dir database/schemas --singleton-rename \
+    && log "  ✓ Schema alias sync complete" || log "  ⚠️  Schema alias sync had issues"
+else
+  log "  ⚠️  database/schemas not found (skipping schema alias sync)"
+fi
+
+log ""
 log "[Step 2/3] Building hierarchical indices (L0, L1, L2)..."
 log "============================================"
 
