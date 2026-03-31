@@ -169,6 +169,67 @@ ERF_PATH="${ERF_REPO_PATH:-${ERF_PATH:-../ERF}}"
 AMREX_PATH="${AMREX_REPO_PATH:-${AMREX_PATH:-../amrex}}"
 REMORA_PATH="${REMORA_REPO_PATH:-${REMORA_PATH:-../REMORA}}"
 
+report_pin_status() {
+  local code="$1"
+  local label="$2"
+  local path="$3"
+
+  if ! should_process "$code"; then
+    return 0
+  fi
+
+  local pinned
+  pinned="$(dep_value "$code" "commit")"
+  if [[ -z "$pinned" ]]; then
+    log "  $label: pinned commit: (not set in .dependencies.json)"
+    return 0
+  fi
+
+  if [[ ! -d "$path/.git" ]]; then
+    log "  $label: pinned $pinned | local repo not found at $path"
+    return 0
+  fi
+
+  local head
+  head="$(git -C "$path" rev-parse --short HEAD 2>/dev/null || true)"
+  if [[ -z "$head" ]]; then
+    log "  $label: pinned $pinned | local HEAD unavailable"
+    return 0
+  fi
+
+  if ! git -C "$path" cat-file -e "${pinned}^{commit}" >/dev/null 2>&1; then
+    log "  $label: pinned $pinned | local HEAD $head | pinned commit not present in local clone"
+    return 0
+  fi
+
+  local left_right
+  left_right="$(git -C "$path" rev-list --left-right --count "${pinned}...HEAD" 2>/dev/null || true)"
+  if [[ -z "$left_right" ]]; then
+    log "  $label: pinned $pinned | local HEAD $head | distance unavailable"
+    return 0
+  fi
+
+  local behind ahead
+  read -r behind ahead <<<"$left_right"
+  if [[ "$behind" == "0" && "$ahead" == "0" ]]; then
+    log "  $label: pinned $pinned | local HEAD $head | at pinned commit (0 commits ago)"
+  elif [[ "$behind" == "0" ]]; then
+    log "  $label: pinned $pinned | local HEAD $head | pinned commit is $ahead commit(s) ago"
+  elif [[ "$ahead" == "0" ]]; then
+    log "  $label: pinned $pinned | local HEAD $head | local HEAD is $behind commit(s) behind pinned"
+  else
+    log "  $label: pinned $pinned | local HEAD $head | diverged ($ahead ahead, $behind behind)"
+  fi
+}
+
+log "Pinned commit status (.dependencies.json vs local repos):"
+report_pin_status "pelec" "PeleC" "$PELEC_PATH"
+report_pin_status "pelelmex" "PeleLMeX" "$PELELMEX_PATH"
+report_pin_status "erf" "ERF" "$ERF_PATH"
+report_pin_status "amrex" "AMReX" "$AMREX_PATH"
+report_pin_status "remora" "REMORA" "$REMORA_PATH"
+log ""
+
 ensure_repo() {
   local code="$1"
   local path="$2"

@@ -9,10 +9,11 @@ Node choices and graph setup are inspired by Foam-Agent (https://arxiv.org/abs/2
 Build schema + indices for PeleC:
 
 ```bash
-bash demo/setup_demo_database.sh --code pelec
+bash demo/setup_demo_database.sh --code pelec --force-rebuild
 ```
 
 If `database/schemas` and `database/faiss` already contain the prebuilt PeleC artifacts, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash in `.dependencies.json` with your local repo if you need to validate you’re on the same version.
+Use `--code pelec` here because setup options should match the specific repo you are using.
 
 Ensure the PeleC repo is available (or set `PELEC_REPO_PATH`):
 

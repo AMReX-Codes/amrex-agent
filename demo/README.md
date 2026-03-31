@@ -91,18 +91,19 @@ If you want `--clone-missing` to pull specific forks/branches/commits, edit `.de
 ### 4. Build Database Indices
 
 ```bash
-bash demo/setup_demo_database.sh
+bash demo/setup_demo_database.sh --force-rebuild
 ```
 
 This extracts parameter schemas and builds FAISS indices from the source repositories.
 If prebuilt schemas/indices are already present in `database/schemas` and `database/faiss`, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash recorded in `.dependencies.json` with the commit in your local repo if you need to validate you’re using the same version.
+Use the `--code <code>` variant for the specific repo you are actively working with.
 
 To build indices for a single code only:
 
 ```bash
-bash demo/setup_demo_database.sh --code erf
-bash demo/setup_demo_database.sh --code amrex
-bash demo/setup_demo_database.sh --code pelelmex
+bash demo/setup_demo_database.sh --code erf --force-rebuild
+bash demo/setup_demo_database.sh --code amrex --force-rebuild
+bash demo/setup_demo_database.sh --code pelelmex --force-rebuild
 ```
 
 To clone missing solver repos automatically (requires git + network):
@@ -128,7 +129,7 @@ bash demo/setup_demo_database.sh --upload-openai
 Use this as the zero-manual-setup path for first runs:
 
 1. Keep solver repos as siblings of `amrex-agent` (autodetected default).
-2. Run `bash demo/setup_demo_database.sh`.
+2. Run `bash demo/setup_demo_database.sh --force-rebuild` (or `--code <code> --force-rebuild` for the repo you're using).
 3. Start the CLI from repo root.
 
 Required behavior and fallbacks:
@@ -136,8 +137,8 @@ Required behavior and fallbacks:
 - Sibling repo autodetect: default lookup is `../ERF`, `../PeleC`, `../PeleLMeX`, `../amrex`.
 - Auto-clone fallback: run `bash demo/setup_demo_database.sh --clone-missing` to fetch missing repos using `.dependencies.json` pins.
 - Rebuild/index repair: if schemas or FAISS artifacts are stale/corrupt, rerun setup.
-  - Full rebuild: `bash demo/setup_demo_database.sh`
-  - Single-code repair: `bash demo/setup_demo_database.sh --code <code>`
+  - Full rebuild: `bash demo/setup_demo_database.sh --force-rebuild`
+  - Single-code repair: `bash demo/setup_demo_database.sh --code <code> --force-rebuild`
 - Non-interactive fail-fast: CI/headless startup readiness checks should exit non-zero on blocking repo/dependency/index issues instead of prompting.
 - Code-specific build policy: defaults and fallbacks can vary by solver/codebase.
 - ERF-specific build policy is documented in `demo/erf/README.md` (CMake Release default and GNUmake fallback notes).
@@ -259,7 +260,7 @@ the spatial grid typically requires more conservative time stepping.
 Build schema + indices:
 
 ```bash
-bash demo/setup_demo_database.sh --code amrex
+bash demo/setup_demo_database.sh --code amrex --force-rebuild
 ```
 
 Run a simple AMReX demo:
