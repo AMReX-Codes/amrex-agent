@@ -54,6 +54,7 @@ def _as_path(value: Any) -> Path | None:
 
 
 def _erf_path(repo_root: Path, erf_repo_path: Any = None) -> Path:
+    repo_root = Path(repo_root)
     path = _as_path(erf_repo_path)
     if path is not None:
         return path
@@ -200,6 +201,90 @@ def _collect_indexed_commits(repo_root: Path, repo_name: str) -> set[str]:
     return commits
 
 
+def _find_schema_candidates(schema_root: Path, solver: str) -> list[Path]:
+    """
+    Return ordered, deduplicated schema candidates for staleness checks.
+
+    Priority: complete_current, then versioned complete files, then schema files.
+    Includes lower/upper solver variants. Returns [] if no matches or root missing.
+    """
+    if not schema_root.exists():
+        return []
+    solver_name = str(solver).lower()
+    schema_patterns = (
+        f"{solver_name}_complete_current.json",
+        f"{solver_name.upper()}_complete_current.json",
+        f"{solver_name}_complete_*.json",
+        f"{solver_name.upper()}_complete_*.json",
+        f"{solver_name}_schema_*.json",
+        f"{solver_name.upper()}_schema_*.json",
+    )
+    candidates: list[Path] = []
+    seen: set[Path] = set()
+    for pattern in schema_patterns:
+        for candidate in sorted(schema_root.glob(pattern)):
+            if candidate in seen:
+                continue
+            seen.add(candidate)
+            candidates.append(candidate)
+    return candidates
+
+
+def _assess_erf_commit_compatibility(
+    repo_root: Path,
+    erf_repo_path: Path,
+    actual_sha: str,
+    **kwargs: Any,
+) -> tuple[bool, bool, bool]:
+    """
+    Assess compatibility for an ERF commit mismatch.
+
+    Returns (compatibility_verified, indexed_for_actual_commit, schema_stale).
+    Uses permissive fallback for missing/unreadable schema checks.
+    """
+    try:
+        indexed_commits = _collect_indexed_commits(repo_root, "erf")
+        indexed_for_actual_commit = actual_sha.lower() in {
+            str(commit).strip().lower() for commit in indexed_commits
+        }
+
+        schema_root = Path(kwargs.get("schema_root") or repo_root / "database" / "schemas")
+        solver = str(kwargs.get("solver") or "erf").lower()
+        schema_candidates = _find_schema_candidates(schema_root, solver)
+
+        schema_stale = False
+        if not schema_candidates:
+            logger.warning(
+                "Commit mismatch check could not find schema candidates under %s for solver=%s; "
+                "treating schema staleness as unknown/non-stale for compatibility decision.",
+                schema_root,
+                solver,
+            )
+        else:
+            schema_path = schema_candidates[0]
+            try:
+                report = check_schema_staleness(schema_path, repo_paths={"erf": erf_repo_path})
+                schema_stale = bool(getattr(report, "is_stale", False))
+            except Exception as exc:
+                logger.warning(
+                    "Commit mismatch check could not evaluate schema staleness from %s (%s); "
+                    "treating schema staleness as unknown/non-stale for compatibility decision.",
+                    schema_path,
+                    exc,
+                )
+                schema_stale = False
+
+        compatibility_verified = indexed_for_actual_commit and not schema_stale
+        return (compatibility_verified, indexed_for_actual_commit, schema_stale)
+    except Exception as exc:
+        logger.warning(
+            "Commit mismatch compatibility check failed unexpectedly (%s); "
+            "treating compatibility as unverified.",
+            exc,
+        )
+        return (False, False, False)
+
+
 def _detect_schema_staleness(**kwargs: Any) -> bool:
     schema_root = Path(kwargs.get("schema_root") or "")
     repo_root = Path(kwargs.get("repo_root") or ".")
@@ -210,6 +295,8 @@ def _detect_schema_staleness(**kwargs: Any) -> bool:
     candidates = sorted(schema_root.glob(f"{solver}_schema_*.json"))
     if not candidates:
         return False
+    # Intentional: generic schema-readiness stale check (bool only), not
+    # commit-mismatch compatibility evaluation.
     report = check_schema_staleness(candidates[-1], repo_paths=repo_paths)
     return bool(report.is_stale)
 
@@ -369,6 +456,16 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
         if not actual_sha and not has_git_metadata:
             return {"issues": issues}
         if actual_sha and actual_sha != expected_sha:
+            compatibility_verified, indexed_for_actual_commit, schema_stale = (
+                _assess_erf_commit_compatibility(
+                    repo_root,
+                    erf_repo_path,
+                    actual_sha,
+                    schema_root=kwargs.get("schema_root"),
+                    solver=kwargs.get("solver"),
+                )
+            )
+            severity = "warning" if compatibility_verified else "error"
             rebuild_steps = [
                 "python -u database/scripts/build_schema.py \"$ERF_PATH\" --output database/schemas --auto-compose",
                 "python -u scripts/rename_schema_after_build.py --repo-root . --schemas-dir database/schemas --singleton-rename",
@@ -383,7 +480,7 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
             issues.append(
                 _issue(
                     ISSUE_ERF_COMMIT_MISMATCH,
-                    "error",
+                    severity,
                     (
                         "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF embeddings and inputs schema.\n"
                         "Rebuild sequence:\n"
@@ -394,6 +491,9 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
                     actual_commit=actual_sha,
                     repo_name="erf",
                     repo_path=str(erf_repo_path),
+                    compatibility_verified=compatibility_verified,
+                    indexed_for_actual_commit=indexed_for_actual_commit,
+                    schema_stale=schema_stale,
                 )
             )
     return {"issues": issues}
@@ -1036,6 +1136,8 @@ def resolve_readiness_issues_interactive(**kwargs: Any) -> dict[str, Any]:
             continue
 
         discovered_candidates = _discover_local_repo_candidates(repo_root, repo_name)
+        # Intentional: interactive missing-repo flow needs raw indexed commit
+        # set for prompt/action selection, not mismatch compatibility scoring.
         indexed_commits = _collect_indexed_commits(repo_root, repo_name)
         response = _interactive_missing_repo_prompt(repo_name, custom_path)
         action, ok, selected_path = _try_interactive_resolution(

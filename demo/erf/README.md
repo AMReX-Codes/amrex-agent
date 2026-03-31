@@ -12,10 +12,11 @@ Build ERF-only schemas and indices:
 
 ```bash
 export ERF_REPO_PATH=/path/to/ERF
-bash demo/setup_demo_database.sh --code erf
+bash demo/setup_demo_database.sh --code erf --force-rebuild
 ```
 
-If `database/schemas` and `database/faiss` already contain the prebuilt ERF artifacts, you can skip this step. Those artifacts are tied to specific code commits; compare the commit hash in `.dependencies.json` with your local repo if you need to validate you’re on the same version.
+The `.dependencies.json` ERF pin remains the recommended commit for reproducible shared runs, but startup preflight does not block on pin mismatch when local schema and FAISS artifacts are valid for your current ERF commit.
+Without `--force-rebuild`, setup may reuse existing artifacts; if ERF `HEAD` has moved since they were built, those reused artifacts can be stale and preflight will block.
 
 Auto-clone missing ERF repo (requires git + network):
 
@@ -43,7 +44,7 @@ python database/scripts/build_index.py --config erf --type case_details --source
 Zero-manual-setup path:
 
 1. Keep ERF as a sibling repo (`../ERF`) or set `ERF_REPO_PATH`.
-2. Run `bash demo/setup_demo_database.sh --code erf`.
+2. Run `bash demo/setup_demo_database.sh --code erf --force-rebuild`.
 3. Run the agent from repo root.
 
 Required behavior and fallback notes:
@@ -51,7 +52,9 @@ Required behavior and fallback notes:
 - Sibling repo autodetect: ERF is discovered from sibling layout first.
 - Auto-clone fallback: `bash demo/setup_demo_database.sh --code erf --clone-missing` clones missing ERF using `.dependencies.json`.
 - Rebuild/index repair: rerun ERF build commands when schema/index artifacts are stale or mismatched:
-  - `bash demo/setup_demo_database.sh --code erf`
+  - `bash demo/setup_demo_database.sh --code erf --force-rebuild`
+  - If `--force-rebuild` is omitted, existing artifacts may be reused and can remain stale after ERF commit changes.
+- Commit mismatch behavior: preflight warns (does not block) when local artifacts are valid for current ERF HEAD; it blocks only when compatibility is not verified.
 - Non-interactive fail-fast: headless startup checks must return non-zero on blocking ERF repo/index/dependency issues.
 - CMake-default build note: ERF docs specify `CMAKE_BUILD_TYPE` default `Release` and Release should be preferred for ERF CMake builds.
 - Fallback when CMake is unavailable: use GNUmakefile builds (`make ... DEBUG=FALSE`) as the fallback route.
