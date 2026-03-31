@@ -675,3 +675,58 @@ def test_assess_compatibility_permissive_when_no_schema_candidates(
         "Permissive fallback: missing schema candidates must default stale=False"
     )
     assert compatibility_verified is True  # indexed=True, stale=False
+
+
+def test_assess_compatibility_permissive_when_staleness_check_raises(
+    tmp_path, monkeypatch, caplog
+):
+    """
+    If check_schema_staleness raises, helper logs warning and treats staleness
+    as unknown/non-stale (permissive fallback), preserving indexed status.
+    """
+    monkeypatch.setattr(
+        "src.first_run._collect_indexed_commits",
+        lambda *a, **kw: {"abc123"},
+    )
+
+    def _raise(*args, **kwargs):
+        raise RuntimeError("staleness boom")
+
+    monkeypatch.setattr("src.first_run.check_schema_staleness", _raise)
+    schema_root = tmp_path / "database" / "schemas"
+    schema_root.mkdir(parents=True)
+    (schema_root / "erf_complete_current.json").write_text("{}")
+    erf_path = tmp_path / "erf"
+    erf_path.mkdir()
+
+    from src.first_run import _assess_erf_commit_compatibility
+
+    with caplog.at_level("WARNING"):
+        compatibility_verified, indexed, stale = _assess_erf_commit_compatibility(
+            tmp_path, erf_path, "abc123"
+        )
+
+    assert compatibility_verified is True
+    assert indexed is True
+    assert stale is False
+    assert "could not evaluate schema staleness" in caplog.text
+
+
+def test_assess_compatibility_returns_unverified_on_unexpected_failure(
+    tmp_path, monkeypatch, caplog
+):
+    """Outer helper fallback returns all-false tuple when unexpected error occurs."""
+    monkeypatch.setattr(
+        "src.first_run._collect_indexed_commits",
+        lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("collect boom")),
+    )
+    erf_path = tmp_path / "erf"
+    erf_path.mkdir()
+
+    from src.first_run import _assess_erf_commit_compatibility
+
+    with caplog.at_level("WARNING"):
+        result = _assess_erf_commit_compatibility(tmp_path, erf_path, "abc123")
+
+    assert result == (False, False, False)
+    assert "compatibility check failed unexpectedly" in caplog.text
