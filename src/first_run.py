@@ -261,18 +261,33 @@ def _assess_erf_commit_compatibility(
                 solver,
             )
         else:
-            schema_path = schema_candidates[0]
-            try:
-                report = check_schema_staleness(schema_path, repo_paths={"erf": erf_repo_path})
-                schema_stale = bool(getattr(report, "is_stale", False))
-            except Exception as exc:
-                logger.warning(
-                    "Commit mismatch check could not evaluate schema staleness from %s (%s); "
-                    "treating schema staleness as unknown/non-stale for compatibility decision.",
-                    schema_path,
-                    exc,
+            last_stale_schema: Path | None = None
+            for schema_path in schema_candidates:
+                try:
+                    report = check_schema_staleness(schema_path, repo_paths={"erf": erf_repo_path})
+                    is_stale = bool(getattr(report, "is_stale", False))
+                except Exception as exc:
+                    logger.warning(
+                        "Commit mismatch check could not evaluate schema staleness from %s (%s); "
+                        "continuing with next candidate.",
+                        schema_path,
+                        exc,
+                    )
+                    continue
+
+                if not is_stale:
+                    schema_stale = False
+                    break
+
+                schema_stale = True
+                last_stale_schema = schema_path
+
+            if schema_stale and last_stale_schema is not None:
+                logger.info(
+                    "Commit mismatch compatibility check found all schema candidates stale; "
+                    "using stale candidate outcome from %s.",
+                    last_stale_schema,
                 )
-                schema_stale = False
 
         compatibility_verified = indexed_for_actual_commit and not schema_stale
         return (compatibility_verified, indexed_for_actual_commit, schema_stale)
@@ -477,25 +492,26 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
                 "python -u database/scripts/build_all_indices.py --check --output database/faiss --provider cborg",
             ]
             rebuild_cmds = " && \\\n  ".join(rebuild_steps)
-            issues.append(
-                _issue(
-                    ISSUE_ERF_COMMIT_MISMATCH,
-                    severity,
-                    (
-                        "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF embeddings and inputs schema.\n"
-                        "Rebuild sequence:\n"
-                        f"  ERF_PATH={erf_repo_path} && \\\n"
-                        f"  {rebuild_cmds}"
-                    ),
-                    expected_commit=expected_sha,
-                    actual_commit=actual_sha,
-                    repo_name="erf",
-                    repo_path=str(erf_repo_path),
-                    compatibility_verified=compatibility_verified,
-                    indexed_for_actual_commit=indexed_for_actual_commit,
-                    schema_stale=schema_stale,
+            if not compatibility_verified:
+                issues.append(
+                    _issue(
+                        ISSUE_ERF_COMMIT_MISMATCH,
+                        severity,
+                        (
+                            "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF embeddings and inputs schema.\n"
+                            "Rebuild sequence:\n"
+                            f"  ERF_PATH={erf_repo_path} && \\\n"
+                            f"  {rebuild_cmds}"
+                        ),
+                        expected_commit=expected_sha,
+                        actual_commit=actual_sha,
+                        repo_name="erf",
+                        repo_path=str(erf_repo_path),
+                        compatibility_verified=compatibility_verified,
+                        indexed_for_actual_commit=indexed_for_actual_commit,
+                        schema_stale=schema_stale,
+                    )
                 )
-            )
     return {"issues": issues}
 
 
