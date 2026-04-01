@@ -79,12 +79,26 @@ def _find_mismatch_issues(result: dict) -> list:
     ]
 
 
+def _find_compatible_drift_issues(result: dict) -> list:
+    return [
+        i for i in result.get("issues", [])
+        if i.get("code") == "ERF_COMMIT_DRIFT_COMPATIBLE"
+    ]
+
+
+def _find_alignment_issues(result: dict) -> list:
+    return [
+        i for i in result.get("issues", [])
+        if i.get("code") in {"ERF_COMMIT_MISMATCH", "ERF_COMMIT_DRIFT_COMPATIBLE"}
+    ]
+
+
 def _is_blocking(issue: dict) -> bool:
     return issue.get("severity") == "error"
 
 
-def _is_warning(issue: dict) -> bool:
-    return issue.get("severity") == "warning"
+def _is_info(issue: dict) -> bool:
+    return issue.get("severity") == "info"
 
 
 # ─── Path fixture ─────────────────────────────────────────────────────────────
@@ -232,7 +246,7 @@ class TestMismatchDecisionContract:
 
     # ── Case 1 ── RED ──────────────────────────────────────────────────────────
 
-    def test_mismatch_with_compatible_artifacts_is_warning(
+    def test_mismatch_with_compatible_artifacts_is_info_note(
         self, erf_path, no_real_subprocess, actual_sha_differs,
         schema_fresh, indexed_for_actual
     ):
@@ -248,16 +262,21 @@ class TestMismatchDecisionContract:
         The RED reason is unconditional "error" not the missing seam calls.
         """
         issues = _run_alignment_check(erf_path, PINNED_SHA)
+        drift = _find_compatible_drift_issues({"issues": issues})
         mismatch = _find_mismatch_issues({"issues": issues})
 
-        assert len(mismatch) == 1, (
-            f"Expected exactly one ERF_COMMIT_MISMATCH issue, got {len(mismatch)}.\n"
+        assert len(drift) == 1, (
+            f"Expected exactly one ERF_COMMIT_DRIFT_COMPATIBLE issue, got {len(drift)}.\n"
             f"All issues: {issues}"
         )
-        assert _is_warning(mismatch[0]), (
-            f"Expected severity='warning' for compatible local state. "
-            f"Got severity={mismatch[0].get('severity')!r}.\n"
-            f"Full issue: {mismatch[0]}"
+        assert len(mismatch) == 0, (
+            f"Expected zero ERF_COMMIT_MISMATCH issues in compatible drift case. "
+            f"Got: {mismatch}"
+        )
+        assert _is_info(drift[0]), (
+            f"Expected severity='info' for compatible local state. "
+            f"Got severity={drift[0].get('severity')!r}.\n"
+            f"Full issue: {drift[0]}"
         )
 
     # ── Case 2 ── likely GREEN (regression lock) ───────────────────────────────
@@ -368,11 +387,11 @@ class TestMismatchIssuePayloadFields:
         Stores result on the instance so test methods can access it.
         """
         issues = _run_alignment_check(erf_path, PINNED_SHA)
-        self._mismatch_issues = _find_mismatch_issues({"issues": issues})
+        self._mismatch_issues = _find_alignment_issues({"issues": issues})
 
     def _get_single_mismatch(self) -> dict:
         assert len(self._mismatch_issues) == 1, (
-            f"Fixture produced {len(self._mismatch_issues)} mismatch issues, "
+            f"Fixture produced {len(self._mismatch_issues)} alignment issues, "
             "expected 1. Check _setup fixture state or V-1/V-2."
         )
         return self._mismatch_issues[0]
@@ -435,7 +454,7 @@ _MATRIX = [
     (True,  True,  False,  None,       "GREEN-lock",  "pin-match-clean"),
     (True,  False, False,  None,       "GREEN-lock",  "pin-match-not-indexed"),
     (True,  True,  True,   None,       "GREEN-lock",  "pin-match-stale"),
-    (False, True,  False,  "warning",  "RED",         "mismatch-fully-compatible"),
+    (False, True,  False,  "info",     "GREEN-lock",  "mismatch-fully-compatible"),
     (False, True,  True,   "error",    "GREEN-lock",  "mismatch-stale-schema-overrides"),
     (False, False, False,  "error",    "GREEN-lock",  "mismatch-not-indexed-for-actual"),
     (False, False, True,   "error",    "GREEN-lock",  "mismatch-not-indexed-and-stale"),
@@ -482,7 +501,7 @@ def test_mismatch_decision_matrix(
         erf_repo_path=str(erf_path),                   # VERIFY: V-2
         expected_dependencies=_make_expected_deps(pinned),  # VERIFY: V-1
     )
-    mismatch = _find_mismatch_issues(result)
+    mismatch = _find_alignment_issues(result)
 
     if expected_sev is None:
         assert len(mismatch) == 0, (

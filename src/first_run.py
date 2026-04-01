@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 ISSUE_ERF_REPO_MISSING = "ERF_REPO_MISSING"
 ISSUE_ERF_COMMIT_MISMATCH = "ERF_COMMIT_MISMATCH"
+ISSUE_ERF_COMMIT_DRIFT_COMPATIBLE = "ERF_COMMIT_DRIFT_COMPATIBLE"
 ISSUE_FAISS_INDEX_MISSING = "FAISS_INDEX_MISSING"
 ISSUE_FAISS_MANIFEST_MISMATCH = "FAISS_MANIFEST_MISMATCH"
 ISSUE_SCHEMA_STALE = "SCHEMA_STALE"
@@ -198,6 +199,23 @@ def _collect_indexed_commits(repo_root: Path, repo_name: str) -> set[str]:
                 commit = str(entry.get(key) or "").strip()
                 if _is_commit_like(commit):
                     commits.add(commit.lower())
+    # Also scan individual per-index provenance files: build_session_manifest.json
+    # is an aggregation that may be stale if individual indices were rebuilt without
+    # regenerating the top-level manifest.
+    for provenance_path in faiss_root.glob("**/*faiss_provenance.json"):
+        try:
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if not isinstance(provenance, dict):
+            continue
+        solver = str(provenance.get("solver") or "").strip().lower()
+        if solver != repo_name:
+            continue
+        for key in ("repo_commit", "dependencies_commit"):
+            commit = str(provenance.get(key) or "").strip()
+            if _is_commit_like(commit):
+                commits.add(commit.lower())
     return commits
 
 
@@ -480,7 +498,6 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
                     solver=kwargs.get("solver"),
                 )
             )
-            severity = "warning" if compatibility_verified else "error"
             rebuild_steps = [
                 "python -u database/scripts/build_schema.py \"$ERF_PATH\" --output database/schemas --auto-compose",
                 "python -u scripts/rename_schema_after_build.py --repo-root . --schemas-dir database/schemas --singleton-rename",
@@ -492,11 +509,26 @@ def check_dependency_commit_alignment(**kwargs: Any) -> dict[str, Any]:
                 "python -u database/scripts/build_all_indices.py --check --output database/faiss --provider cborg",
             ]
             rebuild_cmds = " && \\\n  ".join(rebuild_steps)
-            if not compatibility_verified:
+            if compatibility_verified:
+                issues.append(
+                    _issue(
+                        ISSUE_ERF_COMMIT_DRIFT_COMPATIBLE,
+                        "info",
+                        "ERF commit differs from .dependencies.json, but local schema and indices appear compatible.",
+                        expected_commit=expected_sha,
+                        actual_commit=actual_sha,
+                        repo_name="erf",
+                        repo_path=str(erf_repo_path),
+                        compatibility_verified=compatibility_verified,
+                        indexed_for_actual_commit=indexed_for_actual_commit,
+                        schema_stale=schema_stale,
+                    )
+                )
+            else:
                 issues.append(
                     _issue(
                         ISSUE_ERF_COMMIT_MISMATCH,
-                        severity,
+                        "error",
                         (
                             "Check out the ERF commit pinned in .dependencies.json, or rebuild ERF embeddings and inputs schema.\n"
                             "Rebuild sequence:\n"
