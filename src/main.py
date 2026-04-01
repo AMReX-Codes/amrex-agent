@@ -795,6 +795,7 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
         and isinstance(readiness_result, dict)
         and readiness_result.get("mode") == "interactive"
         and readiness_result.get("issues")
+        and _has_blocking_issues(list(readiness_result.get("issues") or []))
     ):
         readiness_result = apply_interactive_fixes(
             repo_root=repo_root,
@@ -833,7 +834,11 @@ def _run_startup_preflight(config: AMReXAgentConfig) -> None:
             erf_repo_path=getattr(config, "erf_repo_path", None),
             ignore_issue_codes=sorted(waived_issue_codes),
         )
-        if followup_result.get("mode") == "interactive" and followup_result.get("issues"):
+        if (
+            followup_result.get("mode") == "interactive"
+            and followup_result.get("issues")
+            and _has_blocking_issues(list(followup_result.get("issues") or []))
+        ):
             followup_result = apply_interactive_fixes(
                 repo_root=repo_root,
                 config=config,
