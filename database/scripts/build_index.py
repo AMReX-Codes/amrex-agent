@@ -90,7 +90,7 @@ except Exception as e:
 
 def get_embedding_model(
     provider: str = "openai",
-    model_name: str = "text-embedding-3-small",
+    model_name: str = "lbl/nomic-embed-text",
 ) -> Any:
     """
     Get an embeddings client for a provider/model.
@@ -978,8 +978,8 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--embedding-model',
-        default='text-embedding-3-small',
-        help='Embedding model name (default: text-embedding-3-small for OpenAI)',
+        default='lbl/nomic-embed-text',
+        help='Embedding model name (default: lbl/nomic-embed-text for OpenAI)',
     )
     parser.add_argument(
         '--provider',
