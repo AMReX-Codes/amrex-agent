@@ -1,0 +1,12 @@
+{
+  "build_script": "build_all_indices.py",
+  "dependencies_commit": null,
+  "embedding_dimension": null,
+  "embedding_model": "lbl/nomic-embed-text",
+  "embedding_provider": "cborg",
+  "generated_at": "2026-04-17T19:08:46.724997+00:00",
+  "level": "0",
+  "repo_commit": null,
+  "solver": null,
+  "version": "1"
+}

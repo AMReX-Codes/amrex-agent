@@ -1,0 +1,80 @@
+{
+  "generated_at_utc": "2026-04-20T17:15:09.596126+00:00",
+  "index_levels": [
+    "l0",
+    "l1",
+    "l2"
+  ],
+  "solvers": [
+    {
+      "code_name": "AMReX",
+      "solver_commit": "bac24575",
+      "solver_schema_file": "amrex_schema_bac24575.json",
+      "level_versions": {
+        "l0": "AMReX@bac24575",
+        "l1": "AMReX@bac24575",
+        "l2": "AMReX@bac24575"
+      }
+    },
+    {
+      "code_name": "ERF",
+      "solver_commit": "unknown",
+      "solver_schema_file": "erf_complete_v1_amrexbac2457_erf5613ec3.json",
+      "level_versions": {
+        "l0": "ERF@unknown",
+        "l1": "ERF@unknown",
+        "l2": "ERF@unknown"
+      }
+    },
+    {
+      "code_name": "PeleC",
+      "solver_commit": "unknown",
+      "solver_schema_file": "pelec_complete_v1_amrex53dc0a4_pelephysicsac521b3_peleca6b4dff.json",
+      "level_versions": {
+        "l0": "PeleC@unknown",
+        "l1": "PeleC@unknown",
+        "l2": "PeleC@unknown"
+      }
+    },
+    {
+      "code_name": "PeleLMeX",
+      "solver_commit": "unknown",
+      "solver_schema_file": "pelelmex_complete_v1_amrex53dc0a4_pelephysicsac521b3_pelelmex9e7fb9f.json",
+      "level_versions": {
+        "l0": "PeleLMeX@unknown",
+        "l1": "PeleLMeX@unknown",
+        "l2": "PeleLMeX@unknown"
+      }
+    },
+    {
+      "code_name": "REMORA",
+      "solver_commit": "bac24575",
+      "solver_schema_file": "amrex_schema_bac24575.json",
+      "level_versions": {
+        "l0": "REMORA@bac24575",
+        "l1": "REMORA@bac24575",
+        "l2": "REMORA@bac24575"
+      }
+    },
+    {
+      "code_name": "WarpX",
+      "solver_commit": "bac24575",
+      "solver_schema_file": "amrex_schema_bac24575.json",
+      "level_versions": {
+        "l0": "WarpX@bac24575",
+        "l1": "WarpX@bac24575",
+        "l2": "WarpX@bac24575"
+      }
+    },
+    {
+      "code_name": "incflo",
+      "solver_commit": "bac24575",
+      "solver_schema_file": "amrex_schema_bac24575.json",
+      "level_versions": {
+        "l0": "incflo@bac24575",
+        "l1": "incflo@bac24575",
+        "l2": "incflo@bac24575"
+      }
+    }
+  ]
+}

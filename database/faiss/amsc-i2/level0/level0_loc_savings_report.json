@@ -1,0 +1,65 @@
+{
+  "metric_name": "level0_framework_reuse_loc_savings",
+  "generated_at_utc": "2026-04-20T17:15:09.598395+00:00",
+  "solver_count": 7,
+  "subindex_count": 4,
+  "baseline_manual_loc": 700,
+  "framework_loc": 416,
+  "estimated_loc_saved": 284,
+  "savings_ratio": 0.4057,
+  "per_code_cost_accounting": [
+    {
+      "code_name": "AMReX",
+      "baseline_manual_loc": 100,
+      "allocated_framework_loc": 59.43,
+      "estimated_loc_saved": 40.57,
+      "savings_ratio": 0.4057
+    },
+    {
+      "code_name": "PeleC",
+      "baseline_manual_loc": 100,
+      "allocated_framework_loc": 59.43,
+      "estimated_loc_saved": 40.57,
+      "savings_ratio": 0.4057
+    },
+    {
+      "code_name": "PeleLMeX",
+      "baseline_manual_loc": 100,
+      "allocated_framework_loc": 59.43,
+      "estimated_loc_saved": 40.57,
+      "savings_ratio": 0.4057
+    },
+    {
+      "code_name": "incflo",
+      "baseline_manual_loc": 100,
+      "allocated_framework_loc": 59.43,
+      "estimated_loc_saved": 40.57,
+      "savings_ratio": 0.4057
+    },
+    {
+      "code_name": "WarpX",
+      "baseline_manual_loc": 100,
+      "allocated_framework_loc": 59.43,
+      "estimated_loc_saved": 40.57,
+      "savings_ratio": 0.4057
+    },
+    {
+      "code_name": "ERF",
+      "baseline_manual_loc": 100,
+      "allocated_framework_loc": 59.43,
+      "estimated_loc_saved": 40.57,
+      "savings_ratio": 0.4057
+    },
+    {
+      "code_name": "REMORA",
+      "baseline_manual_loc": 100,
+      "allocated_framework_loc": 59.43,
+      "estimated_loc_saved": 40.57,
+      "savings_ratio": 0.4057
+    }
+  ],
+  "assumptions": {
+    "baseline_loc_per_solver_per_index": 25,
+    "baseline_description": "Estimated LOC for a bespoke per-solver/per-index implementation"
+  }
+}
