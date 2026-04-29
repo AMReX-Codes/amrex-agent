@@ -1,0 +1,1112 @@
+DEBUG: === CBORG API Configuration ===
+
+DEBUG:  Using CBORG_API_KEY from environment
+INFO: Using LLM model: cborg/lbl/cborg-deepthought
+DEBUG:  Testing API connection...
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-5a3e76b9-29c7-4112-9f92-dcec9c87e34b', 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': "Say 'OK' and nothing else."}], 'model': 'lbl/cborg-deepthought', 'max_tokens': 5, 'response_format': None, 'temperature': None}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7df8a430b050>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x7df8a49dae70> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7df8a430b010>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:57:25 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'578'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:57:24 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'74239c2e-e813-45d8-915f-20df3c2a024c'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'2.881'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'253.257'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'4c3cdf56-4ca7-49c2-b057-e6f6f2f0500e'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.685'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'266.484'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'19'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=QBZ8H0Ol4W5U7obncFo1HV_IUcZwyVtbDz98_VvH82Y-1777384644.811204-1.0.1.1-rMjydn5p14GsMc2YbL06tIT0T4ftLiRpP3PWKp_5Uw.9Ze1jwXvcSzu.GFOLLBF.KL0Jxb0q2eTj6gJyinhucbi566f4QuJw_7.qBgFJOdPPGGdGg_Vg1ZY91w8gE5N4; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 14:27:25 GMT'), (b'set-cookie', b'_cfuvid=0CqQ8bUHctid_imM5KMHMLu_w77Y_qRXm9VLZyK27Io-1777384644.811204-1.0.1.1-UhxUfPAzoUkPj0buEjHEVc8LTS80NVIyWaKN05i1N9s; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f36936e19ce7e56-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers([('date', 'Tue, 28 Apr 2026 13:57:25 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '578'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Tue, 28 Apr 2026 13:57:24 GMT'), ('llm_provider-server', 'uvicorn'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '74239c2e-e813-45d8-915f-20df3c2a024c'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://vllm-h100-4x-1:8000/v1'), ('llm_provider-x-litellm-model-group', 'gemma-4-31b-it'), ('llm_provider-x-litellm-model-id', 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), ('llm_provider-x-litellm-overhead-duration-ms', '2.881'), ('llm_provider-x-litellm-response-cost-discount-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-percent', '0.0'), ('llm_provider-x-litellm-response-cost-original', '0.0'), ('llm_provider-x-litellm-response-duration-ms', '253.257'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', '4c3cdf56-4ca7-49c2-b057-e6f6f2f0500e'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/cborg-deepthought'), ('x-litellm-model-id', 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), ('x-litellm-overhead-duration-ms', '1.685'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '266.484'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '19'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=QBZ8H0Ol4W5U7obncFo1HV_IUcZwyVtbDz98_VvH82Y-1777384644.811204-1.0.1.1-rMjydn5p14GsMc2YbL06tIT0T4ftLiRpP3PWKp_5Uw.9Ze1jwXvcSzu.GFOLLBF.KL0Jxb0q2eTj6gJyinhucbi566f4QuJw_7.qBgFJOdPPGGdGg_Vg1ZY91w8gE5N4; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 14:27:25 GMT'), ('set-cookie', '_cfuvid=0CqQ8bUHctid_imM5KMHMLu_w77Y_qRXm9VLZyK27Io-1777384644.811204-1.0.1.1-UhxUfPAzoUkPj0buEjHEVc8LTS80NVIyWaKN05i1N9s; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f36936e19ce7e56-SJC')])
+DEBUG: request_id: None
+DEBUG: [ OK ] CBORG API connection successful
+DEBUG:        Response: None
+DEBUG:  Set PELE_REPORTS_DIR=/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports
+DEBUG:  Set CBORG_API_KEY for pele_tools
+DEBUG:  Set CBORG_MODEL=lbl/cborg-deepthought
+DEBUG: 
+============================================================
+
+DEBUG: Starting AMReXAgent workflow...
+INFO: ================================================================================
+INFO: Starting AMReXAgent workflow
+INFO: ================================================================================
+DEBUG: Prompt: Use ERF case Exec/RegTests/ScalarAdvDiff with inpu...
+INFO: ================================================================================
+INFO: Starting Architect node
+INFO: ================================================================================
+DEBUG: Mode: initial (initial planning)
+DEBUG: Initialized CBORG embeddings (with caching)
+DEBUG:   Model: lbl/nomic-embed-text
+DEBUG:   Dimensions: 768
+DEBUG:   Context: 8192 tokens
+DEBUG:   Cost: FREE at LBNL
+DEBUG:   Cache: Enabled (1-hour TTL)
+DEBUG: Loaded FAISS index: pelec_case_structure
+DEBUG: Loaded FAISS index: pelec_case_details
+DEBUG: Loaded FAISS index: pelec_case_names
+DEBUG: Loaded FAISS index: pelec_input_templates
+DEBUG: Loaded FAISS index: pelec_chemistry
+DEBUG: Loaded FAISS index: pelelmex_case_names
+DEBUG: Loaded FAISS index: pelelmex_case_structure
+DEBUG: Loaded FAISS index: pelelmex_case_details
+DEBUG: Loaded FAISS index: pelelmex_input_templates
+DEBUG: Loaded FAISS index: erf_case_structure
+DEBUG: Loaded FAISS index: erf_case_details
+DEBUG: Loaded FAISS index: erf_case_names
+DEBUG: Loaded FAISS index: remora_case_structure
+DEBUG: Loaded FAISS index: remora_case_details
+DEBUG: FAISS cache initialized with 14 indices
+DEBUG: EmbeddingService initialized: True
+DEBUG: Embeddings available: True
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG: ArchitectService instantiated with RAG support: True
+DEBUG: Total exclusions: 0 cases, 0 inputs files
+INFO: Using indexing strategy: hierarchical
+INFO: [Strategy Router] strategy_router -> hierarchical_strategy (branch=hierarchical, strategy=hierarchical)
+DEBUG:  Level0 searching for: 'Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh'
+DEBUG: Loaded physics_regimes: 9 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-94171ec9-b8b3-47d9-9e58-e19964a6cae2', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7df956bb5c60>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7df8a4233490>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x7df8a3b9a7b0> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7df8a4115090>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:57:25 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:57:25 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'f6e0d624-b66f-4c4f-9fae-f3314f18ad71'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.297'), (b'llm_provider-x-litellm-response-duration-ms', b'32.99'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'c20050c3-bae7-485d-8b63-540938403648'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.854'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'44.442'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'18'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=nlQSOJQ3B4Z4NsGug.RXyF0TdmGfJajX0BHZ.t.W2AI-1777384645.8070514-1.0.1.1-Tk2Fb3FD7fo_2pCLOA4cZvwwtLn.BImagnnd8yO4fyXG2y4JlFvBfWciCgkY182isEren4DTPa14TlG.TA6Z4Z_eAk0QC3wEr6MR9ayLLrr7da89LkBynR2nmMhlowMN; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 14:27:25 GMT'), (b'set-cookie', b'_cfuvid=qHHL9DHrKn8MDLOmFCo3bhFCXK8wcaIAAFB6J5VHixQ-1777384645.8070514-1.0.1.1-upBXpn.jOXLbnFJa2SRFQ_doH8KxyQSLmqx9_ZBtPNU; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3693744bbc3ad4-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers([('date', 'Tue, 28 Apr 2026 13:57:25 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '4328'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Tue, 28 Apr 2026 13:57:25 GMT'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-transfer-encoding', 'chunked'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', 'f6e0d624-b66f-4c4f-9fae-f3314f18ad71'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://bk-ollama:11434/v1'), ('llm_provider-x-litellm-model-group', 'nomic-embed-text'), ('llm_provider-x-litellm-model-id', 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), ('llm_provider-x-litellm-overhead-duration-ms', '1.297'), ('llm_provider-x-litellm-response-duration-ms', '32.99'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', 'c20050c3-bae7-485d-8b63-540938403648'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/nomic-embed-text'), ('x-litellm-model-id', '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), ('x-litellm-overhead-duration-ms', '0.854'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '44.442'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '18'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=nlQSOJQ3B4Z4NsGug.RXyF0TdmGfJajX0BHZ.t.W2AI-1777384645.8070514-1.0.1.1-Tk2Fb3FD7fo_2pCLOA4cZvwwtLn.BImagnnd8yO4fyXG2y4JlFvBfWciCgkY182isEren4DTPa14TlG.TA6Z4Z_eAk0QC3wEr6MR9ayLLrr7da89LkBynR2nmMhlowMN; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 14:27:25 GMT'), ('set-cookie', '_cfuvid=qHHL9DHrKn8MDLOmFCo3bhFCXK8wcaIAAFB6J5VHixQ-1777384645.8070514-1.0.1.1-upBXpn.jOXLbnFJa2SRFQ_doH8KxyQSLmqx9_ZBtPNU; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f3693744bbc3ad4-SJC')])
+DEBUG: request_id: None
+DEBUG: Loaded solver_capabilities: 101 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-02fbdfd9-6a7b-47ba-bd21-2ca01a77b17b', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7df8a4c31760>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:57:26 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:57:26 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'fabf73ca-b1bb-4a7d-aace-67aebbcf3d7b'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.39'), (b'llm_provider-x-litellm-response-duration-ms', b'29.812'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'e883e001-a45a-4de9-ba6d-1d895e93afa9'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.797'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'41.7'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'17'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3693759c7c3ad4-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:57:26 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:57:26 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'fabf73ca-b1bb-4a7d-aace-67aebbcf3d7b', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.39', 'llm_provider-x-litellm-response-duration-ms': '29.812', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': 'e883e001-a45a-4de9-ba6d-1d895e93afa9', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.797', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '41.7', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '17', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f3693759c7c3ad4-SJC'})
+DEBUG: request_id: None
+DEBUG: Loaded code_lineage: 7 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-d7aeaa5c-42b0-4bae-8db7-b5e33e06cd67', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7df956bb5c60>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:57:26 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:57:26 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'a283e31f-33ef-4724-a6b5-e2ffa863032f'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.189'), (b'llm_provider-x-litellm-response-duration-ms', b'29.145'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'af22417a-52c4-484a-9de7-c57990bc0414'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.831'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'40.813'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'16'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3693767cf03ad4-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:57:26 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:57:26 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'a283e31f-33ef-4724-a6b5-e2ffa863032f', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.189', 'llm_provider-x-litellm-response-duration-ms': '29.145', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': 'af22417a-52c4-484a-9de7-c57990bc0414', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.831', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '40.813', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '16', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f3693767cf03ad4-SJC'})
+DEBUG: request_id: None
+DEBUG: Loaded cross_cutting_guidance: 7 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-e69203b8-ce7e-4027-9764-2530acb79ef0', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7df956bb5c60>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:57:26 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:57:26 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'fa3b55a2-c2a2-412a-b7b8-5dcf63c39703'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.302'), (b'llm_provider-x-litellm-response-duration-ms', b'33.088'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'599cbb2c-0b4e-46d6-a9bf-802a7beb791e'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.752'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'44.488'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'15'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3693774d8c3ad4-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:57:26 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:57:26 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'fa3b55a2-c2a2-412a-b7b8-5dcf63c39703', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.302', 'llm_provider-x-litellm-response-duration-ms': '33.088', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': '599cbb2c-0b4e-46d6-a9bf-802a7beb791e', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.752', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '44.488', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '15', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f3693774d8c3ad4-SJC'})
+DEBUG: request_id: None
+DEBUG:  Level0 results: [('WarpX', 0.4085617005825043), ('PeleC', 0.40355595350265505), ('ERF', 0.39659933447837836), ('AMReX', 0.38252429068088534), ('REMORA', 0.27528426051139837)]
+INFO: Selected solver: WarpX (confidence: 0.41)
+WARNING: Level0 near-tie detected (top1=0.409, top2=0.404, margin=0.005 <= 0.080); attempting solver disambiguation.
+INFO: [Level0 flat disambiguation] Blocked solver switch WarpX -> REMORA (explicit_solver_conflict)
+INFO: Using LLM to resolve near-tie Level0 solver routing
+DEBUG: close.started
+DEBUG: close.complete
+DEBUG: Patching `client.chat.completions.create` with mode=<Mode.TOOLS: 'tool_call'>
+DEBUG: Instructor Request: mode.value='tool_call', response_model=<class 'src.services.cases.AMReXCasesService.find_best_match.<locals>.CaseSelection'>, new_kwargs={'messages': [{'role': 'user', 'content': 'You are an expert in AMReX-based simulation codes. Given this request:\n\n"Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh"\n\nSelect the BEST AMReX code and example case as a starting point.\n\nAvailable codes:\nPeleC - Compressible reacting flow with detailed chemistry  Docs quality: excellent  Cases:    - Exec/Production/PistonBowl/inputs    - Exec/Production/JetFlame    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/PMF    - Exec/RegTests/Sedov    - Exec/RegTests/TG    - Exec/Production/CavityFlame    - Exec/Production/ChallengeProblem    - Exec/Production/PistonBowl    - Exec/RegTests/AuxQuantities    - Exec/RegTests/ChannelFlow    - Exec/RegTests/EB-BluffBody    - Exec/RegTests/EB-C1    - Exec/RegTests/EB-C10    - Exec/RegTests/EB-C11    - Exec/RegTests/EB-C12    - Exec/RegTests/EB-C13    - Exec/RegTests/EB-C14    ... and 100 more\nPeleLMeX - Low Mach combustion with detailed transport  Docs quality: excellent  Cases:    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Exec/Production/CounterFlow    - Exec/Production/JetInCrossflow    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/FlameSheet    - Exec/RegTests/TaylorGreen    - Exec/Plasma/FlameSheetIons    - Exec/Plasma/IonizedAirWave    - Exec/Plasma/PremBunsen3DKuhl    - Exec/Production/ChallengeProblem    - Exec/Production/CounterFlowSpray    - Exec/Production/DiffBunsen2D    - Exec/Production/JetInCrossflow/LiDryer_CO2_He    - Exec/Production/NormalJet_OpenDomain    - Exec/Production/PremBunsen2D    - Exec/Production/PremBunsen3D    - Exec/Production/SwirlFlowWallInteractions    - Exec/RegTests/EB_BackwardStepFlame    - Exec/RegTests/EB_EnclosedFlame    ... and 93 more\nWarpX - Advanced electromagnetic particle-in-cell code  Docs quality: excellent  Cases:\n\n#######################\n# Domain-specific: physics keyword -> solver mapping guidance\n#######################\nGuidelines:\n- Learning AMReX -> amrex-tutorials\n- Framework/core AMR tutorial workflows -> AMReX\n- Combustion/flames -> PeleC or PeleLMeX\n- Incompressible flow -> incflo\n- Laser/plasma -> WarpX\n- Atmospheric/weather -> ERF\n- Ocean/coastal modeling -> REMORA\n#######################\n\nPrefer codes with "excellent" documentation quality.\n\nReturn EXACTLY two lines:\nCODE: <name>\nCASE: <path>'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tools': [{'type': 'function', 'function': {'name': 'CaseSelection', 'description': 'Correctly extracted `CaseSelection` with all the required parameters with correct types', 'parameters': {'properties': {'code': {'description': 'Code name from the available list', 'title': 'Code', 'type': 'string'}, 'case': {'description': 'Case path from the selected code', 'title': 'Case', 'type': 'string'}}, 'required': ['case', 'code'], 'type': 'object'}}}], 'tool_choice': {'type': 'function', 'function': {'name': 'CaseSelection'}}}
+DEBUG: max_retries: 2, timeout: None
+DEBUG: Retrying, attempt: 1
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-00deb137-6557-47af-b83d-290555cc1482', 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': 'You are an expert in AMReX-based simulation codes. Given this request:\n\n"Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh"\n\nSelect the BEST AMReX code and example case as a starting point.\n\nAvailable codes:\nPeleC - Compressible reacting flow with detailed chemistry  Docs quality: excellent  Cases:    - Exec/Production/PistonBowl/inputs    - Exec/Production/JetFlame    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/PMF    - Exec/RegTests/Sedov    - Exec/RegTests/TG    - Exec/Production/CavityFlame    - Exec/Production/ChallengeProblem    - Exec/Production/PistonBowl    - Exec/RegTests/AuxQuantities    - Exec/RegTests/ChannelFlow    - Exec/RegTests/EB-BluffBody    - Exec/RegTests/EB-C1    - Exec/RegTests/EB-C10    - Exec/RegTests/EB-C11    - Exec/RegTests/EB-C12    - Exec/RegTests/EB-C13    - Exec/RegTests/EB-C14    ... and 100 more\nPeleLMeX - Low Mach combustion with detailed transport  Docs quality: excellent  Cases:    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Exec/Production/CounterFlow    - Exec/Production/JetInCrossflow    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/FlameSheet    - Exec/RegTests/TaylorGreen    - Exec/Plasma/FlameSheetIons    - Exec/Plasma/IonizedAirWave    - Exec/Plasma/PremBunsen3DKuhl    - Exec/Production/ChallengeProblem    - Exec/Production/CounterFlowSpray    - Exec/Production/DiffBunsen2D    - Exec/Production/JetInCrossflow/LiDryer_CO2_He    - Exec/Production/NormalJet_OpenDomain    - Exec/Production/PremBunsen2D    - Exec/Production/PremBunsen3D    - Exec/Production/SwirlFlowWallInteractions    - Exec/RegTests/EB_BackwardStepFlame    - Exec/RegTests/EB_EnclosedFlame    ... and 93 more\nWarpX - Advanced electromagnetic particle-in-cell code  Docs quality: excellent  Cases:\n\n#######################\n# Domain-specific: physics keyword -> solver mapping guidance\n#######################\nGuidelines:\n- Learning AMReX -> amrex-tutorials\n- Framework/core AMR tutorial workflows -> AMReX\n- Combustion/flames -> PeleC or PeleLMeX\n- Incompressible flow -> incflo\n- Laser/plasma -> WarpX\n- Atmospheric/weather -> ERF\n- Ocean/coastal modeling -> REMORA\n#######################\n\nPrefer codes with "excellent" documentation quality.\n\nReturn EXACTLY two lines:\nCODE: <name>\nCASE: <path>'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tool_choice': {'type': 'function', 'function': {'name': 'CaseSelection'}}, 'tools': [{'type': 'function', 'function': {'name': 'CaseSelection', 'description': 'Correctly extracted `CaseSelection` with all the required parameters with correct types', 'parameters': {'properties': {'code': {'description': 'Code name from the available list', 'title': 'Code', 'type': 'string'}, 'case': {'description': 'Case path from the selected code', 'title': 'Case', 'type': 'string'}}, 'required': ['case', 'code'], 'type': 'object'}}}]}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7df8a19b2e50>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x7df8a3b9a690> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7df8a19be490>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:57:37 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'1535'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:57:32 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'433b2a90-0740-4d69-8e4f-de2d217f4271'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'3.186'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'5158.9169999999995'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'c13c6f6f-8858-4ef2-b80b-2028238ddb21'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.877'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'5172.246'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'14'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=5m4inTHWLWsbmN3Gq87p26idpt22YxmNxDpiHYcUDXc-1777384652.3655615-1.0.1.1-hApYfo7pBL9EN.lAJdmxcYHtCiJyPY.dIXa.oeEQTE3bcilwdyHefcrgyf9GZGX_4TXCK63pZZsGoCpJYLOFP9qoXWr9geWNH3wK7ocYgR89tESgKFFfSFi9Ql2n64NU; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 14:27:37 GMT'), (b'set-cookie', b'_cfuvid=u3PBq0ISzIFvHSshUtS0hSmBrGtuCnB4hebPaDxpzOc-1777384652.3655615-1.0.1.1-qaQBOfADzlACXTK5.9vuAtiVinnLJI7vEhHMuyizmpI; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f36939d490bc68c-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers([('date', 'Tue, 28 Apr 2026 13:57:37 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '1535'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Tue, 28 Apr 2026 13:57:32 GMT'), ('llm_provider-server', 'uvicorn'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '433b2a90-0740-4d69-8e4f-de2d217f4271'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://vllm-h100-4x-1:8000/v1'), ('llm_provider-x-litellm-model-group', 'gemma-4-31b-it'), ('llm_provider-x-litellm-model-id', 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), ('llm_provider-x-litellm-overhead-duration-ms', '3.186'), ('llm_provider-x-litellm-response-cost-discount-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-percent', '0.0'), ('llm_provider-x-litellm-response-cost-original', '0.0'), ('llm_provider-x-litellm-response-duration-ms', '5158.9169999999995'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', 'c13c6f6f-8858-4ef2-b80b-2028238ddb21'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/cborg-deepthought'), ('x-litellm-model-id', 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), ('x-litellm-overhead-duration-ms', '1.877'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '5172.246'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '14'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=5m4inTHWLWsbmN3Gq87p26idpt22YxmNxDpiHYcUDXc-1777384652.3655615-1.0.1.1-hApYfo7pBL9EN.lAJdmxcYHtCiJyPY.dIXa.oeEQTE3bcilwdyHefcrgyf9GZGX_4TXCK63pZZsGoCpJYLOFP9qoXWr9geWNH3wK7ocYgR89tESgKFFfSFi9Ql2n64NU; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 14:27:37 GMT'), ('set-cookie', '_cfuvid=u3PBq0ISzIFvHSshUtS0hSmBrGtuCnB4hebPaDxpzOc-1777384652.3655615-1.0.1.1-qaQBOfADzlACXTK5.9vuAtiVinnLJI7vEhHMuyizmpI; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f36939d490bc68c-SJC')])
+DEBUG: request_id: None
+DEBUG: Instructor Raw Response: ChatCompletion(id='chatcmpl-b391d42cd7d58fee', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='chatcmpl-tool-a9e8b0ba25cff475', function=Function(arguments='{\n  "code": "ERF",\n  "case": "Exec/RegTests/ScalarAdvDiff"\n}', name='CaseSelection'), type='function')], reasoning_content='*   Request: "Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh"\n    *   Target Code: ERF (based on the request "Use ERF case...")\n    *   Target Case: `Exec/RegTests/ScalarAdvDiff`\n\n    *   PeleC\n    *   PeleLMeX\n    *   WarpX\n    *   (Wait, the available codes list provided in the prompt only lists PeleC, PeleLMeX, and WarpX explicitly, but the "Guidelines" section mentions ERF: "Atmospheric/weather -> ERF").\n\n    *   The user explicitly asks for "ERF case Exec/RegTests/ScalarAdvDiff".\n    *   The guidelines explicitly map "Atmospheric/weather -> ERF".\n    *   Even though ERF isn\'t in the "Available codes" list with a detailed case list, the request is specific to ERF.\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/ScalarAdvDiff', provider_specific_fields={'reasoning': '*   Request: "Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh"\n    *   Target Code: ERF (based on the request "Use ERF case...")\n    *   Target Case: `Exec/RegTests/ScalarAdvDiff`\n\n    *   PeleC\n    *   PeleLMeX\n    *   WarpX\n    *   (Wait, the available codes list provided in the prompt only lists PeleC, PeleLMeX, and WarpX explicitly, but the "Guidelines" section mentions ERF: "Atmospheric/weather -> ERF").\n\n    *   The user explicitly asks for "ERF case Exec/RegTests/ScalarAdvDiff".\n    *   The guidelines explicitly map "Atmospheric/weather -> ERF".\n    *   Even though ERF isn\'t in the "Available codes" list with a detailed case list, the request is specific to ERF.\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/ScalarAdvDiff', 'refusal': None, 'reasoning_content': '*   Request: "Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh"\n    *   Target Code: ERF (based on the request "Use ERF case...")\n    *   Target Case: `Exec/RegTests/ScalarAdvDiff`\n\n    *   PeleC\n    *   PeleLMeX\n    *   WarpX\n    *   (Wait, the available codes list provided in the prompt only lists PeleC, PeleLMeX, and WarpX explicitly, but the "Guidelines" section mentions ERF: "Atmospheric/weather -> ERF").\n\n    *   The user explicitly asks for "ERF case Exec/RegTests/ScalarAdvDiff".\n    *   The guidelines explicitly map "Atmospheric/weather -> ERF".\n    *   Even though ERF isn\'t in the "Available codes" list with a detailed case list, the request is specific to ERF.\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/ScalarAdvDiff'}), provider_specific_fields={})], created=1777384652, model='lbl/cborg-deepthought', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=259, prompt_tokens=841, total_tokens=1100, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+WARNING: [WARN] LLM returned invalid, using keyword match
+ERROR: [ERROR] LLM failed: Missing solver selection: no keyword matched and no solver specified
+WARNING: LLM near-tie disambiguation failed: Missing solver selection: no keyword matched and no solver specified
+DEBUG: Discovered 0 doc indices for WarpX
+DEBUG: Retrieved 0 context documents for WarpX
+DEBUG: Discovered 0 case indices for WarpX
+INFO: Hierarchical Level2 weights (config): configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050
+WARNING: No baseline cases found for WarpX
+DEBUG: Patching `client.chat.completions.create` with mode=<Mode.TOOLS: 'tool_call'>
+DEBUG: Instructor Request: mode.value='tool_call', response_model=<class 'src.services.architect.ArchitectService._llm_plan.<locals>.LLMPlanResponse'>, new_kwargs={'messages': [{'role': 'system', 'content': 'Return JSON only with keys: modifications, reasoning. Do not include markdown.'}, {'role': 'user', 'content': 'Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tools': [{'type': 'function', 'function': {'name': 'LLMPlanResponse', 'description': 'Correctly extracted `LLMPlanResponse` with all the required parameters with correct types', 'parameters': {'$defs': {'Modification': {'properties': {'parameter': {'title': 'Parameter', 'type': 'string'}, 'value': {'title': 'Value', 'type': 'string'}}, 'required': ['parameter', 'value'], 'title': 'Modification', 'type': 'object'}}, 'properties': {'modifications': {'items': {'$ref': '#/$defs/Modification'}, 'title': 'Modifications', 'type': 'array'}, 'reasoning': {'default': '', 'title': 'Reasoning', 'type': 'string'}}, 'required': ['modifications'], 'type': 'object'}}}], 'tool_choice': {'type': 'function', 'function': {'name': 'LLMPlanResponse'}}}
+DEBUG: max_retries: 3, timeout: None
+DEBUG: Retrying, attempt: 1
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-3aa1b70c-ed63-412e-b70b-88dbfceea9e4', 'content': None, 'json_data': {'messages': [{'role': 'system', 'content': 'Return JSON only with keys: modifications, reasoning. Do not include markdown.'}, {'role': 'user', 'content': 'Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tool_choice': {'type': 'function', 'function': {'name': 'LLMPlanResponse'}}, 'tools': [{'type': 'function', 'function': {'name': 'LLMPlanResponse', 'description': 'Correctly extracted `LLMPlanResponse` with all the required parameters with correct types', 'parameters': {'$defs': {'Modification': {'properties': {'parameter': {'title': 'Parameter', 'type': 'string'}, 'value': {'title': 'Value', 'type': 'string'}}, 'required': ['parameter', 'value'], 'title': 'Modification', 'type': 'object'}}, 'properties': {'modifications': {'items': {'$ref': '#/$defs/Modification'}, 'title': 'Modifications', 'type': 'array'}, 'reasoning': {'default': '', 'title': 'Reasoning', 'type': 'string'}}, 'required': ['modifications'], 'type': 'object'}}}]}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:57:45 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'2332'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:57:37 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'a8be35fb-9b68-4dbf-b0b0-aa51500b6c15'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'3.149'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'8141.0289999999995'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'3fb89e48-c002-456c-9f9a-3d4662d5cdd2'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.71'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'8153.294000000001'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'19'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3693be485cc68c-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:57:45 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '2332', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:57:37 GMT', 'llm_provider-server': 'uvicorn', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'a8be35fb-9b68-4dbf-b0b0-aa51500b6c15', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://vllm-h100-4x-1:8000/v1', 'llm_provider-x-litellm-model-group': 'gemma-4-31b-it', 'llm_provider-x-litellm-model-id': 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53', 'llm_provider-x-litellm-overhead-duration-ms': '3.149', 'llm_provider-x-litellm-response-cost-discount-amount': '0.0', 'llm_provider-x-litellm-response-cost-margin-amount': '0.0', 'llm_provider-x-litellm-response-cost-margin-percent': '0.0', 'llm_provider-x-litellm-response-cost-original': '0.0', 'llm_provider-x-litellm-response-duration-ms': '8141.0289999999995', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': '3fb89e48-c002-456c-9f9a-3d4662d5cdd2', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/cborg-deepthought', 'x-litellm-model-id': 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61', 'x-litellm-overhead-duration-ms': '1.71', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '8153.294000000001', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '19', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f3693be485cc68c-SJC'})
+DEBUG: request_id: None
+DEBUG: Instructor Raw Response: ChatCompletion(id='chatcmpl-a762ce4a3ad0c0a8', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='chatcmpl-tool-b505e9589dafc472', function=Function(arguments='{\n "modifications": [\n  {\n   "parameter": "command",\n   "value": "ls -R Exec/RegTests/ScalarAdvDiff"\n  }\n ],\n "reasoning": "I need to explore the directory structure to find the executable and the input file mentioned in the request."\n}', name='LLMPlanResponse'), type='function')], reasoning_content='The user wants to run a specific test case (`Exec/RegTests/ScalarAdvDiff`) with a specific input file (`inputs_test_rayleigh`) using the `ERF` (likely a specific software or framework).\n\nLooking at the available tools, there isn\'t a direct "run test" tool. However, I have tools for interacting with a file system and executing shell commands.\n\n1.  **Identify the environment**: I need to find where `Exec/RegTests/ScalarAdvDiff` and `inputs_test_rayleigh` are located.\n2.  **Execute the command**: I need to construct a command to run the executable with the input file. Usually, this involves calling the executable and passing the input file as an argument or via a configuration.\n\nWait, I don\'t have a tool to "run" a specific software unless I use `execute_shell_command`.\n\nLet\'s check the file system first to see if these paths exist and what the executable is.\nThe path `Exec/RegTests/ScalarAdvDiff` suggests a directory structure.\nThe input `inputs_test_rayleigh` is likely a file.\n\nPlan:\n1.  List files in `Exec/RegTests/ScalarAdvDiff` to see if there\'s an executable.\n2.  Find `inputs_test_rayleigh`.\n3.  Run the executable with the input file.\n\nActually, the prompt says "Use ERF case...". This sounds like a request to execute a simulation.\nI should check if there\'s a script or a specific way to run these cases.\n\nLet\'s start by exploring the directory.', provider_specific_fields={'refusal': None, 'reasoning': 'The user wants to run a specific test case (`Exec/RegTests/ScalarAdvDiff`) with a specific input file (`inputs_test_rayleigh`) using the `ERF` (likely a specific software or framework).\n\nLooking at the available tools, there isn\'t a direct "run test" tool. However, I have tools for interacting with a file system and executing shell commands.\n\n1.  **Identify the environment**: I need to find where `Exec/RegTests/ScalarAdvDiff` and `inputs_test_rayleigh` are located.\n2.  **Execute the command**: I need to construct a command to run the executable with the input file. Usually, this involves calling the executable and passing the input file as an argument or via a configuration.\n\nWait, I don\'t have a tool to "run" a specific software unless I use `execute_shell_command`.\n\nLet\'s check the file system first to see if these paths exist and what the executable is.\nThe path `Exec/RegTests/ScalarAdvDiff` suggests a directory structure.\nThe input `inputs_test_rayleigh` is likely a file.\n\nPlan:\n1.  List files in `Exec/RegTests/ScalarAdvDiff` to see if there\'s an executable.\n2.  Find `inputs_test_rayleigh`.\n3.  Run the executable with the input file.\n\nActually, the prompt says "Use ERF case...". This sounds like a request to execute a simulation.\nI should check if there\'s a script or a specific way to run these cases.\n\nLet\'s start by exploring the directory.', 'reasoning_content': 'The user wants to run a specific test case (`Exec/RegTests/ScalarAdvDiff`) with a specific input file (`inputs_test_rayleigh`) using the `ERF` (likely a specific software or framework).\n\nLooking at the available tools, there isn\'t a direct "run test" tool. However, I have tools for interacting with a file system and executing shell commands.\n\n1.  **Identify the environment**: I need to find where `Exec/RegTests/ScalarAdvDiff` and `inputs_test_rayleigh` are located.\n2.  **Execute the command**: I need to construct a command to run the executable with the input file. Usually, this involves calling the executable and passing the input file as an argument or via a configuration.\n\nWait, I don\'t have a tool to "run" a specific software unless I use `execute_shell_command`.\n\nLet\'s check the file system first to see if these paths exist and what the executable is.\nThe path `Exec/RegTests/ScalarAdvDiff` suggests a directory structure.\nThe input `inputs_test_rayleigh` is likely a file.\n\nPlan:\n1.  List files in `Exec/RegTests/ScalarAdvDiff` to see if there\'s an executable.\n2.  Find `inputs_test_rayleigh`.\n3.  Run the executable with the input file.\n\nActually, the prompt says "Use ERF case...". This sounds like a request to execute a simulation.\nI should check if there\'s a script or a specific way to run these cases.\n\nLet\'s start by exploring the directory.'}), provider_specific_fields={})], created=1777384657, model='lbl/cborg-deepthought', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=423, prompt_tokens=141, total_tokens=564, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+DEBUG: Hierarchical indexing succeeded
+DEBUG: [DATA TRANSFER] Called architect service with feedback=True
+INFO: Plan created: unknown
+DEBUG: History entry appended: plan_created at iteration 1
+DEBUG: Baseline metadata computed: /home/jmsexton/codes/worktree_sandbox/warpx/unknown
+INFO: Iteration 1, Retry 0, Mode: proceed
+INFO: --------------------------------------------------------------------------------
+INFO: Architect node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Reviewer node
+INFO: ================================================================================
+DEBUG: [DATA TRANSFER] Checking for parameter resolution requirement
+DEBUG: [DATA TRANSFER] requires_parameter_resolution = False
+DEBUG: Plan loaded from workflow_history (canonical path)
+INFO: Reviewing plan...
+DEBUG: Using newest schema: amrex_schema_bac24575.json
+WARNING: No build config found - skipping dependency checks
+DEBUG: Using flat schema: 0 params found
+DEBUG: Rule 'SchemaExistence' found 0 violation(s)
+DEBUG: Rule 'BuildFlagDependency' found 0 violation(s)
+DEBUG: Rule 'GridConsistency' found 0 violation(s)
+DEBUG: Rule 'TimestepBounds' found 0 violation(s)
+DEBUG: [REVIEWER SERVICE] Returning ValidationResult with 281 schema params
+INFO: Plan approved - proceeding to execution
+DEBUG: [REVIEWER NODE] Creating history entry
+DEBUG: [REVIEWER NODE] validation_result.available_schema_params: 281 items
+DEBUG: [REVIEWER NODE] Sample schema params: ['amr.regrid_on_restart', 'amr.force_regrid_level_zero', 'amr.use_efficient_regrid', 'amr.plotfile_on_restart', 'amr.insitu_on_restart', 'amr.checkpoint_on_restart', 'amr.compute_new_dt_on_regrid', 'amr.mffile_nstreams', 'amr.probinit_natonce', 'amr.file_name_digits']
+INFO: Review complete: proceed (errors: 0)
+INFO: --------------------------------------------------------------------------------
+INFO: Reviewer node complete
+INFO: --------------------------------------------------------------------------------
+DEBUG: [ROUTE] Reviewer → Input Writer (Approved)
+INFO: ================================================================================
+INFO: Starting Input Writer node
+INFO: ================================================================================
+DEBUG: [InputWriter] Plan extracted from workflow_history: unknown
+DEBUG: [InputWriter] Extracted 0 modifications: []...
+DEBUG: [InputWriter] Baseline: {'code_name': 'WarpX', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/warpx', 'case_path': 'unknown', 'local_path': '/home/jmsexton/codes/worktree_sandbox/warpx/unknown'}
+DEBUG: Target directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [OK] FAISS embeddings initialized for input writer
+DEBUG: InputWriterService instantiated with cases service
+DEBUG: [Input Writer] Starting Load-Modify-Write pipeline
+DEBUG: [DEBUG] baseline dict keys: ['code_name', 'repo_path', 'case_path', 'local_path']
+DEBUG: [DEBUG] baseline dict: {'code_name': 'WarpX', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/warpx', 'case_path': 'unknown', 'local_path': '/home/jmsexton/codes/worktree_sandbox/warpx/unknown'}
+DEBUG: Plan: solver=WarpX, case=unknown
+DEBUG: Reasoning: I need to explore the directory structure to find the executable and the input file mentioned in the request.
+DEBUG: [1/5] Loading baseline: unknown
+DEBUG: Attempting cases_service fallback
+DEBUG: cases_service fallback failed: 'AMReXCasesService' object has no attribute 'get_case_files'
+WARNING: Empty baseline for unknown at /home/jmsexton/codes/worktree_sandbox/warpx/unknown
+WARNING: Unknown solver 'WarpX' - falling back to amr.plot_vars
+DEBUG: [2/5] Creating Pydantic model for WarpX
+DEBUG: Using newest schema: amrex_schema_bac24575.json
+DEBUG: Loading schema from: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/schemas/amrex_schema_bac24575.json
+DEBUG: Loaded nested schema with 281 parameters from amrex_schema_bac24575.json
+DEBUG: Loaded schema with 281 entries from amrex_schema_bac24575.json
+DEBUG: Using flat schema: 281 params found
+DEBUG: Coerced '5' to array [5] (is_array=True)
+DEBUG: Coerced default for amr.file_name_digits: 5 (int) → [5] (list)
+DEBUG: Coerced '"probin"' to str "probin" (is_array=False, single type)
+DEBUG: Coerced default for amr.probin_file: '"probin"' (str) → '"probin"' (str)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amr.regrid_int: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amr.loadbalance_with_workestimates: 0 (int) → 0 (int)
+DEBUG: Coerced '2' to int 2 (is_array=False, single type)
+DEBUG: Coerced default for amr.loadbalance_level0_int: 2 (int) → 2 (int)
+DEBUG: Coerced '1.5' to float 1.5 (is_array=False, single type)
+DEBUG: Coerced default for amr.loadbalance_max_fac: 1.5 (float) → 1.5 (float)
+DEBUG: Coerced '"Auto"' to array ['"Auto"'] (is_array=True)
+DEBUG: Coerced default for amr.subcycling_mode: '"Auto"' (str) → ['"Auto"'] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amr.subcycling_iterations: 0 (int) → 0 (int)
+DEBUG: Coerced '"chk"' to array ['"chk"'] (is_array=True)
+DEBUG: Coerced default for amr.check_file: '"chk"' (str) → ['"chk"'] (list)
+DEBUG: Coerced '-1' to array [-1] (is_array=True)
+DEBUG: Coerced default for amr.check_int: -1 (int) → [-1] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.check_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced '"plt"' to array ['"plt"'] (is_array=True)
+DEBUG: Coerced default for amr.plot_file: '"plt"' (str) → ['"plt"'] (list)
+DEBUG: Coerced '-1' to array [-1] (is_array=True)
+DEBUG: Coerced default for amr.plot_int: -1 (int) → [-1] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.plot_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.plot_log_per: -1.0 (float) → [-1.0] (list)
+WARNING: Failed to parse array 'max_level': could not convert string to float: 'max_level'
+DEBUG: Coerced 'max_level' to array ['max_level'] (is_array=True)
+DEBUG: Coerced default for amr.plot_max_level: 'max_level' (str) → ['max_level'] (list)
+DEBUG: Coerced '"smallplt"' to array ['"smallplt"'] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_file: '"smallplt"' (str) → ['"smallplt"'] (list)
+DEBUG: Coerced '-1' to array [-1] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_int: -1 (int) → [-1] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_log_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for amr.write_plotfile_with_checkpoint: 'true' (str) → [True] (list)
+DEBUG: Coerced '4' to int 4 (is_array=False, single type)
+DEBUG: Coerced default for amr.stream_max_tries: 4 (int) → 4 (int)
+DEBUG: Coerced 'false' to bool False (is_array=False, single type)
+DEBUG: Coerced default for amr.abort_on_stream_retry_failure: 'false' (str) → False (bool)
+DEBUG: Skipping C++ expression default for amr.derive_plot_vars: = "ALL") {
+                amrex::Amr::fillStatePlotVarList()
+DEBUG: Skipping C++ expression default for amr.small_plot_vars: = "ALL") {
+                amrex::Amr::fillDerivePlotVarList()
+DEBUG: Skipping C++ expression default for amr.derive_small_plot_vars: = "ALL") {
+                amrex::Amr::fillStateSmallPlotVarList()
+DEBUG: Coerced '64' to array [64] (is_array=True)
+DEBUG: Coerced default for eb2.max_grid_size: 64 (int) → [64] (list)
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for eb2.extend_domain_face: 'true' (str) → [True] (list)
+DEBUG: Coerced '0' to array [0] (is_array=True)
+DEBUG: Coerced default for eb2.num_coarsen_opt: 0 (int) → [0] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for eb2.cylinder_height: -1.0 (float) → [-1.0] (list)
+WARNING: Failed to parse array '1._rt': could not convert string to float: '1._rt'
+DEBUG: Coerced '1._rt' to array ['1._rt'] (is_array=True)
+DEBUG: Coerced default for eb2.stl_scale: '1._rt' (str) → ['1._rt'] (list)
+DEBUG: Coerced 'false' to array [False] (is_array=True)
+DEBUG: Coerced default for eb2.stl_reverse_normal: 'false' (str) → [False] (list)
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for eb2.stl_use_bvh: 'true' (str) → [True] (list)
+DEBUG: Coerced 'false' to bool False (is_array=False, single type)
+DEBUG: Coerced default for eb2.test_marching_cubes: 'false' (str) → False (bool)
+WARNING: Failed to parse scalar 'Max_Readers_def' as int: could not convert string to float: 'Max_Readers_def'
+DEBUG: Coerced 'Max_Readers_def' to str Max_Readers_def (is_array=False, single type)
+DEBUG: Coerced default for particles.nreaders: 'Max_Readers_def' (str) → 'Max_Readers_def' (str)
+WARNING: Failed to parse scalar 'Max_Particles_Per_Read_def' as int: could not convert string to float: 'Max_Particles_Per_Read_def'
+DEBUG: Coerced 'Max_Particles_Per_Read_def' to str Max_Particles_Per_Read_def (is_array=False, single type)
+DEBUG: Coerced default for particles.nparts_per_read: 'Max_Particles_Per_Read_def' (str) → 'Max_Particles_Per_Read_def' (str)
+DEBUG: Coerced '"None"' to str "None" (is_array=False, single type)
+DEBUG: Coerced default for particles.aggregation_type: '"None"' (str) → '"None"' (str)
+DEBUG: Coerced '2' to int 2 (is_array=False, single type)
+DEBUG: Coerced default for particles.aggregation_buffer: 2 (int) → 2 (int)
+DEBUG: Coerced 'false' to array [False] (is_array=True)
+DEBUG: Coerced default for amrex.async_out: 'false' (str) → [False] (list)
+DEBUG: Coerced '64' to array [64] (is_array=True)
+DEBUG: Coerced default for amrex.async_out_nfiles: 64 (int) → [64] (list)
+DEBUG: Coerced '(bool) MPIX_Query_cuda_support()' to array [False, False] (is_array=True)
+DEBUG: Coerced default for amrex.team.use_gpu_aware_mpi: '(bool) MPIX_Query_cuda_support()' (str) → [False, False] (list)
+DEBUG: Coerced '1' to int 1 (is_array=False, single type)
+DEBUG: Coerced default for amrex.team.size: 1 (int) → 1 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amrex.team.reduce: 0 (int) → 0 (int)
+DEBUG: Skipping C++ expression default for amrex.the_arena_init_size: Gpu::Device::totalGlobalMem() / Gpu::Device::numDevicePartners() / 4L * 3L
+DEBUG: Coerced '0' to array ['0'] (is_array=True)
+DEBUG: Coerced default for amrex.the_pinned_arena_init_size: 0 (int) → ['0'] (list)
+DEBUG: Coerced 'false, divbyzero=false, overflow=false' to array [False, False, False] (is_array=True)
+DEBUG: Coerced default for amrex.fpe_trap_invalid: 'false, divbyzero=false, overflow=false' (str) → [False, False, False] (list)
+DEBUG: Coerced 'false, overflow=false' to array ['false,', 'overflow=false'] (is_array=True)
+DEBUG: Coerced default for amrex.fpe_trap_zero: 'false, overflow=false' (str) → ['false,', 'overflow=false'] (list)
+DEBUG: Coerced 'false' to array ['false'] (is_array=True)
+DEBUG: Coerced default for amrex.fpe_trap_overflow: 'false' (str) → ['false'] (list)
+DEBUG: Coerced '"memlog"' to array ['"memlog"'] (is_array=True)
+DEBUG: Coerced default for amrex.memory_log: '"memlog"' (str) → ['"memlog"'] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numThreads.x: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numThreads.y: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numThreads.z: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numBlocks.x: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numBlocks.y: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numBlocks.z: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.graph_init: 0 (int) → 0 (int)
+DEBUG: Coerced '10000' to int 10000 (is_array=False, single type)
+DEBUG: Coerced default for device.graph_init_nodes: 10000 (int) → 10000 (int)
+WARNING: Failed to parse array 'min_factor': could not convert string to float: 'min_factor'
+DEBUG: Coerced 'min_factor' to array ['min_factor'] (is_array=True)
+DEBUG: Coerced default for amrex.vector_growth_factor: 'min_factor' (str) → ['min_factor'] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.v: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.verbose: 0 (int) → 0 (int)
+WARNING: Failed to parse scalar '0.9_rt' as float: could not convert string to float: '0.9_rt'
+DEBUG: Coerced '0.9_rt' to str 0.9_rt (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.efficiency: '0.9_rt' (str) → '0.9_rt' (str)
+DEBUG: Skipping C++ expression default for DistributionMapping.sfc_threshold: std::min(n,1)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.node_size: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.verbose_mapper: 0 (int) → 0 (int)
+DEBUG: Coerced '"system"' to array ['"system"'] (is_array=True)
+DEBUG: Coerced default for amrex.omp_threads: '"system"' (str) → ['"system"'] (list)
+DEBUG: Skipping C++ expression default for fab.initval: std::numeric_limits<Real>::has_quiet_NaN
+            ? std::numeric_limits<Real>::quiet_NaN()
+            : std::numeric_limits<Real>::max()
+DEBUG: Skipping C++ expression default for geometry.coord_sys: = -1) {
+        c_sys = gg->Coord()
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for bamg_use_old_default: 'true' (str) → [True] (list)
+WARNING: Failed to parse array '1.e-5_rt': could not convert string to float: '1.e-5_rt'
+DEBUG: Coerced '1.e-5_rt' to array ['1.e-5_rt'] (is_array=True)
+DEBUG: Coerced default for eb2.small_volfrac: '1.e-5_rt' (str) → ['1.e-5_rt'] (list)
+DEBUG: Coerced 'false' to array [False] (is_array=True)
+DEBUG: Coerced default for eb2.cover_multiple_cuts: 'false' (str) → [False] (list)
+DEBUG: Coerced '32' to array [32] (is_array=True)
+DEBUG: Coerced default for eb2.maxiter: 32 (int) → [32] (list)
+DEBUG: Coerced '0' to array [0] (is_array=True)
+DEBUG: Coerced default for plot.var: 0 (int) → [0] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for integration.rk.type: 0 (int) → 0 (int)
+DEBUG: Coerced '[1.0, 6.0, 1.0, 3.0, 1.0, 3.0, 1.0, 6.0]' to array ['[1.0,', '6.0,', '1.0,', '3.0,', '1.0,', '3.0,', '1.0,', '6.0]'] (is_array=True)
+DEBUG: Coerced default for integration.rk.weights: [1.0, 6.0, 1.0, 3.0, 1.0, 3.0, 1.0, 6.0] (list) → ['[1.0,', '6.0,', '1.0,', '3.0,', '1.0,', '3.0,', '1.0,', '6.0]'] (list)
+DEBUG: Coerced '[]' to array ['[]'] (is_array=True)
+DEBUG: Coerced default for integration.rk.extended_weights: [] (list) → ['[]'] (list)
+DEBUG: Created Pydantic model with 281 fields
+DEBUG: [HYDRATE] Starting baseline hydration with AMReX-aware coercion
+DEBUG: [HYDRATE] Parsed 0 parameters from inputs
+DEBUG: [HYDRATE] Model has 269 fields
+DEBUG: [HYDRATE] Coercion summary: 0 type changes, 0 None values, 0 unknown fields
+DEBUG: [HYDRATE] Verifying critical fields in coerced_dict (before Pydantic):
+DEBUG: [HYDRATE] Creating Pydantic model instance with 0 dotted keys...
+DEBUG: [HYDRATE] Final verification after model instantiation:
+DEBUG: [HYDRATE]   config.amr_blocking_factor = None (type: NoneType)
+DEBUG: [HYDRATE]   config.amr_n_cell = None (type: NoneType)
+DEBUG: [HYDRATE] Complete - baseline hydration successful
+DEBUG: Hydrated model from baseline
+DEBUG: [InputWriter] Step 3/5: Applying 0 modification(s)
+DEBUG: [InputWriter] Modifications to apply: []
+DEBUG: [DATA TRANSFER] apply_modifications called
+DEBUG: [DATA TRANSFER]   - modifications count: 0
+DEBUG: [DATA TRANSFER]   - config type: AMReXConfig
+DEBUG: [ConfigFactory] Applying 0 modifications
+DEBUG: [ConfigFactory] Modifications: []
+DEBUG: [ConfigFactory] Built alias_map with 522 entries
+DEBUG: [ConfigFactory] Sample mappings: [('amr_regrid_on_restart', 'amr_regrid_on_restart'), ('amr.regrid_on_restart', 'amr_regrid_on_restart'), ('amr_force_regrid_level_zero', 'amr_force_regrid_level_zero'), ('amr.force_regrid_level_zero', 'amr_force_regrid_level_zero'), ('amr_use_efficient_regrid', 'amr_use_efficient_regrid')]
+DEBUG: [ConfigFactory] Completed applying modifications
+DEBUG: [DATA TRANSFER] Returning dict with:
+DEBUG: [DATA TRANSFER]   - unresolved_parameters: 0
+DEBUG: [DATA TRANSFER]   - available_schema_params: 522
+DEBUG: [DATA TRANSFER]   - suggested_params: 0 mappings
+DEBUG: [DATA TRANSFER] Received result from ConfigModelFactory
+DEBUG: [DATA TRANSFER] Result keys: ['config', 'unresolved_parameters', 'available_schema_params', 'resolution_attempted', 'remap_success_count', 'suggested_params', 'remap_mapping', 'remap_details', 'applied_params']
+DEBUG: [DATA TRANSFER]   - unresolved_parameters: 0
+DEBUG: [DATA TRANSFER]   - available_schema_params: 522
+DEBUG: [DATA TRANSFER]   - remap_success_count: 0
+DEBUG: [InputWriter] Applied modifications completed
+DEBUG: [InputWriter] Step 4/5: Skipping RuleEngine (0 modifications)
+DEBUG: [5/5] Serializing to inputs file
+DEBUG: [DEBUG] Sample model keys: []
+DEBUG: [DEBUG] Total keys in model: 0
+DEBUG: [DEBUG] Seen 0 keys in original
+DEBUG: [DEBUG] Sample seen keys: []
+DEBUG: Wrote 17 bytes to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/inputs
+DEBUG: [Input Writer] Pipeline complete
+INFO: Files written to: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362
+DEBUG: [DATA TRANSFER] Checking InputWriterService result
+DEBUG: [DATA TRANSFER] Service result keys: ['inputs_path', 'output_dir', 'run_dir', 'modifications_applied', 'inputs_file_selected', 'inputs_file_strategy', 'inputs_file_override', 'inputs_candidates', 'solver', 'status', 'requires_parameter_resolution']
+INFO: Input Writer complete: run_20260428_065744_556362
+INFO:   Inputs selected: None (strategy: llm_compare, override: None)
+DEBUG:   Inputs written: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/inputs
+DEBUG:   Run directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362
+INFO: --------------------------------------------------------------------------------
+INFO: Input Writer node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Runner node
+INFO: ================================================================================
+INFO: Validation passed: run_20260428_065744_556362
+DEBUG: LocalRunner initialized for local execution
+INFO: Using LocalRunner for local execution
+DEBUG: 
+=== Setting Up Job (Local) ===
+
+DEBUG:  Using existing run directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362
+DEBUG: [ OK ] Copied 2 files to run directory
+INFO: Job setup complete: 
+DEBUG:    Using run directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362
+DEBUG: 
+=== Submitting Job (Local) ===
+
+ERROR: Executable resolution failed: No executable found in benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362
+WARNING: [ROUTE] Runtime failure → Analysis (retryable): 
+INFO: ================================================================================
+INFO: Starting Analysis node
+INFO: ================================================================================
+INFO: [INFO] Run mode dry - skipping analysis
+DEBUG: [ROUTE] Router: Analysis → Visualization (simulation passed)
+INFO: ================================================================================
+INFO: Starting Visualization node
+INFO: ================================================================================
+DEBUG: 
+[Step 1/4] Checking for plotfiles...
+WARNING: [WARN] No plotfiles found in run directory
+DEBUG:   Searched: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362
+INFO: --------------------------------------------------------------------------------
+INFO: Workflow complete. Status: completed
+INFO: --------------------------------------------------------------------------------
+INFO: Metrics saved to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/metrics.jsonl
+INFO: Workflow history saved to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/workflow_history.json
+INFO: Agent transcript saved to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/agent_transcript.txt
+{
+  "prompt": "Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh",
+  "config": "llm_provider='cborg' llm_model='lbl/cborg-deepthought' llm_fast_onprem_model='lbl/cborg-mini' llm_fast_model='gcp/gpt-oss-120b-high' llm_thinking_model='claude-sonnet-4-5' llm_temperature=0.1 llm_max_tokens=4000 cborg_api_key='sk-3r5QhYlL8hGQxywoC_AWBw' cborg_base_url='https://api.cborg.lbl.gov/v1' alcf_api_key=None alcf_cluster=None alcf_base_url=None openai_api_key='sk-3r5QhYlL8hGQxywoC_AWBw' anthropic_api_key=None litellm_api_key=None litellm_base_url=None pnnl_api_key=None pnnl_base_url='https://ai-incubator-api.pnnl.gov' pnnl_default_model='claude-haiku-4-5-20251001-v1-birthright' pelec_executable=PosixPath('.') pelec_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC') pelelmex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX') erf_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF') erf_executable_path=None erf_central_build_dir=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests') warpx_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx') incflo_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo') remora_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA') amrex_tutorials_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials') amrex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex') repositories={'PeleC': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC'), 'PeleLMeX': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX'), 'ERF': PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF'), 'WarpX': PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx'), 'incflo': PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo'), 'REMORA': PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA'), 'amrex-tutorials': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials'), 'AMReX': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex')} knowledge_base_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports') pele_tools_path=PosixPath('utils/pele_tools.py') faiss_db_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/faiss/cborg') database_mismatch_policy='warn_continue' environment='local' embedding_provider='cborg' vector_store_backend='auto' faiss_embedding_model='lbl/nomic-embed-text' alcf_embedding_model=None openai_vector_store_id=None openai_vector_store_ids={} openai_base_url='https://api.cborg.lbl.gov' vector_store_base_url=None vector_store_manifest_url=None faiss_topk=3 faiss_cache_enabled=True faiss_fallback_to_llm=True embedding_chunk_size_chars=2000 embedding_rate_limit_rpm=20 embedding_retry_max_attempts=50 llm_retry_max_attempts=3 faiss_semantic_weight=0.5 simple_weight_kb_relevance=0.4 simple_weight_metrics=0.25 simple_weight_path_heuristics=0.1 simple_weight_domain_specific=0.25 simple_weight_faiss_semantic=0.5 simple_case_hint_min_total=0.0 simple_case_hint_max_gap=0.14 simple_case_hint_score_boost=0.2 hierarchical_weight_physics_parameters=0.3 hierarchical_weight_grid_specifications=0.2 hierarchical_weight_development_activity=0.1 hierarchical_weight_configuration_complexity=0.1 hierarchical_weight_path_hierarchy=0.15 hierarchical_weight_domain_models=0.1 hierarchical_weight_resource_requirements=0.05 indexing_strategy='hierarchical' level2_override_enabled=True level2_override_l0_threshold=0.15 level2_override_case_match_threshold=0.9 level2_override_min_metadata_hits=3 routing_intent_enabled=True routing_intent_conflict_policy='block_then_clarify' routing_intent_anchor_min_segment_overlap=0.6 routing_intent_exact_path_boost=0.2 routing_intent_segment_boost=0.12 routing_intent_cross_solver_penalty=0.25 routing_intent_high_gap_clarification_threshold=0.2 routing_intent_apply_to_level2_override=True routing_intent_apply_to_near_tie=True inputs_file_strategy='llm_compare' remap_strategy='last_write' inputs_file_override=None inputs_default_precedence='strategy_first' retry_guidance_use_llm=False enable_intent_extraction=False enable_sweep_orchestration=False enable_clarification_subgraph=False clarification_route_on_intent_missing_only=True preexec_route_to_clarification_on_retry_exhausted=False reviewer_reflexive_guidance_enabled=True reviewer_reason_codes=['intent_missing', 'solver_mismatch', 'baseline_path_mismatch', 'domain_conflict', 'schema_unresolved', 'resource_conflict', 'rate_limit_pressure'] schema_escalation_policy='lightweight_first' reviewer_gated_schema_escalation_enabled=True benchmark_manifest_enabled=True llm_gate_strategy='off' llm_gate_auto_approve=False disable_embeddings=False baseline_switch_after_retries=3 baseline_override=None dry_run=True preconfirm_gate=False preconfirm_gate_auto_approve=False run_mode='dry' container_mode=False analysis_always_enabled=True allow_make_introspection=False make_introspection_command=None visualization_backend='auto' amrex_tools_path=None superfacility_account='amsc014' superfacility_client_id=None superfacility_secret=None superfacility_endpoint='https://api.nersc.gov/api/v1.2' remote_output_dir=None remote_run_dir=None remote_executable_path=None remote_executable_template=None remote_executable_find=True remote_staging_method='auto' monitor_job=True stage_out_outputs=True workflow_store_path=PosixPath('/home/jmsexton/.amrex_agent/workflow_store.db') max_iterations=3 allow_local_run=True use_mpi=True mpi_ranks=1 output_dir=PosixPath('benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical') metrics_output_dir=None metrics_filename='metrics.jsonl' privacy_mode='off' privacy_scrubber='builtin' privacy_hash_salt=None write_policy_mode='warn' allow_write_paths=[] require_run_dir_prefix=False run_dir_prefix='run_' save_intermediate=True metrics_enabled=True benchmark_environment_lockfile=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/utils/environment-frozen.yaml') benchmark_require_lockfile=True disabled_validators=[]",
+  "requested_plot_vars": [],
+  "visualization_config": {},
+  "selected_case": "unknown",
+  "modifications": [],
+  "reasoning": "I need to explore the directory structure to find the executable and the input file mentioned in the request.",
+  "case_candidates": [],
+  "baseline_confidence": 0.0,
+  "plan": {
+    "selected_solver": "WarpX",
+    "selected_case": "unknown",
+    "modifications": [],
+    "reasoning": "I need to explore the directory structure to find the executable and the input file mentioned in the request.",
+    "solver_confidence": 0.4085617005825043,
+    "baseline_confidence": 0.0,
+    "cbr_confidence": 0.5,
+    "prompt": "Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_test_rayleigh",
+    "requirements": {
+      "router_branch": "hierarchical",
+      "router_reason_code": "hierarchical_primary"
+    },
+    "baseline": {
+      "code_name": "WarpX",
+      "repo_path": "/home/jmsexton/codes/worktree_sandbox/warpx",
+      "case_path": "unknown",
+      "local_path": "/home/jmsexton/codes/worktree_sandbox/warpx/unknown"
+    },
+    "case_candidates": [],
+    "documentation_context": [],
+    "baseline_evidence_citations": [
+      {
+        "citation_type": "baseline",
+        "case": "unknown"
+      }
+    ],
+    "visualization": null,
+    "analysis": {
+      "routing_intent_summary": {
+        "anchor_strength": "strong",
+        "explicit_solver": "ERF",
+        "explicit_case_path": "Exec/RegTests/ScalarAdvDiff",
+        "allowed_solvers": [
+          "ERF"
+        ],
+        "conflict_policy": "block_then_clarify",
+        "source_tags": [
+          "prompt",
+          "reviewer_guidance"
+        ]
+      },
+      "router_mapping": {
+        "router_branch": "hierarchical",
+        "diagram_nodes": {
+          "router": "strategy_router",
+          "branch": "hierarchical_strategy"
+        },
+        "strategy": "hierarchical",
+        "baseline_override_active": false,
+        "fallback_to": null
+      }
+    },
+    "unresolved_parameters": null,
+    "suggested_mappings": null,
+    "resolution_guidance": null,
+    "requires_parameter_resolution": false,
+    "available_schema_params": null,
+    "level0_solver": "WarpX",
+    "level0_confidence": 0.4085617005825043,
+    "level2_override_applied": false,
+    "level2_override_solver": null,
+    "level2_override_case": null,
+    "level2_override_confidence": null,
+    "used_llm": true,
+    "indexing_strategy": "hierarchical",
+    "baseline_inputs_path": null,
+    "inputs_file_strategy": "llm_compare",
+    "inputs_file_override": null,
+    "inputs_candidates": []
+  },
+  "baseline": {
+    "code_name": "WarpX",
+    "repo_path": "/home/jmsexton/codes/worktree_sandbox/warpx",
+    "case_path": "unknown",
+    "local_path": "/home/jmsexton/codes/worktree_sandbox/warpx/unknown"
+  },
+  "review_analysis": {
+    "mode": "proceed",
+    "violations": [],
+    "summary": "All validation checks passed.",
+    "reviewer_guidance": {
+      "required_solver": "WarpX",
+      "forbidden_path_patterns": [],
+      "preferred_path_patterns": [],
+      "excluded_cases": [],
+      "schema_escalation_required": false,
+      "replan_reason_codes": []
+    }
+  },
+  "suggested_fixes": [],
+  "retry_guidance": {
+    "inputs_base_action": "keep",
+    "inputs_reason": null,
+    "baseline_base_action": "keep",
+    "baseline_reason": null
+  },
+  "reviewer_failure_category": null,
+  "run_directory": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362",
+  "inputs_file_path": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/inputs",
+  "inputs_file": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/inputs",
+  "ready_to_run": true,
+  "job_status": "completed",
+  "analysis_report": {
+    "status": "skipped",
+    "message": "Dry-run: analysis skipped"
+  },
+  "visualization_images": [],
+  "visualization_backend": "none",
+  "visualization_status": "skipped",
+  "visualization_metadata": {
+    "plotfile_count": 0,
+    "skip_reason": "no_plotfiles"
+  },
+  "mode": "proceed",
+  "iteration": 1,
+  "retry_count": 0,
+  "max_retries": 3,
+  "loop_count": 1,
+  "errors_active": [],
+  "errors_found": [],
+  "errors_fixed": [],
+  "error_logs": [],
+  "preconfirm_action": "proceed",
+  "workflow_history": [
+    {
+      "node": "architect",
+      "timestamp": "2026-04-28T13:57:44.537307Z",
+      "action": "plan_created",
+      "iteration": 1,
+      "details": {
+        "selected_case": "unknown",
+        "selected_solver": "WarpX",
+        "modifications": [],
+        "reasoning": "I need to explore the directory structure to find the executable and the input file mentioned in the request.",
+        "baseline": {
+          "code_name": "WarpX",
+          "repo_path": "/home/jmsexton/codes/worktree_sandbox/warpx",
+          "case_path": "unknown",
+          "local_path": "/home/jmsexton/codes/worktree_sandbox/warpx/unknown"
+        },
+        "case_candidates": [],
+        "baseline_evidence_citations": [
+          {
+            "citation_type": "baseline",
+            "case": "unknown"
+          }
+        ],
+        "indexing_strategy": "hierarchical",
+        "indexing_calls_count": 4,
+        "indexing_calls_total": 4,
+        "indexing_calls_detail": {
+          "embed_documents": 0,
+          "embed_query": 4
+        },
+        "confidence_score": 0.0,
+        "level0_solver": "WarpX",
+        "level0_confidence": 0.4085617005825043,
+        "level2_override_applied": false,
+        "level2_override_solver": null,
+        "level2_override_case": null,
+        "level2_override_confidence": null,
+        "parameter_resolution_applied": true,
+        "reviewer_guidance": {},
+        "remapped_parameters": [],
+        "metrics": {
+          "llm": {
+            "total_calls": 2,
+            "prompt_tokens": 982,
+            "completion_tokens": 682,
+            "total_tokens": 1664,
+            "by_model": {
+              "lbl/cborg-deepthought": {
+                "calls": 2,
+                "prompt_tokens": 982,
+                "completion_tokens": 682,
+                "total_tokens": 1664,
+                "cost_usd": 0.0
+              }
+            },
+            "by_user": {
+              "unknown": {
+                "calls": 2,
+                "prompt_tokens": 982,
+                "completion_tokens": 682,
+                "total_tokens": 1664,
+                "cost_usd": 0.0
+              }
+            },
+            "cost_usd": 0.0
+          }
+        }
+      }
+    },
+    {
+      "node": "reviewer",
+      "timestamp": "2026-04-28T13:57:44.551944Z",
+      "action": "validation_completed",
+      "iteration": 1,
+      "details": {
+        "status": "approved",
+        "errors": [],
+        "warnings": [],
+        "validation_passed": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "newly_fixed": [],
+        "newly_found": [],
+        "errors_all_found": [],
+        "errors_all_fixed": [],
+        "suggested_fixes": [],
+        "available_schema_params": [
+          "amr.regrid_on_restart",
+          "amr.force_regrid_level_zero",
+          "amr.use_efficient_regrid",
+          "amr.plotfile_on_restart",
+          "amr.insitu_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr.compute_new_dt_on_regrid",
+          "amr.mffile_nstreams",
+          "amr.probinit_natonce",
+          "amr.file_name_digits",
+          "amr.initial_grid_file",
+          "amr.regrid_file",
+          "amr.message_int",
+          "amr.run_log",
+          "amr.run_log_terse",
+          "amr.grid_log",
+          "amr.data_log",
+          "amr.probin_file",
+          "amr.restart",
+          "amr.restart_from_plotfile",
+          "amr.regrid_int",
+          "amr.loadbalance_with_workestimates",
+          "amr.loadbalance_level0_int",
+          "amr.loadbalance_max_fac",
+          "amr.nosub",
+          "amr.subcycling_mode",
+          "amr.subcycling_iterations",
+          "amr.checkpoint_files_output",
+          "amr.plot_files_output",
+          "amr.plot_nfiles",
+          "amr.checkpoint_nfiles",
+          "amr.check_file",
+          "amr.check_int",
+          "amr.check_per",
+          "amr.plot_file",
+          "amr.plot_int",
+          "amr.plot_per",
+          "amr.plot_log_per",
+          "amr.plot_max_level",
+          "amr.small_plot_file",
+          "amr.small_plot_int",
+          "amr.small_plot_per",
+          "amr.small_plot_log_per",
+          "amr.write_plotfile_with_checkpoint",
+          "amr.stream_max_tries",
+          "amr.abort_on_stream_retry_failure",
+          "amr.precreateDirectories",
+          "amr.prereadFAHeaders",
+          "amr.plot_headerversion",
+          "amr.checkpoint_headerversion",
+          "amr.plot_vars",
+          "amr.derive_plot_vars",
+          "amr.small_plot_vars",
+          "amr.derive_small_plot_vars",
+          "eb2.max_grid_size",
+          "eb2.extend_domain_face",
+          "eb2.num_coarsen_opt",
+          "eb2.geom_type",
+          "eb2.box_lo",
+          "eb2.box_hi",
+          "eb2.box_has_fluid_inside",
+          "eb2.cylinder_center",
+          "eb2.cylinder_radius",
+          "eb2.cylinder_height",
+          "eb2.cylinder_direction",
+          "eb2.cylinder_has_fluid_inside",
+          "eb2.plane_point",
+          "eb2.plane_normal",
+          "eb2.sphere_center",
+          "eb2.sphere_radius",
+          "eb2.sphere_has_fluid_inside",
+          "eb2.torus_center",
+          "eb2.torus_small_radius",
+          "eb2.torus_large_radius",
+          "eb2.parser_function",
+          "eb2.stl_file",
+          "eb2.stl_scale",
+          "eb2.stl_center",
+          "eb2.stl_reverse_normal",
+          "eb2.stl_use_bvh",
+          "eb2.test_marching_cubes",
+          "amr.v",
+          "amr.verbose",
+          "amr.max_level",
+          "amr.n_proper",
+          "amr.grid_eff",
+          "amr.n_error_buf",
+          "amr.n_error_buf_x",
+          "amr.n_error_buf_y",
+          "amr.n_error_buf_z",
+          "amr.ref_ratio_vect",
+          "amr.ref_ratio",
+          "amr.max_grid_size",
+          "amr.max_grid_size_x",
+          "amr.max_grid_size_y",
+          "amr.max_grid_size_z",
+          "amr.blocking_factor",
+          "amr.blocking_factor_x",
+          "amr.blocking_factor_y",
+          "amr.blocking_factor_z",
+          "amr.n_cell",
+          "amr.refine_grid_layout",
+          "amr.refine_grid_layout_x",
+          "amr.refine_grid_layout_y",
+          "amr.refine_grid_layout_z",
+          "amr.check_input",
+          "amr.max_grid_iterations",
+          "amr.use_bittree",
+          "particles.particles_nfiles",
+          "particles.nreaders",
+          "particles.nparts_per_read",
+          "particles.aggregation_type",
+          "particles.aggregation_buffer",
+          "amrex.parmparse.v",
+          "amrex.parmparse.verbose",
+          "amrex.async_out",
+          "amrex.async_out_nfiles",
+          "amrex.forkjoin.verbose",
+          "amrex.team.use_gpu_aware_mpi",
+          "amrex.team.size",
+          "amrex.team.reduce",
+          "amrex.the_arena_init_size",
+          "amrex.the_device_arena_init_size",
+          "amrex.the_managed_arena_init_size",
+          "amrex.the_pinned_arena_init_size",
+          "amrex.the_comms_arena_init_size",
+          "amrex.the_arena_release_threshold",
+          "amrex.the_device_arena_release_threshold",
+          "amrex.the_managed_arena_release_threshold",
+          "amrex.the_pinned_arena_release_threshold",
+          "amrex.the_comms_arena_release_threshold",
+          "amrex.the_arena_defragmentation",
+          "amrex.the_device_arena_defragmentation",
+          "amrex.the_managed_arena_defragmentation",
+          "amrex.the_pinned_arena_defragmentation",
+          "amrex.the_comms_arena_defragmentation",
+          "amrex.the_arena_is_managed",
+          "amrex.abort_on_out_of_gpu_memory",
+          "vismf.v",
+          "vismf.headerversion",
+          "vismf.groupsets",
+          "vismf.setbuf",
+          "vismf.usesingleread",
+          "vismf.usesinglewrite",
+          "vismf.checkfilepositions",
+          "vismf.usepersistentifstreams",
+          "vismf.usesynchronousreads",
+          "vismf.usedynamicsetselection",
+          "vismf.iobuffersize",
+          "vismf.allowsparsewrites",
+          "vismf.noflushafterwrite",
+          "vismf.barrierafterlevel",
+          "amrex.v",
+          "amrex.verbose",
+          "amrex.init_snan",
+          "amrex.regtest_reduction",
+          "amrex.signal_handling",
+          "amrex.throw_exception",
+          "amrex.call_addr2line",
+          "amrex.abort_on_unused_inputs",
+          "amrex.handle_sigsegv",
+          "amrex.handle_sigterm",
+          "amrex.handle_sigint",
+          "amrex.handle_sigabrt",
+          "amrex.handle_sigfpe",
+          "amrex.handle_sigill",
+          "amrex.fpe_trap_invalid",
+          "amrex.fpe_trap_zero",
+          "amrex.fpe_trap_overflow",
+          "amrex.init_hypre",
+          "amrex.hypre_spgemm_use_vendor",
+          "amrex.hypre_spmv_use_vendor",
+          "amrex.hypre_sptrans_use_vendor",
+          "amrex.memory_log",
+          "amrex.max_gpu_streams",
+          "device.v",
+          "device.verbose",
+          "device.numThreads.x",
+          "device.numThreads.y",
+          "device.numThreads.z",
+          "device.numBlocks.x",
+          "device.numBlocks.y",
+          "device.numBlocks.z",
+          "device.graph_init",
+          "device.graph_init_nodes",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose",
+          "tiny_profiler.print_threshold",
+          "tiny_profiler.enabled",
+          "tiny_profiler.memprof_enabled",
+          "tiny_profiler.output_file",
+          "amrex.vector_growth_factor",
+          "amrex.pout_int",
+          "DistributionMapping.v",
+          "DistributionMapping.verbose",
+          "DistributionMapping.efficiency",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping.node_size",
+          "DistributionMapping.verbose_mapper",
+          "DistributionMapping.strategy",
+          "amrex.prof_nfiles",
+          "amrex.prof_csflushsize",
+          "amrex.prof_traceflushsize",
+          "amrex.prof_flushinterval",
+          "amrex.prof_flushtimeinterval",
+          "amrex.prof_flushprint",
+          "amrex.use_profiler_syncs",
+          "amrex.omp_threads",
+          "fab.format",
+          "fab.ordering",
+          "fab.initval",
+          "fab.do_initval",
+          "fabarray.mfiter_tile_size",
+          "fabarray.comm_tile_size",
+          "fabarray.maxcomp",
+          "amrex.mf.alloc_single_chunk",
+          "geometry.coord_sys",
+          "geometry.prob_lo",
+          "geometry.prob_hi",
+          "geometry.prob_extent",
+          "geometry.is_periodic",
+          "enabled",
+          "config",
+          "frequency",
+          "pin_mesh",
+          "hypre_solver",
+          "hypre_preconditioner",
+          "recompute_preconditioner",
+          "write_matrix_files",
+          "overwrite_existing_matrix_files",
+          "adjust_singular_matrix",
+          "bamg_non_galerkin_level_levels",
+          "bamg_non_galerkin_level_tols",
+          "bamg_smooth_type",
+          "bamg_euclid_file",
+          "bamg_use_old_default",
+          "eb2.small_volfrac",
+          "eb2.cover_multiple_cuts",
+          "eb2.maxiter",
+          "particles.do_tiling",
+          "particles.tile_size",
+          "particles.use_prepost",
+          "particles.do_unlink",
+          "particles.do_mem_efficient_sort",
+          "particles.use_comms_arena",
+          "particles.datadigits_read",
+          "plot.niter",
+          "plot.cell_size",
+          "plot.var",
+          "val",
+          "integration.use_adaptive_time_step",
+          "integration.time_step",
+          "integration.use_adaptive_fast_time_step",
+          "integration.fast_time_step",
+          "integration.rel_tol",
+          "integration.abs_tol",
+          "integration.fast_rel_tol",
+          "integration.fast_abs_tol",
+          "integration.type",
+          "integration.rk.type",
+          "integration.rk.weights",
+          "integration.rk.extended_weights",
+          "integration.rk.nodes",
+          "integration.rk.tableau",
+          "integration.sundials.type",
+          "integration.sundials.method",
+          "integration.sundials.method_e",
+          "integration.sundials.method_i",
+          "integration.sundials.fast_type",
+          "integration.sundials.fast_method",
+          "integration.sundials.nonlinear_solver",
+          "integration.sundials.max_nonlinear_iters",
+          "integration.sundials.fast_nonlinear_solver",
+          "integration.sundials.fast_max_nonlinear_iters",
+          "integration.sundials.linear_solver",
+          "integration.sundials.max_linear_iters",
+          "integration.sundials.fast_linear_solver",
+          "integration.sundials.fast_max_linear_iters",
+          "integration.sundials.stop_time",
+          "integration.sundials.max_num_steps"
+        ],
+        "retry_guidance": {
+          "inputs_base_action": "keep",
+          "inputs_reason": null,
+          "baseline_base_action": "keep",
+          "baseline_reason": null
+        },
+        "reviewer_guidance": {
+          "required_solver": "WarpX",
+          "forbidden_path_patterns": [],
+          "preferred_path_patterns": [],
+          "excluded_cases": [],
+          "schema_escalation_required": false,
+          "replan_reason_codes": []
+        },
+        "review_context": "pre_execution",
+        "review_origin": "architect_validation",
+        "baseline_dir_rejected": false,
+        "plan_rejected_baseline": null,
+        "plan_rejected_inputs_file": null,
+        "postexec_repair_feedback": null,
+        "metrics": {
+          "validation": {
+            "validator_latency_ms": 8.173,
+            "validator_outcome": "proceed",
+            "review_outcome": "approved",
+            "transition_mode": "proceed",
+            "error_count": 0,
+            "warning_count": 0,
+            "violation_count": 0,
+            "unknown_param_count": 0,
+            "persistent_unknown_count": 0,
+            "schema_missing": false,
+            "solver_unknown": false
+          }
+        }
+      }
+    },
+    {
+      "node": "input_writer",
+      "timestamp": "2026-04-28T13:57:44.646687Z",
+      "action": "inputs_generated",
+      "iteration": 1,
+      "details": {
+        "run_directory": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362",
+        "inputs_file_path": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362/inputs",
+        "status": "success",
+        "modifications_applied": 0,
+        "file_size_bytes": 95,
+        "applied_modifications": [],
+        "requires_parameter_resolution": false,
+        "selected_case": "unknown",
+        "baseline_code": "WarpX",
+        "inputs_file_selected": null,
+        "inputs_file_strategy": "llm_compare",
+        "inputs_file_override": null,
+        "inputs_candidates": []
+      }
+    },
+    {
+      "node": "runner",
+      "timestamp": "2026-04-28T13:57:44.655441Z",
+      "action": "write_failed",
+      "iteration": 1,
+      "details": {
+        "error": "No executable found in benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_065744_556362"
+      }
+    },
+    {
+      "node": "analysis",
+      "timestamp": "2026-04-28T13:57:44.657312Z",
+      "action": "analysis_skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "dry"
+      }
+    },
+    {
+      "node": "visualization",
+      "timestamp": "2026-04-28T13:57:44.659534Z",
+      "action": "skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "no_plotfiles",
+        "plotfile_count": 0
+      }
+    }
+  ],
+  "history": []
+}

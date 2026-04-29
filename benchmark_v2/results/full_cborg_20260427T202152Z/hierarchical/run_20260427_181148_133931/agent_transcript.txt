@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/EkmanSpiral with inputs_custom
+
+================================================================================
+
+[2026-04-28T01:11:48.117333Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T01:11:48.132286Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T01:12:20.954061Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T01:12:20.965037Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T01:12:20.967820Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T01:12:20.969409Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/IsentropicVortex with inputs_advecting_no_msf
+
+================================================================================
+
+[2026-04-28T12:33:44.529359Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T12:33:44.547306Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T12:33:44.561761Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T12:33:44.571863Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T12:33:44.574509Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T12:33:44.578496Z] NODE: VISUALIZATION
+ACTION: skipped
+

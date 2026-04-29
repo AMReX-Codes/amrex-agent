@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/WitchOfAgnesi with inputs_most_test
+
+================================================================================
+
+[2026-04-28T17:35:44.913326Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T17:35:44.941165Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T17:35:50.098750Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T17:35:50.108318Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T17:35:50.114269Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T17:35:50.117237Z] NODE: VISUALIZATION
+ACTION: skipped
+

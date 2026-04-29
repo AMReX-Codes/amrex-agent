@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/Real_Terrain/Altamont with inputs_terrain
+
+================================================================================
+
+[2026-04-27T21:26:26.016149Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-27T21:26:26.113395Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-27T21:26:27.718343Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-27T21:26:27.780877Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-27T21:26:27.813467Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-27T21:26:27.843107Z] NODE: VISUALIZATION
+ACTION: skipped
+

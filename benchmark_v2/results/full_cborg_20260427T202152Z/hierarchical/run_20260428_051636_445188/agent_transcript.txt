@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/ImmersedForcingTest with inputs_if_building
+
+================================================================================
+
+[2026-04-28T12:16:36.425224Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T12:16:36.442002Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T12:16:36.450514Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T12:16:36.455408Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T12:16:36.456799Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T12:16:36.457932Z] NODE: VISUALIZATION
+ACTION: skipped
+

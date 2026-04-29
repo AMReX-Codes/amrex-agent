@@ -1,0 +1,2635 @@
+[
+  {
+    "node": "architect",
+    "timestamp": "2026-04-28T12:30:20.361301Z",
+    "action": "plan_created",
+    "iteration": 1,
+    "details": {
+      "selected_case": "Tests/LinearSolvers/CurlCurl",
+      "selected_solver": "AMReX",
+      "modifications": [],
+      "reasoning": "The user wants to run the 'Exec/RegTests/IsentropicVortex' case with the 'inputs_advecting_msf' input set. The `run_case` tool is designed for this purpose. Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+      "baseline": {
+        "code_name": "AMReX",
+        "repo_path": "/home/jmsexton/codes/worktree_sandbox/amrex",
+        "case_path": "Tests/LinearSolvers/CurlCurl",
+        "local_path": "/home/jmsexton/codes/worktree_sandbox/amrex/Tests/LinearSolvers/CurlCurl"
+      },
+      "case_candidates": [
+        {
+          "case": "Tests/LinearSolvers/CurlCurl",
+          "score": 0.11859911531209943,
+          "metadata": {
+            "case_name": "CurlCurl",
+            "repo_path": "Tests/LinearSolvers/CurlCurl",
+            "inputs_content": {
+              "coord": "0",
+              "n_cell": "128",
+              "max_grid_size": "64",
+              "verbose": "2",
+              "bottom_verbose": "2",
+              "alpha": "1.0",
+              "beta_factor": "0.01",
+              "amrex.fpe_trap_invalid": "1",
+              "amrex.fpe_trap_zero": "1",
+              "amrex.fpe_trap_overflow": "1"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 31,
+            "chunk_index": 31
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "path_hierarchy": "0.44648233",
+            "configuration_complexity": "0.46086955",
+            "grid_specifications": "0.43485868",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/EBTensor",
+          "score": 0.06995119899511337,
+          "metadata": {
+            "case_name": "EBTensor",
+            "repo_path": "Tests/LinearSolvers/EBTensor",
+            "inputs_content": {
+              "n_cell": "64",
+              "max_grid_size": "32",
+              "eb2.geom_type": "sphere",
+              "eb2.sphere_center": "0.0 0.0",
+              "eb2.sphere_radius": "0.9",
+              "eb2.sphere_has_fluid_inside": "1"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 33,
+            "chunk_index": 33
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "path_hierarchy": "0.43380335",
+            "grid_specifications": "0.4315631",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/FortranInterface/Advection_F/Exec/SingleVortex",
+          "score": 0.06363937944173814,
+          "metadata": {
+            "case_name": "SingleVortex",
+            "repo_path": "Tests/FortranInterface/Advection_F/Exec/SingleVortex",
+            "inputs_content": {
+              "max_step": "1000000",
+              "stop_time": "2.0",
+              "geometry.is_periodic": "1  1  1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0  0.0  0.0",
+              "geometry.prob_hi": "1.0  1.0  1.0",
+              "amr.n_cell": "64   64   64",
+              "amr.v": "1",
+              "amr.max_level": "2",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.blocking_factor": "8",
+              "amr.max_grid_size": "16",
+              "amr.regrid_int": "2",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "10",
+              "myamr.verbose": "1",
+              "myamr.cfl": "0.7",
+              "myamr.do_reflux": "1",
+              "myamr.phierr": "1.01  1.1  1.5"
+            },
+            "path_components": [
+              "Tests",
+              "FortranInterface",
+              "Advection_F",
+              "Exec",
+              "SingleVortex"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 15,
+            "chunk_index": 15
+          },
+          "breakdown": {
+            "path_hierarchy": "0.45454216",
+            "grid_specifications": "0.423791",
+            "domain_models": "0.48639944",
+            "development_activity": "0.4773994",
+            "resource_requirements": "0.48639944"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Amr/Advection_AmrCore/Exec",
+          "score": 0.059952265918254866,
+          "metadata": {
+            "case_name": "Exec",
+            "repo_path": "Tests/Amr/Advection_AmrCore/Exec",
+            "inputs_content": {
+              "max_step": "1000",
+              "stop_time": "2.0",
+              "geometry.prob_lo": "0.0  0.0  0.0",
+              "geometry.prob_hi": "1.0  1.0  0.125",
+              "geometry.is_periodic": "1    1    1",
+              "amr.v": "1",
+              "amr.n_cell": "64 64 8",
+              "amr.max_level": "2",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.blocking_factor_x": "8",
+              "amr.blocking_factor_y": "8",
+              "amr.blocking_factor_z": "8",
+              "amr.max_grid_size": "16",
+              "amr.regrid_int": "2",
+              "adv.cfl": "0.7",
+              "adv.do_subcycle": "1",
+              "adv.do_reflux": "1",
+              "adv.phierr": "1.01  1.1  1.5",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "10",
+              "amr.chk_file": "chk",
+              "amr.chk_int": "-1",
+              "amr.do_tracers": "1"
+            },
+            "path_components": [
+              "Tests",
+              "Amr",
+              "Advection_AmrCore",
+              "Exec"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 0,
+            "chunk_index": 0
+          },
+          "breakdown": {
+            "path_hierarchy": "0.43210444",
+            "grid_specifications": "0.42231646",
+            "domain_models": "0.4871819",
+            "development_activity": "0.47596022",
+            "resource_requirements": "0.4871819"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/GPU/RandomNumberGeneration",
+          "score": 0.055446773767471313,
+          "metadata": {
+            "case_name": "RandomNumberGeneration",
+            "repo_path": "Tests/GPU/RandomNumberGeneration",
+            "inputs_content": {
+              "num_draw": "1000000"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 20,
+            "chunk_index": 20
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "configuration_complexity": "0.42072988",
+            "grid_specifications": "0.47402856",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/ABecLaplacian_C/threadmultiple_test",
+          "score": 0.02853412032127378,
+          "metadata": {
+            "case_name": "threadmultiple_test",
+            "repo_path": "Tests/LinearSolvers/ABecLaplacian_C/threadmultiple_test",
+            "inputs_content": {
+              "max_level": "0",
+              "ref_ratio": "2",
+              "n_cell": "256",
+              "max_grid_size": "64",
+              "composite_solve": "0",
+              "prob_type": "2",
+              "verbose": "0",
+              "bottom_verbose": "0",
+              "max_iter": "100",
+              "max_fmg_iter": "0",
+              "linop_maxorder": "3",
+              "agglomeration": "1",
+              "consolidation": "1"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 27,
+            "chunk_index": 27
+          },
+          "breakdown": {
+            "physics_parameters": "0.41813472",
+            "path_hierarchy": "0.44198054",
+            "grid_specifications": "0.43398312"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/NodeEB",
+          "score": 0.022444480657577537,
+          "metadata": {
+            "case_name": "NodeEB",
+            "repo_path": "Tests/LinearSolvers/NodeEB",
+            "inputs_content": {
+              "n_cell": "128",
+              "max_grid_size": "32",
+              "verbose": "2",
+              "bottom_verbose": "0",
+              "eb2.geom_type": "sphere",
+              "eb2.sphere_center": "0.7006 0.5521 0.0",
+              "eb2.sphere_radius": "0.125",
+              "eb2.sphere_has_fluid_inside": "0"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 39,
+            "chunk_index": 39
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "path_hierarchy": "0.43038148",
+            "grid_specifications": "0.4338573"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/ABecLaplacian_F",
+          "score": 0.020722478628158514,
+          "metadata": {
+            "case_name": "ABecLaplacian_F",
+            "repo_path": "Tests/LinearSolvers/ABecLaplacian_F",
+            "inputs_content": {
+              "max_level": "1",
+              "ref_ratio": "2",
+              "n_cell": "128",
+              "max_grid_size": "64",
+              "composite_solve": "1",
+              "prob_type": "1",
+              "verbose": "2",
+              "bottom_verbose": "0",
+              "max_iter": "100",
+              "max_fmg_iter": "0",
+              "linop_maxorder": "2",
+              "agglomeration": "1",
+              "consolidation": "1"
+            },
+            "path_components": [
+              "Tests",
+              "LinearSolvers",
+              "ABecLaplacian_F"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 28,
+            "chunk_index": 28
+          },
+          "breakdown": {
+            "path_hierarchy": "0.44528732",
+            "configuration_complexity": "0.43807182",
+            "grid_specifications": "0.44011533",
+            "domain_models": "0.4806609",
+            "resource_requirements": "0.4806609"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/ABecLaplacian_C",
+          "score": 0.020155513286590543,
+          "metadata": {
+            "case_name": "ABecLaplacian_C",
+            "repo_path": "Tests/LinearSolvers/ABecLaplacian_C",
+            "inputs_content": {
+              "max_level": "1",
+              "ref_ratio": "2",
+              "n_cell": "128",
+              "max_grid_size": "64",
+              "composite_solve": "1",
+              "prob_type": "1",
+              "verbose": "2",
+              "bottom_verbose": "0",
+              "max_iter": "100",
+              "max_fmg_iter": "0",
+              "linop_maxorder": "2",
+              "agglomeration": "1",
+              "consolidation": "1"
+            },
+            "path_components": [
+              "Tests",
+              "LinearSolvers",
+              "ABecLaplacian_C"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 25,
+            "chunk_index": 25
+          },
+          "breakdown": {
+            "path_hierarchy": "0.44150755",
+            "configuration_complexity": "0.43807182",
+            "grid_specifications": "0.44011533",
+            "domain_models": "0.4806609",
+            "resource_requirements": "0.4806609"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/NodalPoisson",
+          "score": 0.002642852067947399,
+          "metadata": {
+            "case_name": "NodalPoisson",
+            "repo_path": "Tests/LinearSolvers/NodalPoisson",
+            "inputs_content": {
+              "max_level": "1",
+              "ref_ratio": "2",
+              "n_cell": "128",
+              "max_grid_size": "64",
+              "composite_solve": "1",
+              "verbose": "2",
+              "bottom_verbose": "0",
+              "max_iter": "100",
+              "max_fmg_iter": "0",
+              "reltol": "1.e-11"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 37,
+            "chunk_index": 37
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "configuration_complexity": "0.42976138",
+            "grid_specifications": "0.44275457"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB/CNS/Exec/Combustor",
+          "score": -0.0004757320880890148,
+          "metadata": {
+            "case_name": "Combustor",
+            "repo_path": "Tests/EB/CNS/Exec/Combustor",
+            "inputs_content": {
+              "max_step": "250",
+              "stop_time": "0.2",
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0      0      0",
+              "geometry.prob_hi": "5.0   5.0    5.0",
+              "amr.n_cell": "64    64     64",
+              "cns.lo_bc": "5 5 1",
+              "cns.hi_bc": "5 5 2",
+              "cns.cfl": "0.3",
+              "cns.v": "1",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "10",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "50",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.geom_type": "\"combustor\"",
+              "combustor.far_wall_loc": "2.25",
+              "combustor.ramp_plane1_point": "1.25 3.75",
+              "combustor.ramp_plane2_point": "1.25 3.75",
+              "combustor.ramp_plane2_normal": "3.45 -0.95",
+              "combustor.ramp_plane3_point": "0.5 0.",
+              "combustor.pipe_lo": "0.3 -5.0",
+              "combustor.pipe_hi": "0.5 2.5"
+            },
+            "grid_params": {
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0      0      0",
+              "geometry.prob_hi": "5.0   5.0    5.0",
+              "amr.n_cell": "64    64     64",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "10",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "50",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity"
+            },
+            "index_type": "grid_specifications",
+            "chunk_parent": 5,
+            "chunk_index": 5
+          },
+          "breakdown": {
+            "grid_specifications": "0.43438852",
+            "domain_models": "0.49471337",
+            "development_activity": "0.4843956",
+            "resource_requirements": "0.49471337"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB/CNS/Exec/Pulse",
+          "score": -0.0012217617034912254,
+          "metadata": {
+            "case_name": "Pulse",
+            "repo_path": "Tests/EB/CNS/Exec/Pulse",
+            "inputs_content": {
+              "max_step": "10000",
+              "stop_time": "7.e-6",
+              "geometry.is_periodic": "1 1 1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "1.0     1.0     1.0",
+              "amr.n_cell": "64      64      64",
+              "cns.lo_bc": "0   0   0",
+              "cns.hi_bc": "0   0   0",
+              "cns.cfl": "0.3",
+              "cns.v": "1",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "100",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.geom_type": "sphere",
+              "eb2.sphere_radius": "0.125",
+              "eb2.sphere_center": "0.45  0.65  0.53",
+              "eb2.sphere_has_fluid_inside": "0",
+              "prob.drho": "1.2e-4"
+            },
+            "grid_params": {
+              "geometry.is_periodic": "1 1 1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "1.0     1.0     1.0",
+              "amr.n_cell": "64      64      64",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "100",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity"
+            },
+            "index_type": "grid_specifications",
+            "chunk_parent": 6,
+            "chunk_index": 6
+          },
+          "breakdown": {
+            "grid_specifications": "0.43065837",
+            "domain_models": "0.49471337",
+            "development_activity": "0.4843956",
+            "resource_requirements": "0.49471337"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/CellEB",
+          "score": -0.013678333163261419,
+          "metadata": {
+            "case_name": "CellEB",
+            "repo_path": "Tests/LinearSolvers/CellEB",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "eb2.geom_type": "sphere",
+              "eb2.sphere_center": "0.5  0.5  0.5",
+              "eb2.sphere_radius": "0.25",
+              "eb2.sphere_has_fluid_inside": "0",
+              "eb2.box_lo": "0.23 0.37  0.4",
+              "eb2.box_hi": "0.55 0.88  0.7",
+              "eb2.box_has_fluid_inside": "0"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 29,
+            "chunk_index": 29
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "path_hierarchy": "0.4516906",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/CellEB2",
+          "score": -0.01627245843410491,
+          "metadata": {
+            "case_name": "CellEB2",
+            "repo_path": "Tests/LinearSolvers/CellEB2",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "reltol": "1.e-12",
+              "prob_type": "1",
+              "max_level": "1",
+              "n_cell": "128",
+              "max_grid_size": "64",
+              "eb2.max_grid_size": "32",
+              "eb2.geom_type": "flower",
+              "eb2.sphere_center": "0.5  0.5  0.5",
+              "eb2.sphere_radius": "0.4",
+              "eb2.sphere_has_fluid_inside": "1",
+              "eb2.box_lo": "0.2  0.2  0.2",
+              "eb2.box_hi": "0.8  0.8  0.8",
+              "eb2.box_has_fluid_inside": "1"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 30,
+            "chunk_index": 30
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "path_hierarchy": "0.43439645",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/EBConvergenceTest",
+          "score": -0.01686823070049287,
+          "metadata": {
+            "case_name": "EBConvergenceTest",
+            "repo_path": "Tests/LinearSolvers/EBConvergenceTest",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "n_cell": "32",
+              "max_grid_size": "32",
+              "eb2.geom_type": "sphere",
+              "eb2.sphere_center": "0.5  0.5  0.5",
+              "eb2.sphere_radius": "0.25",
+              "eb2.sphere_has_fluid_inside": "0",
+              "eb2.box_lo": "0.23 0.37",
+              "eb2.box_hi": "0.55 0.88",
+              "eb2.box_has_fluid_inside": "0"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 32,
+            "chunk_index": 32
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "path_hierarchy": "0.43042463",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Amr/Advection_AmrLevel/Exec/SingleVortex",
+          "score": -0.02262165606021882,
+          "metadata": {
+            "case_name": "SingleVortex",
+            "repo_path": "Tests/Amr/Advection_AmrLevel/Exec/SingleVortex",
+            "inputs_content": {
+              "max_step": "1000000",
+              "stop_time": "2.0",
+              "geometry.is_periodic": "1  1  1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0  0.0  0.0",
+              "geometry.prob_hi": "1.0  1.0  1.0",
+              "amr.n_cell": "64   64   64",
+              "adv.cfl": "0.7",
+              "adv.v": "1",
+              "amr.v": "1",
+              "amr.max_level": "2",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2",
+              "amr.blocking_factor": "8",
+              "amr.max_grid_size": "16",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "10",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "100",
+              "adv.do_tracers": "0",
+              "tagging.phierr": "1.01  1.1   1.5",
+              "tagging.max_phierr_lev": "10"
+            },
+            "path_components": [
+              "Tests",
+              "Amr",
+              "Advection_AmrLevel",
+              "Exec",
+              "SingleVortex"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 1,
+            "chunk_index": 1
+          },
+          "breakdown": {
+            "path_hierarchy": "0.44452325",
+            "domain_models": "0.48639944",
+            "development_activity": "0.4773994",
+            "resource_requirements": "0.48639944"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/ABecLap_SP",
+          "score": -0.04772938042879102,
+          "metadata": {
+            "case_name": "ABecLap_SP",
+            "repo_path": "Tests/LinearSolvers/ABecLap_SP",
+            "inputs_content": {
+              "max_level": "1",
+              "ref_ratio": "2",
+              "n_cell": "64",
+              "max_grid_size": "32",
+              "composite_solve": "0",
+              "prob_type": "2",
+              "verbose": "2",
+              "bottom_verbose": "0",
+              "max_iter": "100",
+              "max_fmg_iter": "0",
+              "linop_maxorder": "2",
+              "agglomeration": "1",
+              "consolidation": "1"
+            },
+            "param_count": 13,
+            "complexity_score": 0.26,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 24,
+            "chunk_index": 24
+          },
+          "breakdown": {
+            "configuration_complexity": "0.43971196",
+            "grid_specifications": "0.43100145",
+            "domain_models": "0.4806609",
+            "resource_requirements": "0.4806609"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/ParmParse",
+          "score": -0.04869531840085983,
+          "metadata": {
+            "case_name": "ParmParse",
+            "repo_path": "Tests/ParmParse",
+            "inputs_content": {
+              "dAx_x/dx(x,y,t,zeval)": "12",
+              "amrex.signal_handling": "0",
+              "amrex.throw_exception": "1",
+              "amrex.v": "0",
+              "name": "\"I am w\" \\",
+              "b": "((1, 2, 3) (7, 8,9) (1,0,   1))",
+              "f": "3+4  99  \"5 + 6\"",
+              "g": "3.1+4.1 \\",
+              "w": "1 -2",
+              "my_constants.alpha": "5.",
+              "amrex.c": "c",
+              "amrex.foo": "sin( pi/2 ) + alpha + -amrex.c**2.5/c^2",
+              "amrex.bar": "sin(pi/2)+alpha+-amrex.c**2.5/c^2",
+              "amrex.bar2": "\"sin(pi/2)+alpha+",
+              "geom.prob_lo": "-2*sin(pi/4)/sqrt(2)  -sin(pi/2)-cos(pi/2)  (sin(pi*3/2)+cos(pi*3/2))",
+              "geom.prob_hi": "\"2*sin(pi/4)/sqrt(2)\" \\",
+              "long_int_1": "123456789012345",
+              "long_int_2": "123'456'789'012'345",
+              "long_int_3": "1.23456789012345e14",
+              "code.a": "code.b",
+              "code.b": "code.c",
+              "code.c": "code.d",
+              "code.d": "code.a",
+              "my_constants.max_steps": "40",
+              "max_steps": "max_steps",
+              "warpx.max_steps": "max_steps",
+              "my_constants.lx": "40.e-6",
+              "my_constants.dx": "6.25e-7",
+              "my_constants.nx": "lx/dx",
+              "n_cell": "nx nx nx",
+              "ny": "nx",
+              "do_this": "1",
+              "bool.true_val": "true",
+              "bool.false_val": "false",
+              "bool.True_val": "True",
+              "bool.FALSE_val": "FALSE",
+              "bool.t_val": "t",
+              "bool.f_val": "f",
+              "my_value": "10",
+              "my_threshold": "3",
+              "my_bool_flag": "\"(my_threshold < my_value) and (my_value < 100)\"",
+              "my_string_line": "a  b c",
+              "t.table": "\\",
+              "macro.spacedim.n_cell": "64 64 64",
+              "macro.spacedim.use_gpu": "1",
+              "macro.spacedim.t": "1.5",
+              "macro.use_gpu.foo": "32",
+              "macro.use_gpu.bar": "\"use_cpu\"",
+              "macro.use_gpu.spacedim": "3"
+            },
+            "path_components": [
+              "Tests",
+              "ParmParse"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 40,
+            "chunk_index": 40
+          },
+          "breakdown": {
+            "path_hierarchy": "0.44103387",
+            "configuration_complexity": "0.45327803",
+            "grid_specifications": "0.449109"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB_CNS/Exec/Combustor",
+          "score": -0.0498044228553772,
+          "metadata": {
+            "case_name": "Combustor",
+            "repo_path": "Tests/EB_CNS/Exec/Combustor",
+            "inputs_content": {
+              "max_step": "250",
+              "stop_time": "0.2",
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0      0      0",
+              "geometry.prob_hi": "5.0   5.0    5.0",
+              "amr.n_cell": "64    64     64",
+              "cns.lo_bc": "5 5 1",
+              "cns.hi_bc": "5 5 2",
+              "cns.cfl": "0.3",
+              "cns.v": "1",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "10",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "50",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.geom_type": "\"combustor\"",
+              "combustor.far_wall_loc": "2.25",
+              "combustor.ramp_plane1_point": "1.25 3.75",
+              "combustor.ramp_plane2_point": "1.25 3.75",
+              "combustor.ramp_plane2_normal": "3.45 -0.95",
+              "combustor.ramp_plane3_point": "0.5 0.",
+              "combustor.pipe_lo": "0.3 -5.0",
+              "combustor.pipe_hi": "0.5 2.5"
+            },
+            "grid_params": {
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0      0      0",
+              "geometry.prob_hi": "5.0   5.0    5.0",
+              "amr.n_cell": "64    64     64",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "10",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "50",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity"
+            },
+            "index_type": "grid_specifications",
+            "chunk_parent": 10,
+            "chunk_index": 10
+          },
+          "breakdown": {
+            "grid_specifications": "0.43707034",
+            "domain_models": "0.48521006",
+            "resource_requirements": "0.48521006"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB_CNS/Exec/Pulse",
+          "score": -0.05052746295928956,
+          "metadata": {
+            "case_name": "Pulse",
+            "repo_path": "Tests/EB_CNS/Exec/Pulse",
+            "inputs_content": {
+              "max_step": "10000",
+              "stop_time": "7.e-6",
+              "geometry.is_periodic": "1 1 1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "1.0     1.0     1.0",
+              "amr.n_cell": "64      64      64",
+              "cns.lo_bc": "0   0   0",
+              "cns.hi_bc": "0   0   0",
+              "cns.cfl": "0.3",
+              "cns.v": "1",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "100",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.geom_type": "sphere",
+              "eb2.sphere_radius": "0.125",
+              "eb2.sphere_center": "0.45  0.65  0.53",
+              "eb2.sphere_has_fluid_inside": "0",
+              "prob.drho": "1.2e-4"
+            },
+            "grid_params": {
+              "geometry.is_periodic": "1 1 1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "1.0     1.0     1.0",
+              "amr.n_cell": "64      64      64",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "100",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity"
+            },
+            "index_type": "grid_specifications",
+            "chunk_parent": 11,
+            "chunk_index": 11
+          },
+          "breakdown": {
+            "grid_specifications": "0.43345514",
+            "domain_models": "0.48521006",
+            "resource_requirements": "0.48521006"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/LeastSquares",
+          "score": -0.0644100859761238,
+          "metadata": {
+            "case_name": "LeastSquares",
+            "repo_path": "Tests/LinearSolvers/LeastSquares",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "eb_is_dirichlet": "0",
+              "eb_is_homog_dirichlet": "1",
+              "eb2.geom_type": "channel",
+              "eb2.channel_pt_on_top_wall": "0.0  1.225  0.0",
+              "eb2.channel_height": "1.0",
+              "eb2.channel_rotation": "0.",
+              "eb2.channel_has_fluid_inside": "1",
+              "max_level": "0",
+              "ref_ratio": "2",
+              "n_cell": "14",
+              "max_grid_size": "64",
+              "max_coarsening_level": "0",
+              "prob_lo": "0.   0.   0.",
+              "prob_hi": "1.4  1.4  0.",
+              "is_periodic": "1  0  0",
+              "scalars": "0 1",
+              "use_poiseuille": "1",
+              "poiseuille_pt_on_top_wall": "0.0  1.225  0.0",
+              "poiseuille_height": "1.0",
+              "poiseuille_rotation": "0.",
+              "plot_file": "\"plot-base\""
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 36,
+            "chunk_index": 36
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "path_hierarchy": "0.42982742"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB/MarchingCubes",
+          "score": -0.08143192529678345,
+          "metadata": {
+            "case_name": "MarchingCubes",
+            "repo_path": "Tests/EB/MarchingCubes",
+            "inputs_content": {
+              "nx": "64",
+              "ny": "64",
+              "nz": "64",
+              "max_grid_size": "32"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 9,
+            "chunk_index": 9
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/GPU/AnyOf",
+          "score": -0.08143192529678345,
+          "metadata": {
+            "case_name": "AnyOf",
+            "repo_path": "Tests/GPU/AnyOf",
+            "inputs_content": {
+              "ncell": "128",
+              "ncomp": "1",
+              "nitem": "100000",
+              "max_grid_size": "64",
+              "nghost": "0",
+              "fabarray.maxcomp": "25",
+              "amrex.v": "1",
+              "amrex.async_out": "0"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 17,
+            "chunk_index": 17
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/GPU/Vector",
+          "score": -0.08143192529678345,
+          "metadata": {
+            "case_name": "Vector",
+            "repo_path": "Tests/GPU/Vector",
+            "inputs_content": {
+              "amrex.the_arena_is_managed": "0"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 21,
+            "chunk_index": 21
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/Hypre",
+          "score": -0.08143192529678345,
+          "metadata": {
+            "case_name": "Hypre",
+            "repo_path": "Tests/LinearSolvers/Hypre",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "verbose": "2",
+              "reltol": "1.e-11",
+              "n_cell": "128",
+              "max_grid_size": "64",
+              "eb2.geom_type": "sphere",
+              "eb2.sphere_center": "0.5  0.5  0.5",
+              "eb2.sphere_radius": "0.13",
+              "eb2.sphere_has_fluid_inside": "0"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 35,
+            "chunk_index": 35
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "development_activity": "0.47452274"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/CheckpointRestart",
+          "score": -0.0846940904855728,
+          "metadata": {
+            "case_name": "CheckpointRestart",
+            "repo_path": "Tests/Particles/CheckpointRestart",
+            "inputs_content": {
+              "ncells": "64",
+              "max_grid_size": "8",
+              "nlevs": "1",
+              "ncomp": "6",
+              "nppc": "2",
+              "nplotfile": "1",
+              "nparticlefile": "1",
+              "restart_check": "1",
+              "directory": "."
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 45,
+            "chunk_index": 45
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "configuration_complexity": "0.4419011"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/CheckpointRestartSOA",
+          "score": -0.0846940904855728,
+          "metadata": {
+            "case_name": "CheckpointRestartSOA",
+            "repo_path": "Tests/Particles/CheckpointRestartSOA",
+            "inputs_content": {
+              "ncells": "64",
+              "max_grid_size": "8",
+              "nlevs": "1",
+              "ncomp": "6",
+              "nppc": "2",
+              "nplotfile": "1",
+              "nparticlefile": "1",
+              "restart_check": "1",
+              "directory": "."
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 46,
+            "chunk_index": 46
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "configuration_complexity": "0.4419011"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/AssignMultiLevelDensity",
+          "score": -0.08486563563346863,
+          "metadata": {
+            "case_name": "AssignMultiLevelDensity",
+            "repo_path": "Tests/Particles/AssignMultiLevelDensity",
+            "inputs_content": {
+              "nx": "128",
+              "ny": "128",
+              "nz": "128",
+              "max_grid_size": "16",
+              "nppc": "10",
+              "verbose": "true",
+              "nlevs": "2"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 43,
+            "chunk_index": 43
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "configuration_complexity": "0.44018564"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/AsyncIO",
+          "score": -0.08556042909622191,
+          "metadata": {
+            "case_name": "AsyncIO",
+            "repo_path": "Tests/Particles/AsyncIO",
+            "inputs_content": {
+              "nx": "32",
+              "ny": "32",
+              "nz": "32",
+              "max_grid_size": "16",
+              "nppc": "10",
+              "verbose": "true",
+              "nlevs": "2",
+              "amrex.async_out": "1"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 44,
+            "chunk_index": 44
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "configuration_complexity": "0.4332377"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/AssignDensity",
+          "score": -0.08684542179107665,
+          "metadata": {
+            "case_name": "AssignDensity",
+            "repo_path": "Tests/Particles/AssignDensity",
+            "inputs_content": {
+              "nx": "128",
+              "ny": "128",
+              "nz": "128",
+              "max_grid_size": "32",
+              "nppc": "10",
+              "verbose": "true"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 42,
+            "chunk_index": 42
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934",
+            "configuration_complexity": "0.42038777"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB/CNS/Exec/ShockRef",
+          "score": -0.08735343575477603,
+          "metadata": {
+            "case_name": "ShockRef",
+            "repo_path": "Tests/EB/CNS/Exec/ShockRef",
+            "inputs_content": {
+              "max_step": "1000",
+              "stop_time": "1.2e-5",
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0      0.0      0.0",
+              "geometry.prob_hi": "7.5  3.75  0.1171875",
+              "amr.n_cell": "512      256      8",
+              "cns.lo_bc": "2   5   2",
+              "cns.hi_bc": "2   2   2",
+              "cns.cfl": "0.3",
+              "cns.v": "1",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.check_input": "0",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "50",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.geom_type": "plane",
+              "eb2.plane_point": "5.2 0.0 0.0",
+              "eb2.plane_normal": "0.7547095802227719  -0.6560590289905074  0.0",
+              "physics.gamma": "1.6666666666666667",
+              "physics.eos_mu": "41.57255",
+              "physics.use_const_visc": "1",
+              "physics.const_visc_mu": "1.21e-2",
+              "physics.const_visc_ki": "0.0",
+              "physics.const_lambda": "1.7e3",
+              "cns.dim": "2",
+              "cns.use_total_energy_as_eb_weights": "1"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 7,
+            "chunk_index": 7
+          },
+          "breakdown": {
+            "domain_models": "0.49471337",
+            "development_activity": "0.4843956",
+            "resource_requirements": "0.49471337"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB/CNS/Exec/Sod",
+          "score": -0.08735343575477603,
+          "metadata": {
+            "case_name": "Sod",
+            "repo_path": "Tests/EB/CNS/Exec/Sod",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "max_step": "100",
+              "stop_time": "0.2",
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "1.0     1.0     1.0",
+              "amr.n_cell": "64      64      64",
+              "cns.lo_bc": "2   5   5",
+              "cns.hi_bc": "2   5   5",
+              "cns.cfl": "0.3",
+              "cns.v": "2",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "0 0 0 0",
+              "amr.grid_eff": "0.99",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "10",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.sphere_radius": "0.125",
+              "eb2.sphere_center": "0.7 0.5 0.5",
+              "eb2.sphere_has_fluid_inside": "0",
+              "eb2.geom_type": "sphere",
+              "cns.refine_cutcells": "0",
+              "cns.refine_box_lo_0": "0.55 0.5  0.3",
+              "cns.refine_box_hi_0": "0.85 0.65 0.7",
+              "prob.p_l": "1.0",
+              "prob.p_r": "0.1",
+              "prob.rho_l": "1.0",
+              "prob.rho_r": "0.125",
+              "prob.u_l": "0.0",
+              "prob.u_r": "0.0"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 8,
+            "chunk_index": 8
+          },
+          "breakdown": {
+            "domain_models": "0.49471337",
+            "development_activity": "0.4843956",
+            "resource_requirements": "0.49471337"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/GPU/CNS/Exec/RT",
+          "score": -0.08735343575477603,
+          "metadata": {
+            "case_name": "RT",
+            "repo_path": "Tests/GPU/CNS/Exec/RT",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "max_step": "100000",
+              "stop_time": "1.9",
+              "geometry.is_periodic": "1 1 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "0.5     0.5     1.0",
+              "amr.n_cell": "64      64     128",
+              "cns.lo_bc": "0   0   4",
+              "cns.hi_bc": "0   0   4",
+              "cns.gravity": "-1.0",
+              "cns.eos_gamma": "1.6666666666",
+              "cns.do_visc": "false",
+              "cns.cfl": "0.3",
+              "cns.refine_max_dengrad_lev": "10",
+              "cns.refine_dengrad": "1.0e-2",
+              "cns.v": "2",
+              "amr.v": "1",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "32",
+              "amr.n_error_buf": "0 0 0 0",
+              "amr.grid_eff": "0.99",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "500"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 18,
+            "chunk_index": 18
+          },
+          "breakdown": {
+            "domain_models": "0.49471337",
+            "development_activity": "0.4843956",
+            "resource_requirements": "0.49471337"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/GPU/CNS/Exec/Sod",
+          "score": -0.08735343575477603,
+          "metadata": {
+            "case_name": "Sod",
+            "repo_path": "Tests/GPU/CNS/Exec/Sod",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "max_step": "100000",
+              "stop_time": "0.2",
+              "geometry.is_periodic": "0 1 1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "1.0     1.0     1.0",
+              "amr.n_cell": "64      64      64",
+              "cns.lo_bc": "2   0   0",
+              "cns.hi_bc": "2   0   0",
+              "cns.cfl": "0.3",
+              "cns.do_visc": "false",
+              "cns.v": "2",
+              "amr.v": "1",
+              "amr.max_level": "0",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "32",
+              "amr.n_error_buf": "0 0 0 0",
+              "amr.grid_eff": "0.99",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "0",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "10",
+              "amr.derive_plot_vars": "pressure velocity",
+              "prob.p_l": "1.0",
+              "prob.p_r": "0.1",
+              "prob.rho_l": "1.0",
+              "prob.rho_r": "0.125",
+              "prob.u_l": "0.0",
+              "prob.u_r": "0.0"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 19,
+            "chunk_index": 19
+          },
+          "breakdown": {
+            "domain_models": "0.49471337",
+            "development_activity": "0.4843956",
+            "resource_requirements": "0.49471337"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Amr/Advection_AmrLevel/Exec/UniformVelocity",
+          "score": -0.08930014282464982,
+          "metadata": {
+            "case_name": "UniformVelocity",
+            "repo_path": "Tests/Amr/Advection_AmrLevel/Exec/UniformVelocity",
+            "inputs_content": {
+              "max_step": "1000000",
+              "stop_time": "7.0",
+              "geometry.is_periodic": "1  1  1",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "-1.0 -1.0 -1.0",
+              "geometry.prob_hi": "1.0  1.0  1.0",
+              "amr.n_cell": "64   64   64",
+              "adv.cfl": "0.9",
+              "adv.v": "1",
+              "amr.v": "1",
+              "amr.max_level": "2",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2",
+              "amr.blocking_factor": "8",
+              "amr.max_grid_size": "16",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "10",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "10",
+              "adv.do_tracers": "0",
+              "prob.adv_vel": "1.0  1.0  1.0",
+              "tagging.phierr": "1.01  1.1   1.5",
+              "tagging.max_phierr_lev": "10"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 2,
+            "chunk_index": 2
+          },
+          "breakdown": {
+            "domain_models": "0.48639944",
+            "development_activity": "0.4773994",
+            "resource_requirements": "0.48639944"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/LinearSolvers/Nodal_Projection_EB",
+          "score": -0.08944248259067536,
+          "metadata": {
+            "case_name": "Nodal_Projection_EB",
+            "repo_path": "Tests/LinearSolvers/Nodal_Projection_EB",
+            "inputs_content": {
+              "n_cell": "128",
+              "max_grid_size": "64",
+              "obstacles": "0 1 2 3 4 5 6 7 8",
+              "use_hypre": "0",
+              "mg_verbose": "2",
+              "bottom_verbose": "2"
+            },
+            "grid_params": {
+              "n_cell": "128",
+              "max_grid_size": "64"
+            },
+            "index_type": "grid_specifications",
+            "chunk_parent": 38,
+            "chunk_index": 38
+          },
+          "breakdown": {
+            "grid_specifications": "0.441839",
+            "domain_models": "0.48126477",
+            "resource_requirements": "0.48126477"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Enum",
+          "score": -0.0903558075428009,
+          "metadata": {
+            "case_name": "Enum",
+            "repo_path": "Tests/Enum",
+            "inputs_content": {
+              "color1": "red",
+              "color2": "green",
+              "color3": "blue",
+              "color4": "greenxxx",
+              "color5": "Blue",
+              "color6": "G-r-e-e.n",
+              "colors": "cyan yellow orange"
+            },
+            "path_components": [
+              "Tests",
+              "Enum"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 14,
+            "chunk_index": 14
+          },
+          "breakdown": {
+            "path_hierarchy": "0.44494188",
+            "grid_specifications": "0.46451455"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/DivFreePatch",
+          "score": -0.11632272899150847,
+          "metadata": {
+            "case_name": "DivFreePatch",
+            "repo_path": "Tests/DivFreePatch",
+            "inputs_content": {
+              "n_cell": "64",
+              "f_offset": "8",
+              "max_grid_size": "128",
+              "amrex.v": "1",
+              "amrex.async_out": "0"
+            },
+            "param_count": 5,
+            "complexity_score": 0.1,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 4,
+            "chunk_index": 4
+          },
+          "breakdown": {
+            "configuration_complexity": "0.45284554",
+            "grid_specifications": "0.44196358"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Reinit",
+          "score": -0.1191910684108734,
+          "metadata": {
+            "case_name": "Reinit",
+            "repo_path": "Tests/Reinit",
+            "inputs_content": {
+              "amrex.abort_on_out_of_gpu_memory": "1",
+              "amrex.signal_handling": "0",
+              "amrex.the_arena_is_managed": "0",
+              "amrex.throw_exception": "1",
+              "amrex.verbose": "2"
+            },
+            "param_count": 5,
+            "complexity_score": 0.1,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 64,
+            "chunk_index": 64
+          },
+          "breakdown": {
+            "configuration_complexity": "0.44142628",
+            "grid_specifications": "0.43333152"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/DenseBins",
+          "score": -0.12888419926166533,
+          "metadata": {
+            "case_name": "DenseBins",
+            "repo_path": "Tests/Particles/DenseBins",
+            "inputs_content": {
+              "amrex.the_arena_is_managed": "1",
+              "nitems": "100000017",
+              "nbins": "5000"
+            },
+            "index_type": "physics_parameters",
+            "chunk_parent": 48,
+            "chunk_index": 48
+          },
+          "breakdown": {
+            "physics_parameters": "0.40371934"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB_CNS/Exec/ShockRef",
+          "score": -0.13721849083900453,
+          "metadata": {
+            "case_name": "ShockRef",
+            "repo_path": "Tests/EB_CNS/Exec/ShockRef",
+            "inputs_content": {
+              "max_step": "1000",
+              "stop_time": "1.2e-5",
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0      0.0      0.0",
+              "geometry.prob_hi": "7.5  3.75  0.1171875",
+              "amr.n_cell": "512      256      8",
+              "cns.lo_bc": "2   5   2",
+              "cns.hi_bc": "2   2   2",
+              "cns.cfl": "0.3",
+              "cns.v": "1",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.check_input": "0",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "50",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.geom_type": "plane",
+              "eb2.plane_point": "5.2 0.0 0.0",
+              "eb2.plane_normal": "0.7547095802227719  -0.6560590289905074  0.0",
+              "physics.gamma": "1.6666666666666667",
+              "physics.eos_mu": "41.57255",
+              "cns.eos_gamma": "1.6666666666666667",
+              "cns.eos_mu": "41.57255",
+              "physics.use_const_visc": "1",
+              "physics.const_visc_mu": "1.21e-2",
+              "physics.const_visc_ki": "0.0",
+              "physics.const_lambda": "1.7e3",
+              "cns.dim": "2",
+              "cns.eb_weights_type": "1"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 12,
+            "chunk_index": 12
+          },
+          "breakdown": {
+            "domain_models": "0.48521006",
+            "resource_requirements": "0.48521006"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/EB_CNS/Exec/Sod",
+          "score": -0.13721849083900453,
+          "metadata": {
+            "case_name": "Sod",
+            "repo_path": "Tests/EB_CNS/Exec/Sod",
+            "inputs_content": {
+              "amrex.fpe_trap_invalid": "1",
+              "max_step": "100",
+              "stop_time": "0.2",
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0     0.0     0.0",
+              "geometry.prob_hi": "1.0     1.0     1.0",
+              "amr.n_cell": "64      64      64",
+              "cns.lo_bc": "2   5   5",
+              "cns.hi_bc": "2   5   5",
+              "cns.cfl": "0.3",
+              "cns.v": "2",
+              "amr.v": "1",
+              "amr.loadbalance_with_workestimates": "1",
+              "amr.loadbalance_level0_int": "1000",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2 2 2 2",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.n_error_buf": "0 0 0 0",
+              "amr.grid_eff": "0.99",
+              "amr.checkpoint_files_output": "0",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_files_output": "1",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "10",
+              "amr.derive_plot_vars": "pressure x_velocity y_velocity z_velocity",
+              "eb2.sphere_radius": "0.125",
+              "eb2.sphere_center": "0.7 0.5 0.5",
+              "eb2.sphere_has_fluid_inside": "0",
+              "eb2.geom_type": "sphere",
+              "cns.refine_cutcells": "0",
+              "cns.do_visc": "true",
+              "cns.refine_box_lo_0": "0.55 0.5  0.3",
+              "cns.refine_box_hi_0": "0.85 0.65 0.7",
+              "prob.p_l": "1.0",
+              "prob.p_r": "0.1",
+              "prob.rho_l": "1.0",
+              "prob.rho_r": "0.125",
+              "prob.u_l": "0.0",
+              "prob.u_r": "0.0"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 13,
+            "chunk_index": 13
+          },
+          "breakdown": {
+            "domain_models": "0.48521006",
+            "resource_requirements": "0.48521006"
+          },
+          "routing_intent_adjustment": -0.21000000000000002,
+          "routing_intent_overlap": 0.3333333333333333,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/HDF5Benchmark",
+          "score": -0.14114302545785903,
+          "metadata": {
+            "case_name": "HDF5Benchmark",
+            "repo_path": "Tests/HDF5Benchmark",
+            "inputs_content": {
+              "ncells": "64",
+              "max_grid_size": "8",
+              "nlevs": "1",
+              "ncomp": "6",
+              "nppc": "2",
+              "nplotfile": "2",
+              "nparticlefile": "2",
+              "sleeptime": "2",
+              "restart_check": "1",
+              "directory": "."
+            },
+            "path_components": [
+              "Tests",
+              "HDF5Benchmark"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 22,
+            "chunk_index": 22
+          },
+          "breakdown": {
+            "path_hierarchy": "0.43902454",
+            "configuration_complexity": "0.43003294"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/HeatEquation",
+          "score": -0.14154281318187711,
+          "metadata": {
+            "case_name": "HeatEquation",
+            "repo_path": "Tests/HeatEquation",
+            "inputs_content": {
+              "n_cell": "32",
+              "max_grid_size": "16",
+              "nsteps": "1000",
+              "plot_int": "0",
+              "dt": "1.e-5"
+            },
+            "path_components": [
+              "Tests",
+              "HeatEquation"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 23,
+            "chunk_index": 23
+          },
+          "breakdown": {
+            "path_hierarchy": "0.43537778",
+            "configuration_complexity": "0.4315052"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/Ascent_Insitu_SOA",
+          "score": -0.1778102844953537,
+          "metadata": {
+            "case_name": "Ascent_Insitu_SOA",
+            "repo_path": "Tests/Particles/Ascent_Insitu_SOA",
+            "inputs_content": {
+              "ascent.size": "(32, 64, 64)",
+              "ascent.max_grid_size": "32",
+              "ascent.is_periodic": "1",
+              "ascent.num_ppc": "1",
+              "ascent.nlevs": "1",
+              "ascent.num_runtime_real": "0",
+              "ascent.num_runtime_int": "0",
+              "particles.do_tiling": "1"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 41,
+            "chunk_index": 41
+          },
+          "breakdown": {
+            "domain_models": "0.48126477",
+            "resource_requirements": "0.48126477"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/SENSEI_Insitu_SOA",
+          "score": -0.1778102844953537,
+          "metadata": {
+            "case_name": "SENSEI_Insitu_SOA",
+            "repo_path": "Tests/Particles/SENSEI_Insitu_SOA",
+            "inputs_content": {
+              "insitu.size": "(32, 64, 64)",
+              "insitu.max_grid_size": "32",
+              "insitu.is_periodic": "1",
+              "insitu.num_ppc": "1",
+              "insitu.nlevs": "1",
+              "insitu.num_runtime_real": "0",
+              "insitu.num_runtime_int": "0",
+              "particles.do_tiling": "1"
+            },
+            "chemistry_params": {},
+            "index_type": "domain_models",
+            "chunk_parent": 62,
+            "chunk_index": 62
+          },
+          "breakdown": {
+            "domain_models": "0.48126477",
+            "resource_requirements": "0.48126477"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/InitFromAscii",
+          "score": -0.18165261596441268,
+          "metadata": {
+            "case_name": "InitFromAscii",
+            "repo_path": "Tests/Particles/InitFromAscii",
+            "inputs_content": {
+              "nx": "128",
+              "ny": "128",
+              "nz": "128",
+              "max_grid_size": "32"
+            },
+            "path_components": [
+              "Tests",
+              "Particles",
+              "InitFromAscii"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 50,
+            "chunk_index": 50
+          },
+          "breakdown": {
+            "path_hierarchy": "0.45564923"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/NeighborParticles",
+          "score": -0.1851010784506798,
+          "metadata": {
+            "case_name": "NeighborParticles",
+            "repo_path": "Tests/Particles/NeighborParticles",
+            "inputs_content": {
+              "nbor_parts.size": "(24, 24, 24)",
+              "nbor_parts.max_grid_size": "8",
+              "nbor_parts.is_periodic": "1",
+              "nbor_parts.num_ppc": "1",
+              "nbor_list.size": "(24, 24, 24)",
+              "nbor_list.max_grid_size": "8",
+              "nbor_list.is_periodic": "1",
+              "nbor_list.num_ppc": "1",
+              "nbor_list.do_plotfile": "1",
+              "nbor_list.check_answer": "1"
+            },
+            "path_components": [
+              "Tests",
+              "Particles",
+              "NeighborParticles"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 54,
+            "chunk_index": 54
+          },
+          "breakdown": {
+            "path_hierarchy": "0.43265948"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/Redistribute",
+          "score": -0.1853711545467377,
+          "metadata": {
+            "case_name": "Redistribute",
+            "repo_path": "Tests/Particles/Redistribute",
+            "inputs_content": {
+              "redistribute.size": "(256, 256, 384)",
+              "redistribute.max_grid_size": "128",
+              "redistribute.is_periodic": "1",
+              "redistribute.num_ppc": "1",
+              "redistribute.move_dir": "(1, 1, 1)",
+              "redistribute.do_random": "1",
+              "redistribute.nsteps": "500",
+              "redistribute.nlevs": "1",
+              "redistribute.do_regrid": "1",
+              "redistribute.num_runtime_real": "0",
+              "redistribute.num_runtime_int": "0",
+              "redistribute.sort": "0",
+              "amrex.use_gpu_aware_mpi": "0"
+            },
+            "path_components": [
+              "Tests",
+              "Particles",
+              "Redistribute"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 60,
+            "chunk_index": 60
+          },
+          "breakdown": {
+            "path_hierarchy": "0.43085897"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/ParticleMeshMultiLevel",
+          "score": -0.20604914724826812,
+          "metadata": {
+            "case_name": "ParticleMeshMultiLevel",
+            "repo_path": "Tests/Particles/ParticleMeshMultiLevel",
+            "inputs_content": {
+              "nx": "128",
+              "ny": "128",
+              "nz": "128",
+              "max_grid_size": "32",
+              "nppc": "10",
+              "verbose": "true",
+              "nlevs": "2"
+            },
+            "param_count": 7,
+            "complexity_score": 0.14,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 57,
+            "chunk_index": 57
+          },
+          "breakdown": {
+            "configuration_complexity": "0.43950853"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/GhostsAndVirtuals",
+          "score": -0.2060667872428894,
+          "metadata": {
+            "case_name": "GhostsAndVirtuals",
+            "repo_path": "Tests/Particles/GhostsAndVirtuals",
+            "inputs_content": {
+              "nx": "128",
+              "ny": "128",
+              "nz": "128",
+              "max_grid_size": "16",
+              "nppc": "10",
+              "verbose": "true",
+              "nlevs": "3"
+            },
+            "param_count": 7,
+            "complexity_score": 0.14,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 49,
+            "chunk_index": 49
+          },
+          "breakdown": {
+            "configuration_complexity": "0.43933213"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/CheckpointRestartSOA_AsyncIO",
+          "score": -0.20758725702762604,
+          "metadata": {
+            "case_name": "CheckpointRestartSOA_AsyncIO",
+            "repo_path": "Tests/Particles/CheckpointRestartSOA_AsyncIO",
+            "inputs_content": {
+              "ncells": "64",
+              "max_grid_size": "8",
+              "nlevs": "1",
+              "ncomp": "6",
+              "nppc": "2",
+              "nplotfile": "1",
+              "nparticlefile": "1",
+              "restart_check": "1",
+              "directory": ".",
+              "amrex.async_out": "1"
+            },
+            "param_count": 10,
+            "complexity_score": 0.2,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 47,
+            "chunk_index": 47
+          },
+          "breakdown": {
+            "configuration_complexity": "0.42412743"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        },
+        {
+          "case": "Tests/Particles/InitRandom",
+          "score": -0.20788160860538482,
+          "metadata": {
+            "case_name": "InitRandom",
+            "repo_path": "Tests/Particles/InitRandom",
+            "inputs_content": {
+              "ncells": "64",
+              "max_grid_size": "8",
+              "nlevs": "1",
+              "nppc": "2"
+            },
+            "param_count": 4,
+            "complexity_score": 0.08,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 51,
+            "chunk_index": 51
+          },
+          "breakdown": {
+            "configuration_complexity": "0.4211839"
+          },
+          "routing_intent_adjustment": -0.25,
+          "routing_intent_overlap": 0.0,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "explicit_solver_conflict"
+        }
+      ],
+      "baseline_evidence_citations": [
+        {
+          "citation_type": "baseline",
+          "case": "Tests/LinearSolvers/CurlCurl"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Tests/LinearSolvers/CurlCurl"
+        }
+      ],
+      "indexing_strategy": "hierarchical",
+      "indexing_calls_count": 18,
+      "indexing_calls_total": 18,
+      "indexing_calls_detail": {
+        "embed_documents": 0,
+        "embed_query": 18
+      },
+      "confidence_score": 0.11859911531209943,
+      "level0_solver": "AMReX",
+      "level0_confidence": 0.42711080610752106,
+      "level2_override_applied": false,
+      "level2_override_solver": null,
+      "level2_override_case": null,
+      "level2_override_confidence": null,
+      "parameter_resolution_applied": true,
+      "reviewer_guidance": {},
+      "remapped_parameters": [],
+      "metrics": {
+        "llm": {
+          "total_calls": 2,
+          "prompt_tokens": 1012,
+          "completion_tokens": 526,
+          "total_tokens": 1538,
+          "by_model": {
+            "lbl/cborg-deepthought": {
+              "calls": 2,
+              "prompt_tokens": 1012,
+              "completion_tokens": 526,
+              "total_tokens": 1538,
+              "cost_usd": 0.0
+            }
+          },
+          "by_user": {
+            "unknown": {
+              "calls": 2,
+              "prompt_tokens": 1012,
+              "completion_tokens": 526,
+              "total_tokens": 1538,
+              "cost_usd": 0.0
+            }
+          },
+          "cost_usd": 0.0
+        }
+      }
+    }
+  },
+  {
+    "node": "reviewer",
+    "timestamp": "2026-04-28T12:30:20.366972Z",
+    "action": "validation_completed",
+    "iteration": 1,
+    "details": {
+      "status": "approved",
+      "errors": [],
+      "warnings": [],
+      "validation_passed": true,
+      "error_count": 0,
+      "warning_count": 0,
+      "newly_fixed": [],
+      "newly_found": [],
+      "errors_all_found": [],
+      "errors_all_fixed": [],
+      "suggested_fixes": [],
+      "available_schema_params": [
+        "amr.regrid_on_restart",
+        "amr.force_regrid_level_zero",
+        "amr.use_efficient_regrid",
+        "amr.plotfile_on_restart",
+        "amr.insitu_on_restart",
+        "amr.checkpoint_on_restart",
+        "amr.compute_new_dt_on_regrid",
+        "amr.mffile_nstreams",
+        "amr.probinit_natonce",
+        "amr.file_name_digits",
+        "amr.initial_grid_file",
+        "amr.regrid_file",
+        "amr.message_int",
+        "amr.run_log",
+        "amr.run_log_terse",
+        "amr.grid_log",
+        "amr.data_log",
+        "amr.probin_file",
+        "amr.restart",
+        "amr.restart_from_plotfile",
+        "amr.regrid_int",
+        "amr.loadbalance_with_workestimates",
+        "amr.loadbalance_level0_int",
+        "amr.loadbalance_max_fac",
+        "amr.nosub",
+        "amr.subcycling_mode",
+        "amr.subcycling_iterations",
+        "amr.checkpoint_files_output",
+        "amr.plot_files_output",
+        "amr.plot_nfiles",
+        "amr.checkpoint_nfiles",
+        "amr.check_file",
+        "amr.check_int",
+        "amr.check_per",
+        "amr.plot_file",
+        "amr.plot_int",
+        "amr.plot_per",
+        "amr.plot_log_per",
+        "amr.plot_max_level",
+        "amr.small_plot_file",
+        "amr.small_plot_int",
+        "amr.small_plot_per",
+        "amr.small_plot_log_per",
+        "amr.write_plotfile_with_checkpoint",
+        "amr.stream_max_tries",
+        "amr.abort_on_stream_retry_failure",
+        "amr.precreateDirectories",
+        "amr.prereadFAHeaders",
+        "amr.plot_headerversion",
+        "amr.checkpoint_headerversion",
+        "amr.plot_vars",
+        "amr.derive_plot_vars",
+        "amr.small_plot_vars",
+        "amr.derive_small_plot_vars",
+        "eb2.max_grid_size",
+        "eb2.extend_domain_face",
+        "eb2.num_coarsen_opt",
+        "eb2.geom_type",
+        "eb2.box_lo",
+        "eb2.box_hi",
+        "eb2.box_has_fluid_inside",
+        "eb2.cylinder_center",
+        "eb2.cylinder_radius",
+        "eb2.cylinder_height",
+        "eb2.cylinder_direction",
+        "eb2.cylinder_has_fluid_inside",
+        "eb2.plane_point",
+        "eb2.plane_normal",
+        "eb2.sphere_center",
+        "eb2.sphere_radius",
+        "eb2.sphere_has_fluid_inside",
+        "eb2.torus_center",
+        "eb2.torus_small_radius",
+        "eb2.torus_large_radius",
+        "eb2.parser_function",
+        "eb2.stl_file",
+        "eb2.stl_scale",
+        "eb2.stl_center",
+        "eb2.stl_reverse_normal",
+        "eb2.stl_use_bvh",
+        "eb2.test_marching_cubes",
+        "amr.v",
+        "amr.verbose",
+        "amr.max_level",
+        "amr.n_proper",
+        "amr.grid_eff",
+        "amr.n_error_buf",
+        "amr.n_error_buf_x",
+        "amr.n_error_buf_y",
+        "amr.n_error_buf_z",
+        "amr.ref_ratio_vect",
+        "amr.ref_ratio",
+        "amr.max_grid_size",
+        "amr.max_grid_size_x",
+        "amr.max_grid_size_y",
+        "amr.max_grid_size_z",
+        "amr.blocking_factor",
+        "amr.blocking_factor_x",
+        "amr.blocking_factor_y",
+        "amr.blocking_factor_z",
+        "amr.n_cell",
+        "amr.refine_grid_layout",
+        "amr.refine_grid_layout_x",
+        "amr.refine_grid_layout_y",
+        "amr.refine_grid_layout_z",
+        "amr.check_input",
+        "amr.max_grid_iterations",
+        "amr.use_bittree",
+        "particles.particles_nfiles",
+        "particles.nreaders",
+        "particles.nparts_per_read",
+        "particles.aggregation_type",
+        "particles.aggregation_buffer",
+        "amrex.parmparse.v",
+        "amrex.parmparse.verbose",
+        "amrex.async_out",
+        "amrex.async_out_nfiles",
+        "amrex.forkjoin.verbose",
+        "amrex.team.use_gpu_aware_mpi",
+        "amrex.team.size",
+        "amrex.team.reduce",
+        "amrex.the_arena_init_size",
+        "amrex.the_device_arena_init_size",
+        "amrex.the_managed_arena_init_size",
+        "amrex.the_pinned_arena_init_size",
+        "amrex.the_comms_arena_init_size",
+        "amrex.the_arena_release_threshold",
+        "amrex.the_device_arena_release_threshold",
+        "amrex.the_managed_arena_release_threshold",
+        "amrex.the_pinned_arena_release_threshold",
+        "amrex.the_comms_arena_release_threshold",
+        "amrex.the_arena_defragmentation",
+        "amrex.the_device_arena_defragmentation",
+        "amrex.the_managed_arena_defragmentation",
+        "amrex.the_pinned_arena_defragmentation",
+        "amrex.the_comms_arena_defragmentation",
+        "amrex.the_arena_is_managed",
+        "amrex.abort_on_out_of_gpu_memory",
+        "vismf.v",
+        "vismf.headerversion",
+        "vismf.groupsets",
+        "vismf.setbuf",
+        "vismf.usesingleread",
+        "vismf.usesinglewrite",
+        "vismf.checkfilepositions",
+        "vismf.usepersistentifstreams",
+        "vismf.usesynchronousreads",
+        "vismf.usedynamicsetselection",
+        "vismf.iobuffersize",
+        "vismf.allowsparsewrites",
+        "vismf.noflushafterwrite",
+        "vismf.barrierafterlevel",
+        "amrex.v",
+        "amrex.verbose",
+        "amrex.init_snan",
+        "amrex.regtest_reduction",
+        "amrex.signal_handling",
+        "amrex.throw_exception",
+        "amrex.call_addr2line",
+        "amrex.abort_on_unused_inputs",
+        "amrex.handle_sigsegv",
+        "amrex.handle_sigterm",
+        "amrex.handle_sigint",
+        "amrex.handle_sigabrt",
+        "amrex.handle_sigfpe",
+        "amrex.handle_sigill",
+        "amrex.fpe_trap_invalid",
+        "amrex.fpe_trap_zero",
+        "amrex.fpe_trap_overflow",
+        "amrex.init_hypre",
+        "amrex.hypre_spgemm_use_vendor",
+        "amrex.hypre_spmv_use_vendor",
+        "amrex.hypre_sptrans_use_vendor",
+        "amrex.memory_log",
+        "amrex.max_gpu_streams",
+        "device.v",
+        "device.verbose",
+        "device.numThreads.x",
+        "device.numThreads.y",
+        "device.numThreads.z",
+        "device.numBlocks.x",
+        "device.numBlocks.y",
+        "device.numBlocks.z",
+        "device.graph_init",
+        "device.graph_init_nodes",
+        "tiny_profiler.device_synchronize_around_region",
+        "tiny_profiler.v",
+        "tiny_profiler.verbose",
+        "tiny_profiler.print_threshold",
+        "tiny_profiler.enabled",
+        "tiny_profiler.memprof_enabled",
+        "tiny_profiler.output_file",
+        "amrex.vector_growth_factor",
+        "amrex.pout_int",
+        "DistributionMapping.v",
+        "DistributionMapping.verbose",
+        "DistributionMapping.efficiency",
+        "DistributionMapping.sfc_threshold",
+        "DistributionMapping.node_size",
+        "DistributionMapping.verbose_mapper",
+        "DistributionMapping.strategy",
+        "amrex.prof_nfiles",
+        "amrex.prof_csflushsize",
+        "amrex.prof_traceflushsize",
+        "amrex.prof_flushinterval",
+        "amrex.prof_flushtimeinterval",
+        "amrex.prof_flushprint",
+        "amrex.use_profiler_syncs",
+        "amrex.omp_threads",
+        "fab.format",
+        "fab.ordering",
+        "fab.initval",
+        "fab.do_initval",
+        "fabarray.mfiter_tile_size",
+        "fabarray.comm_tile_size",
+        "fabarray.maxcomp",
+        "amrex.mf.alloc_single_chunk",
+        "geometry.coord_sys",
+        "geometry.prob_lo",
+        "geometry.prob_hi",
+        "geometry.prob_extent",
+        "geometry.is_periodic",
+        "enabled",
+        "config",
+        "frequency",
+        "pin_mesh",
+        "hypre_solver",
+        "hypre_preconditioner",
+        "recompute_preconditioner",
+        "write_matrix_files",
+        "overwrite_existing_matrix_files",
+        "adjust_singular_matrix",
+        "bamg_non_galerkin_level_levels",
+        "bamg_non_galerkin_level_tols",
+        "bamg_smooth_type",
+        "bamg_euclid_file",
+        "bamg_use_old_default",
+        "eb2.small_volfrac",
+        "eb2.cover_multiple_cuts",
+        "eb2.maxiter",
+        "particles.do_tiling",
+        "particles.tile_size",
+        "particles.use_prepost",
+        "particles.do_unlink",
+        "particles.do_mem_efficient_sort",
+        "particles.use_comms_arena",
+        "particles.datadigits_read",
+        "plot.niter",
+        "plot.cell_size",
+        "plot.var",
+        "val",
+        "integration.use_adaptive_time_step",
+        "integration.time_step",
+        "integration.use_adaptive_fast_time_step",
+        "integration.fast_time_step",
+        "integration.rel_tol",
+        "integration.abs_tol",
+        "integration.fast_rel_tol",
+        "integration.fast_abs_tol",
+        "integration.type",
+        "integration.rk.type",
+        "integration.rk.weights",
+        "integration.rk.extended_weights",
+        "integration.rk.nodes",
+        "integration.rk.tableau",
+        "integration.sundials.type",
+        "integration.sundials.method",
+        "integration.sundials.method_e",
+        "integration.sundials.method_i",
+        "integration.sundials.fast_type",
+        "integration.sundials.fast_method",
+        "integration.sundials.nonlinear_solver",
+        "integration.sundials.max_nonlinear_iters",
+        "integration.sundials.fast_nonlinear_solver",
+        "integration.sundials.fast_max_nonlinear_iters",
+        "integration.sundials.linear_solver",
+        "integration.sundials.max_linear_iters",
+        "integration.sundials.fast_linear_solver",
+        "integration.sundials.fast_max_linear_iters",
+        "integration.sundials.stop_time",
+        "integration.sundials.max_num_steps"
+      ],
+      "retry_guidance": {
+        "inputs_base_action": "keep",
+        "inputs_reason": null,
+        "baseline_base_action": "keep",
+        "baseline_reason": null
+      },
+      "reviewer_guidance": {
+        "required_solver": "AMReX",
+        "forbidden_path_patterns": [],
+        "preferred_path_patterns": [
+          "Tests/LinearSolvers"
+        ],
+        "excluded_cases": [],
+        "schema_escalation_required": false,
+        "replan_reason_codes": []
+      },
+      "review_context": "pre_execution",
+      "review_origin": "architect_validation",
+      "baseline_dir_rejected": false,
+      "plan_rejected_baseline": null,
+      "plan_rejected_inputs_file": null,
+      "postexec_repair_feedback": null,
+      "metrics": {
+        "validation": {
+          "validator_latency_ms": 2.701,
+          "validator_outcome": "proceed",
+          "review_outcome": "approved",
+          "transition_mode": "proceed",
+          "error_count": 0,
+          "warning_count": 0,
+          "violation_count": 0,
+          "unknown_param_count": 0,
+          "persistent_unknown_count": 0,
+          "schema_missing": false,
+          "solver_unknown": false
+        }
+      }
+    }
+  },
+  {
+    "node": "input_writer",
+    "timestamp": "2026-04-28T12:30:20.371578Z",
+    "action": "inputs_generated",
+    "iteration": 1,
+    "details": {
+      "run_directory": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_053020_368227",
+      "inputs_file_path": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_053020_368227/inputs",
+      "status": "success",
+      "modifications_applied": 0,
+      "file_size_bytes": 95,
+      "applied_modifications": [],
+      "requires_parameter_resolution": false,
+      "selected_case": "Tests/LinearSolvers/CurlCurl",
+      "baseline_code": "AMReX",
+      "inputs_file_selected": "/home/jmsexton/codes/worktree_sandbox/amrex/Tests/LinearSolvers/CurlCurl/inputs",
+      "inputs_file_strategy": "llm_compare",
+      "inputs_file_override": null,
+      "inputs_candidates": [
+        "/home/jmsexton/codes/worktree_sandbox/amrex/Tests/LinearSolvers/CurlCurl/inputs",
+        "/home/jmsexton/codes/worktree_sandbox/amrex/Tests/LinearSolvers/CurlCurl/inputs"
+      ],
+      "metrics": {
+        "retrieval": {
+          "strategies": {
+            "prompt_anchor": 1
+          },
+          "last": {
+            "strategy": "prompt_anchor",
+            "original_strategy": "llm_compare",
+            "fallback_reason": null,
+            "selected": "inputs",
+            "candidate_count": 2,
+            "score": null
+          }
+        }
+      }
+    }
+  },
+  {
+    "node": "runner",
+    "timestamp": "2026-04-28T12:30:20.374772Z",
+    "action": "write_failed",
+    "iteration": 1,
+    "details": {
+      "error": "No executable found in benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_053020_368227"
+    }
+  },
+  {
+    "node": "analysis",
+    "timestamp": "2026-04-28T12:30:20.375657Z",
+    "action": "analysis_skipped",
+    "iteration": 1,
+    "details": {
+      "status": "skipped",
+      "reason": "dry"
+    }
+  },
+  {
+    "node": "visualization",
+    "timestamp": "2026-04-28T12:30:20.376622Z",
+    "action": "skipped",
+    "iteration": 1,
+    "details": {
+      "status": "skipped",
+      "reason": "no_plotfiles",
+      "plotfile_count": 0
+    }
+  }
+]

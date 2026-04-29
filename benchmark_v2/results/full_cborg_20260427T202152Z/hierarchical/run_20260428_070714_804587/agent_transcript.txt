@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/TaylorGreenVortex with inputs_advdiff
+
+================================================================================
+
+[2026-04-28T14:07:14.793993Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T14:07:14.802850Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T14:07:14.811650Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T14:07:14.818049Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T14:07:14.819217Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T14:07:14.820149Z] NODE: VISUALIZATION
+ACTION: skipped
+

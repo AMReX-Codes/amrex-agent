@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/Terrain2d_Cylinder with inputs
+
+================================================================================
+
+[2026-04-28T15:15:18.968456Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T15:15:18.983911Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T15:15:18.998612Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T15:15:19.009266Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T15:15:19.011588Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T15:15:19.013833Z] NODE: VISUALIZATION
+ACTION: skipped
+

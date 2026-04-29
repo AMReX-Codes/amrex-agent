@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/ABL with inputs_sample
+
+================================================================================
+
+[2026-04-28T00:06:24.981512Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T00:06:24.992309Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T00:06:43.243408Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T00:06:43.247141Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T00:06:43.249759Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T00:06:43.250890Z] NODE: VISUALIZATION
+ACTION: skipped
+

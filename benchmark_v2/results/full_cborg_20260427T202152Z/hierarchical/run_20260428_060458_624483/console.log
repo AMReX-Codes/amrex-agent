@@ -1,0 +1,1112 @@
+DEBUG: === CBORG API Configuration ===
+
+DEBUG:  Using CBORG_API_KEY from environment
+INFO: Using LLM model: cborg/lbl/cborg-deepthought
+DEBUG:  Testing API connection...
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-a4d3b356-932d-4cf6-b6d0-78edc5ba518b', 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': "Say 'OK' and nothing else."}], 'model': 'lbl/cborg-deepthought', 'max_tokens': 5, 'response_format': None, 'temperature': None}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7b5f202ef110>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x7b5f209bee70> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7b5f202ef050>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:04:01 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'578'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:04:00 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'e728c17d-2ce3-4e14-b5dd-b6e0cd2c71d1'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'2.687'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'411.481'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'6dea3526-b677-4081-aaa4-49bddfcd6318'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.666'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'441.972'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'19'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=hNp42GAQCfWrjodIO40TAUwoTSWZilyubVCNo6m6hNg-1777381440.800643-1.0.1.1-.L25jsWQBzeOYb0xSp5CQwV3ae3Yk6MonENV4LxqkV1r7i4V6M8fDp_xnOKI1gCGhfCaA4MP0qUjggm5RPvx3q13YQzcyQcj0uXct0pLUfjS7kyg6yUHi6tsloLx3ckL; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 13:34:01 GMT'), (b'set-cookie', b'_cfuvid=DUirDUAMxlMKsQXGtyoeOab1fEXnmkbGAMrQmmG4Uuk-1777381440.800643-1.0.1.1-TLPZ_qVZrTLAmxJ5pReN6n2ckE7To5MUjcfahJMGEkk; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f364534f8f198ae-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers([('date', 'Tue, 28 Apr 2026 13:04:01 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '578'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Tue, 28 Apr 2026 13:04:00 GMT'), ('llm_provider-server', 'uvicorn'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', 'e728c17d-2ce3-4e14-b5dd-b6e0cd2c71d1'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://vllm-h100-4x-1:8000/v1'), ('llm_provider-x-litellm-model-group', 'gemma-4-31b-it'), ('llm_provider-x-litellm-model-id', 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), ('llm_provider-x-litellm-overhead-duration-ms', '2.687'), ('llm_provider-x-litellm-response-cost-discount-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-percent', '0.0'), ('llm_provider-x-litellm-response-cost-original', '0.0'), ('llm_provider-x-litellm-response-duration-ms', '411.481'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', '6dea3526-b677-4081-aaa4-49bddfcd6318'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/cborg-deepthought'), ('x-litellm-model-id', 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), ('x-litellm-overhead-duration-ms', '1.666'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '441.972'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '19'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=hNp42GAQCfWrjodIO40TAUwoTSWZilyubVCNo6m6hNg-1777381440.800643-1.0.1.1-.L25jsWQBzeOYb0xSp5CQwV3ae3Yk6MonENV4LxqkV1r7i4V6M8fDp_xnOKI1gCGhfCaA4MP0qUjggm5RPvx3q13YQzcyQcj0uXct0pLUfjS7kyg6yUHi6tsloLx3ckL; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 13:34:01 GMT'), ('set-cookie', '_cfuvid=DUirDUAMxlMKsQXGtyoeOab1fEXnmkbGAMrQmmG4Uuk-1777381440.800643-1.0.1.1-TLPZ_qVZrTLAmxJ5pReN6n2ckE7To5MUjcfahJMGEkk; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f364534f8f198ae-SJC')])
+DEBUG: request_id: None
+DEBUG: [ OK ] CBORG API connection successful
+DEBUG:        Response: None
+DEBUG:  Set PELE_REPORTS_DIR=/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports
+DEBUG:  Set CBORG_API_KEY for pele_tools
+DEBUG:  Set CBORG_MODEL=lbl/cborg-deepthought
+DEBUG: 
+============================================================
+
+DEBUG: Starting AMReXAgent workflow...
+INFO: ================================================================================
+INFO: Starting AMReXAgent workflow
+INFO: ================================================================================
+DEBUG: Prompt: Use ERF case Exec/RegTests/Radiation with inputs_r...
+INFO: ================================================================================
+INFO: Starting Architect node
+INFO: ================================================================================
+DEBUG: Mode: initial (initial planning)
+DEBUG: Initialized CBORG embeddings (with caching)
+DEBUG:   Model: lbl/nomic-embed-text
+DEBUG:   Dimensions: 768
+DEBUG:   Context: 8192 tokens
+DEBUG:   Cost: FREE at LBNL
+DEBUG:   Cache: Enabled (1-hour TTL)
+DEBUG: Loaded FAISS index: pelec_case_structure
+DEBUG: Loaded FAISS index: pelec_case_details
+DEBUG: Loaded FAISS index: pelec_case_names
+DEBUG: Loaded FAISS index: pelec_input_templates
+DEBUG: Loaded FAISS index: pelec_chemistry
+DEBUG: Loaded FAISS index: pelelmex_case_names
+DEBUG: Loaded FAISS index: pelelmex_case_structure
+DEBUG: Loaded FAISS index: pelelmex_case_details
+DEBUG: Loaded FAISS index: pelelmex_input_templates
+DEBUG: Loaded FAISS index: erf_case_structure
+DEBUG: Loaded FAISS index: erf_case_details
+DEBUG: Loaded FAISS index: erf_case_names
+DEBUG: Loaded FAISS index: remora_case_structure
+DEBUG: Loaded FAISS index: remora_case_details
+DEBUG: FAISS cache initialized with 14 indices
+DEBUG: EmbeddingService initialized: True
+DEBUG: Embeddings available: True
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG: ArchitectService instantiated with RAG support: True
+DEBUG: Total exclusions: 0 cases, 0 inputs files
+INFO: Using indexing strategy: hierarchical
+INFO: [Strategy Router] strategy_router -> hierarchical_strategy (branch=hierarchical, strategy=hierarchical)
+DEBUG:  Level0 searching for: 'Use ERF case Exec/RegTests/Radiation with inputs_radiation'
+DEBUG: Loaded physics_regimes: 9 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-343c3910-7ea9-433c-9145-8437bddca3fe', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7b5fd2bd5c60>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/Radiation with inputs_radiation', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7b5f20216f10>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x7b5f1f97e7b0> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7b5f2030b850>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:04:02 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:04:02 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'9d358cf7-d10f-4806-8e44-8d03318a982d'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.218'), (b'llm_provider-x-litellm-response-duration-ms', b'44.977000000000004'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'c3c0ee1e-9330-4155-be97-45e987b9f0f3'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'1.857'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'57.766'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'18'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=gqMm9HnKzu8AsNyQ_iF7gmaWw6bXdeOcwW3kp3GvDaQ-1777381442.7965786-1.0.1.1-jkPYhsmXhiUfRFIrCa6J0A.C1FXeoL7__TaLeugR2lfEcQGb.KYXl6UC6.Tdd.Qp53VD7PqJmLEaqN8w7Ib3uREaGFDJI.G0kTAQfB0IRLAhErdwM1LlMQaZYNniq8y.; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 13:34:02 GMT'), (b'set-cookie', b'_cfuvid=0PEcW36gplygYsOKZX5n4fljvT_S37RfFikS5rW3fxM-1777381442.7965786-1.0.1.1-rc.Bk48fo.cW1dN3GOnRBK.8U8LA3Y1TRSjesS6cqC4; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3645417b6f8775-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers([('date', 'Tue, 28 Apr 2026 13:04:02 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '4328'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Tue, 28 Apr 2026 13:04:02 GMT'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-transfer-encoding', 'chunked'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '9d358cf7-d10f-4806-8e44-8d03318a982d'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://bk-ollama:11434/v1'), ('llm_provider-x-litellm-model-group', 'nomic-embed-text'), ('llm_provider-x-litellm-model-id', 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), ('llm_provider-x-litellm-overhead-duration-ms', '1.218'), ('llm_provider-x-litellm-response-duration-ms', '44.977000000000004'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', 'c3c0ee1e-9330-4155-be97-45e987b9f0f3'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/nomic-embed-text'), ('x-litellm-model-id', '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), ('x-litellm-overhead-duration-ms', '1.857'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '57.766'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '18'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=gqMm9HnKzu8AsNyQ_iF7gmaWw6bXdeOcwW3kp3GvDaQ-1777381442.7965786-1.0.1.1-jkPYhsmXhiUfRFIrCa6J0A.C1FXeoL7__TaLeugR2lfEcQGb.KYXl6UC6.Tdd.Qp53VD7PqJmLEaqN8w7Ib3uREaGFDJI.G0kTAQfB0IRLAhErdwM1LlMQaZYNniq8y.; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 13:34:02 GMT'), ('set-cookie', '_cfuvid=0PEcW36gplygYsOKZX5n4fljvT_S37RfFikS5rW3fxM-1777381442.7965786-1.0.1.1-rc.Bk48fo.cW1dN3GOnRBK.8U8LA3Y1TRSjesS6cqC4; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f3645417b6f8775-SJC')])
+DEBUG: request_id: None
+DEBUG: Loaded solver_capabilities: 101 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-03eea1fa-490d-41f2-b2ee-7e7be5bc1c6b', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7b5f20c15760>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/Radiation with inputs_radiation', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:04:03 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:04:03 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'be02a8ce-d992-4006-82bd-4e2848114203'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.147'), (b'llm_provider-x-litellm-response-duration-ms', b'43.744'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'b81caf4b-1617-4c85-b220-15ef39055a10'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.82'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'55.839'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'18'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3645427d6e8775-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:04:03 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:04:03 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'be02a8ce-d992-4006-82bd-4e2848114203', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.147', 'llm_provider-x-litellm-response-duration-ms': '43.744', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': 'b81caf4b-1617-4c85-b220-15ef39055a10', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.82', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '55.839', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '18', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f3645427d6e8775-SJC'})
+DEBUG: request_id: None
+DEBUG: Loaded code_lineage: 7 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-82434708-9dd8-45e7-afad-24b77e6ba000', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7b5fd2bd5c60>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/Radiation with inputs_radiation', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:04:03 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:04:03 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'3053de20-d93d-4672-bbbc-a8da1b2d8d58'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.054'), (b'llm_provider-x-litellm-response-duration-ms', b'42.548'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'09dc5525-9f30-4e81-b50b-6f39162e8e11'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.834'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'55.175000000000004'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'17'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3645436f0b8775-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:04:03 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:04:03 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': '3053de20-d93d-4672-bbbc-a8da1b2d8d58', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.054', 'llm_provider-x-litellm-response-duration-ms': '42.548', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': '09dc5525-9f30-4e81-b50b-6f39162e8e11', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.834', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '55.175000000000004', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '17', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f3645436f0b8775-SJC'})
+DEBUG: request_id: None
+DEBUG: Loaded cross_cutting_guidance: 7 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-87c53711-2064-4733-86a0-0563c78db530', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7b5fd2bd5c60>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/Radiation with inputs_radiation', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:04:03 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:04:03 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'724c6c2d-f9a4-449b-8396-191daa47b0e8'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.013'), (b'llm_provider-x-litellm-response-duration-ms', b'42.230999999999995'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'ec6bc29e-11eb-4b67-8c84-155a0f56f507'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.766'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'53.150000000000006'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'16'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f36454459588775-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:04:03 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:04:03 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': '724c6c2d-f9a4-449b-8396-191daa47b0e8', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.013', 'llm_provider-x-litellm-response-duration-ms': '42.230999999999995', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': 'ec6bc29e-11eb-4b67-8c84-155a0f56f507', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.766', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '53.150000000000006', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '16', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f36454459588775-SJC'})
+DEBUG: request_id: None
+DEBUG:  Level0 results: [('WarpX', 0.47212065756320953), ('ERF', 0.4227989405393601), ('PeleC', 0.4170654207468033), ('PeleLMeX', 0.39680570960044864), ('REMORA', 0.270508086681366)]
+INFO: Selected solver: WarpX (confidence: 0.47)
+WARNING: Level0 near-tie detected (top1=0.472, top2=0.423, margin=0.049 <= 0.080); attempting solver disambiguation.
+INFO: [Level0 flat disambiguation] Blocked solver switch WarpX -> PeleLMeX (explicit_solver_conflict)
+INFO: Using LLM to resolve near-tie Level0 solver routing
+DEBUG: close.started
+DEBUG: close.complete
+DEBUG: Patching `client.chat.completions.create` with mode=<Mode.TOOLS: 'tool_call'>
+DEBUG: Instructor Request: mode.value='tool_call', response_model=<class 'src.services.cases.AMReXCasesService.find_best_match.<locals>.CaseSelection'>, new_kwargs={'messages': [{'role': 'user', 'content': 'You are an expert in AMReX-based simulation codes. Given this request:\n\n"Use ERF case Exec/RegTests/Radiation with inputs_radiation"\n\nSelect the BEST AMReX code and example case as a starting point.\n\nAvailable codes:\nPeleC - Compressible reacting flow with detailed chemistry  Docs quality: excellent  Cases:    - Exec/Production/PistonBowl/inputs    - Exec/Production/JetFlame    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/PMF    - Exec/RegTests/Sedov    - Exec/RegTests/TG    - Exec/Production/CavityFlame    - Exec/Production/ChallengeProblem    - Exec/Production/PistonBowl    - Exec/RegTests/AuxQuantities    - Exec/RegTests/ChannelFlow    - Exec/RegTests/EB-BluffBody    - Exec/RegTests/EB-C1    - Exec/RegTests/EB-C10    - Exec/RegTests/EB-C11    - Exec/RegTests/EB-C12    - Exec/RegTests/EB-C13    ... and 100 more\nPeleLMeX - Low Mach combustion with detailed transport  Docs quality: excellent  Cases:    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Exec/Production/CounterFlow    - Exec/Production/JetInCrossflow    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/FlameSheet    - Exec/RegTests/TaylorGreen    - Exec/Plasma/FlameSheetIons    - Exec/Plasma/IonizedAirWave    - Exec/Plasma/PremBunsen3DKuhl    - Exec/Production/ChallengeProblem    - Exec/Production/CounterFlowSpray    - Exec/Production/DiffBunsen2D    - Exec/Production/JetInCrossflow/LiDryer_CO2_He    - Exec/Production/NormalJet_OpenDomain    - Exec/Production/PremBunsen2D    - Exec/Production/PremBunsen3D    - Exec/Production/SwirlFlowWallInteractions    - Exec/RegTests/EB_BackwardStepFlame    ... and 93 more\nWarpX - Advanced electromagnetic particle-in-cell code  Docs quality: excellent  Cases:\n\n#######################\n# Domain-specific: physics keyword -> solver mapping guidance\n#######################\nGuidelines:\n- Learning AMReX -> amrex-tutorials\n- Framework/core AMR tutorial workflows -> AMReX\n- Combustion/flames -> PeleC or PeleLMeX\n- Incompressible flow -> incflo\n- Laser/plasma -> WarpX\n- Atmospheric/weather -> ERF\n- Ocean/coastal modeling -> REMORA\n#######################\n\nPrefer codes with "excellent" documentation quality.\n\nReturn EXACTLY two lines:\nCODE: <name>\nCASE: <path>'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tools': [{'type': 'function', 'function': {'name': 'CaseSelection', 'description': 'Correctly extracted `CaseSelection` with all the required parameters with correct types', 'parameters': {'properties': {'code': {'description': 'Code name from the available list', 'title': 'Code', 'type': 'string'}, 'case': {'description': 'Case path from the selected code', 'title': 'Case', 'type': 'string'}}, 'required': ['case', 'code'], 'type': 'object'}}}], 'tool_choice': {'type': 'function', 'function': {'name': 'CaseSelection'}}}
+DEBUG: max_retries: 2, timeout: None
+DEBUG: Retrying, attempt: 1
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-092a7d52-5222-460b-9f71-52fd26d3e78e', 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': 'You are an expert in AMReX-based simulation codes. Given this request:\n\n"Use ERF case Exec/RegTests/Radiation with inputs_radiation"\n\nSelect the BEST AMReX code and example case as a starting point.\n\nAvailable codes:\nPeleC - Compressible reacting flow with detailed chemistry  Docs quality: excellent  Cases:    - Exec/Production/PistonBowl/inputs    - Exec/Production/JetFlame    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/PMF    - Exec/RegTests/Sedov    - Exec/RegTests/TG    - Exec/Production/CavityFlame    - Exec/Production/ChallengeProblem    - Exec/Production/PistonBowl    - Exec/RegTests/AuxQuantities    - Exec/RegTests/ChannelFlow    - Exec/RegTests/EB-BluffBody    - Exec/RegTests/EB-C1    - Exec/RegTests/EB-C10    - Exec/RegTests/EB-C11    - Exec/RegTests/EB-C12    - Exec/RegTests/EB-C13    ... and 100 more\nPeleLMeX - Low Mach combustion with detailed transport  Docs quality: excellent  Cases:    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Exec/Production/CounterFlow    - Exec/Production/JetInCrossflow    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/FlameSheet    - Exec/RegTests/TaylorGreen    - Exec/Plasma/FlameSheetIons    - Exec/Plasma/IonizedAirWave    - Exec/Plasma/PremBunsen3DKuhl    - Exec/Production/ChallengeProblem    - Exec/Production/CounterFlowSpray    - Exec/Production/DiffBunsen2D    - Exec/Production/JetInCrossflow/LiDryer_CO2_He    - Exec/Production/NormalJet_OpenDomain    - Exec/Production/PremBunsen2D    - Exec/Production/PremBunsen3D    - Exec/Production/SwirlFlowWallInteractions    - Exec/RegTests/EB_BackwardStepFlame    ... and 93 more\nWarpX - Advanced electromagnetic particle-in-cell code  Docs quality: excellent  Cases:\n\n#######################\n# Domain-specific: physics keyword -> solver mapping guidance\n#######################\nGuidelines:\n- Learning AMReX -> amrex-tutorials\n- Framework/core AMR tutorial workflows -> AMReX\n- Combustion/flames -> PeleC or PeleLMeX\n- Incompressible flow -> incflo\n- Laser/plasma -> WarpX\n- Atmospheric/weather -> ERF\n- Ocean/coastal modeling -> REMORA\n#######################\n\nPrefer codes with "excellent" documentation quality.\n\nReturn EXACTLY two lines:\nCODE: <name>\nCASE: <path>'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tool_choice': {'type': 'function', 'function': {'name': 'CaseSelection'}}, 'tools': [{'type': 'function', 'function': {'name': 'CaseSelection', 'description': 'Correctly extracted `CaseSelection` with all the required parameters with correct types', 'parameters': {'properties': {'code': {'description': 'Code name from the available list', 'title': 'Code', 'type': 'string'}, 'case': {'description': 'Case path from the selected code', 'title': 'Case', 'type': 'string'}}, 'required': ['case', 'code'], 'type': 'object'}}}]}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7b5f1d9aa050>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x7b5f1f97e690> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7b5f1d9aa010>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:04:16 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'1937'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:04:07 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'1c6d4442-197d-407f-972e-a1c3b435888b'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'3.199'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'8809.913'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'd89ccae9-253a-45e4-8bf4-d43c65628504'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.753'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'8823.344000000001'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'15'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=_ZSgBKOvAlf82IpKuJ4dab_peUmgxR.u8sH.Lw0FoYI-1777381447.571659-1.0.1.1-6WaJvZHRGYyZkE5AIPLRXkU8kgMrUEZrGavYwQEroG_Vw81QSZCDQzoPSVJ56PsAOO52Q.KEv_ZejFIhJWO2yIHuQ348hjndg9DRRv._9zsPRlsK2DFT0hNncp_7tmFc; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 13:34:16 GMT'), (b'set-cookie', b'_cfuvid=SvqkukxhHXne3njKkS4zoFH8h_nKYJp_uXN3ClWm59w-1777381447.571659-1.0.1.1-jt1vA18gzhUyB9xGiHUkJg_GlLXPtjq22qu1bdKlaok; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f36455f582fcf82-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers([('date', 'Tue, 28 Apr 2026 13:04:16 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '1937'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Tue, 28 Apr 2026 13:04:07 GMT'), ('llm_provider-server', 'uvicorn'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '1c6d4442-197d-407f-972e-a1c3b435888b'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://vllm-h100-4x-1:8000/v1'), ('llm_provider-x-litellm-model-group', 'gemma-4-31b-it'), ('llm_provider-x-litellm-model-id', 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), ('llm_provider-x-litellm-overhead-duration-ms', '3.199'), ('llm_provider-x-litellm-response-cost-discount-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-percent', '0.0'), ('llm_provider-x-litellm-response-cost-original', '0.0'), ('llm_provider-x-litellm-response-duration-ms', '8809.913'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', 'd89ccae9-253a-45e4-8bf4-d43c65628504'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/cborg-deepthought'), ('x-litellm-model-id', 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), ('x-litellm-overhead-duration-ms', '1.753'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '8823.344000000001'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '15'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=_ZSgBKOvAlf82IpKuJ4dab_peUmgxR.u8sH.Lw0FoYI-1777381447.571659-1.0.1.1-6WaJvZHRGYyZkE5AIPLRXkU8kgMrUEZrGavYwQEroG_Vw81QSZCDQzoPSVJ56PsAOO52Q.KEv_ZejFIhJWO2yIHuQ348hjndg9DRRv._9zsPRlsK2DFT0hNncp_7tmFc; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Tue, 28 Apr 2026 13:34:16 GMT'), ('set-cookie', '_cfuvid=SvqkukxhHXne3njKkS4zoFH8h_nKYJp_uXN3ClWm59w-1777381447.571659-1.0.1.1-jt1vA18gzhUyB9xGiHUkJg_GlLXPtjq22qu1bdKlaok; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f36455f582fcf82-SJC')])
+DEBUG: request_id: None
+DEBUG: Instructor Raw Response: ChatCompletion(id='chatcmpl-9827f7e3d09e2f06', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='chatcmpl-tool-911efdd0aa1ee806', function=Function(arguments='{\n  "code": "ERF",\n  "case": "Exec/RegTests/Radiation"\n}', name='CaseSelection'), type='function')], reasoning_content='*   Request: "Use ERF case Exec/RegTests/Radiation with inputs_radiation"\n    *   Target: Select the best AMReX code and example case.\n    *   Available codes: PeleC, PeleLMeX, WarpX (and others mentioned in guidelines).\n    *   Guidelines: "Atmospheric/weather -> ERF".\n\n    *   The request explicitly mentions "ERF case".\n    *   The guidelines state "Atmospheric/weather -> ERF".\n    *   The request specifies the path: `Exec/RegTests/Radiation` with `inputs_radiation`.\n\n    *   The user is asking for an ERF case.\n    *   The available codes list provided in the prompt only explicitly lists PeleC, PeleLMeX, and WarpX, but the *guidelines* section explicitly mentions ERF for atmospheric/weather.\n    *   Wait, looking at the "Available codes" section provided in the prompt, ERF is *not* listed in the detailed list (PeleC, PeleLMeX, WarpX), but it *is* listed in the "Domain-specific" guidelines.\n    *   Usually, in these tasks, if the request says "Use ERF case", and the guidelines say "Atmospheric/weather -> ERF", the code is ERF.\n\n    *   Code: ERF\n    *   Case: Exec/RegTests/Radiation\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/Radiation', provider_specific_fields={'reasoning': '*   Request: "Use ERF case Exec/RegTests/Radiation with inputs_radiation"\n    *   Target: Select the best AMReX code and example case.\n    *   Available codes: PeleC, PeleLMeX, WarpX (and others mentioned in guidelines).\n    *   Guidelines: "Atmospheric/weather -> ERF".\n\n    *   The request explicitly mentions "ERF case".\n    *   The guidelines state "Atmospheric/weather -> ERF".\n    *   The request specifies the path: `Exec/RegTests/Radiation` with `inputs_radiation`.\n\n    *   The user is asking for an ERF case.\n    *   The available codes list provided in the prompt only explicitly lists PeleC, PeleLMeX, and WarpX, but the *guidelines* section explicitly mentions ERF for atmospheric/weather.\n    *   Wait, looking at the "Available codes" section provided in the prompt, ERF is *not* listed in the detailed list (PeleC, PeleLMeX, WarpX), but it *is* listed in the "Domain-specific" guidelines.\n    *   Usually, in these tasks, if the request says "Use ERF case", and the guidelines say "Atmospheric/weather -> ERF", the code is ERF.\n\n    *   Code: ERF\n    *   Case: Exec/RegTests/Radiation\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/Radiation', 'refusal': None, 'reasoning_content': '*   Request: "Use ERF case Exec/RegTests/Radiation with inputs_radiation"\n    *   Target: Select the best AMReX code and example case.\n    *   Available codes: PeleC, PeleLMeX, WarpX (and others mentioned in guidelines).\n    *   Guidelines: "Atmospheric/weather -> ERF".\n\n    *   The request explicitly mentions "ERF case".\n    *   The guidelines state "Atmospheric/weather -> ERF".\n    *   The request specifies the path: `Exec/RegTests/Radiation` with `inputs_radiation`.\n\n    *   The user is asking for an ERF case.\n    *   The available codes list provided in the prompt only explicitly lists PeleC, PeleLMeX, and WarpX, but the *guidelines* section explicitly mentions ERF for atmospheric/weather.\n    *   Wait, looking at the "Available codes" section provided in the prompt, ERF is *not* listed in the detailed list (PeleC, PeleLMeX, WarpX), but it *is* listed in the "Domain-specific" guidelines.\n    *   Usually, in these tasks, if the request says "Use ERF case", and the guidelines say "Atmospheric/weather -> ERF", the code is ERF.\n\n    *   Code: ERF\n    *   Case: Exec/RegTests/Radiation\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/Radiation'}), provider_specific_fields={})], created=1777381447, model='lbl/cborg-deepthought', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=353, prompt_tokens=840, total_tokens=1193, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+WARNING: [WARN] LLM returned invalid, using keyword match
+ERROR: [ERROR] LLM failed: Missing solver selection: no keyword matched and no solver specified
+WARNING: LLM near-tie disambiguation failed: Missing solver selection: no keyword matched and no solver specified
+DEBUG: Discovered 0 doc indices for WarpX
+DEBUG: Retrieved 0 context documents for WarpX
+DEBUG: Discovered 0 case indices for WarpX
+INFO: Hierarchical Level2 weights (config): configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050
+WARNING: No baseline cases found for WarpX
+DEBUG: Patching `client.chat.completions.create` with mode=<Mode.TOOLS: 'tool_call'>
+DEBUG: Instructor Request: mode.value='tool_call', response_model=<class 'src.services.architect.ArchitectService._llm_plan.<locals>.LLMPlanResponse'>, new_kwargs={'messages': [{'role': 'system', 'content': 'Return JSON only with keys: modifications, reasoning. Do not include markdown.'}, {'role': 'user', 'content': 'Use ERF case Exec/RegTests/Radiation with inputs_radiation'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tools': [{'type': 'function', 'function': {'name': 'LLMPlanResponse', 'description': 'Correctly extracted `LLMPlanResponse` with all the required parameters with correct types', 'parameters': {'$defs': {'Modification': {'properties': {'parameter': {'title': 'Parameter', 'type': 'string'}, 'value': {'title': 'Value', 'type': 'string'}}, 'required': ['parameter', 'value'], 'title': 'Modification', 'type': 'object'}}, 'properties': {'modifications': {'items': {'$ref': '#/$defs/Modification'}, 'title': 'Modifications', 'type': 'array'}, 'reasoning': {'default': '', 'title': 'Reasoning', 'type': 'string'}}, 'required': ['modifications'], 'type': 'object'}}}], 'tool_choice': {'type': 'function', 'function': {'name': 'LLMPlanResponse'}}}
+DEBUG: max_retries: 3, timeout: None
+DEBUG: Retrying, attempt: 1
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-f628106f-4d73-4102-9691-356e9bfbccbd', 'content': None, 'json_data': {'messages': [{'role': 'system', 'content': 'Return JSON only with keys: modifications, reasoning. Do not include markdown.'}, {'role': 'user', 'content': 'Use ERF case Exec/RegTests/Radiation with inputs_radiation'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tool_choice': {'type': 'function', 'function': {'name': 'LLMPlanResponse'}}, 'tools': [{'type': 'function', 'function': {'name': 'LLMPlanResponse', 'description': 'Correctly extracted `LLMPlanResponse` with all the required parameters with correct types', 'parameters': {'$defs': {'Modification': {'properties': {'parameter': {'title': 'Parameter', 'type': 'string'}, 'value': {'title': 'Value', 'type': 'string'}}, 'required': ['parameter', 'value'], 'title': 'Modification', 'type': 'object'}}, 'properties': {'modifications': {'items': {'$ref': '#/$defs/Modification'}, 'title': 'Modifications', 'type': 'array'}, 'reasoning': {'default': '', 'title': 'Reasoning', 'type': 'string'}}, 'required': ['modifications'], 'type': 'object'}}}]}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 28 Apr 2026 13:04:59 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'7287'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Tue, 28 Apr 2026 13:04:16 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'8ea0c3ca-5001-4c8d-9b42-6899f59a061c'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'3.035'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'42844.125'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'35e33933-a3d4-4711-a83e-4838ad0b1853'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.89'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'42857.182'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'14'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3645976a0ecf82-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers({'date': 'Tue, 28 Apr 2026 13:04:59 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '7287', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Tue, 28 Apr 2026 13:04:16 GMT', 'llm_provider-server': 'uvicorn', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': '8ea0c3ca-5001-4c8d-9b42-6899f59a061c', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://vllm-h100-4x-1:8000/v1', 'llm_provider-x-litellm-model-group': 'gemma-4-31b-it', 'llm_provider-x-litellm-model-id': 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53', 'llm_provider-x-litellm-overhead-duration-ms': '3.035', 'llm_provider-x-litellm-response-cost-discount-amount': '0.0', 'llm_provider-x-litellm-response-cost-margin-amount': '0.0', 'llm_provider-x-litellm-response-cost-margin-percent': '0.0', 'llm_provider-x-litellm-response-cost-original': '0.0', 'llm_provider-x-litellm-response-duration-ms': '42844.125', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': '35e33933-a3d4-4711-a83e-4838ad0b1853', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/cborg-deepthought', 'x-litellm-model-id': 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61', 'x-litellm-overhead-duration-ms': '1.89', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '42857.182', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '14', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f3645976a0ecf82-SJC'})
+DEBUG: request_id: None
+DEBUG: Instructor Raw Response: ChatCompletion(id='chatcmpl-8cc799d9fc05c51f', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='chatcmpl-tool-813209086b3d3869', function=Function(arguments='{\n  "modifications": [\n    {\n      "parameter": "case",\n      "value": "Exec/RegTests/Radiation"\n    },\n    {\n      "parameter": "inputs",\n      "value": "inputs_radiation"\n    }\n  ],\n  "reasoning": "The user specified a particular ERF test case (\'Exec/RegTests/Radiation\') and a corresponding input set (\'inputs_radiation\') to be used. I am updating the parameters to reflect these specific requirements."\n}', name='LLMPlanResponse'), type='function')], reasoning_content='The user wants to run a specific test case ("ERF case Exec/RegTests/Radiation") with a specific input set ("inputs_radiation").\nLooking at the available tools, there isn\'t a direct "run test case" tool. However, there are tools for interacting with a filesystem and potentially executing commands or scripts if a shell tool were available (which it isn\'t explicitly, but I should check the tool definitions).\n\nWait, I don\'t see any tools provided in the prompt. The prompt is just a request.\nWait, the system prompt says "Return JSON only with keys: modifications, reasoning. Do not include markdown." and provides a tool definition `LLMPlanResponse`. This looks like a request to modify a plan or a set of actions, but there is no initial plan provided.\n\nActually, looking at the context, this seems to be part of a larger framework where I\'m acting as a planner or a modifier for a plan. But the user prompt is a direct command: "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\n\nIf I am supposed to generate a plan to achieve this, I need to know what tools are available. Since no tools are listed in the prompt, I have to assume I\'m in a state where I\'m modifying a previous (unseen) plan or I\'m supposed to propose the steps.\n\nHowever, the prompt asks for `modifications` and `reasoning`. This implies there\'s an existing plan that needs to be changed. But no plan was provided in the conversation history.\n\nLet\'s re-read. "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\nThis sounds like a request to execute a specific test.\nIf I have to return a JSON with `modifications`, it suggests I\'m editing a sequence of tool calls.\n\nSince there is no previous plan, I will treat this as creating a new plan or modifying an empty one.\nBut what tools do I have? I don\'t see any tool definitions in the prompt other than the `LLMPlanResponse` schema.\n\nWait, usually in these tasks, the "modifications" refer to changes to a list of tool calls.\nIf I don\'t have a plan, I can\'t modify it.\nBut maybe the "modifications" can be "add" operations.\n\nLet\'s look at the `Modification` definition (which is referenced as `$ref: \'#/$defs/Modification\'`). I don\'t have the definition of `Modification` here, but typically it involves `action` (add/remove/replace), `index`, and `value`.\n\nIf I assume the goal is to run a test, and I have a tool like `run_test(case, inputs)`, I would add that.\nBut I don\'t know the tools.\n\nLet\'s look at the prompt again. "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\nThis is a very specific request.\nMaybe the "modifications" are meant to be the steps to achieve this.\n\nIf I have no context on the tools, I cannot provide a valid `LLMPlanResponse` with specific tool calls.\nHowever, if this is a test of my ability to follow the JSON format, I should provide a response that fits the schema.\n\nWait, is it possible that the "modifications" are just a description of what to do?\nNo, the schema says `modifications` is an array of `Modification`.\n\nLet\'s assume the `Modification` object looks like:\n`{"action": "add", "index": 0, "value": {"tool": "...", "parameters": {...}}}`\n\nBut I don\'t know the tool name.\nIs there a tool called `execute_test`? `run_erf_case`?\nWithout the tool definitions, I\'m guessing.\n\nLet\'s try to reason about the request.\nCase: `Exec/RegTests/Radiation`\nInputs: `inputs_radiation`\n\nIf I were to guess a tool call:\n`run_test(case="Exec/RegTests/Radiation", inputs="inputs_radiation")`\n\nBut wait, maybe the user is asking me to *modify* a plan that was previously discussed (but not shown in this turn).\nSince I have no history, I\'ll assume I\'m starting from scratch.\n\nActually, looking at the prompt "Return JSON only with keys: modifications, reasoning. Do not include markdown.", and the `LLMPlanResponse` tool, this is a very constrained output format.\n\nIf I don\'t have the tools, I can\'t make a valid tool call.\nIs it possible that the "modifications" are just text descriptions?\nThe schema says `items: {$ref: \'#/$defs/Modification\'}`.\n\nLet\'s try to provide a reasoning that explains I\'m adding the step to run the specified test case.\n\nSince I don\'t have the tool definitions, I will use a generic tool name like `run_test_case` or similar, or I will simply state that I am adding the action to the plan.\n\nWait, if I am an AI agent in a loop, maybe the "plan" is implicit.\nLet\'s try to construct a plausible modification.\n\nReasoning: The user wants to execute a specific ERF test case (\'Exec/RegTests/Radiation\') using a specific input set (\'inputs_radiation\'). I need to add a step to the plan to perform this execution.\n\nModifications:\nI\'ll assume the modification format is `{"action": "add", "value": {"tool": "run_test", "parameters": {"case": "Exec/RegTests/Radiation", "inputs": "inputs_radiation"}}}`.\n\nActually, if I don\'t have the tools, I should probably just say I\'m adding the step.\n\nLet\'s try to be as precise as possible based on the prompt.\nCase: `Exec/RegTests/Radiation`\nInputs: `inputs_radiation`\n\nI will use a hypothetical tool `run_erf_test`.\n\n```json\n{\n  "modifications": [\n    {\n      "action": "add",\n      "index": 0,\n      "value": {\n        "tool": "run_erf_test",\n        "parameters": {\n          "case": "Exec/RegTests/Radiation",\n          "inputs": "inputs_radiation"\n        }\n      }\n    }\n  ],\n  "reasoning": "The user requested to run the ERF case \'Exec/RegTests/Radiation\' with the inputs \'inputs_radiation\'. I am adding a tool call to execute this specific test case with the provided inputs."\n}\n```\n\nWait, I should check if there are any other clues. "ERF case" might refer to a specific system.\nIf I don\'t have the tools, maybe I should just return an empty modifications list and explain why? No, the user wants me to "Use" it.\n\nLet\'s try to find if `Modification` has a different structure.\nUsually, `Modification` is:\n`{"action": "add" | "remove" | "replace", "index": number, "value": any}`\n\nI\'ll go with this.', provider_specific_fields={'refusal': None, 'reasoning': 'The user wants to run a specific test case ("ERF case Exec/RegTests/Radiation") with a specific input set ("inputs_radiation").\nLooking at the available tools, there isn\'t a direct "run test case" tool. However, there are tools for interacting with a filesystem and potentially executing commands or scripts if a shell tool were available (which it isn\'t explicitly, but I should check the tool definitions).\n\nWait, I don\'t see any tools provided in the prompt. The prompt is just a request.\nWait, the system prompt says "Return JSON only with keys: modifications, reasoning. Do not include markdown." and provides a tool definition `LLMPlanResponse`. This looks like a request to modify a plan or a set of actions, but there is no initial plan provided.\n\nActually, looking at the context, this seems to be part of a larger framework where I\'m acting as a planner or a modifier for a plan. But the user prompt is a direct command: "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\n\nIf I am supposed to generate a plan to achieve this, I need to know what tools are available. Since no tools are listed in the prompt, I have to assume I\'m in a state where I\'m modifying a previous (unseen) plan or I\'m supposed to propose the steps.\n\nHowever, the prompt asks for `modifications` and `reasoning`. This implies there\'s an existing plan that needs to be changed. But no plan was provided in the conversation history.\n\nLet\'s re-read. "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\nThis sounds like a request to execute a specific test.\nIf I have to return a JSON with `modifications`, it suggests I\'m editing a sequence of tool calls.\n\nSince there is no previous plan, I will treat this as creating a new plan or modifying an empty one.\nBut what tools do I have? I don\'t see any tool definitions in the prompt other than the `LLMPlanResponse` schema.\n\nWait, usually in these tasks, the "modifications" refer to changes to a list of tool calls.\nIf I don\'t have a plan, I can\'t modify it.\nBut maybe the "modifications" can be "add" operations.\n\nLet\'s look at the `Modification` definition (which is referenced as `$ref: \'#/$defs/Modification\'`). I don\'t have the definition of `Modification` here, but typically it involves `action` (add/remove/replace), `index`, and `value`.\n\nIf I assume the goal is to run a test, and I have a tool like `run_test(case, inputs)`, I would add that.\nBut I don\'t know the tools.\n\nLet\'s look at the prompt again. "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\nThis is a very specific request.\nMaybe the "modifications" are meant to be the steps to achieve this.\n\nIf I have no context on the tools, I cannot provide a valid `LLMPlanResponse` with specific tool calls.\nHowever, if this is a test of my ability to follow the JSON format, I should provide a response that fits the schema.\n\nWait, is it possible that the "modifications" are just a description of what to do?\nNo, the schema says `modifications` is an array of `Modification`.\n\nLet\'s assume the `Modification` object looks like:\n`{"action": "add", "index": 0, "value": {"tool": "...", "parameters": {...}}}`\n\nBut I don\'t know the tool name.\nIs there a tool called `execute_test`? `run_erf_case`?\nWithout the tool definitions, I\'m guessing.\n\nLet\'s try to reason about the request.\nCase: `Exec/RegTests/Radiation`\nInputs: `inputs_radiation`\n\nIf I were to guess a tool call:\n`run_test(case="Exec/RegTests/Radiation", inputs="inputs_radiation")`\n\nBut wait, maybe the user is asking me to *modify* a plan that was previously discussed (but not shown in this turn).\nSince I have no history, I\'ll assume I\'m starting from scratch.\n\nActually, looking at the prompt "Return JSON only with keys: modifications, reasoning. Do not include markdown.", and the `LLMPlanResponse` tool, this is a very constrained output format.\n\nIf I don\'t have the tools, I can\'t make a valid tool call.\nIs it possible that the "modifications" are just text descriptions?\nThe schema says `items: {$ref: \'#/$defs/Modification\'}`.\n\nLet\'s try to provide a reasoning that explains I\'m adding the step to run the specified test case.\n\nSince I don\'t have the tool definitions, I will use a generic tool name like `run_test_case` or similar, or I will simply state that I am adding the action to the plan.\n\nWait, if I am an AI agent in a loop, maybe the "plan" is implicit.\nLet\'s try to construct a plausible modification.\n\nReasoning: The user wants to execute a specific ERF test case (\'Exec/RegTests/Radiation\') using a specific input set (\'inputs_radiation\'). I need to add a step to the plan to perform this execution.\n\nModifications:\nI\'ll assume the modification format is `{"action": "add", "value": {"tool": "run_test", "parameters": {"case": "Exec/RegTests/Radiation", "inputs": "inputs_radiation"}}}`.\n\nActually, if I don\'t have the tools, I should probably just say I\'m adding the step.\n\nLet\'s try to be as precise as possible based on the prompt.\nCase: `Exec/RegTests/Radiation`\nInputs: `inputs_radiation`\n\nI will use a hypothetical tool `run_erf_test`.\n\n```json\n{\n  "modifications": [\n    {\n      "action": "add",\n      "index": 0,\n      "value": {\n        "tool": "run_erf_test",\n        "parameters": {\n          "case": "Exec/RegTests/Radiation",\n          "inputs": "inputs_radiation"\n        }\n      }\n    }\n  ],\n  "reasoning": "The user requested to run the ERF case \'Exec/RegTests/Radiation\' with the inputs \'inputs_radiation\'. I am adding a tool call to execute this specific test case with the provided inputs."\n}\n```\n\nWait, I should check if there are any other clues. "ERF case" might refer to a specific system.\nIf I don\'t have the tools, maybe I should just return an empty modifications list and explain why? No, the user wants me to "Use" it.\n\nLet\'s try to find if `Modification` has a different structure.\nUsually, `Modification` is:\n`{"action": "add" | "remove" | "replace", "index": number, "value": any}`\n\nI\'ll go with this.', 'reasoning_content': 'The user wants to run a specific test case ("ERF case Exec/RegTests/Radiation") with a specific input set ("inputs_radiation").\nLooking at the available tools, there isn\'t a direct "run test case" tool. However, there are tools for interacting with a filesystem and potentially executing commands or scripts if a shell tool were available (which it isn\'t explicitly, but I should check the tool definitions).\n\nWait, I don\'t see any tools provided in the prompt. The prompt is just a request.\nWait, the system prompt says "Return JSON only with keys: modifications, reasoning. Do not include markdown." and provides a tool definition `LLMPlanResponse`. This looks like a request to modify a plan or a set of actions, but there is no initial plan provided.\n\nActually, looking at the context, this seems to be part of a larger framework where I\'m acting as a planner or a modifier for a plan. But the user prompt is a direct command: "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\n\nIf I am supposed to generate a plan to achieve this, I need to know what tools are available. Since no tools are listed in the prompt, I have to assume I\'m in a state where I\'m modifying a previous (unseen) plan or I\'m supposed to propose the steps.\n\nHowever, the prompt asks for `modifications` and `reasoning`. This implies there\'s an existing plan that needs to be changed. But no plan was provided in the conversation history.\n\nLet\'s re-read. "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\nThis sounds like a request to execute a specific test.\nIf I have to return a JSON with `modifications`, it suggests I\'m editing a sequence of tool calls.\n\nSince there is no previous plan, I will treat this as creating a new plan or modifying an empty one.\nBut what tools do I have? I don\'t see any tool definitions in the prompt other than the `LLMPlanResponse` schema.\n\nWait, usually in these tasks, the "modifications" refer to changes to a list of tool calls.\nIf I don\'t have a plan, I can\'t modify it.\nBut maybe the "modifications" can be "add" operations.\n\nLet\'s look at the `Modification` definition (which is referenced as `$ref: \'#/$defs/Modification\'`). I don\'t have the definition of `Modification` here, but typically it involves `action` (add/remove/replace), `index`, and `value`.\n\nIf I assume the goal is to run a test, and I have a tool like `run_test(case, inputs)`, I would add that.\nBut I don\'t know the tools.\n\nLet\'s look at the prompt again. "Use ERF case Exec/RegTests/Radiation with inputs_radiation".\nThis is a very specific request.\nMaybe the "modifications" are meant to be the steps to achieve this.\n\nIf I have no context on the tools, I cannot provide a valid `LLMPlanResponse` with specific tool calls.\nHowever, if this is a test of my ability to follow the JSON format, I should provide a response that fits the schema.\n\nWait, is it possible that the "modifications" are just a description of what to do?\nNo, the schema says `modifications` is an array of `Modification`.\n\nLet\'s assume the `Modification` object looks like:\n`{"action": "add", "index": 0, "value": {"tool": "...", "parameters": {...}}}`\n\nBut I don\'t know the tool name.\nIs there a tool called `execute_test`? `run_erf_case`?\nWithout the tool definitions, I\'m guessing.\n\nLet\'s try to reason about the request.\nCase: `Exec/RegTests/Radiation`\nInputs: `inputs_radiation`\n\nIf I were to guess a tool call:\n`run_test(case="Exec/RegTests/Radiation", inputs="inputs_radiation")`\n\nBut wait, maybe the user is asking me to *modify* a plan that was previously discussed (but not shown in this turn).\nSince I have no history, I\'ll assume I\'m starting from scratch.\n\nActually, looking at the prompt "Return JSON only with keys: modifications, reasoning. Do not include markdown.", and the `LLMPlanResponse` tool, this is a very constrained output format.\n\nIf I don\'t have the tools, I can\'t make a valid tool call.\nIs it possible that the "modifications" are just text descriptions?\nThe schema says `items: {$ref: \'#/$defs/Modification\'}`.\n\nLet\'s try to provide a reasoning that explains I\'m adding the step to run the specified test case.\n\nSince I don\'t have the tool definitions, I will use a generic tool name like `run_test_case` or similar, or I will simply state that I am adding the action to the plan.\n\nWait, if I am an AI agent in a loop, maybe the "plan" is implicit.\nLet\'s try to construct a plausible modification.\n\nReasoning: The user wants to execute a specific ERF test case (\'Exec/RegTests/Radiation\') using a specific input set (\'inputs_radiation\'). I need to add a step to the plan to perform this execution.\n\nModifications:\nI\'ll assume the modification format is `{"action": "add", "value": {"tool": "run_test", "parameters": {"case": "Exec/RegTests/Radiation", "inputs": "inputs_radiation"}}}`.\n\nActually, if I don\'t have the tools, I should probably just say I\'m adding the step.\n\nLet\'s try to be as precise as possible based on the prompt.\nCase: `Exec/RegTests/Radiation`\nInputs: `inputs_radiation`\n\nI will use a hypothetical tool `run_erf_test`.\n\n```json\n{\n  "modifications": [\n    {\n      "action": "add",\n      "index": 0,\n      "value": {\n        "tool": "run_erf_test",\n        "parameters": {\n          "case": "Exec/RegTests/Radiation",\n          "inputs": "inputs_radiation"\n        }\n      }\n    }\n  ],\n  "reasoning": "The user requested to run the ERF case \'Exec/RegTests/Radiation\' with the inputs \'inputs_radiation\'. I am adding a tool call to execute this specific test case with the provided inputs."\n}\n```\n\nWait, I should check if there are any other clues. "ERF case" might refer to a specific system.\nIf I don\'t have the tools, maybe I should just return an empty modifications list and explain why? No, the user wants me to "Use" it.\n\nLet\'s try to find if `Modification` has a different structure.\nUsually, `Modification` is:\n`{"action": "add" | "remove" | "replace", "index": number, "value": any}`\n\nI\'ll go with this.'}), provider_specific_fields={})], created=1777381456, model='lbl/cborg-deepthought', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=1682, prompt_tokens=136, total_tokens=1818, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+DEBUG: Hierarchical indexing succeeded
+DEBUG: [DATA TRANSFER] Called architect service with feedback=True
+INFO: Plan created: unknown
+DEBUG: History entry appended: plan_created at iteration 1
+DEBUG: Baseline metadata computed: /home/jmsexton/codes/worktree_sandbox/warpx/unknown
+INFO: Iteration 1, Retry 0, Mode: proceed
+INFO: --------------------------------------------------------------------------------
+INFO: Architect node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Reviewer node
+INFO: ================================================================================
+DEBUG: [DATA TRANSFER] Checking for parameter resolution requirement
+DEBUG: [DATA TRANSFER] requires_parameter_resolution = False
+DEBUG: Plan loaded from workflow_history (canonical path)
+INFO: Reviewing plan...
+DEBUG: Using newest schema: amrex_schema_bac24575.json
+WARNING: No build config found - skipping dependency checks
+DEBUG: Using flat schema: 0 params found
+DEBUG: Rule 'SchemaExistence' found 0 violation(s)
+DEBUG: Rule 'BuildFlagDependency' found 0 violation(s)
+DEBUG: Rule 'GridConsistency' found 0 violation(s)
+DEBUG: Rule 'TimestepBounds' found 0 violation(s)
+DEBUG: [REVIEWER SERVICE] Returning ValidationResult with 281 schema params
+INFO: Plan approved - proceeding to execution
+DEBUG: [REVIEWER NODE] Creating history entry
+DEBUG: [REVIEWER NODE] validation_result.available_schema_params: 281 items
+DEBUG: [REVIEWER NODE] Sample schema params: ['amr.regrid_on_restart', 'amr.force_regrid_level_zero', 'amr.use_efficient_regrid', 'amr.plotfile_on_restart', 'amr.insitu_on_restart', 'amr.checkpoint_on_restart', 'amr.compute_new_dt_on_regrid', 'amr.mffile_nstreams', 'amr.probinit_natonce', 'amr.file_name_digits']
+INFO: Review complete: proceed (errors: 0)
+INFO: --------------------------------------------------------------------------------
+INFO: Reviewer node complete
+INFO: --------------------------------------------------------------------------------
+DEBUG: [ROUTE] Reviewer → Input Writer (Approved)
+INFO: ================================================================================
+INFO: Starting Input Writer node
+INFO: ================================================================================
+DEBUG: [InputWriter] Plan extracted from workflow_history: unknown
+DEBUG: [InputWriter] Extracted 0 modifications: []...
+DEBUG: [InputWriter] Baseline: {'code_name': 'WarpX', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/warpx', 'case_path': 'unknown', 'local_path': '/home/jmsexton/codes/worktree_sandbox/warpx/unknown'}
+DEBUG: Target directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [OK] FAISS embeddings initialized for input writer
+DEBUG: InputWriterService instantiated with cases service
+DEBUG: [Input Writer] Starting Load-Modify-Write pipeline
+DEBUG: [DEBUG] baseline dict keys: ['code_name', 'repo_path', 'case_path', 'local_path']
+DEBUG: [DEBUG] baseline dict: {'code_name': 'WarpX', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/warpx', 'case_path': 'unknown', 'local_path': '/home/jmsexton/codes/worktree_sandbox/warpx/unknown'}
+DEBUG: Plan: solver=WarpX, case=unknown
+DEBUG: Reasoning: The user specified a particular ERF test case ('Exec/RegTests/Radiation') and a corresponding input set ('inputs_radiation') to be used. I am updating the parameters to reflect these specific requirements.
+DEBUG: [1/5] Loading baseline: unknown
+DEBUG: Attempting cases_service fallback
+DEBUG: cases_service fallback failed: 'AMReXCasesService' object has no attribute 'get_case_files'
+WARNING: Empty baseline for unknown at /home/jmsexton/codes/worktree_sandbox/warpx/unknown
+WARNING: Unknown solver 'WarpX' - falling back to amr.plot_vars
+DEBUG: [2/5] Creating Pydantic model for WarpX
+DEBUG: Using newest schema: amrex_schema_bac24575.json
+DEBUG: Loading schema from: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/schemas/amrex_schema_bac24575.json
+DEBUG: Loaded nested schema with 281 parameters from amrex_schema_bac24575.json
+DEBUG: Loaded schema with 281 entries from amrex_schema_bac24575.json
+DEBUG: Using flat schema: 281 params found
+DEBUG: Coerced '5' to array [5] (is_array=True)
+DEBUG: Coerced default for amr.file_name_digits: 5 (int) → [5] (list)
+DEBUG: Coerced '"probin"' to str "probin" (is_array=False, single type)
+DEBUG: Coerced default for amr.probin_file: '"probin"' (str) → '"probin"' (str)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amr.regrid_int: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amr.loadbalance_with_workestimates: 0 (int) → 0 (int)
+DEBUG: Coerced '2' to int 2 (is_array=False, single type)
+DEBUG: Coerced default for amr.loadbalance_level0_int: 2 (int) → 2 (int)
+DEBUG: Coerced '1.5' to float 1.5 (is_array=False, single type)
+DEBUG: Coerced default for amr.loadbalance_max_fac: 1.5 (float) → 1.5 (float)
+DEBUG: Coerced '"Auto"' to array ['"Auto"'] (is_array=True)
+DEBUG: Coerced default for amr.subcycling_mode: '"Auto"' (str) → ['"Auto"'] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amr.subcycling_iterations: 0 (int) → 0 (int)
+DEBUG: Coerced '"chk"' to array ['"chk"'] (is_array=True)
+DEBUG: Coerced default for amr.check_file: '"chk"' (str) → ['"chk"'] (list)
+DEBUG: Coerced '-1' to array [-1] (is_array=True)
+DEBUG: Coerced default for amr.check_int: -1 (int) → [-1] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.check_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced '"plt"' to array ['"plt"'] (is_array=True)
+DEBUG: Coerced default for amr.plot_file: '"plt"' (str) → ['"plt"'] (list)
+DEBUG: Coerced '-1' to array [-1] (is_array=True)
+DEBUG: Coerced default for amr.plot_int: -1 (int) → [-1] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.plot_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.plot_log_per: -1.0 (float) → [-1.0] (list)
+WARNING: Failed to parse array 'max_level': could not convert string to float: 'max_level'
+DEBUG: Coerced 'max_level' to array ['max_level'] (is_array=True)
+DEBUG: Coerced default for amr.plot_max_level: 'max_level' (str) → ['max_level'] (list)
+DEBUG: Coerced '"smallplt"' to array ['"smallplt"'] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_file: '"smallplt"' (str) → ['"smallplt"'] (list)
+DEBUG: Coerced '-1' to array [-1] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_int: -1 (int) → [-1] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for amr.small_plot_log_per: -1.0 (float) → [-1.0] (list)
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for amr.write_plotfile_with_checkpoint: 'true' (str) → [True] (list)
+DEBUG: Coerced '4' to int 4 (is_array=False, single type)
+DEBUG: Coerced default for amr.stream_max_tries: 4 (int) → 4 (int)
+DEBUG: Coerced 'false' to bool False (is_array=False, single type)
+DEBUG: Coerced default for amr.abort_on_stream_retry_failure: 'false' (str) → False (bool)
+DEBUG: Skipping C++ expression default for amr.derive_plot_vars: = "ALL") {
+                amrex::Amr::fillStatePlotVarList()
+DEBUG: Skipping C++ expression default for amr.small_plot_vars: = "ALL") {
+                amrex::Amr::fillDerivePlotVarList()
+DEBUG: Skipping C++ expression default for amr.derive_small_plot_vars: = "ALL") {
+                amrex::Amr::fillStateSmallPlotVarList()
+DEBUG: Coerced '64' to array [64] (is_array=True)
+DEBUG: Coerced default for eb2.max_grid_size: 64 (int) → [64] (list)
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for eb2.extend_domain_face: 'true' (str) → [True] (list)
+DEBUG: Coerced '0' to array [0] (is_array=True)
+DEBUG: Coerced default for eb2.num_coarsen_opt: 0 (int) → [0] (list)
+DEBUG: Coerced '-1.0' to array [-1.0] (is_array=True)
+DEBUG: Coerced default for eb2.cylinder_height: -1.0 (float) → [-1.0] (list)
+WARNING: Failed to parse array '1._rt': could not convert string to float: '1._rt'
+DEBUG: Coerced '1._rt' to array ['1._rt'] (is_array=True)
+DEBUG: Coerced default for eb2.stl_scale: '1._rt' (str) → ['1._rt'] (list)
+DEBUG: Coerced 'false' to array [False] (is_array=True)
+DEBUG: Coerced default for eb2.stl_reverse_normal: 'false' (str) → [False] (list)
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for eb2.stl_use_bvh: 'true' (str) → [True] (list)
+DEBUG: Coerced 'false' to bool False (is_array=False, single type)
+DEBUG: Coerced default for eb2.test_marching_cubes: 'false' (str) → False (bool)
+WARNING: Failed to parse scalar 'Max_Readers_def' as int: could not convert string to float: 'Max_Readers_def'
+DEBUG: Coerced 'Max_Readers_def' to str Max_Readers_def (is_array=False, single type)
+DEBUG: Coerced default for particles.nreaders: 'Max_Readers_def' (str) → 'Max_Readers_def' (str)
+WARNING: Failed to parse scalar 'Max_Particles_Per_Read_def' as int: could not convert string to float: 'Max_Particles_Per_Read_def'
+DEBUG: Coerced 'Max_Particles_Per_Read_def' to str Max_Particles_Per_Read_def (is_array=False, single type)
+DEBUG: Coerced default for particles.nparts_per_read: 'Max_Particles_Per_Read_def' (str) → 'Max_Particles_Per_Read_def' (str)
+DEBUG: Coerced '"None"' to str "None" (is_array=False, single type)
+DEBUG: Coerced default for particles.aggregation_type: '"None"' (str) → '"None"' (str)
+DEBUG: Coerced '2' to int 2 (is_array=False, single type)
+DEBUG: Coerced default for particles.aggregation_buffer: 2 (int) → 2 (int)
+DEBUG: Coerced 'false' to array [False] (is_array=True)
+DEBUG: Coerced default for amrex.async_out: 'false' (str) → [False] (list)
+DEBUG: Coerced '64' to array [64] (is_array=True)
+DEBUG: Coerced default for amrex.async_out_nfiles: 64 (int) → [64] (list)
+DEBUG: Coerced '(bool) MPIX_Query_cuda_support()' to array [False, False] (is_array=True)
+DEBUG: Coerced default for amrex.team.use_gpu_aware_mpi: '(bool) MPIX_Query_cuda_support()' (str) → [False, False] (list)
+DEBUG: Coerced '1' to int 1 (is_array=False, single type)
+DEBUG: Coerced default for amrex.team.size: 1 (int) → 1 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for amrex.team.reduce: 0 (int) → 0 (int)
+DEBUG: Skipping C++ expression default for amrex.the_arena_init_size: Gpu::Device::totalGlobalMem() / Gpu::Device::numDevicePartners() / 4L * 3L
+DEBUG: Coerced '0' to array ['0'] (is_array=True)
+DEBUG: Coerced default for amrex.the_pinned_arena_init_size: 0 (int) → ['0'] (list)
+DEBUG: Coerced 'false, divbyzero=false, overflow=false' to array [False, False, False] (is_array=True)
+DEBUG: Coerced default for amrex.fpe_trap_invalid: 'false, divbyzero=false, overflow=false' (str) → [False, False, False] (list)
+DEBUG: Coerced 'false, overflow=false' to array ['false,', 'overflow=false'] (is_array=True)
+DEBUG: Coerced default for amrex.fpe_trap_zero: 'false, overflow=false' (str) → ['false,', 'overflow=false'] (list)
+DEBUG: Coerced 'false' to array ['false'] (is_array=True)
+DEBUG: Coerced default for amrex.fpe_trap_overflow: 'false' (str) → ['false'] (list)
+DEBUG: Coerced '"memlog"' to array ['"memlog"'] (is_array=True)
+DEBUG: Coerced default for amrex.memory_log: '"memlog"' (str) → ['"memlog"'] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numThreads.x: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numThreads.y: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numThreads.z: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numBlocks.x: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numBlocks.y: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.numBlocks.z: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for device.graph_init: 0 (int) → 0 (int)
+DEBUG: Coerced '10000' to int 10000 (is_array=False, single type)
+DEBUG: Coerced default for device.graph_init_nodes: 10000 (int) → 10000 (int)
+WARNING: Failed to parse array 'min_factor': could not convert string to float: 'min_factor'
+DEBUG: Coerced 'min_factor' to array ['min_factor'] (is_array=True)
+DEBUG: Coerced default for amrex.vector_growth_factor: 'min_factor' (str) → ['min_factor'] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.v: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.verbose: 0 (int) → 0 (int)
+WARNING: Failed to parse scalar '0.9_rt' as float: could not convert string to float: '0.9_rt'
+DEBUG: Coerced '0.9_rt' to str 0.9_rt (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.efficiency: '0.9_rt' (str) → '0.9_rt' (str)
+DEBUG: Skipping C++ expression default for DistributionMapping.sfc_threshold: std::min(n,1)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.node_size: 0 (int) → 0 (int)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for DistributionMapping.verbose_mapper: 0 (int) → 0 (int)
+DEBUG: Coerced '"system"' to array ['"system"'] (is_array=True)
+DEBUG: Coerced default for amrex.omp_threads: '"system"' (str) → ['"system"'] (list)
+DEBUG: Skipping C++ expression default for fab.initval: std::numeric_limits<Real>::has_quiet_NaN
+            ? std::numeric_limits<Real>::quiet_NaN()
+            : std::numeric_limits<Real>::max()
+DEBUG: Skipping C++ expression default for geometry.coord_sys: = -1) {
+        c_sys = gg->Coord()
+DEBUG: Coerced 'true' to array [True] (is_array=True)
+DEBUG: Coerced default for bamg_use_old_default: 'true' (str) → [True] (list)
+WARNING: Failed to parse array '1.e-5_rt': could not convert string to float: '1.e-5_rt'
+DEBUG: Coerced '1.e-5_rt' to array ['1.e-5_rt'] (is_array=True)
+DEBUG: Coerced default for eb2.small_volfrac: '1.e-5_rt' (str) → ['1.e-5_rt'] (list)
+DEBUG: Coerced 'false' to array [False] (is_array=True)
+DEBUG: Coerced default for eb2.cover_multiple_cuts: 'false' (str) → [False] (list)
+DEBUG: Coerced '32' to array [32] (is_array=True)
+DEBUG: Coerced default for eb2.maxiter: 32 (int) → [32] (list)
+DEBUG: Coerced '0' to array [0] (is_array=True)
+DEBUG: Coerced default for plot.var: 0 (int) → [0] (list)
+DEBUG: Coerced '0' to int 0 (is_array=False, single type)
+DEBUG: Coerced default for integration.rk.type: 0 (int) → 0 (int)
+DEBUG: Coerced '[1.0, 6.0, 1.0, 3.0, 1.0, 3.0, 1.0, 6.0]' to array ['[1.0,', '6.0,', '1.0,', '3.0,', '1.0,', '3.0,', '1.0,', '6.0]'] (is_array=True)
+DEBUG: Coerced default for integration.rk.weights: [1.0, 6.0, 1.0, 3.0, 1.0, 3.0, 1.0, 6.0] (list) → ['[1.0,', '6.0,', '1.0,', '3.0,', '1.0,', '3.0,', '1.0,', '6.0]'] (list)
+DEBUG: Coerced '[]' to array ['[]'] (is_array=True)
+DEBUG: Coerced default for integration.rk.extended_weights: [] (list) → ['[]'] (list)
+DEBUG: Created Pydantic model with 281 fields
+DEBUG: [HYDRATE] Starting baseline hydration with AMReX-aware coercion
+DEBUG: [HYDRATE] Parsed 0 parameters from inputs
+DEBUG: [HYDRATE] Model has 269 fields
+DEBUG: [HYDRATE] Coercion summary: 0 type changes, 0 None values, 0 unknown fields
+DEBUG: [HYDRATE] Verifying critical fields in coerced_dict (before Pydantic):
+DEBUG: [HYDRATE] Creating Pydantic model instance with 0 dotted keys...
+DEBUG: [HYDRATE] Final verification after model instantiation:
+DEBUG: [HYDRATE]   config.amr_blocking_factor = None (type: NoneType)
+DEBUG: [HYDRATE]   config.amr_n_cell = None (type: NoneType)
+DEBUG: [HYDRATE] Complete - baseline hydration successful
+DEBUG: Hydrated model from baseline
+DEBUG: [InputWriter] Step 3/5: Applying 0 modification(s)
+DEBUG: [InputWriter] Modifications to apply: []
+DEBUG: [DATA TRANSFER] apply_modifications called
+DEBUG: [DATA TRANSFER]   - modifications count: 0
+DEBUG: [DATA TRANSFER]   - config type: AMReXConfig
+DEBUG: [ConfigFactory] Applying 0 modifications
+DEBUG: [ConfigFactory] Modifications: []
+DEBUG: [ConfigFactory] Built alias_map with 522 entries
+DEBUG: [ConfigFactory] Sample mappings: [('amr_regrid_on_restart', 'amr_regrid_on_restart'), ('amr.regrid_on_restart', 'amr_regrid_on_restart'), ('amr_force_regrid_level_zero', 'amr_force_regrid_level_zero'), ('amr.force_regrid_level_zero', 'amr_force_regrid_level_zero'), ('amr_use_efficient_regrid', 'amr_use_efficient_regrid')]
+DEBUG: [ConfigFactory] Completed applying modifications
+DEBUG: [DATA TRANSFER] Returning dict with:
+DEBUG: [DATA TRANSFER]   - unresolved_parameters: 0
+DEBUG: [DATA TRANSFER]   - available_schema_params: 522
+DEBUG: [DATA TRANSFER]   - suggested_params: 0 mappings
+DEBUG: [DATA TRANSFER] Received result from ConfigModelFactory
+DEBUG: [DATA TRANSFER] Result keys: ['config', 'unresolved_parameters', 'available_schema_params', 'resolution_attempted', 'remap_success_count', 'suggested_params', 'remap_mapping', 'remap_details', 'applied_params']
+DEBUG: [DATA TRANSFER]   - unresolved_parameters: 0
+DEBUG: [DATA TRANSFER]   - available_schema_params: 522
+DEBUG: [DATA TRANSFER]   - remap_success_count: 0
+DEBUG: [InputWriter] Applied modifications completed
+DEBUG: [InputWriter] Step 4/5: Skipping RuleEngine (0 modifications)
+DEBUG: [5/5] Serializing to inputs file
+DEBUG: [DEBUG] Sample model keys: []
+DEBUG: [DEBUG] Total keys in model: 0
+DEBUG: [DEBUG] Seen 0 keys in original
+DEBUG: [DEBUG] Sample seen keys: []
+DEBUG: Wrote 17 bytes to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/inputs
+DEBUG: [Input Writer] Pipeline complete
+INFO: Files written to: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483
+DEBUG: [DATA TRANSFER] Checking InputWriterService result
+DEBUG: [DATA TRANSFER] Service result keys: ['inputs_path', 'output_dir', 'run_dir', 'modifications_applied', 'inputs_file_selected', 'inputs_file_strategy', 'inputs_file_override', 'inputs_candidates', 'solver', 'status', 'requires_parameter_resolution']
+INFO: Input Writer complete: run_20260428_060458_624483
+INFO:   Inputs selected: None (strategy: llm_compare, override: None)
+DEBUG:   Inputs written: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/inputs
+DEBUG:   Run directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483
+INFO: --------------------------------------------------------------------------------
+INFO: Input Writer node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Runner node
+INFO: ================================================================================
+INFO: Validation passed: run_20260428_060458_624483
+DEBUG: LocalRunner initialized for local execution
+INFO: Using LocalRunner for local execution
+DEBUG: 
+=== Setting Up Job (Local) ===
+
+DEBUG:  Using existing run directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483
+DEBUG: [ OK ] Copied 2 files to run directory
+INFO: Job setup complete: 
+DEBUG:    Using run directory: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483
+DEBUG: 
+=== Submitting Job (Local) ===
+
+ERROR: Executable resolution failed: No executable found in benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483
+WARNING: [ROUTE] Runtime failure → Analysis (retryable): 
+INFO: ================================================================================
+INFO: Starting Analysis node
+INFO: ================================================================================
+INFO: [INFO] Run mode dry - skipping analysis
+DEBUG: [ROUTE] Router: Analysis → Visualization (simulation passed)
+INFO: ================================================================================
+INFO: Starting Visualization node
+INFO: ================================================================================
+DEBUG: 
+[Step 1/4] Checking for plotfiles...
+WARNING: [WARN] No plotfiles found in run directory
+DEBUG:   Searched: benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483
+INFO: --------------------------------------------------------------------------------
+INFO: Workflow complete. Status: completed
+INFO: --------------------------------------------------------------------------------
+INFO: Metrics saved to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/metrics.jsonl
+INFO: Workflow history saved to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/workflow_history.json
+INFO: Agent transcript saved to benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/agent_transcript.txt
+{
+  "prompt": "Use ERF case Exec/RegTests/Radiation with inputs_radiation",
+  "config": "llm_provider='cborg' llm_model='lbl/cborg-deepthought' llm_fast_onprem_model='lbl/cborg-mini' llm_fast_model='gcp/gpt-oss-120b-high' llm_thinking_model='claude-sonnet-4-5' llm_temperature=0.1 llm_max_tokens=4000 cborg_api_key='sk-3r5QhYlL8hGQxywoC_AWBw' cborg_base_url='https://api.cborg.lbl.gov/v1' alcf_api_key=None alcf_cluster=None alcf_base_url=None openai_api_key='sk-3r5QhYlL8hGQxywoC_AWBw' anthropic_api_key=None litellm_api_key=None litellm_base_url=None pnnl_api_key=None pnnl_base_url='https://ai-incubator-api.pnnl.gov' pnnl_default_model='claude-haiku-4-5-20251001-v1-birthright' pelec_executable=PosixPath('.') pelec_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC') pelelmex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX') erf_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF') erf_executable_path=None erf_central_build_dir=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests') warpx_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx') incflo_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo') remora_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA') amrex_tutorials_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials') amrex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex') repositories={'PeleC': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC'), 'PeleLMeX': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX'), 'ERF': PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF'), 'WarpX': PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx'), 'incflo': PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo'), 'REMORA': PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA'), 'amrex-tutorials': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials'), 'AMReX': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex')} knowledge_base_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports') pele_tools_path=PosixPath('utils/pele_tools.py') faiss_db_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/faiss/cborg') database_mismatch_policy='warn_continue' environment='local' embedding_provider='cborg' vector_store_backend='auto' faiss_embedding_model='lbl/nomic-embed-text' alcf_embedding_model=None openai_vector_store_id=None openai_vector_store_ids={} openai_base_url='https://api.cborg.lbl.gov' vector_store_base_url=None vector_store_manifest_url=None faiss_topk=3 faiss_cache_enabled=True faiss_fallback_to_llm=True embedding_chunk_size_chars=2000 embedding_rate_limit_rpm=20 embedding_retry_max_attempts=50 llm_retry_max_attempts=3 faiss_semantic_weight=0.5 simple_weight_kb_relevance=0.4 simple_weight_metrics=0.25 simple_weight_path_heuristics=0.1 simple_weight_domain_specific=0.25 simple_weight_faiss_semantic=0.5 simple_case_hint_min_total=0.0 simple_case_hint_max_gap=0.14 simple_case_hint_score_boost=0.2 hierarchical_weight_physics_parameters=0.3 hierarchical_weight_grid_specifications=0.2 hierarchical_weight_development_activity=0.1 hierarchical_weight_configuration_complexity=0.1 hierarchical_weight_path_hierarchy=0.15 hierarchical_weight_domain_models=0.1 hierarchical_weight_resource_requirements=0.05 indexing_strategy='hierarchical' level2_override_enabled=True level2_override_l0_threshold=0.15 level2_override_case_match_threshold=0.9 level2_override_min_metadata_hits=3 routing_intent_enabled=True routing_intent_conflict_policy='block_then_clarify' routing_intent_anchor_min_segment_overlap=0.6 routing_intent_exact_path_boost=0.2 routing_intent_segment_boost=0.12 routing_intent_cross_solver_penalty=0.25 routing_intent_high_gap_clarification_threshold=0.2 routing_intent_apply_to_level2_override=True routing_intent_apply_to_near_tie=True inputs_file_strategy='llm_compare' remap_strategy='last_write' inputs_file_override=None inputs_default_precedence='strategy_first' retry_guidance_use_llm=False enable_intent_extraction=False enable_sweep_orchestration=False enable_clarification_subgraph=False clarification_route_on_intent_missing_only=True preexec_route_to_clarification_on_retry_exhausted=False reviewer_reflexive_guidance_enabled=True reviewer_reason_codes=['intent_missing', 'solver_mismatch', 'baseline_path_mismatch', 'domain_conflict', 'schema_unresolved', 'resource_conflict', 'rate_limit_pressure'] schema_escalation_policy='lightweight_first' reviewer_gated_schema_escalation_enabled=True benchmark_manifest_enabled=True llm_gate_strategy='off' llm_gate_auto_approve=False disable_embeddings=False baseline_switch_after_retries=3 baseline_override=None dry_run=True preconfirm_gate=False preconfirm_gate_auto_approve=False run_mode='dry' container_mode=False analysis_always_enabled=True allow_make_introspection=False make_introspection_command=None visualization_backend='auto' amrex_tools_path=None superfacility_account='amsc014' superfacility_client_id=None superfacility_secret=None superfacility_endpoint='https://api.nersc.gov/api/v1.2' remote_output_dir=None remote_run_dir=None remote_executable_path=None remote_executable_template=None remote_executable_find=True remote_staging_method='auto' monitor_job=True stage_out_outputs=True workflow_store_path=PosixPath('/home/jmsexton/.amrex_agent/workflow_store.db') max_iterations=3 allow_local_run=True use_mpi=True mpi_ranks=1 output_dir=PosixPath('benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical') metrics_output_dir=None metrics_filename='metrics.jsonl' privacy_mode='off' privacy_scrubber='builtin' privacy_hash_salt=None write_policy_mode='warn' allow_write_paths=[] require_run_dir_prefix=False run_dir_prefix='run_' save_intermediate=True metrics_enabled=True benchmark_environment_lockfile=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/utils/environment-frozen.yaml') benchmark_require_lockfile=True disabled_validators=[]",
+  "requested_plot_vars": [],
+  "visualization_config": {},
+  "selected_case": "unknown",
+  "modifications": [],
+  "reasoning": "The user specified a particular ERF test case ('Exec/RegTests/Radiation') and a corresponding input set ('inputs_radiation') to be used. I am updating the parameters to reflect these specific requirements.",
+  "case_candidates": [],
+  "baseline_confidence": 0.0,
+  "plan": {
+    "selected_solver": "WarpX",
+    "selected_case": "unknown",
+    "modifications": [],
+    "reasoning": "The user specified a particular ERF test case ('Exec/RegTests/Radiation') and a corresponding input set ('inputs_radiation') to be used. I am updating the parameters to reflect these specific requirements.",
+    "solver_confidence": 0.47212065756320953,
+    "baseline_confidence": 0.0,
+    "cbr_confidence": 0.5,
+    "prompt": "Use ERF case Exec/RegTests/Radiation with inputs_radiation",
+    "requirements": {
+      "router_branch": "hierarchical",
+      "router_reason_code": "hierarchical_primary"
+    },
+    "baseline": {
+      "code_name": "WarpX",
+      "repo_path": "/home/jmsexton/codes/worktree_sandbox/warpx",
+      "case_path": "unknown",
+      "local_path": "/home/jmsexton/codes/worktree_sandbox/warpx/unknown"
+    },
+    "case_candidates": [],
+    "documentation_context": [],
+    "baseline_evidence_citations": [
+      {
+        "citation_type": "baseline",
+        "case": "unknown"
+      }
+    ],
+    "visualization": null,
+    "analysis": {
+      "routing_intent_summary": {
+        "anchor_strength": "strong",
+        "explicit_solver": "ERF",
+        "explicit_case_path": "Exec/RegTests/Radiation",
+        "allowed_solvers": [
+          "ERF"
+        ],
+        "conflict_policy": "block_then_clarify",
+        "source_tags": [
+          "prompt",
+          "reviewer_guidance"
+        ]
+      },
+      "router_mapping": {
+        "router_branch": "hierarchical",
+        "diagram_nodes": {
+          "router": "strategy_router",
+          "branch": "hierarchical_strategy"
+        },
+        "strategy": "hierarchical",
+        "baseline_override_active": false,
+        "fallback_to": null
+      }
+    },
+    "unresolved_parameters": null,
+    "suggested_mappings": null,
+    "resolution_guidance": null,
+    "requires_parameter_resolution": false,
+    "available_schema_params": null,
+    "level0_solver": "WarpX",
+    "level0_confidence": 0.47212065756320953,
+    "level2_override_applied": false,
+    "level2_override_solver": null,
+    "level2_override_case": null,
+    "level2_override_confidence": null,
+    "used_llm": true,
+    "indexing_strategy": "hierarchical",
+    "baseline_inputs_path": null,
+    "inputs_file_strategy": "llm_compare",
+    "inputs_file_override": null,
+    "inputs_candidates": []
+  },
+  "baseline": {
+    "code_name": "WarpX",
+    "repo_path": "/home/jmsexton/codes/worktree_sandbox/warpx",
+    "case_path": "unknown",
+    "local_path": "/home/jmsexton/codes/worktree_sandbox/warpx/unknown"
+  },
+  "review_analysis": {
+    "mode": "proceed",
+    "violations": [],
+    "summary": "All validation checks passed.",
+    "reviewer_guidance": {
+      "required_solver": "WarpX",
+      "forbidden_path_patterns": [],
+      "preferred_path_patterns": [],
+      "excluded_cases": [],
+      "schema_escalation_required": false,
+      "replan_reason_codes": []
+    }
+  },
+  "suggested_fixes": [],
+  "retry_guidance": {
+    "inputs_base_action": "keep",
+    "inputs_reason": null,
+    "baseline_base_action": "keep",
+    "baseline_reason": null
+  },
+  "reviewer_failure_category": null,
+  "run_directory": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483",
+  "inputs_file_path": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/inputs",
+  "inputs_file": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/inputs",
+  "ready_to_run": true,
+  "job_status": "completed",
+  "analysis_report": {
+    "status": "skipped",
+    "message": "Dry-run: analysis skipped"
+  },
+  "visualization_images": [],
+  "visualization_backend": "none",
+  "visualization_status": "skipped",
+  "visualization_metadata": {
+    "plotfile_count": 0,
+    "skip_reason": "no_plotfiles"
+  },
+  "mode": "proceed",
+  "iteration": 1,
+  "retry_count": 0,
+  "max_retries": 3,
+  "loop_count": 1,
+  "errors_active": [],
+  "errors_found": [],
+  "errors_fixed": [],
+  "error_logs": [],
+  "preconfirm_action": "proceed",
+  "workflow_history": [
+    {
+      "node": "architect",
+      "timestamp": "2026-04-28T13:04:58.593373Z",
+      "action": "plan_created",
+      "iteration": 1,
+      "details": {
+        "selected_case": "unknown",
+        "selected_solver": "WarpX",
+        "modifications": [],
+        "reasoning": "The user specified a particular ERF test case ('Exec/RegTests/Radiation') and a corresponding input set ('inputs_radiation') to be used. I am updating the parameters to reflect these specific requirements.",
+        "baseline": {
+          "code_name": "WarpX",
+          "repo_path": "/home/jmsexton/codes/worktree_sandbox/warpx",
+          "case_path": "unknown",
+          "local_path": "/home/jmsexton/codes/worktree_sandbox/warpx/unknown"
+        },
+        "case_candidates": [],
+        "baseline_evidence_citations": [
+          {
+            "citation_type": "baseline",
+            "case": "unknown"
+          }
+        ],
+        "indexing_strategy": "hierarchical",
+        "indexing_calls_count": 4,
+        "indexing_calls_total": 4,
+        "indexing_calls_detail": {
+          "embed_documents": 0,
+          "embed_query": 4
+        },
+        "confidence_score": 0.0,
+        "level0_solver": "WarpX",
+        "level0_confidence": 0.47212065756320953,
+        "level2_override_applied": false,
+        "level2_override_solver": null,
+        "level2_override_case": null,
+        "level2_override_confidence": null,
+        "parameter_resolution_applied": true,
+        "reviewer_guidance": {},
+        "remapped_parameters": [],
+        "metrics": {
+          "llm": {
+            "total_calls": 2,
+            "prompt_tokens": 976,
+            "completion_tokens": 2035,
+            "total_tokens": 3011,
+            "by_model": {
+              "lbl/cborg-deepthought": {
+                "calls": 2,
+                "prompt_tokens": 976,
+                "completion_tokens": 2035,
+                "total_tokens": 3011,
+                "cost_usd": 0.0
+              }
+            },
+            "by_user": {
+              "unknown": {
+                "calls": 2,
+                "prompt_tokens": 976,
+                "completion_tokens": 2035,
+                "total_tokens": 3011,
+                "cost_usd": 0.0
+              }
+            },
+            "cost_usd": 0.0
+          }
+        }
+      }
+    },
+    {
+      "node": "reviewer",
+      "timestamp": "2026-04-28T13:04:58.616089Z",
+      "action": "validation_completed",
+      "iteration": 1,
+      "details": {
+        "status": "approved",
+        "errors": [],
+        "warnings": [],
+        "validation_passed": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "newly_fixed": [],
+        "newly_found": [],
+        "errors_all_found": [],
+        "errors_all_fixed": [],
+        "suggested_fixes": [],
+        "available_schema_params": [
+          "amr.regrid_on_restart",
+          "amr.force_regrid_level_zero",
+          "amr.use_efficient_regrid",
+          "amr.plotfile_on_restart",
+          "amr.insitu_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr.compute_new_dt_on_regrid",
+          "amr.mffile_nstreams",
+          "amr.probinit_natonce",
+          "amr.file_name_digits",
+          "amr.initial_grid_file",
+          "amr.regrid_file",
+          "amr.message_int",
+          "amr.run_log",
+          "amr.run_log_terse",
+          "amr.grid_log",
+          "amr.data_log",
+          "amr.probin_file",
+          "amr.restart",
+          "amr.restart_from_plotfile",
+          "amr.regrid_int",
+          "amr.loadbalance_with_workestimates",
+          "amr.loadbalance_level0_int",
+          "amr.loadbalance_max_fac",
+          "amr.nosub",
+          "amr.subcycling_mode",
+          "amr.subcycling_iterations",
+          "amr.checkpoint_files_output",
+          "amr.plot_files_output",
+          "amr.plot_nfiles",
+          "amr.checkpoint_nfiles",
+          "amr.check_file",
+          "amr.check_int",
+          "amr.check_per",
+          "amr.plot_file",
+          "amr.plot_int",
+          "amr.plot_per",
+          "amr.plot_log_per",
+          "amr.plot_max_level",
+          "amr.small_plot_file",
+          "amr.small_plot_int",
+          "amr.small_plot_per",
+          "amr.small_plot_log_per",
+          "amr.write_plotfile_with_checkpoint",
+          "amr.stream_max_tries",
+          "amr.abort_on_stream_retry_failure",
+          "amr.precreateDirectories",
+          "amr.prereadFAHeaders",
+          "amr.plot_headerversion",
+          "amr.checkpoint_headerversion",
+          "amr.plot_vars",
+          "amr.derive_plot_vars",
+          "amr.small_plot_vars",
+          "amr.derive_small_plot_vars",
+          "eb2.max_grid_size",
+          "eb2.extend_domain_face",
+          "eb2.num_coarsen_opt",
+          "eb2.geom_type",
+          "eb2.box_lo",
+          "eb2.box_hi",
+          "eb2.box_has_fluid_inside",
+          "eb2.cylinder_center",
+          "eb2.cylinder_radius",
+          "eb2.cylinder_height",
+          "eb2.cylinder_direction",
+          "eb2.cylinder_has_fluid_inside",
+          "eb2.plane_point",
+          "eb2.plane_normal",
+          "eb2.sphere_center",
+          "eb2.sphere_radius",
+          "eb2.sphere_has_fluid_inside",
+          "eb2.torus_center",
+          "eb2.torus_small_radius",
+          "eb2.torus_large_radius",
+          "eb2.parser_function",
+          "eb2.stl_file",
+          "eb2.stl_scale",
+          "eb2.stl_center",
+          "eb2.stl_reverse_normal",
+          "eb2.stl_use_bvh",
+          "eb2.test_marching_cubes",
+          "amr.v",
+          "amr.verbose",
+          "amr.max_level",
+          "amr.n_proper",
+          "amr.grid_eff",
+          "amr.n_error_buf",
+          "amr.n_error_buf_x",
+          "amr.n_error_buf_y",
+          "amr.n_error_buf_z",
+          "amr.ref_ratio_vect",
+          "amr.ref_ratio",
+          "amr.max_grid_size",
+          "amr.max_grid_size_x",
+          "amr.max_grid_size_y",
+          "amr.max_grid_size_z",
+          "amr.blocking_factor",
+          "amr.blocking_factor_x",
+          "amr.blocking_factor_y",
+          "amr.blocking_factor_z",
+          "amr.n_cell",
+          "amr.refine_grid_layout",
+          "amr.refine_grid_layout_x",
+          "amr.refine_grid_layout_y",
+          "amr.refine_grid_layout_z",
+          "amr.check_input",
+          "amr.max_grid_iterations",
+          "amr.use_bittree",
+          "particles.particles_nfiles",
+          "particles.nreaders",
+          "particles.nparts_per_read",
+          "particles.aggregation_type",
+          "particles.aggregation_buffer",
+          "amrex.parmparse.v",
+          "amrex.parmparse.verbose",
+          "amrex.async_out",
+          "amrex.async_out_nfiles",
+          "amrex.forkjoin.verbose",
+          "amrex.team.use_gpu_aware_mpi",
+          "amrex.team.size",
+          "amrex.team.reduce",
+          "amrex.the_arena_init_size",
+          "amrex.the_device_arena_init_size",
+          "amrex.the_managed_arena_init_size",
+          "amrex.the_pinned_arena_init_size",
+          "amrex.the_comms_arena_init_size",
+          "amrex.the_arena_release_threshold",
+          "amrex.the_device_arena_release_threshold",
+          "amrex.the_managed_arena_release_threshold",
+          "amrex.the_pinned_arena_release_threshold",
+          "amrex.the_comms_arena_release_threshold",
+          "amrex.the_arena_defragmentation",
+          "amrex.the_device_arena_defragmentation",
+          "amrex.the_managed_arena_defragmentation",
+          "amrex.the_pinned_arena_defragmentation",
+          "amrex.the_comms_arena_defragmentation",
+          "amrex.the_arena_is_managed",
+          "amrex.abort_on_out_of_gpu_memory",
+          "vismf.v",
+          "vismf.headerversion",
+          "vismf.groupsets",
+          "vismf.setbuf",
+          "vismf.usesingleread",
+          "vismf.usesinglewrite",
+          "vismf.checkfilepositions",
+          "vismf.usepersistentifstreams",
+          "vismf.usesynchronousreads",
+          "vismf.usedynamicsetselection",
+          "vismf.iobuffersize",
+          "vismf.allowsparsewrites",
+          "vismf.noflushafterwrite",
+          "vismf.barrierafterlevel",
+          "amrex.v",
+          "amrex.verbose",
+          "amrex.init_snan",
+          "amrex.regtest_reduction",
+          "amrex.signal_handling",
+          "amrex.throw_exception",
+          "amrex.call_addr2line",
+          "amrex.abort_on_unused_inputs",
+          "amrex.handle_sigsegv",
+          "amrex.handle_sigterm",
+          "amrex.handle_sigint",
+          "amrex.handle_sigabrt",
+          "amrex.handle_sigfpe",
+          "amrex.handle_sigill",
+          "amrex.fpe_trap_invalid",
+          "amrex.fpe_trap_zero",
+          "amrex.fpe_trap_overflow",
+          "amrex.init_hypre",
+          "amrex.hypre_spgemm_use_vendor",
+          "amrex.hypre_spmv_use_vendor",
+          "amrex.hypre_sptrans_use_vendor",
+          "amrex.memory_log",
+          "amrex.max_gpu_streams",
+          "device.v",
+          "device.verbose",
+          "device.numThreads.x",
+          "device.numThreads.y",
+          "device.numThreads.z",
+          "device.numBlocks.x",
+          "device.numBlocks.y",
+          "device.numBlocks.z",
+          "device.graph_init",
+          "device.graph_init_nodes",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose",
+          "tiny_profiler.print_threshold",
+          "tiny_profiler.enabled",
+          "tiny_profiler.memprof_enabled",
+          "tiny_profiler.output_file",
+          "amrex.vector_growth_factor",
+          "amrex.pout_int",
+          "DistributionMapping.v",
+          "DistributionMapping.verbose",
+          "DistributionMapping.efficiency",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping.node_size",
+          "DistributionMapping.verbose_mapper",
+          "DistributionMapping.strategy",
+          "amrex.prof_nfiles",
+          "amrex.prof_csflushsize",
+          "amrex.prof_traceflushsize",
+          "amrex.prof_flushinterval",
+          "amrex.prof_flushtimeinterval",
+          "amrex.prof_flushprint",
+          "amrex.use_profiler_syncs",
+          "amrex.omp_threads",
+          "fab.format",
+          "fab.ordering",
+          "fab.initval",
+          "fab.do_initval",
+          "fabarray.mfiter_tile_size",
+          "fabarray.comm_tile_size",
+          "fabarray.maxcomp",
+          "amrex.mf.alloc_single_chunk",
+          "geometry.coord_sys",
+          "geometry.prob_lo",
+          "geometry.prob_hi",
+          "geometry.prob_extent",
+          "geometry.is_periodic",
+          "enabled",
+          "config",
+          "frequency",
+          "pin_mesh",
+          "hypre_solver",
+          "hypre_preconditioner",
+          "recompute_preconditioner",
+          "write_matrix_files",
+          "overwrite_existing_matrix_files",
+          "adjust_singular_matrix",
+          "bamg_non_galerkin_level_levels",
+          "bamg_non_galerkin_level_tols",
+          "bamg_smooth_type",
+          "bamg_euclid_file",
+          "bamg_use_old_default",
+          "eb2.small_volfrac",
+          "eb2.cover_multiple_cuts",
+          "eb2.maxiter",
+          "particles.do_tiling",
+          "particles.tile_size",
+          "particles.use_prepost",
+          "particles.do_unlink",
+          "particles.do_mem_efficient_sort",
+          "particles.use_comms_arena",
+          "particles.datadigits_read",
+          "plot.niter",
+          "plot.cell_size",
+          "plot.var",
+          "val",
+          "integration.use_adaptive_time_step",
+          "integration.time_step",
+          "integration.use_adaptive_fast_time_step",
+          "integration.fast_time_step",
+          "integration.rel_tol",
+          "integration.abs_tol",
+          "integration.fast_rel_tol",
+          "integration.fast_abs_tol",
+          "integration.type",
+          "integration.rk.type",
+          "integration.rk.weights",
+          "integration.rk.extended_weights",
+          "integration.rk.nodes",
+          "integration.rk.tableau",
+          "integration.sundials.type",
+          "integration.sundials.method",
+          "integration.sundials.method_e",
+          "integration.sundials.method_i",
+          "integration.sundials.fast_type",
+          "integration.sundials.fast_method",
+          "integration.sundials.nonlinear_solver",
+          "integration.sundials.max_nonlinear_iters",
+          "integration.sundials.fast_nonlinear_solver",
+          "integration.sundials.fast_max_nonlinear_iters",
+          "integration.sundials.linear_solver",
+          "integration.sundials.max_linear_iters",
+          "integration.sundials.fast_linear_solver",
+          "integration.sundials.fast_max_linear_iters",
+          "integration.sundials.stop_time",
+          "integration.sundials.max_num_steps"
+        ],
+        "retry_guidance": {
+          "inputs_base_action": "keep",
+          "inputs_reason": null,
+          "baseline_base_action": "keep",
+          "baseline_reason": null
+        },
+        "reviewer_guidance": {
+          "required_solver": "WarpX",
+          "forbidden_path_patterns": [],
+          "preferred_path_patterns": [],
+          "excluded_cases": [],
+          "schema_escalation_required": false,
+          "replan_reason_codes": []
+        },
+        "review_context": "pre_execution",
+        "review_origin": "architect_validation",
+        "baseline_dir_rejected": false,
+        "plan_rejected_baseline": null,
+        "plan_rejected_inputs_file": null,
+        "postexec_repair_feedback": null,
+        "metrics": {
+          "validation": {
+            "validator_latency_ms": 12.0,
+            "validator_outcome": "proceed",
+            "review_outcome": "approved",
+            "transition_mode": "proceed",
+            "error_count": 0,
+            "warning_count": 0,
+            "violation_count": 0,
+            "unknown_param_count": 0,
+            "persistent_unknown_count": 0,
+            "schema_missing": false,
+            "solver_unknown": false
+          }
+        }
+      }
+    },
+    {
+      "node": "input_writer",
+      "timestamp": "2026-04-28T13:04:58.788532Z",
+      "action": "inputs_generated",
+      "iteration": 1,
+      "details": {
+        "run_directory": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483",
+        "inputs_file_path": "benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483/inputs",
+        "status": "success",
+        "modifications_applied": 0,
+        "file_size_bytes": 95,
+        "applied_modifications": [],
+        "requires_parameter_resolution": false,
+        "selected_case": "unknown",
+        "baseline_code": "WarpX",
+        "inputs_file_selected": null,
+        "inputs_file_strategy": "llm_compare",
+        "inputs_file_override": null,
+        "inputs_candidates": []
+      }
+    },
+    {
+      "node": "runner",
+      "timestamp": "2026-04-28T13:04:58.804043Z",
+      "action": "write_failed",
+      "iteration": 1,
+      "details": {
+        "error": "No executable found in benchmark_v2/results/full_cborg_20260427T202152Z/hierarchical/run_20260428_060458_624483"
+      }
+    },
+    {
+      "node": "analysis",
+      "timestamp": "2026-04-28T13:04:58.807639Z",
+      "action": "analysis_skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "dry"
+      }
+    },
+    {
+      "node": "visualization",
+      "timestamp": "2026-04-28T13:04:58.811381Z",
+      "action": "skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "no_plotfiles",
+        "plotfile_count": 0
+      }
+    }
+  ],
+  "history": []
+}

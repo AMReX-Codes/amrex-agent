@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/Real_Terrain/Askervein with inputs_anel
+
+================================================================================
+
+[2026-04-27T21:28:41.865702Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-27T21:28:41.983017Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-27T21:28:43.853474Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-27T21:28:43.924550Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-27T21:28:43.975628Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-27T21:28:43.998798Z] NODE: VISUALIZATION
+ACTION: skipped
+

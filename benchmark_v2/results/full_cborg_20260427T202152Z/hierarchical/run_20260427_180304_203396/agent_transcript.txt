@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/DensityCurrent with inputs_hybrid_zlev
+
+================================================================================
+
+[2026-04-28T01:03:04.187163Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T01:03:04.200697Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T01:03:36.405728Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T01:03:36.412693Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T01:03:36.416296Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T01:03:36.417354Z] NODE: VISUALIZATION
+ACTION: skipped
+

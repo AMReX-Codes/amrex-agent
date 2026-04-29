@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/Bubble with inputs_squall2d_x
+
+================================================================================
+
+[2026-04-27T21:56:42.289269Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-27T21:56:42.298472Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-27T21:57:02.377837Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-27T21:57:02.383411Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-27T21:57:02.386638Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-27T21:57:02.388587Z] NODE: VISUALIZATION
+ACTION: skipped
+

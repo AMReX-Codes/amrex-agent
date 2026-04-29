@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/EB_Poiseuille with inputs_compressible
+
+================================================================================
+
+[2026-04-28T12:04:40.921530Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T12:04:40.938847Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T12:04:45.123918Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T12:04:45.137050Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T12:04:45.139541Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T12:04:45.142434Z] NODE: VISUALIZATION
+ACTION: skipped
+

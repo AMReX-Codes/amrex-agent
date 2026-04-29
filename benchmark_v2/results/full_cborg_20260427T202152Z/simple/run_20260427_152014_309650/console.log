@@ -1,0 +1,1658 @@
+DEBUG: === CBORG API Configuration ===
+
+DEBUG:  Using CBORG_API_KEY from environment
+INFO: Using LLM model: cborg/lbl/cborg-deepthought
+DEBUG:  Testing API connection...
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-01b28541-01cd-4269-beb8-9be88489636a', 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': "Say 'OK' and nothing else."}], 'model': 'lbl/cborg-deepthought', 'max_tokens': 5, 'response_format': None, 'temperature': None}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7e6bf450>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x752e7e5c2e70> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7def2e50>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 27 Apr 2026 22:19:50 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'574'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Mon, 27 Apr 2026 22:19:49 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'49b9d0fc-e87d-4527-9c34-8359d35520b3'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'3.49'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'74.26299999999999'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'dfa186ea-efcc-4e14-ad38-26f445d33348'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.655'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'88.983'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'19'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=3Hs3rnca5Lh5PpFydqFleHbjPRbeVaMKB81DARNpcPo-1777328389.9285078-1.0.1.1-bH9qCKca3LWGLtCpiFFf7jq.y02hvQQPQ.J75Xw75urZOpNVhiKP_o0QQmWnKEM7byz7XL8Ks.IocfWxHL9rrX4Cu_UlTaX_IZufJ5kg.Z6.uiaZzLEZgGJYEwQ6tJI_; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:49:50 GMT'), (b'set-cookie', b'_cfuvid=.UGYRKqL.w5OIf2afR.VEq_6dIXNRe0ndrGBjWP2fL0-1777328389.9285078-1.0.1.1-96YtMejSIOwvWhVYxXbZTXPzsq_blSQKPNetZSJjUas; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f313605089933dc-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers([('date', 'Mon, 27 Apr 2026 22:19:50 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '574'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Mon, 27 Apr 2026 22:19:49 GMT'), ('llm_provider-server', 'uvicorn'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '49b9d0fc-e87d-4527-9c34-8359d35520b3'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://vllm-h100-4x-1:8000/v1'), ('llm_provider-x-litellm-model-group', 'gemma-4-31b-it'), ('llm_provider-x-litellm-model-id', 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), ('llm_provider-x-litellm-overhead-duration-ms', '3.49'), ('llm_provider-x-litellm-response-cost-discount-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-percent', '0.0'), ('llm_provider-x-litellm-response-cost-original', '0.0'), ('llm_provider-x-litellm-response-duration-ms', '74.26299999999999'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', 'dfa186ea-efcc-4e14-ad38-26f445d33348'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/cborg-deepthought'), ('x-litellm-model-id', 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), ('x-litellm-overhead-duration-ms', '1.655'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '88.983'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '19'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=3Hs3rnca5Lh5PpFydqFleHbjPRbeVaMKB81DARNpcPo-1777328389.9285078-1.0.1.1-bH9qCKca3LWGLtCpiFFf7jq.y02hvQQPQ.J75Xw75urZOpNVhiKP_o0QQmWnKEM7byz7XL8Ks.IocfWxHL9rrX4Cu_UlTaX_IZufJ5kg.Z6.uiaZzLEZgGJYEwQ6tJI_; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:49:50 GMT'), ('set-cookie', '_cfuvid=.UGYRKqL.w5OIf2afR.VEq_6dIXNRe0ndrGBjWP2fL0-1777328389.9285078-1.0.1.1-96YtMejSIOwvWhVYxXbZTXPzsq_blSQKPNetZSJjUas; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f313605089933dc-SJC')])
+DEBUG: request_id: None
+DEBUG: [ OK ] CBORG API connection successful
+DEBUG:        Response: None
+DEBUG:  Set PELE_REPORTS_DIR=/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports
+DEBUG:  Set CBORG_API_KEY for pele_tools
+DEBUG:  Set CBORG_MODEL=lbl/cborg-deepthought
+DEBUG: 
+============================================================
+
+DEBUG: Starting AMReXAgent workflow...
+INFO: ================================================================================
+INFO: Starting AMReXAgent workflow
+INFO: ================================================================================
+DEBUG: Prompt: Use ERF case Exec/RegTests/ParticleTests with inpu...
+INFO: ================================================================================
+INFO: Starting Architect node
+INFO: ================================================================================
+DEBUG: Mode: initial (initial planning)
+DEBUG: Initialized CBORG embeddings (with caching)
+DEBUG:   Model: lbl/nomic-embed-text
+DEBUG:   Dimensions: 768
+DEBUG:   Context: 8192 tokens
+DEBUG:   Cost: FREE at LBNL
+DEBUG:   Cache: Enabled (1-hour TTL)
+DEBUG: Loaded FAISS index: pelec_case_structure
+DEBUG: Loaded FAISS index: pelec_case_details
+DEBUG: Loaded FAISS index: pelec_case_names
+DEBUG: Loaded FAISS index: pelec_input_templates
+DEBUG: Loaded FAISS index: pelec_chemistry
+DEBUG: Loaded FAISS index: pelelmex_case_names
+DEBUG: Loaded FAISS index: pelelmex_case_structure
+DEBUG: Loaded FAISS index: pelelmex_case_details
+DEBUG: Loaded FAISS index: pelelmex_input_templates
+DEBUG: Loaded FAISS index: erf_case_structure
+DEBUG: Loaded FAISS index: erf_case_details
+DEBUG: Loaded FAISS index: erf_case_names
+DEBUG: Loaded FAISS index: remora_case_structure
+DEBUG: Loaded FAISS index: remora_case_details
+DEBUG: FAISS cache initialized with 14 indices
+DEBUG: EmbeddingService initialized: True
+DEBUG: Embeddings available: True
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG: ArchitectService instantiated with RAG support: True
+DEBUG: Total exclusions: 0 cases, 0 inputs files
+INFO: Using indexing strategy: simple
+INFO: [Strategy Router] strategy_router -> simple_strategy (branch=simple, strategy=simple)
+DEBUG: 
+=== Creating Simulation Plan ===
+
+DEBUG: Prompt: Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill
+
+DEBUG:       Detected solver from prompt: ERF
+DEBUG: Requirements: {'problem_type': 'general flow', 'solver': 'ERF', 'solver_source': 'explicit_mention', 'user_prompt': 'Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill'}
+
+DEBUG: Knowledge tools not available for solver AMReX
+DEBUG:  [OK] FAISS embeddings initialized for knowledge service
+DEBUG:  Knowledge base path: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports
+DEBUG:  Knowledge base exists: True
+DEBUG: [WARN] Knowledge tools missing load hook
+DEBUG: FAISS index unavailable. Falling back to LLM for query: What are typical parameters for general flow problems?
+DEBUG: [DEBUG] FAISS retrieved 0 case_details results
+DEBUG: Knowledge gathered: ['What are typical parameters for general flow problems?']
+
+DEBUG: close.started
+DEBUG: close.complete
+DEBUG: Patching `client.chat.completions.create` with mode=<Mode.TOOLS: 'tool_call'>
+DEBUG: Instructor Request: mode.value='tool_call', response_model=<class 'src.services.cases.AMReXCasesService.find_best_match.<locals>.CaseSelection'>, new_kwargs={'messages': [{'role': 'user', 'content': 'You are an expert in AMReX-based simulation codes. Given this request:\n\n"Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n\nSelect the BEST AMReX code and example case as a starting point.\n\nAvailable codes:\nPeleC - Compressible reacting flow with detailed chemistry  Docs quality: excellent  Cases:    - Exec/Production/PistonBowl/inputs    - Exec/Production/JetFlame    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Submodules/PelePhysics/Submodules/amrex/Tests/GPU/CNS/Exec/RT    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/PMF    - Exec/RegTests/Sedov    - Exec/RegTests/TG    - Exec/Production/CavityFlame    - Exec/Production/ChallengeProblem    - Exec/Production/PistonBowl    - Exec/RegTests/AuxQuantities    - Exec/RegTests/ChannelFlow    - Exec/RegTests/EB-BluffBody    - Exec/RegTests/EB-C1    - Exec/RegTests/EB-C10    - Exec/RegTests/EB-C11    - Exec/RegTests/EB-C12    - Exec/RegTests/EB-C13    ... and 100 more\nPeleLMeX - Low Mach combustion with detailed transport  Docs quality: excellent  Cases:    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Exec/Production/CounterFlow    - Exec/Production/JetInCrossflow    - Submodules/PelePhysics/Submodules/amrex/Tests/GPU/CNS/Exec/RT    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/FlameSheet    - Exec/RegTests/TaylorGreen    - Exec/Plasma/FlameSheetIons    - Exec/Plasma/IonizedAirWave    - Exec/Plasma/PremBunsen3DKuhl    - Exec/Production/ChallengeProblem    - Exec/Production/CounterFlowSpray    - Exec/Production/DiffBunsen2D    - Exec/Production/JetInCrossflow/LiDryer_CO2_He    - Exec/Production/NormalJet_OpenDomain    - Exec/Production/PremBunsen2D    - Exec/Production/PremBunsen3D    - Exec/Production/SwirlFlowWallInteractions    - Exec/RegTests/EB_BackwardStepFlame    ... and 93 more\nWarpX - Advanced electromagnetic particle-in-cell code  Docs quality: excellent  Cases:\n\n#######################\n# Domain-specific: physics keyword -> solver mapping guidance\n#######################\nGuidelines:\n- Learning AMReX -> amrex-tutorials\n- Framework/core AMR tutorial workflows -> AMReX\n- Combustion/flames -> PeleC or PeleLMeX\n- Incompressible flow -> incflo\n- Laser/plasma -> WarpX\n- Atmospheric/weather -> ERF\n- Ocean/coastal modeling -> REMORA\n#######################\n\nPrefer codes with "excellent" documentation quality.\n\nReturn EXACTLY two lines:\nCODE: <name>\nCASE: <path>'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tools': [{'type': 'function', 'function': {'name': 'CaseSelection', 'description': 'Correctly extracted `CaseSelection` with all the required parameters with correct types', 'parameters': {'properties': {'code': {'description': 'Code name from the available list', 'title': 'Code', 'type': 'string'}, 'case': {'description': 'Case path from the selected code', 'title': 'Case', 'type': 'string'}}, 'required': ['case', 'code'], 'type': 'object'}}}], 'tool_choice': {'type': 'function', 'function': {'name': 'CaseSelection'}}}
+DEBUG: max_retries: 2, timeout: None
+DEBUG: Retrying, attempt: 1
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-e2669921-713d-41ea-9e5b-5d269b6b7d62', 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': 'You are an expert in AMReX-based simulation codes. Given this request:\n\n"Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n\nSelect the BEST AMReX code and example case as a starting point.\n\nAvailable codes:\nPeleC - Compressible reacting flow with detailed chemistry  Docs quality: excellent  Cases:    - Exec/Production/PistonBowl/inputs    - Exec/Production/JetFlame    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Submodules/PelePhysics/Submodules/amrex/Tests/GPU/CNS/Exec/RT    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/PMF    - Exec/RegTests/Sedov    - Exec/RegTests/TG    - Exec/Production/CavityFlame    - Exec/Production/ChallengeProblem    - Exec/Production/PistonBowl    - Exec/RegTests/AuxQuantities    - Exec/RegTests/ChannelFlow    - Exec/RegTests/EB-BluffBody    - Exec/RegTests/EB-C1    - Exec/RegTests/EB-C10    - Exec/RegTests/EB-C11    - Exec/RegTests/EB-C12    - Exec/RegTests/EB-C13    ... and 100 more\nPeleLMeX - Low Mach combustion with detailed transport  Docs quality: excellent  Cases:    - Submodules/PelePhysics/Submodules/amrex/Tests/Amr/Advection_AmrCore/Exec    - Exec/Production/CounterFlow    - Exec/Production/JetInCrossflow    - Submodules/PelePhysics/Submodules/amrex/Tests/GPU/CNS/Exec/RT    - Submodules/PelePhysics/Testing/Exec/IgnitionDelay/inputs    - Submodules/PelePhysics/Testing/Exec/Radiation/inputs    - Exec/RegTests/FlameSheet    - Exec/RegTests/TaylorGreen    - Exec/Plasma/FlameSheetIons    - Exec/Plasma/IonizedAirWave    - Exec/Plasma/PremBunsen3DKuhl    - Exec/Production/ChallengeProblem    - Exec/Production/CounterFlowSpray    - Exec/Production/DiffBunsen2D    - Exec/Production/JetInCrossflow/LiDryer_CO2_He    - Exec/Production/NormalJet_OpenDomain    - Exec/Production/PremBunsen2D    - Exec/Production/PremBunsen3D    - Exec/Production/SwirlFlowWallInteractions    - Exec/RegTests/EB_BackwardStepFlame    ... and 93 more\nWarpX - Advanced electromagnetic particle-in-cell code  Docs quality: excellent  Cases:\n\n#######################\n# Domain-specific: physics keyword -> solver mapping guidance\n#######################\nGuidelines:\n- Learning AMReX -> amrex-tutorials\n- Framework/core AMR tutorial workflows -> AMReX\n- Combustion/flames -> PeleC or PeleLMeX\n- Incompressible flow -> incflo\n- Laser/plasma -> WarpX\n- Atmospheric/weather -> ERF\n- Ocean/coastal modeling -> REMORA\n#######################\n\nPrefer codes with "excellent" documentation quality.\n\nReturn EXACTLY two lines:\nCODE: <name>\nCASE: <path>'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.1, 'tool_choice': {'type': 'function', 'function': {'name': 'CaseSelection'}}, 'tools': [{'type': 'function', 'function': {'name': 'CaseSelection', 'description': 'Correctly extracted `CaseSelection` with all the required parameters with correct types', 'parameters': {'properties': {'code': {'description': 'Code name from the available list', 'title': 'Code', 'type': 'string'}, 'case': {'description': 'Case path from the selected code', 'title': 'Case', 'type': 'string'}}, 'required': ['case', 'code'], 'type': 'object'}}}]}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7b79ffd0>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x752e7d586690> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7de26390>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 27 Apr 2026 22:19:54 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'1750'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Mon, 27 Apr 2026 22:19:51 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'65548a87-7950-418c-a73b-048306c335c8'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'2.939'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'2062.681'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'3f19ae10-96ab-4c15-b0d2-79d97554fb76'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.741'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'2071.791'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'18'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=3jyOPvvk0laDHyG9xp9ED8lqmrPaWrcn0kaK9dZL_9M-1777328392.0127013-1.0.1.1-mHQ12fhH.ZrogovrepVH0rCiFmaD.WXZ8jSBFIfY1FBhVDseeBA.3htJFqM2AdRNZuA6F2whk7PKAqUhuCqaU4gpUHIWvLlWMA91iBdD22L40xkk48yZCgnOIULbVDYO; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:49:54 GMT'), (b'set-cookie', b'_cfuvid=DCikfw5kGslPboUnL_igcNaKbM6.rxaW0nLfWWOKYyg-1777328392.0127013-1.0.1.1-qaxIjUB7jdYmNsNu6PzfdA2glBg6iAWEB_mfOJ1nB1I; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f3136121e10f591-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers([('date', 'Mon, 27 Apr 2026 22:19:54 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '1750'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Mon, 27 Apr 2026 22:19:51 GMT'), ('llm_provider-server', 'uvicorn'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '65548a87-7950-418c-a73b-048306c335c8'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://vllm-h100-4x-1:8000/v1'), ('llm_provider-x-litellm-model-group', 'gemma-4-31b-it'), ('llm_provider-x-litellm-model-id', 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), ('llm_provider-x-litellm-overhead-duration-ms', '2.939'), ('llm_provider-x-litellm-response-cost-discount-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-percent', '0.0'), ('llm_provider-x-litellm-response-cost-original', '0.0'), ('llm_provider-x-litellm-response-duration-ms', '2062.681'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', '3f19ae10-96ab-4c15-b0d2-79d97554fb76'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/cborg-deepthought'), ('x-litellm-model-id', 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), ('x-litellm-overhead-duration-ms', '1.741'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '2071.791'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '18'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=3jyOPvvk0laDHyG9xp9ED8lqmrPaWrcn0kaK9dZL_9M-1777328392.0127013-1.0.1.1-mHQ12fhH.ZrogovrepVH0rCiFmaD.WXZ8jSBFIfY1FBhVDseeBA.3htJFqM2AdRNZuA6F2whk7PKAqUhuCqaU4gpUHIWvLlWMA91iBdD22L40xkk48yZCgnOIULbVDYO; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:49:54 GMT'), ('set-cookie', '_cfuvid=DCikfw5kGslPboUnL_igcNaKbM6.rxaW0nLfWWOKYyg-1777328392.0127013-1.0.1.1-qaxIjUB7jdYmNsNu6PzfdA2glBg6iAWEB_mfOJ1nB1I; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f3136121e10f591-SJC')])
+DEBUG: request_id: None
+DEBUG: Instructor Raw Response: ChatCompletion(id='chatcmpl-913b42884e0c33be', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='chatcmpl-tool-825aef5d28397a1d', function=Function(arguments='{\n  "code": "ERF",\n  "case": "Exec/RegTests/ParticleTests"\n}', name='CaseSelection'), type='function')], reasoning_content='*   Request: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n    *   Target Code: ERF (based on the request "Use ERF case").\n    *   Target Case: `Exec/RegTests/ParticleTests` with `inputs_over_hill`.\n\n    *   PeleC\n    *   PeleLMeX\n    *   WarpX\n    *   (Guidelines mention ERF for Atmospheric/weather)\n\n    *   The user explicitly asks for "ERF case Exec/RegTests/ParticleTests".\n    *   Looking at the provided list of codes, ERF is mentioned in the guidelines ("Atmospheric/weather -> ERF").\n    *   Wait, the "Available codes" list provided in the prompt only lists PeleC, PeleLMeX, and WarpX explicitly with their cases. However, the guidelines explicitly map "Atmospheric/weather -> ERF".\n    *   The request specifically asks for an ERF case.\n\n    *   Code: ERF\n    *   Case: Exec/RegTests/ParticleTests\n\n    *   The prompt asks for "EXACTLY two lines: CODE: <name> CASE: <path>".\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/ParticleTests', provider_specific_fields={'refusal': None, 'reasoning': '*   Request: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n    *   Target Code: ERF (based on the request "Use ERF case").\n    *   Target Case: `Exec/RegTests/ParticleTests` with `inputs_over_hill`.\n\n    *   PeleC\n    *   PeleLMeX\n    *   WarpX\n    *   (Guidelines mention ERF for Atmospheric/weather)\n\n    *   The user explicitly asks for "ERF case Exec/RegTests/ParticleTests".\n    *   Looking at the provided list of codes, ERF is mentioned in the guidelines ("Atmospheric/weather -> ERF").\n    *   Wait, the "Available codes" list provided in the prompt only lists PeleC, PeleLMeX, and WarpX explicitly with their cases. However, the guidelines explicitly map "Atmospheric/weather -> ERF".\n    *   The request specifically asks for an ERF case.\n\n    *   Code: ERF\n    *   Case: Exec/RegTests/ParticleTests\n\n    *   The prompt asks for "EXACTLY two lines: CODE: <name> CASE: <path>".\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/ParticleTests', 'reasoning_content': '*   Request: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n    *   Target Code: ERF (based on the request "Use ERF case").\n    *   Target Case: `Exec/RegTests/ParticleTests` with `inputs_over_hill`.\n\n    *   PeleC\n    *   PeleLMeX\n    *   WarpX\n    *   (Guidelines mention ERF for Atmospheric/weather)\n\n    *   The user explicitly asks for "ERF case Exec/RegTests/ParticleTests".\n    *   Looking at the provided list of codes, ERF is mentioned in the guidelines ("Atmospheric/weather -> ERF").\n    *   Wait, the "Available codes" list provided in the prompt only lists PeleC, PeleLMeX, and WarpX explicitly with their cases. However, the guidelines explicitly map "Atmospheric/weather -> ERF".\n    *   The request specifically asks for an ERF case.\n\n    *   Code: ERF\n    *   Case: Exec/RegTests/ParticleTests\n\n    *   The prompt asks for "EXACTLY two lines: CODE: <name> CASE: <path>".\n\n    *   CODE: ERF\n    *   CASE: Exec/RegTests/ParticleTests'}), provider_specific_fields={})], created=1777328392, model='lbl/cborg-deepthought', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=315, prompt_tokens=863, total_tokens=1178, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+WARNING: [WARN] LLM returned invalid, using keyword match
+ERROR: [ERROR] LLM failed: Missing solver selection: no keyword matched and no solver specified
+WARNING: [WARN] LLM failed: Missing solver selection: no keyword matched and no solver specified
+DEBUG:  Scoring 107 ERF cases...
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-6425f731-cf09-4a93-8041-342e9c4a8a1e', 'post_parser': <function Embeddings.create.<locals>.parser at 0x752e7b676de0>, 'content': None, 'json_data': {'input': 'Simulation request: Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill\n\nPhysics: fluid dynamics\nProblem type: general flow\nDimensionality: 2D\nSolver: ERF\nCandidate case names: ["ABL", "MOST_test_suite", "MYNN_Debug", "Rayleigh_check", "Aurora", "Perlmutter", "WW3_coupling", "column_diffusion_test", "Convective_ABL", "Neutral_ABL", "Stable_ABL", "Channel_DNS", "DensityCurrent", "EkmanSpiral", "ScharMountain"]\n\nScore ONLY the candidate case names above for relevance to this request.\nReturn STRICT JSON only (no markdown, no prose), as one object:\n{"CaseNameA": 0-10, "CaseNameB": 0-10, ...}\nUse only keys from the candidate case names list.\nIf uncertain, still return numeric scores for all candidates.', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7b67f410>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x752e7b717140> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7b67f3d0>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 27 Apr 2026 22:19:54 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4330'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Mon, 27 Apr 2026 22:19:54 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'1270456b-9c79-4cf5-8303-e6b6ac8758b8'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.412'), (b'llm_provider-x-litellm-response-duration-ms', b'51.056999999999995'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'754a6b41-8ee9-410c-a89f-0ef2f996df7c'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'1.007'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'62.984'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'17'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=wkoUdrtm.3xjt3DPMUKlD1sAz93wMsGJ3Yay7wdU0ro-1777328394.3699224-1.0.1.1-FiDq9GYofTLF.DLj_Vi2GiKVWJMOBFOxlCqMFA9kLdu1SRmChD_WAYyofsvYzFVWd1qhrdCC1er7n1p1KfOcWtzQhF3dOL5TNI3EOPfi_326GULW82vCPMdWD.J5kdJL; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:49:54 GMT'), (b'set-cookie', b'_cfuvid=OCx_qR493PRc8BrlB2hko_IY4aztj3Cc3oph8BjOuls-1777328394.3699224-1.0.1.1-U0odE0QDU11zHaqaLQSWLMuJt3hdqnAPuINdb00Xrwk; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f313620ccdbc68c-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers([('date', 'Mon, 27 Apr 2026 22:19:54 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '4330'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Mon, 27 Apr 2026 22:19:54 GMT'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-transfer-encoding', 'chunked'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '1270456b-9c79-4cf5-8303-e6b6ac8758b8'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://bk-ollama:11434/v1'), ('llm_provider-x-litellm-model-group', 'nomic-embed-text'), ('llm_provider-x-litellm-model-id', 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), ('llm_provider-x-litellm-overhead-duration-ms', '1.412'), ('llm_provider-x-litellm-response-duration-ms', '51.056999999999995'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', '754a6b41-8ee9-410c-a89f-0ef2f996df7c'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/nomic-embed-text'), ('x-litellm-model-id', '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), ('x-litellm-overhead-duration-ms', '1.007'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '62.984'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '17'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=wkoUdrtm.3xjt3DPMUKlD1sAz93wMsGJ3Yay7wdU0ro-1777328394.3699224-1.0.1.1-FiDq9GYofTLF.DLj_Vi2GiKVWJMOBFOxlCqMFA9kLdu1SRmChD_WAYyofsvYzFVWd1qhrdCC1er7n1p1KfOcWtzQhF3dOL5TNI3EOPfi_326GULW82vCPMdWD.J5kdJL; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:49:54 GMT'), ('set-cookie', '_cfuvid=OCx_qR493PRc8BrlB2hko_IY4aztj3Cc3oph8BjOuls-1777328394.3699224-1.0.1.1-U0odE0QDU11zHaqaLQSWLMuJt3hdqnAPuINdb00Xrwk; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f313620ccdbc68c-SJC')])
+DEBUG: request_id: None
+DEBUG: [DEBUG] FAISS retrieved 15 case_details results
+DEBUG: KB batch answer keys=['answer', 'sources', 'confidence', 'method'] method=faiss confidence=0.5828096884428385
+DEBUG: KB batch answer preview: [1] column_diffusion_test: <case_begin>
+<index>
+case name: column_diffusion_test
+repo path: Exec/CanonicalTests/ABL/column_diffusion_test
+case: Exec/CanonicalTests/ABL/column_diffusion_test
+local path
+DEBUG:  Using FAISS semantic scores
+DEBUG:  FAISS scored 115 cases
+DEBUG:  Top FAISS scores:
+DEBUG:   0.583 - column_diffusion_test
+DEBUG:   0.570 - Nodal_Projection_EB
+DEBUG:   0.565 - LeastSquares
+DEBUG:   0.557 - NeighborParticles
+DEBUG:   0.552 - ABecLaplacian_F
+DEBUG:  Baseline selection with 5 scoring approaches
+DEBUG:        Weights: KB=27%, Metrics=17%, Path=7%, Domain=17%, FAISS=33%
+DEBUG: [DEBUG] FAISS search query: Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill problem: general flow
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-06205f3c-57d0-4a79-b885-719fd6e6ff9d', 'post_parser': <function Embeddings.create.<locals>.parser at 0x752e7e819760>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill problem: general flow', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: close.started
+DEBUG: close.complete
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7b6a7310>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x752e7b717140> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7b6a7210>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 27 Apr 2026 22:20:14 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Mon, 27 Apr 2026 22:20:14 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'ba918801-621c-4e45-b163-7d9252a3dc18'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.431'), (b'llm_provider-x-litellm-response-duration-ms', b'236.55399999999997'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'53eecd52-bc2f-426a-ad45-345c34cf032f'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.94'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'248.89'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'19'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f31369a4daf49d2-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Mon, 27 Apr 2026 22:20:14 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Mon, 27 Apr 2026 22:20:14 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'ba918801-621c-4e45-b163-7d9252a3dc18', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.431', 'llm_provider-x-litellm-response-duration-ms': '236.55399999999997', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': '53eecd52-bc2f-426a-ad45-345c34cf032f', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.94', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '248.89', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '19', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f31369a4daf49d2-SJC'})
+DEBUG: request_id: None
+DEBUG: [DEBUG] Names index: erf_case_names
+DEBUG: [DEBUG] Names results: 50 items
+DEBUG:   1. Exec/CanonicalTests/ABL/column_diffusion_test score=0.676
+DEBUG:   2. Exec/CanonicalTests/Real_Terrain/Altamont score=0.688
+DEBUG:   3. Exec/CanonicalTests/Channel_DNS score=0.763
+DEBUG:   4. Exec/RegTests/InitFromNCFile   score=0.790
+DEBUG:   5. Exec/CanonicalTests/Canonical_LES/Convective_ABL score=0.806
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-812431da-e52f-41f5-959c-b65013edd144', 'post_parser': <function Embeddings.create.<locals>.parser at 0x752e7e819760>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill problem: general flow', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 27 Apr 2026 22:20:14 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Mon, 27 Apr 2026 22:20:14 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'fcc49ada-cb4c-4b10-ae04-c9799503e6e7'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.215'), (b'llm_provider-x-litellm-response-duration-ms', b'44.266'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'298937b8-8811-47a8-8149-b98d8d0eab4d'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'2.83'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'60.324999999999996'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'16'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Content-Security-Policy-Report-Only', b"script-src 'unsafe-inline' 'unsafe-eval'; report-uri https://csp-reporting.cloudflare.com/cdn-cgi/script_monitor/report?m=JaYUEsvRHV6pFT7XLG34_nWVSyWH9b8jHqqINcuSvkk-1777328414.168975-1.0.1.1-9nlSt_kjY2tqBamnUTVmyJ.gSViheOuyMPkYKXMNM5jCML2HPBROkH0ed5b5ZPrYD8yC77F5cjx8c5xGWsC1jLDvR0g_1UMR9fcTMFEYPWRP_gB7yX6N7Hm68s_4xkXpUKXv7tpRR8fanTnNQn0NShxssxTtpC1XYx2G0jfuCeB7VNlZlPsLF1iDTxIf6gdp; report-to cf-csp-endpoint"), (b'Strict-Transport-Security', b'max-age=31536000'), (b'Report-To', b'{"group":"cf-csp-endpoint","max_age":86400,"endpoints":[{"url":"https://csp-reporting.cloudflare.com/cdn-cgi/script_monitor/report?m=JaYUEsvRHV6pFT7XLG34_nWVSyWH9b8jHqqINcuSvkk-1777328414.168975-1.0.1.1-9nlSt_kjY2tqBamnUTVmyJ.gSViheOuyMPkYKXMNM5jCML2HPBROkH0ed5b5ZPrYD8yC77F5cjx8c5xGWsC1jLDvR0g_1UMR9fcTMFEYPWRP_gB7yX6N7Hm68s_4xkXpUKXv7tpRR8fanTnNQn0NShxssxTtpC1XYx2G0jfuCeB7VNlZlPsLF1iDTxIf6gdp"}]}'), (b'CF-RAY', b'9f31369c8be349d2-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Mon, 27 Apr 2026 22:20:14 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Mon, 27 Apr 2026 22:20:14 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'fcc49ada-cb4c-4b10-ae04-c9799503e6e7', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.215', 'llm_provider-x-litellm-response-duration-ms': '44.266', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': '298937b8-8811-47a8-8149-b98d8d0eab4d', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '2.83', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '60.324999999999996', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '16', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'content-security-policy-report-only': "script-src 'unsafe-inline' 'unsafe-eval'; report-uri https://csp-reporting.cloudflare.com/cdn-cgi/script_monitor/report?m=JaYUEsvRHV6pFT7XLG34_nWVSyWH9b8jHqqINcuSvkk-1777328414.168975-1.0.1.1-9nlSt_kjY2tqBamnUTVmyJ.gSViheOuyMPkYKXMNM5jCML2HPBROkH0ed5b5ZPrYD8yC77F5cjx8c5xGWsC1jLDvR0g_1UMR9fcTMFEYPWRP_gB7yX6N7Hm68s_4xkXpUKXv7tpRR8fanTnNQn0NShxssxTtpC1XYx2G0jfuCeB7VNlZlPsLF1iDTxIf6gdp; report-to cf-csp-endpoint", 'strict-transport-security': 'max-age=31536000', 'report-to': '{"group":"cf-csp-endpoint","max_age":86400,"endpoints":[{"url":"https://csp-reporting.cloudflare.com/cdn-cgi/script_monitor/report?m=JaYUEsvRHV6pFT7XLG34_nWVSyWH9b8jHqqINcuSvkk-1777328414.168975-1.0.1.1-9nlSt_kjY2tqBamnUTVmyJ.gSViheOuyMPkYKXMNM5jCML2HPBROkH0ed5b5ZPrYD8yC77F5cjx8c5xGWsC1jLDvR0g_1UMR9fcTMFEYPWRP_gB7yX6N7Hm68s_4xkXpUKXv7tpRR8fanTnNQn0NShxssxTtpC1XYx2G0jfuCeB7VNlZlPsLF1iDTxIf6gdp"}]}', 'cf-ray': '9f31369c8be349d2-SJC'})
+DEBUG: request_id: None
+DEBUG: [DEBUG] Structure index: erf_case_structure
+DEBUG: [DEBUG] Structure results: 50 items
+DEBUG:   1. Exec/RegTests/MultiSpeciesBubble score=0.717
+DEBUG:   2. Exec/Ascent_Insitu_SOA         score=0.734
+DEBUG:   3. Exec/RegTests/Couette_Poiseuille score=0.745
+DEBUG:   4. Exec/NeighborList              score=0.749
+DEBUG:   5. Exec/RandomNumberGeneration    score=0.752
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-3bcefefb-340d-4876-a4c3-82a567255e3a', 'post_parser': <function Embeddings.create.<locals>.parser at 0x752e7e819760>, 'content': None, 'json_data': {'input': 'Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill problem: general flow', 'model': 'lbl/nomic-embed-text', 'encoding_format': 'base64'}, 'extra_json': {'caching': True, 'ttl': 3600}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 27 Apr 2026 22:20:14 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'4328'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Mon, 27 Apr 2026 22:20:14 GMT'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'f85723fb-dd57-4595-a562-b9553a36886b'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://bk-ollama:11434/v1'), (b'llm_provider-x-litellm-model-group', b'nomic-embed-text'), (b'llm_provider-x-litellm-model-id', b'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78'), (b'llm_provider-x-litellm-overhead-duration-ms', b'1.258'), (b'llm_provider-x-litellm-response-duration-ms', b'46.114000000000004'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'cfae8071-73dd-4562-83bc-0128d7c22757'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/nomic-embed-text'), (b'x-litellm-model-id', b'24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613'), (b'x-litellm-overhead-duration-ms', b'0.817'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'65.97699999999999'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'15'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f31369d8e5a49d2-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/embeddings "200 OK" Headers({'date': 'Mon, 27 Apr 2026 22:20:14 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'llm_provider-connection': 'keep-alive', 'llm_provider-content-length': '4328', 'llm_provider-content-type': 'application/json', 'llm_provider-date': 'Mon, 27 Apr 2026 22:20:14 GMT', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-x-litellm-attempted-fallbacks': '0', 'llm_provider-x-litellm-attempted-retries': '0', 'llm_provider-x-litellm-call-id': 'f85723fb-dd57-4595-a562-b9553a36886b', 'llm_provider-x-litellm-callback-duration-ms': '0.0', 'llm_provider-x-litellm-key-spend': '0.0', 'llm_provider-x-litellm-model-api-base': 'http://bk-ollama:11434/v1', 'llm_provider-x-litellm-model-group': 'nomic-embed-text', 'llm_provider-x-litellm-model-id': 'e901e127b5a03b42d00ac2bb0c3b6e6b9aa79231706264fc678143908077bd78', 'llm_provider-x-litellm-overhead-duration-ms': '1.258', 'llm_provider-x-litellm-response-duration-ms': '46.114000000000004', 'llm_provider-x-litellm-version': '1.82.6', 'server': 'cloudflare', 'x-litellm-attempted-fallbacks': '0', 'x-litellm-attempted-retries': '0', 'x-litellm-call-id': 'cfae8071-73dd-4562-83bc-0128d7c22757', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-key-spend': '77.07672629500004', 'x-litellm-model-api-base': 'https://api-metal.cborg.bk.lbl.gov/v1', 'x-litellm-model-group': 'lbl/nomic-embed-text', 'x-litellm-model-id': '24d0f3e7d7f489614d0f29bd89124f546eb78a8341d0ef127aba174081a8a613', 'x-litellm-overhead-duration-ms': '0.817', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-response-cost-original': '0.0', 'x-litellm-response-duration-ms': '65.97699999999999', 'x-litellm-version': '1.82.6', 'x-ratelimit-user-limit-requests': '20', 'x-ratelimit-user-remaining-requests': '15', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'strict-transport-security': 'max-age=31536000', 'cf-ray': '9f31369d8e5a49d2-SJC'})
+DEBUG: request_id: None
+DEBUG: 
+[SCAN] FAISS RAW SCORES (top 10):
+DEBUG:   ABL                            0.501
+DEBUG:   column_diffusion_test          0.501
+DEBUG:   WitchOfAgnesi                  0.451
+DEBUG:   WitchOfAgnesi                  0.451
+DEBUG:   Stable_ABL                     0.449
+DEBUG:   ABecLaplacian_F                0.449
+DEBUG:   LeastSquares                   0.448
+DEBUG:   ABecLaplacian_C                0.448
+DEBUG:   threadmultiple_test            0.447
+DEBUG:   Nodal_Projection_EB            0.447
+DEBUG:   Couette_Poiseuille             total=0.513 (FAISS=0.443, metrics=0.504, path=0.850, domain=0.000)
+DEBUG:   MetGrid                        total=0.374 (FAISS=0.091, metrics=0.387, path=0.850, domain=0.000)
+DEBUG:   WitchOfAgnesi                  total=0.371 (FAISS=0.451, metrics=0.505, path=0.850, domain=0.000)
+DEBUG:   WPS_Test                       total=0.361 (FAISS=0.382, metrics=0.582, path=0.850, domain=0.000)
+DEBUG:   EB_Poiseuille                  total=0.347 (FAISS=0.437, metrics=0.387, path=0.850, domain=0.000)
+DEBUG:   Terrain3d_Hemisphere           total=0.344 (FAISS=0.346, metrics=0.553, path=0.850, domain=0.000)
+DEBUG:   Terrain2d_Cylinder             total=0.343 (FAISS=0.346, metrics=0.543, path=0.850, domain=0.000)
+DEBUG:   InitFromNCFile                 total=0.334 (FAISS=0.399, metrics=0.387, path=0.850, domain=0.000)
+DEBUG:   ParticleTests                  total=0.321 (FAISS=0.000, metrics=0.387, path=0.850, domain=0.000)
+DEBUG:   Radiation                      total=0.320 (FAISS=0.356, metrics=0.387, path=0.850, domain=0.000)
+DEBUG: Selected baseline: ERF/Exec/RegTests/Couette_Poiseuille
+
+DEBUG: Using newest schema: erf_complete_v1_amrexbac2457_erf5613ec3.json
+DEBUG: Loaded nested schema with 862 parameters from erf_complete_v1_amrexbac2457_erf5613ec3.json
+DEBUG: 
+[PASS] Plan created with 0 modifications
+DEBUG:        Overall confidence: 41.64%
+
+DEBUG: Simple indexing succeeded
+DEBUG: [DATA TRANSFER] Called architect service with feedback=True
+INFO: Plan created: Exec/RegTests/Couette_Poiseuille
+DEBUG: History entry appended: plan_created at iteration 1
+DEBUG: Baseline metadata computed: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille
+INFO: Iteration 1, Retry 0, Mode: proceed
+INFO: --------------------------------------------------------------------------------
+INFO: Architect node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Reviewer node
+INFO: ================================================================================
+DEBUG: [DATA TRANSFER] Checking for parameter resolution requirement
+DEBUG: [DATA TRANSFER] requires_parameter_resolution = False
+DEBUG: Plan loaded from workflow_history (canonical path)
+INFO: Reviewing plan...
+DEBUG: Using newest schema: erf_complete_v1_amrexbac2457_erf5613ec3.json
+WARNING: No build config found - skipping dependency checks
+DEBUG: Using flat schema: 0 params found
+DEBUG: Rule 'SchemaExistence' found 0 violation(s)
+DEBUG: Rule 'BuildFlagDependency' found 0 violation(s)
+DEBUG: Rule 'GridConsistency' found 0 violation(s)
+DEBUG: Rule 'TimestepBounds' found 0 violation(s)
+DEBUG: [REVIEWER SERVICE] Returning ValidationResult with 862 schema params
+INFO: Plan approved - proceeding to execution
+DEBUG: [REVIEWER NODE] Creating history entry
+DEBUG: [REVIEWER NODE] validation_result.available_schema_params: 862 items
+DEBUG: [REVIEWER NODE] Sample schema params: ['amr.regrid_on_restart', 'amr.force_regrid_level_zero', 'amr.use_efficient_regrid', 'amr.plotfile_on_restart', 'amr.insitu_on_restart', 'amr.checkpoint_on_restart', 'amr.compute_new_dt_on_regrid', 'amr.mffile_nstreams', 'amr.probinit_natonce', 'amr.file_name_digits']
+INFO: Review complete: proceed (errors: 0)
+INFO: --------------------------------------------------------------------------------
+INFO: Reviewer node complete
+INFO: --------------------------------------------------------------------------------
+DEBUG: [ROUTE] Reviewer → Input Writer (Approved)
+INFO: ================================================================================
+INFO: Starting Input Writer node
+INFO: ================================================================================
+DEBUG: [InputWriter] Plan extracted from workflow_history: Exec/RegTests/Couette_Poiseuille
+DEBUG: [InputWriter] Extracted 0 modifications: []...
+DEBUG: [InputWriter] Baseline: {'code_name': 'ERF', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/ERF', 'case_path': 'Exec/RegTests/Couette_Poiseuille', 'local_path': '/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille'}
+DEBUG: Target directory: benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [OK] FAISS embeddings initialized for input writer
+DEBUG: InputWriterService instantiated with cases service
+DEBUG: [Input Writer] Starting Load-Modify-Write pipeline
+DEBUG: [DEBUG] baseline dict keys: ['code_name', 'repo_path', 'case_path', 'local_path']
+DEBUG: [DEBUG] baseline dict: {'code_name': 'ERF', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/ERF', 'case_path': 'Exec/RegTests/Couette_Poiseuille', 'local_path': '/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille'}
+DEBUG: Plan: solver=ERF, case=Exec/RegTests/Couette_Poiseuille
+DEBUG: Reasoning: Selected baseline: ERF/Exec/RegTests/Couette_Poiseuille. 0 modifications planned. 5-bucket scoring (weights: {'kb_relevance': 0.26666666666666666, 'metrics': 0.16666666666666666, 'path_heuristics': 0.06666666666666667, 'domain_specific': 0.16666666666666666, 'faiss_semantic': 0.3333333333333333})
+DEBUG: [1/5] Loading baseline: Exec/RegTests/Couette_Poiseuille
+INFO: Default inputs path is outside selected case directory; strategy_first will ignore it: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Bubble/inputs (case: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille)
+DEBUG: Patching `client.chat.completions.create` with mode=<Mode.TOOLS: 'tool_call'>
+DEBUG: Instructor Request: mode.value='tool_call', response_model=<class 'src.services.inputs_file_selector.InputsFileSelector._select_with_llm.<locals>.InputsSelection'>, new_kwargs={'messages': [{'role': 'user', 'content': 'You are selecting the best inputs file for an ERF atmospheric case.\nERF atmospheric case directory: Couette_Poiseuille\n\nRequested simulation prompt:\nUse ERF case Exec/RegTests/ParticleTests with inputs_over_hill\n\nChoose the file that best matches the benchmark intent from filename and header.\nPrefer files that preserve the intended atmospheric setup (e.g., terrain, ABL, moist/dry convection, forcing) without assuming case-specific IDs.\nStrongly prioritize explicit matches to requested boundary conditions, moisture model, and timestep style when present in the prompt.\nReturn ONLY one filename from the candidate list.\n\nFILE: inputs_couette_x\n#------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Couette Flow"\nmax_step = 50\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_extent = 32     4    16\namr.n_cell           = 32     4    16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\nzlo.velocity    = 0.0 0.0 0.0  # for Dirichlet BC\nzhi.velocity    = 2.0 0.0 0.0  # for Dirichlet BC\n\n# TIME STEP CONTROL\nerf.cfl             = 0.9\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval   = 1       # timesteps between computing mass\nerf.v              = 1       # verbosity in ERF.cpp\namr.v                = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 50         # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n\nFILE: inputs_poiseuille_y\n# ------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Poiseuille Flow"\nmax_step = 10\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_lo     =  0    0.  -1.\ngeometry.prob_hi     =  1.   4.   1.    \namr.n_cell           =  4   32    16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\n# TIME STEP CONTROL\nerf.substepping_type   = None\nerf.cfl                = 0.5     # cfl number for hyperbolic system\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval   = 1       # timesteps between computing mass\nerf.v              = 1       # verbosity in ERF.cpp\namr.v              = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 100        # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n# SOLVER CHOICE\n\nFILE: inputs_couette_y\n# ------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Couette Flow"\nmax_step = 50\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_extent = 4  32  16\namr.n_cell           = 4  32  16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\nzlo.velocity    = 0.0 0.0 0.0  # for Dirichlet BC\nzhi.velocity    = 0.0 2.0 0.0  # for Dirichlet BC\n\n# TIME STEP CONTROL\nerf.cfl             = 0.9\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval  = 1       # timesteps between computing mass\nerf.v             = 1       # verbosity in ERF.cpp\namr.v             = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 50         # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n\nFILE: inputs_poiseuille_x\n# ------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Poiseuille Flow"\nmax_step = 10\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_lo     =  0    0.  -1.\ngeometry.prob_hi     =  4.   1.   1.    \namr.n_cell           = 32    4   16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\n# TIME STEP CONTROL\nerf.substepping_type   = None\nerf.cfl                = 0.5     # cfl number for hyperbolic system\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval   = 1       # timesteps between computing mass\nerf.v              = 1       # verbosity in ERF.cpp\namr.v              = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 100        # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n# SOLVER CHOICE\n'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.0, 'tools': [{'type': 'function', 'function': {'name': 'InputsSelection', 'description': 'Correctly extracted `InputsSelection` with all the required parameters with correct types', 'parameters': {'properties': {'filename': {'description': 'Selected inputs filename', 'title': 'Filename', 'type': 'string'}}, 'required': ['filename'], 'type': 'object'}}}], 'tool_choice': {'type': 'function', 'function': {'name': 'InputsSelection'}}}
+DEBUG: max_retries: 2, timeout: None
+DEBUG: Retrying, attempt: 1
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-11365b56-f804-4140-811b-877235a952be', 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': 'You are selecting the best inputs file for an ERF atmospheric case.\nERF atmospheric case directory: Couette_Poiseuille\n\nRequested simulation prompt:\nUse ERF case Exec/RegTests/ParticleTests with inputs_over_hill\n\nChoose the file that best matches the benchmark intent from filename and header.\nPrefer files that preserve the intended atmospheric setup (e.g., terrain, ABL, moist/dry convection, forcing) without assuming case-specific IDs.\nStrongly prioritize explicit matches to requested boundary conditions, moisture model, and timestep style when present in the prompt.\nReturn ONLY one filename from the candidate list.\n\nFILE: inputs_couette_x\n#------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Couette Flow"\nmax_step = 50\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_extent = 32     4    16\namr.n_cell           = 32     4    16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\nzlo.velocity    = 0.0 0.0 0.0  # for Dirichlet BC\nzhi.velocity    = 2.0 0.0 0.0  # for Dirichlet BC\n\n# TIME STEP CONTROL\nerf.cfl             = 0.9\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval   = 1       # timesteps between computing mass\nerf.v              = 1       # verbosity in ERF.cpp\namr.v                = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 50         # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n\nFILE: inputs_poiseuille_y\n# ------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Poiseuille Flow"\nmax_step = 10\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_lo     =  0    0.  -1.\ngeometry.prob_hi     =  1.   4.   1.    \namr.n_cell           =  4   32    16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\n# TIME STEP CONTROL\nerf.substepping_type   = None\nerf.cfl                = 0.5     # cfl number for hyperbolic system\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval   = 1       # timesteps between computing mass\nerf.v              = 1       # verbosity in ERF.cpp\namr.v              = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 100        # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n# SOLVER CHOICE\n\nFILE: inputs_couette_y\n# ------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Couette Flow"\nmax_step = 50\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_extent = 4  32  16\namr.n_cell           = 4  32  16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\nzlo.velocity    = 0.0 0.0 0.0  # for Dirichlet BC\nzhi.velocity    = 0.0 2.0 0.0  # for Dirichlet BC\n\n# TIME STEP CONTROL\nerf.cfl             = 0.9\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval  = 1       # timesteps between computing mass\nerf.v             = 1       # verbosity in ERF.cpp\namr.v             = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 50         # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n\nFILE: inputs_poiseuille_x\n# ------------------  INPUTS TO MAIN PROGRAM  -------------------\nerf.prob_name = "Poiseuille Flow"\nmax_step = 10\n\namrex.fpe_trap_invalid = 1\n\nfabarray.mfiter_tile_size = 1024 1024 1024\n\n# PROBLEM SIZE & GEOMETRY\ngeometry.prob_lo     =  0    0.  -1.\ngeometry.prob_hi     =  4.   1.   1.    \namr.n_cell           = 32    4   16\n\ngeometry.is_periodic = 1 1 0\n\nzlo.type = "NoSlipWall"\nzhi.type = "NoSlipWall"\n\n# TIME STEP CONTROL\nerf.substepping_type   = None\nerf.cfl                = 0.5     # cfl number for hyperbolic system\n\n# DIAGNOSTICS & VERBOSITY\nerf.sum_interval   = 1       # timesteps between computing mass\nerf.v              = 1       # verbosity in ERF.cpp\namr.v              = 1       # verbosity in Amr.cpp\n\n# REFINEMENT / REGRIDDING\namr.max_level       = 0       # maximum level number allowed\n\n# CHECKPOINT FILES\nerf.check_file      = chk        # root name of checkpoint file\nerf.check_int       = 1000       # number of timesteps between checkpoints\n\n# PLOTFILES\nerf.plot_file_1     = plt        # prefix of plotfile name\nerf.plot_int_1      = 100        # number of timesteps between plotfiles\nerf.plot_vars_1     = density x_velocity y_velocity z_velocity\n\n# SOLVER CHOICE\n'}], 'model': 'lbl/cborg-deepthought', 'temperature': 0.0, 'tool_choice': {'type': 'function', 'function': {'name': 'InputsSelection'}}, 'tools': [{'type': 'function', 'function': {'name': 'InputsSelection', 'description': 'Correctly extracted `InputsSelection` with all the required parameters with correct types', 'parameters': {'properties': {'filename': {'description': 'Selected inputs filename', 'title': 'Filename', 'type': 'string'}}, 'required': ['filename'], 'type': 'object'}}}]}}
+DEBUG: Sending HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions
+DEBUG: connect_tcp.started host='api.cborg.lbl.gov' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7b474a90>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x752e7b608440> server_hostname='api.cborg.lbl.gov' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x752e7b474b90>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Mon, 27 Apr 2026 22:20:39 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Content-Encoding', b'gzip'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-content-length', b'13387'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-date', b'Mon, 27 Apr 2026 22:20:14 GMT'), (b'llm_provider-server', b'uvicorn'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains'), (b'llm_provider-x-litellm-attempted-fallbacks', b'0'), (b'llm_provider-x-litellm-attempted-retries', b'0'), (b'llm_provider-x-litellm-call-id', b'09129aea-36cd-459e-8a56-36d3a55040b7'), (b'llm_provider-x-litellm-callback-duration-ms', b'0.0'), (b'llm_provider-x-litellm-key-spend', b'0.0'), (b'llm_provider-x-litellm-model-api-base', b'http://vllm-h100-4x-1:8000/v1'), (b'llm_provider-x-litellm-model-group', b'gemma-4-31b-it'), (b'llm_provider-x-litellm-model-id', b'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), (b'llm_provider-x-litellm-overhead-duration-ms', b'3.777'), (b'llm_provider-x-litellm-response-cost-discount-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-amount', b'0.0'), (b'llm_provider-x-litellm-response-cost-margin-percent', b'0.0'), (b'llm_provider-x-litellm-response-cost-original', b'0.0'), (b'llm_provider-x-litellm-response-duration-ms', b'25258.949999999997'), (b'llm_provider-x-litellm-version', b'1.82.6'), (b'Server', b'cloudflare'), (b'x-litellm-attempted-fallbacks', b'0'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-call-id', b'e55dfe2c-32d8-4684-a1a0-c09b176d0402'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-key-spend', b'77.07672629500004'), (b'x-litellm-model-api-base', b'https://api-metal.cborg.bk.lbl.gov/v1'), (b'x-litellm-model-group', b'lbl/cborg-deepthought'), (b'x-litellm-model-id', b'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), (b'x-litellm-overhead-duration-ms', b'1.94'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-response-cost-original', b'0.0'), (b'x-litellm-response-duration-ms', b'25273.495'), (b'x-litellm-version', b'1.82.6'), (b'x-ratelimit-user-limit-requests', b'20'), (b'x-ratelimit-user-remaining-requests', b'14'), (b'cf-cache-status', b'DYNAMIC'), (b'set-cookie', b'__cf_bm=6AOrNQLj0Ezm2hZiu3w.XjM79gjNqvZ6u_nJjJ5B5QA-1777328414.6134312-1.0.1.1-hLN1KoTQ5cqqZ20uFz9Y8K2RIx6j55v_MyhRe1EPCEb7OfXq1BAnd1xMtzZZaTzpMm2aBrDe3BltMSBizlsQkSMWO7CeE9Pd2_u3sClkyBcEISgWZsBiQx2Mfspdtu0S; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:50:39 GMT'), (b'set-cookie', b'_cfuvid=9KlfKLXmYTH7flJYGJw2Jy1yzTYHZTUqcloL4CQZbMU-1777328414.6134312-1.0.1.1-ypcQjGxyn4vHeObQfw3AqCT6UpUgLRwJXxSVSMsZUCg; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), (b'vary', b'accept-encoding'), (b'Strict-Transport-Security', b'max-age=31536000'), (b'CF-RAY', b'9f31369f5abc9100-SJC')])
+INFO: HTTP Request: POST https://api.cborg.lbl.gov/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.cborg.lbl.gov/v1/chat/completions "200 OK" Headers([('date', 'Mon, 27 Apr 2026 22:20:39 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('content-encoding', 'gzip'), ('llm_provider-connection', 'keep-alive'), ('llm_provider-content-length', '13387'), ('llm_provider-content-type', 'application/json'), ('llm_provider-date', 'Mon, 27 Apr 2026 22:20:14 GMT'), ('llm_provider-server', 'uvicorn'), ('llm_provider-strict-transport-security', 'max-age=31536000; includeSubDomains'), ('llm_provider-x-litellm-attempted-fallbacks', '0'), ('llm_provider-x-litellm-attempted-retries', '0'), ('llm_provider-x-litellm-call-id', '09129aea-36cd-459e-8a56-36d3a55040b7'), ('llm_provider-x-litellm-callback-duration-ms', '0.0'), ('llm_provider-x-litellm-key-spend', '0.0'), ('llm_provider-x-litellm-model-api-base', 'http://vllm-h100-4x-1:8000/v1'), ('llm_provider-x-litellm-model-group', 'gemma-4-31b-it'), ('llm_provider-x-litellm-model-id', 'b6ad9700f951f7a35e3a24c27c174c6a0dee61daa6e939d96b32a39b19f2ae53'), ('llm_provider-x-litellm-overhead-duration-ms', '3.777'), ('llm_provider-x-litellm-response-cost-discount-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-amount', '0.0'), ('llm_provider-x-litellm-response-cost-margin-percent', '0.0'), ('llm_provider-x-litellm-response-cost-original', '0.0'), ('llm_provider-x-litellm-response-duration-ms', '25258.949999999997'), ('llm_provider-x-litellm-version', '1.82.6'), ('server', 'cloudflare'), ('x-litellm-attempted-fallbacks', '0'), ('x-litellm-attempted-retries', '0'), ('x-litellm-call-id', 'e55dfe2c-32d8-4684-a1a0-c09b176d0402'), ('x-litellm-callback-duration-ms', '0.0'), ('x-litellm-key-spend', '77.07672629500004'), ('x-litellm-model-api-base', 'https://api-metal.cborg.bk.lbl.gov/v1'), ('x-litellm-model-group', 'lbl/cborg-deepthought'), ('x-litellm-model-id', 'faf9284ed118614ade2083c30ced0f3fc4f74f27d839d11802094909ea7e1d61'), ('x-litellm-overhead-duration-ms', '1.94'), ('x-litellm-response-cost-discount-amount', '0.0'), ('x-litellm-response-cost-margin-amount', '0.0'), ('x-litellm-response-cost-margin-percent', '0.0'), ('x-litellm-response-cost-original', '0.0'), ('x-litellm-response-duration-ms', '25273.495'), ('x-litellm-version', '1.82.6'), ('x-ratelimit-user-limit-requests', '20'), ('x-ratelimit-user-remaining-requests', '14'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=6AOrNQLj0Ezm2hZiu3w.XjM79gjNqvZ6u_nJjJ5B5QA-1777328414.6134312-1.0.1.1-hLN1KoTQ5cqqZ20uFz9Y8K2RIx6j55v_MyhRe1EPCEb7OfXq1BAnd1xMtzZZaTzpMm2aBrDe3BltMSBizlsQkSMWO7CeE9Pd2_u3sClkyBcEISgWZsBiQx2Mfspdtu0S; HttpOnly; Secure; Path=/; Domain=lbl.gov; Expires=Mon, 27 Apr 2026 22:50:39 GMT'), ('set-cookie', '_cfuvid=9KlfKLXmYTH7flJYGJw2Jy1yzTYHZTUqcloL4CQZbMU-1777328414.6134312-1.0.1.1-ypcQjGxyn4vHeObQfw3AqCT6UpUgLRwJXxSVSMsZUCg; HttpOnly; SameSite=None; Secure; Path=/; Domain=lbl.gov'), ('vary', 'accept-encoding'), ('strict-transport-security', 'max-age=31536000'), ('cf-ray', '9f31369f5abc9100-SJC')])
+DEBUG: request_id: None
+DEBUG: Instructor Raw Response: ChatCompletion(id='chatcmpl-be1b875bfe12f075', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='chatcmpl-tool-9097f4e429cd3054', function=Function(arguments='{\n  "filename": "inputs_couette_x"\n}', name='InputsSelection'), type='function')], reasoning_content='*   ERF atmospheric case directory: `Couette_Poiseuille`\n    *   Requested simulation prompt: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n    *   Candidate files: `inputs_couette_x`, `inputs_poiseuille_y`, `inputs_couette_y`, `inputs_poiseuille_x`.\n\n    *   The prompt asks for `inputs_over_hill`.\n    *   Looking at the candidate files:\n        *   `inputs_couette_x`\n        *   `inputs_poiseuille_y`\n        *   `inputs_couette_y`\n        *   `inputs_poiseuille_x`\n    *   None of the candidate files are named `inputs_over_hill`.\n\n    *   The prompt says "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   However, the directory provided is `Couette_Poiseuille`.\n    *   The candidate files are all related to Couette or Poiseuille flow.\n    *   Wait, the prompt might be a generic template or a mistake, but I must choose the *best* match from the *provided* list.\n    *   If the prompt asks for `inputs_over_hill` but the directory is `Couette_Poiseuille` and the files are Couette/Poiseuille, there is a mismatch.\n    *   Let\'s re-read the prompt: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is there any file that resembles "over hill"? No.\n    *   Is there any file that matches the directory `Couette_Poiseuille`? Yes, all of them.\n    *   Is there any other clue? The prompt mentions `ParticleTests`.\n    *   Let\'s look at the files again.\n        *   `inputs_couette_x`: Couette Flow, x-direction velocity.\n        *   `inputs_couette_y`: Couette Flow, y-direction velocity.\n        *   `inputs_poiseuille_x`: Poiseuille Flow, x-direction.\n        *   `inputs_poiseuille_y`: Poiseuille Flow, y-direction.\n\n    *   Wait, if the prompt specifically asks for `inputs_over_hill` and it\'s not there, but the directory is `Couette_Poiseuille`, maybe the prompt is just wrong or I should look for the most "standard" one?\n    *   Actually, looking at the prompt again: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill". This looks like a request for a completely different case.\n    *   However, the instructions say: "Choose the file that best matches the benchmark intent from filename and header."\n    *   If the requested file `inputs_over_hill` is missing, and I\'m in the `Couette_Poiseuille` directory, I have to pick one of the four.\n    *   Is there any connection between "over hill" and Couette/Poiseuille? Not really.\n    *   Let\'s check if any of the files mention particles or hills in the header.\n        *   `inputs_couette_x`: No.\n        *   `inputs_poiseuille_y`: No.\n        *   `inputs_couette_y`: No.\n        *   `inputs_poiseuille_x`: No.\n\n    *   Wait, let me re-read the prompt very carefully. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If the requested file is `inputs_over_hill` and it\'s not in the list, but the directory is `Couette_Poiseuille`, this is a contradiction.\n    *   However, usually in these tasks, if the specific filename requested isn\'t there, I should look for the closest match. But "over hill" is very different from "Couette" or "Poiseuille".\n    *   Let\'s look at the provided files again.\n    *   Maybe the prompt is a distractor and I should just pick a file from the `Couette_Poiseuille` directory?\n    *   But which one? `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   If the prompt is "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill", and I am forced to choose from the `Couette_Poiseuille` list, there is no logical match.\n    *   *Self-Correction*: Let me check if I missed any file. No, only those four.\n    *   Is it possible that `inputs_over_hill` is a typo for one of these? Unlikely.\n    *   Is it possible that the prompt is simply wrong and I should pick the most "generic" or "first" one?\n    *   Let\'s look at the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Wait, if the prompt is asking for `inputs_over_hill` and it\'s not there, but the directory is `Couette_Poiseuille`, maybe I should look for a file that *would* be used in a particle test?\n    *   Couette and Poiseuille flows are often used as simple benchmarks for particle tracking (advection).\n    *   Between Couette and Poiseuille, which is more common for a "ParticleTest"? Both are.\n    *   Between X and Y, which is more common? X is usually the default.\n    *   Let\'s look at the files again.\n    *   `inputs_couette_x`\n    *   `inputs_poiseuille_x`\n    *   `inputs_couette_y`\n    *   `inputs_poiseuille_y`\n    *   If I have to guess which one "over hill" (a terrain-based flow) might be replaced by in a simplified test suite, it\'s hard.\n    *   However, usually, if the prompt is completely mismatched, I should look for the most basic case.\n    *   Let\'s re-read the instructions: "Strongly prioritize explicit matches to requested boundary conditions, moisture model, and timestep style when present in the prompt."\n    *   The prompt mentions `inputs_over_hill`.\n    *   Since `inputs_over_hill` is not present, and the directory is `Couette_Poiseuille`, I suspect there might be a mistake in the prompt provided to me, or I\'m supposed to pick the one that is most "standard".\n    *   Let\'s look at the filenames again. `inputs_couette_x`, `inputs_poiseuille_x`, `inputs_couette_y`, `inputs_poiseuille_y`.\n    *   If the prompt is "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill", and I\'m in `Couette_Poiseuille`, maybe the "over hill" part is the key? A hill creates a pressure gradient. Poiseuille flow is driven by a pressure gradient. Couette flow is driven by a moving wall.\n    *   Therefore, Poiseuille flow is a closer analog to a pressure-driven flow (like flow over a hill) than Couette flow is.\n    *   Between `inputs_poiseuille_x` and `inputs_poiseuille_y`, `inputs_poiseuille_x` is the more standard orientation.\n\n    *   Prompt: `inputs_over_hill`\n    *   Directory: `Couette_Poiseuille`\n    *   Files: `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   Logic:\n        1.  `inputs_over_hill` is not available.\n        2.  `over_hill` involves flow driven by pressure/terrain.\n        3.  `Poiseuille` flow is driven by a pressure gradient.\n        4.  `Couette` flow is driven by boundary motion.\n        5.  `Poiseuille` is a better match for the "intent" of a pressure-driven flow.\n        6.  `inputs_poiseuille_x` is the standard x-direction version.\n\n    *   Wait, let me double check the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is it possible that `inputs_over_hill` is actually one of the files but renamed? No.\n    *   Is it possible that the prompt is just a copy-paste error and I should just pick the most likely file in the `Couette_Poiseuille` directory?\n    *   If I look at the `ParticleTests` context, often these tests use the simplest possible flow. Couette flow is simpler than Poiseuille flow.\n    *   But "over hill" is definitely not "Couette".\n    *   Let\'s try to see if there\'s any other connection.\n    *   Actually, looking at the provided files, `inputs_couette_x` and `inputs_couette_y` are very similar, as are the Poiseuille ones.\n    *   If the prompt is completely wrong, I\'ll go with `inputs_couette_x` as it\'s the first one, or `inputs_poiseuille_x`.\n    *   Let\'s think about "over hill" again. A hill is a perturbation in the Z direction.\n    *   In `inputs_poiseuille_x`, the flow is in X, and the walls are at Z.\n    *   In `inputs_couette_x`, the flow is in X, and the walls are at Z.\n    *   Wait, let\'s look at the `geometry.prob_extent` or `geometry.prob_lo/hi`.\n    *   `inputs_couette_x`: `geometry.prob_extent = 32 4 16` (X=32, Y=4, Z=16)\n    *   `inputs_couette_y`: `geometry.prob_extent = 4 32 16` (X=4, Y=32, Z=16)\n    *   `inputs_poiseuille_x`: `geometry.prob_lo = 0 0 -1`, `geometry.prob_hi = 4 1 1` (X=4, Y=1, Z=2)\n    *   `inputs_poiseuille_y`: `geometry.prob_lo = 0 0 -1`, `geometry.prob_hi = 1 4 1` (X=1, Y=4, Z=2)\n    *   The `ParticleTests` usually use a simple box.\n    *   If the prompt is "inputs_over_hill", and I have to pick from `Couette_Poiseuille`, and I can\'t find a match, I\'ll look for the most common benchmark.\n    *   Actually, I\'ll search for "ERF ParticleTests inputs_over_hill". (Mental search).\n    *   In many ERF (Energy Research Framework) tests, `inputs_over_hill` is a standard case for atmospheric flow.\n    *   If the user is asking for `inputs_over_hill` but the directory is `Couette_Poiseuille`, it\'s highly likely the prompt is just a mismatch.\n    *   However, I must return *one* filename.\n    *   Let\'s look at the files again. Is there any file that mentions "hill" or "particle" in the comments?\n    *   `inputs_couette_x`: No.\n    *   `inputs_poiseuille_y`: No.\n    *   `inputs_couette_y`: No.\n    *   `inputs_poiseuille_x`: No.\n    *   Okay, if there\'s no match, I\'ll pick the most basic one. `inputs_couette_x` is the first one listed and a very basic flow.\n    *   But wait! Let me look at the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If I am in the `Couette_Poiseuille` directory, and the prompt asks for `inputs_over_hill`, maybe the user *meant* to ask for one of the Couette/Poiseuille files?\n    *   If the prompt is a mistake and I have to choose the "best" match, and there is no match, I\'ll pick the one that is most likely to be used in a `ParticleTest`.\n    *   Couette flow is the simplest shear flow. Poiseuille is the simplest pressure-driven flow.\n    *   Most particle tests start with a simple shear flow (Couette).\n    *   Let\'s try `inputs_couette_x`.\n\n    *   Wait, I just noticed something. The prompt says "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If I look at the directory `Couette_Poiseuille`, and the files are `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   Is it possible that `inputs_over_hill` is a mistake and the user meant `inputs_couette_x`?\n    *   Let\'s look at the `ParticleTests` in ERF. Often, they test particles in a Couette flow.\n    *   Let\'s check the `inputs_couette_x` file again.\n    *   `erf.prob_name = "Couette Flow"`\n    *   `zlo.type = "NoSlipWall"`, `zhi.type = "NoSlipWall"`\n    *   `zlo.velocity = 0.0 0.0 0.0`, `zhi.velocity = 2.0 0.0 0.0`\n    *   This is a classic shear flow.\n    *   Let\'s check `inputs_poiseuille_x`.\n    *   `erf.prob_name = "Poiseuille Flow"`\n    *   `zlo.type = "NoSlipWall"`, `zhi.type = "NoSlipWall"`\n    *   No velocity specified for the walls (they are no-slip, so 0). The flow is driven by a pressure gradient (though the pressure gradient isn\'t explicitly in the inputs, it\'s usually handled in the solver for Poiseuille).\n    *   Given the choice, `inputs_couette_x` is a more common "first test" for particles.\n\n    *   Wait, I just had a thought. What if the prompt "inputs_over_hill" is actually a hint?\n    *   "Over hill" -> Terrain.\n    *   None of these have terrain.\n    *   "Over hill" -> Atmospheric.\n    *   None of these are atmospheric (they are simple channel flows).\n    *   If the prompt is completely wrong, I\'ll just pick the first file that seems reasonable. `inputs_couette_x`.\n\n    *   Let me double check the prompt one more time. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is there any other file? No.\n    *   Is there any other directory? No.\n    *   Okay, I will go with `inputs_couette_x`.\n\n    *   *Wait!* Let me search for "ERF ParticleTests" and "Couette".\n    *   Yes, ERF has particle tests in Couette flow.\n    *   If the prompt says `inputs_over_hill` but the directory is `Couette_Poiseuille`, it\'s almost certain that the prompt is just a generic one and I should pick the most appropriate file for a particle test in that directory.\n    *   `inputs_couette_x` is the most standard.\n\n    *   *One last check*: Could `inputs_poiseuille_x` be better?\n    *   Poiseuille flow is a bit more complex. Couette is the simplest.\n    *   Let\'s look at the `max_step`.\n    *   `inputs_couette_x`: `max_step = 50`\n    *   `inputs_poiseuille_x`: `max_step = 10`\n    *   `inputs_couette_y`: `max_step = 50`\n    *   `inputs_poiseuille_y`: `max_step = 10`\n    *   Couette flow seems to be the more "complete" test here.\n\n    *   Final decision: `inputs_couette_x`.', provider_specific_fields={'refusal': None, 'reasoning': '*   ERF atmospheric case directory: `Couette_Poiseuille`\n    *   Requested simulation prompt: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n    *   Candidate files: `inputs_couette_x`, `inputs_poiseuille_y`, `inputs_couette_y`, `inputs_poiseuille_x`.\n\n    *   The prompt asks for `inputs_over_hill`.\n    *   Looking at the candidate files:\n        *   `inputs_couette_x`\n        *   `inputs_poiseuille_y`\n        *   `inputs_couette_y`\n        *   `inputs_poiseuille_x`\n    *   None of the candidate files are named `inputs_over_hill`.\n\n    *   The prompt says "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   However, the directory provided is `Couette_Poiseuille`.\n    *   The candidate files are all related to Couette or Poiseuille flow.\n    *   Wait, the prompt might be a generic template or a mistake, but I must choose the *best* match from the *provided* list.\n    *   If the prompt asks for `inputs_over_hill` but the directory is `Couette_Poiseuille` and the files are Couette/Poiseuille, there is a mismatch.\n    *   Let\'s re-read the prompt: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is there any file that resembles "over hill"? No.\n    *   Is there any file that matches the directory `Couette_Poiseuille`? Yes, all of them.\n    *   Is there any other clue? The prompt mentions `ParticleTests`.\n    *   Let\'s look at the files again.\n        *   `inputs_couette_x`: Couette Flow, x-direction velocity.\n        *   `inputs_couette_y`: Couette Flow, y-direction velocity.\n        *   `inputs_poiseuille_x`: Poiseuille Flow, x-direction.\n        *   `inputs_poiseuille_y`: Poiseuille Flow, y-direction.\n\n    *   Wait, if the prompt specifically asks for `inputs_over_hill` and it\'s not there, but the directory is `Couette_Poiseuille`, maybe the prompt is just wrong or I should look for the most "standard" one?\n    *   Actually, looking at the prompt again: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill". This looks like a request for a completely different case.\n    *   However, the instructions say: "Choose the file that best matches the benchmark intent from filename and header."\n    *   If the requested file `inputs_over_hill` is missing, and I\'m in the `Couette_Poiseuille` directory, I have to pick one of the four.\n    *   Is there any connection between "over hill" and Couette/Poiseuille? Not really.\n    *   Let\'s check if any of the files mention particles or hills in the header.\n        *   `inputs_couette_x`: No.\n        *   `inputs_poiseuille_y`: No.\n        *   `inputs_couette_y`: No.\n        *   `inputs_poiseuille_x`: No.\n\n    *   Wait, let me re-read the prompt very carefully. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If the requested file is `inputs_over_hill` and it\'s not in the list, but the directory is `Couette_Poiseuille`, this is a contradiction.\n    *   However, usually in these tasks, if the specific filename requested isn\'t there, I should look for the closest match. But "over hill" is very different from "Couette" or "Poiseuille".\n    *   Let\'s look at the provided files again.\n    *   Maybe the prompt is a distractor and I should just pick a file from the `Couette_Poiseuille` directory?\n    *   But which one? `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   If the prompt is "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill", and I am forced to choose from the `Couette_Poiseuille` list, there is no logical match.\n    *   *Self-Correction*: Let me check if I missed any file. No, only those four.\n    *   Is it possible that `inputs_over_hill` is a typo for one of these? Unlikely.\n    *   Is it possible that the prompt is simply wrong and I should pick the most "generic" or "first" one?\n    *   Let\'s look at the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Wait, if the prompt is asking for `inputs_over_hill` and it\'s not there, but the directory is `Couette_Poiseuille`, maybe I should look for a file that *would* be used in a particle test?\n    *   Couette and Poiseuille flows are often used as simple benchmarks for particle tracking (advection).\n    *   Between Couette and Poiseuille, which is more common for a "ParticleTest"? Both are.\n    *   Between X and Y, which is more common? X is usually the default.\n    *   Let\'s look at the files again.\n    *   `inputs_couette_x`\n    *   `inputs_poiseuille_x`\n    *   `inputs_couette_y`\n    *   `inputs_poiseuille_y`\n    *   If I have to guess which one "over hill" (a terrain-based flow) might be replaced by in a simplified test suite, it\'s hard.\n    *   However, usually, if the prompt is completely mismatched, I should look for the most basic case.\n    *   Let\'s re-read the instructions: "Strongly prioritize explicit matches to requested boundary conditions, moisture model, and timestep style when present in the prompt."\n    *   The prompt mentions `inputs_over_hill`.\n    *   Since `inputs_over_hill` is not present, and the directory is `Couette_Poiseuille`, I suspect there might be a mistake in the prompt provided to me, or I\'m supposed to pick the one that is most "standard".\n    *   Let\'s look at the filenames again. `inputs_couette_x`, `inputs_poiseuille_x`, `inputs_couette_y`, `inputs_poiseuille_y`.\n    *   If the prompt is "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill", and I\'m in `Couette_Poiseuille`, maybe the "over hill" part is the key? A hill creates a pressure gradient. Poiseuille flow is driven by a pressure gradient. Couette flow is driven by a moving wall.\n    *   Therefore, Poiseuille flow is a closer analog to a pressure-driven flow (like flow over a hill) than Couette flow is.\n    *   Between `inputs_poiseuille_x` and `inputs_poiseuille_y`, `inputs_poiseuille_x` is the more standard orientation.\n\n    *   Prompt: `inputs_over_hill`\n    *   Directory: `Couette_Poiseuille`\n    *   Files: `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   Logic:\n        1.  `inputs_over_hill` is not available.\n        2.  `over_hill` involves flow driven by pressure/terrain.\n        3.  `Poiseuille` flow is driven by a pressure gradient.\n        4.  `Couette` flow is driven by boundary motion.\n        5.  `Poiseuille` is a better match for the "intent" of a pressure-driven flow.\n        6.  `inputs_poiseuille_x` is the standard x-direction version.\n\n    *   Wait, let me double check the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is it possible that `inputs_over_hill` is actually one of the files but renamed? No.\n    *   Is it possible that the prompt is just a copy-paste error and I should just pick the most likely file in the `Couette_Poiseuille` directory?\n    *   If I look at the `ParticleTests` context, often these tests use the simplest possible flow. Couette flow is simpler than Poiseuille flow.\n    *   But "over hill" is definitely not "Couette".\n    *   Let\'s try to see if there\'s any other connection.\n    *   Actually, looking at the provided files, `inputs_couette_x` and `inputs_couette_y` are very similar, as are the Poiseuille ones.\n    *   If the prompt is completely wrong, I\'ll go with `inputs_couette_x` as it\'s the first one, or `inputs_poiseuille_x`.\n    *   Let\'s think about "over hill" again. A hill is a perturbation in the Z direction.\n    *   In `inputs_poiseuille_x`, the flow is in X, and the walls are at Z.\n    *   In `inputs_couette_x`, the flow is in X, and the walls are at Z.\n    *   Wait, let\'s look at the `geometry.prob_extent` or `geometry.prob_lo/hi`.\n    *   `inputs_couette_x`: `geometry.prob_extent = 32 4 16` (X=32, Y=4, Z=16)\n    *   `inputs_couette_y`: `geometry.prob_extent = 4 32 16` (X=4, Y=32, Z=16)\n    *   `inputs_poiseuille_x`: `geometry.prob_lo = 0 0 -1`, `geometry.prob_hi = 4 1 1` (X=4, Y=1, Z=2)\n    *   `inputs_poiseuille_y`: `geometry.prob_lo = 0 0 -1`, `geometry.prob_hi = 1 4 1` (X=1, Y=4, Z=2)\n    *   The `ParticleTests` usually use a simple box.\n    *   If the prompt is "inputs_over_hill", and I have to pick from `Couette_Poiseuille`, and I can\'t find a match, I\'ll look for the most common benchmark.\n    *   Actually, I\'ll search for "ERF ParticleTests inputs_over_hill". (Mental search).\n    *   In many ERF (Energy Research Framework) tests, `inputs_over_hill` is a standard case for atmospheric flow.\n    *   If the user is asking for `inputs_over_hill` but the directory is `Couette_Poiseuille`, it\'s highly likely the prompt is just a mismatch.\n    *   However, I must return *one* filename.\n    *   Let\'s look at the files again. Is there any file that mentions "hill" or "particle" in the comments?\n    *   `inputs_couette_x`: No.\n    *   `inputs_poiseuille_y`: No.\n    *   `inputs_couette_y`: No.\n    *   `inputs_poiseuille_x`: No.\n    *   Okay, if there\'s no match, I\'ll pick the most basic one. `inputs_couette_x` is the first one listed and a very basic flow.\n    *   But wait! Let me look at the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If I am in the `Couette_Poiseuille` directory, and the prompt asks for `inputs_over_hill`, maybe the user *meant* to ask for one of the Couette/Poiseuille files?\n    *   If the prompt is a mistake and I have to choose the "best" match, and there is no match, I\'ll pick the one that is most likely to be used in a `ParticleTest`.\n    *   Couette flow is the simplest shear flow. Poiseuille is the simplest pressure-driven flow.\n    *   Most particle tests start with a simple shear flow (Couette).\n    *   Let\'s try `inputs_couette_x`.\n\n    *   Wait, I just noticed something. The prompt says "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If I look at the directory `Couette_Poiseuille`, and the files are `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   Is it possible that `inputs_over_hill` is a mistake and the user meant `inputs_couette_x`?\n    *   Let\'s look at the `ParticleTests` in ERF. Often, they test particles in a Couette flow.\n    *   Let\'s check the `inputs_couette_x` file again.\n    *   `erf.prob_name = "Couette Flow"`\n    *   `zlo.type = "NoSlipWall"`, `zhi.type = "NoSlipWall"`\n    *   `zlo.velocity = 0.0 0.0 0.0`, `zhi.velocity = 2.0 0.0 0.0`\n    *   This is a classic shear flow.\n    *   Let\'s check `inputs_poiseuille_x`.\n    *   `erf.prob_name = "Poiseuille Flow"`\n    *   `zlo.type = "NoSlipWall"`, `zhi.type = "NoSlipWall"`\n    *   No velocity specified for the walls (they are no-slip, so 0). The flow is driven by a pressure gradient (though the pressure gradient isn\'t explicitly in the inputs, it\'s usually handled in the solver for Poiseuille).\n    *   Given the choice, `inputs_couette_x` is a more common "first test" for particles.\n\n    *   Wait, I just had a thought. What if the prompt "inputs_over_hill" is actually a hint?\n    *   "Over hill" -> Terrain.\n    *   None of these have terrain.\n    *   "Over hill" -> Atmospheric.\n    *   None of these are atmospheric (they are simple channel flows).\n    *   If the prompt is completely wrong, I\'ll just pick the first file that seems reasonable. `inputs_couette_x`.\n\n    *   Let me double check the prompt one more time. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is there any other file? No.\n    *   Is there any other directory? No.\n    *   Okay, I will go with `inputs_couette_x`.\n\n    *   *Wait!* Let me search for "ERF ParticleTests" and "Couette".\n    *   Yes, ERF has particle tests in Couette flow.\n    *   If the prompt says `inputs_over_hill` but the directory is `Couette_Poiseuille`, it\'s almost certain that the prompt is just a generic one and I should pick the most appropriate file for a particle test in that directory.\n    *   `inputs_couette_x` is the most standard.\n\n    *   *One last check*: Could `inputs_poiseuille_x` be better?\n    *   Poiseuille flow is a bit more complex. Couette is the simplest.\n    *   Let\'s look at the `max_step`.\n    *   `inputs_couette_x`: `max_step = 50`\n    *   `inputs_poiseuille_x`: `max_step = 10`\n    *   `inputs_couette_y`: `max_step = 50`\n    *   `inputs_poiseuille_y`: `max_step = 10`\n    *   Couette flow seems to be the more "complete" test here.\n\n    *   Final decision: `inputs_couette_x`.', 'reasoning_content': '*   ERF atmospheric case directory: `Couette_Poiseuille`\n    *   Requested simulation prompt: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill"\n    *   Candidate files: `inputs_couette_x`, `inputs_poiseuille_y`, `inputs_couette_y`, `inputs_poiseuille_x`.\n\n    *   The prompt asks for `inputs_over_hill`.\n    *   Looking at the candidate files:\n        *   `inputs_couette_x`\n        *   `inputs_poiseuille_y`\n        *   `inputs_couette_y`\n        *   `inputs_poiseuille_x`\n    *   None of the candidate files are named `inputs_over_hill`.\n\n    *   The prompt says "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   However, the directory provided is `Couette_Poiseuille`.\n    *   The candidate files are all related to Couette or Poiseuille flow.\n    *   Wait, the prompt might be a generic template or a mistake, but I must choose the *best* match from the *provided* list.\n    *   If the prompt asks for `inputs_over_hill` but the directory is `Couette_Poiseuille` and the files are Couette/Poiseuille, there is a mismatch.\n    *   Let\'s re-read the prompt: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is there any file that resembles "over hill"? No.\n    *   Is there any file that matches the directory `Couette_Poiseuille`? Yes, all of them.\n    *   Is there any other clue? The prompt mentions `ParticleTests`.\n    *   Let\'s look at the files again.\n        *   `inputs_couette_x`: Couette Flow, x-direction velocity.\n        *   `inputs_couette_y`: Couette Flow, y-direction velocity.\n        *   `inputs_poiseuille_x`: Poiseuille Flow, x-direction.\n        *   `inputs_poiseuille_y`: Poiseuille Flow, y-direction.\n\n    *   Wait, if the prompt specifically asks for `inputs_over_hill` and it\'s not there, but the directory is `Couette_Poiseuille`, maybe the prompt is just wrong or I should look for the most "standard" one?\n    *   Actually, looking at the prompt again: "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill". This looks like a request for a completely different case.\n    *   However, the instructions say: "Choose the file that best matches the benchmark intent from filename and header."\n    *   If the requested file `inputs_over_hill` is missing, and I\'m in the `Couette_Poiseuille` directory, I have to pick one of the four.\n    *   Is there any connection between "over hill" and Couette/Poiseuille? Not really.\n    *   Let\'s check if any of the files mention particles or hills in the header.\n        *   `inputs_couette_x`: No.\n        *   `inputs_poiseuille_y`: No.\n        *   `inputs_couette_y`: No.\n        *   `inputs_poiseuille_x`: No.\n\n    *   Wait, let me re-read the prompt very carefully. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If the requested file is `inputs_over_hill` and it\'s not in the list, but the directory is `Couette_Poiseuille`, this is a contradiction.\n    *   However, usually in these tasks, if the specific filename requested isn\'t there, I should look for the closest match. But "over hill" is very different from "Couette" or "Poiseuille".\n    *   Let\'s look at the provided files again.\n    *   Maybe the prompt is a distractor and I should just pick a file from the `Couette_Poiseuille` directory?\n    *   But which one? `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   If the prompt is "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill", and I am forced to choose from the `Couette_Poiseuille` list, there is no logical match.\n    *   *Self-Correction*: Let me check if I missed any file. No, only those four.\n    *   Is it possible that `inputs_over_hill` is a typo for one of these? Unlikely.\n    *   Is it possible that the prompt is simply wrong and I should pick the most "generic" or "first" one?\n    *   Let\'s look at the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Wait, if the prompt is asking for `inputs_over_hill` and it\'s not there, but the directory is `Couette_Poiseuille`, maybe I should look for a file that *would* be used in a particle test?\n    *   Couette and Poiseuille flows are often used as simple benchmarks for particle tracking (advection).\n    *   Between Couette and Poiseuille, which is more common for a "ParticleTest"? Both are.\n    *   Between X and Y, which is more common? X is usually the default.\n    *   Let\'s look at the files again.\n    *   `inputs_couette_x`\n    *   `inputs_poiseuille_x`\n    *   `inputs_couette_y`\n    *   `inputs_poiseuille_y`\n    *   If I have to guess which one "over hill" (a terrain-based flow) might be replaced by in a simplified test suite, it\'s hard.\n    *   However, usually, if the prompt is completely mismatched, I should look for the most basic case.\n    *   Let\'s re-read the instructions: "Strongly prioritize explicit matches to requested boundary conditions, moisture model, and timestep style when present in the prompt."\n    *   The prompt mentions `inputs_over_hill`.\n    *   Since `inputs_over_hill` is not present, and the directory is `Couette_Poiseuille`, I suspect there might be a mistake in the prompt provided to me, or I\'m supposed to pick the one that is most "standard".\n    *   Let\'s look at the filenames again. `inputs_couette_x`, `inputs_poiseuille_x`, `inputs_couette_y`, `inputs_poiseuille_y`.\n    *   If the prompt is "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill", and I\'m in `Couette_Poiseuille`, maybe the "over hill" part is the key? A hill creates a pressure gradient. Poiseuille flow is driven by a pressure gradient. Couette flow is driven by a moving wall.\n    *   Therefore, Poiseuille flow is a closer analog to a pressure-driven flow (like flow over a hill) than Couette flow is.\n    *   Between `inputs_poiseuille_x` and `inputs_poiseuille_y`, `inputs_poiseuille_x` is the more standard orientation.\n\n    *   Prompt: `inputs_over_hill`\n    *   Directory: `Couette_Poiseuille`\n    *   Files: `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   Logic:\n        1.  `inputs_over_hill` is not available.\n        2.  `over_hill` involves flow driven by pressure/terrain.\n        3.  `Poiseuille` flow is driven by a pressure gradient.\n        4.  `Couette` flow is driven by boundary motion.\n        5.  `Poiseuille` is a better match for the "intent" of a pressure-driven flow.\n        6.  `inputs_poiseuille_x` is the standard x-direction version.\n\n    *   Wait, let me double check the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is it possible that `inputs_over_hill` is actually one of the files but renamed? No.\n    *   Is it possible that the prompt is just a copy-paste error and I should just pick the most likely file in the `Couette_Poiseuille` directory?\n    *   If I look at the `ParticleTests` context, often these tests use the simplest possible flow. Couette flow is simpler than Poiseuille flow.\n    *   But "over hill" is definitely not "Couette".\n    *   Let\'s try to see if there\'s any other connection.\n    *   Actually, looking at the provided files, `inputs_couette_x` and `inputs_couette_y` are very similar, as are the Poiseuille ones.\n    *   If the prompt is completely wrong, I\'ll go with `inputs_couette_x` as it\'s the first one, or `inputs_poiseuille_x`.\n    *   Let\'s think about "over hill" again. A hill is a perturbation in the Z direction.\n    *   In `inputs_poiseuille_x`, the flow is in X, and the walls are at Z.\n    *   In `inputs_couette_x`, the flow is in X, and the walls are at Z.\n    *   Wait, let\'s look at the `geometry.prob_extent` or `geometry.prob_lo/hi`.\n    *   `inputs_couette_x`: `geometry.prob_extent = 32 4 16` (X=32, Y=4, Z=16)\n    *   `inputs_couette_y`: `geometry.prob_extent = 4 32 16` (X=4, Y=32, Z=16)\n    *   `inputs_poiseuille_x`: `geometry.prob_lo = 0 0 -1`, `geometry.prob_hi = 4 1 1` (X=4, Y=1, Z=2)\n    *   `inputs_poiseuille_y`: `geometry.prob_lo = 0 0 -1`, `geometry.prob_hi = 1 4 1` (X=1, Y=4, Z=2)\n    *   The `ParticleTests` usually use a simple box.\n    *   If the prompt is "inputs_over_hill", and I have to pick from `Couette_Poiseuille`, and I can\'t find a match, I\'ll look for the most common benchmark.\n    *   Actually, I\'ll search for "ERF ParticleTests inputs_over_hill". (Mental search).\n    *   In many ERF (Energy Research Framework) tests, `inputs_over_hill` is a standard case for atmospheric flow.\n    *   If the user is asking for `inputs_over_hill` but the directory is `Couette_Poiseuille`, it\'s highly likely the prompt is just a mismatch.\n    *   However, I must return *one* filename.\n    *   Let\'s look at the files again. Is there any file that mentions "hill" or "particle" in the comments?\n    *   `inputs_couette_x`: No.\n    *   `inputs_poiseuille_y`: No.\n    *   `inputs_couette_y`: No.\n    *   `inputs_poiseuille_x`: No.\n    *   Okay, if there\'s no match, I\'ll pick the most basic one. `inputs_couette_x` is the first one listed and a very basic flow.\n    *   But wait! Let me look at the prompt again. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If I am in the `Couette_Poiseuille` directory, and the prompt asks for `inputs_over_hill`, maybe the user *meant* to ask for one of the Couette/Poiseuille files?\n    *   If the prompt is a mistake and I have to choose the "best" match, and there is no match, I\'ll pick the one that is most likely to be used in a `ParticleTest`.\n    *   Couette flow is the simplest shear flow. Poiseuille is the simplest pressure-driven flow.\n    *   Most particle tests start with a simple shear flow (Couette).\n    *   Let\'s try `inputs_couette_x`.\n\n    *   Wait, I just noticed something. The prompt says "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   If I look at the directory `Couette_Poiseuille`, and the files are `inputs_couette_x`, `inputs_couette_y`, `inputs_poiseuille_x`, `inputs_poiseuille_y`.\n    *   Is it possible that `inputs_over_hill` is a mistake and the user meant `inputs_couette_x`?\n    *   Let\'s look at the `ParticleTests` in ERF. Often, they test particles in a Couette flow.\n    *   Let\'s check the `inputs_couette_x` file again.\n    *   `erf.prob_name = "Couette Flow"`\n    *   `zlo.type = "NoSlipWall"`, `zhi.type = "NoSlipWall"`\n    *   `zlo.velocity = 0.0 0.0 0.0`, `zhi.velocity = 2.0 0.0 0.0`\n    *   This is a classic shear flow.\n    *   Let\'s check `inputs_poiseuille_x`.\n    *   `erf.prob_name = "Poiseuille Flow"`\n    *   `zlo.type = "NoSlipWall"`, `zhi.type = "NoSlipWall"`\n    *   No velocity specified for the walls (they are no-slip, so 0). The flow is driven by a pressure gradient (though the pressure gradient isn\'t explicitly in the inputs, it\'s usually handled in the solver for Poiseuille).\n    *   Given the choice, `inputs_couette_x` is a more common "first test" for particles.\n\n    *   Wait, I just had a thought. What if the prompt "inputs_over_hill" is actually a hint?\n    *   "Over hill" -> Terrain.\n    *   None of these have terrain.\n    *   "Over hill" -> Atmospheric.\n    *   None of these are atmospheric (they are simple channel flows).\n    *   If the prompt is completely wrong, I\'ll just pick the first file that seems reasonable. `inputs_couette_x`.\n\n    *   Let me double check the prompt one more time. "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill".\n    *   Is there any other file? No.\n    *   Is there any other directory? No.\n    *   Okay, I will go with `inputs_couette_x`.\n\n    *   *Wait!* Let me search for "ERF ParticleTests" and "Couette".\n    *   Yes, ERF has particle tests in Couette flow.\n    *   If the prompt says `inputs_over_hill` but the directory is `Couette_Poiseuille`, it\'s almost certain that the prompt is just a generic one and I should pick the most appropriate file for a particle test in that directory.\n    *   `inputs_couette_x` is the most standard.\n\n    *   *One last check*: Could `inputs_poiseuille_x` be better?\n    *   Poiseuille flow is a bit more complex. Couette is the simplest.\n    *   Let\'s look at the `max_step`.\n    *   `inputs_couette_x`: `max_step = 50`\n    *   `inputs_poiseuille_x`: `max_step = 10`\n    *   `inputs_couette_y`: `max_step = 50`\n    *   `inputs_poiseuille_y`: `max_step = 10`\n    *   Couette flow seems to be the more "complete" test here.\n\n    *   Final decision: `inputs_couette_x`.'}), provider_specific_fields={})], created=1777328414, model='lbl/cborg-deepthought', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=3902, prompt_tokens=1905, total_tokens=5807, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+INFO: Selected inputs file: inputs_couette_x (strategy: llm_compare)
+DEBUG: Loading baseline from: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_x (strategy: llm_compare)
+INFO: [2/5] Skipping model hydration (no modifications)
+INFO: Wrote 1547 bytes to benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/inputs
+INFO: Files written to: benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650
+DEBUG: [DATA TRANSFER] Checking InputWriterService result
+DEBUG: [DATA TRANSFER] Service result keys: ['inputs_path', 'output_dir', 'run_dir', 'modifications_applied', 'inputs_file_selected', 'inputs_file_strategy', 'inputs_file_override', 'inputs_candidates', 'solver', 'status', 'requires_parameter_resolution']
+INFO: Input Writer complete: run_20260427_152014_309650
+INFO:   Inputs selected: /home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_x (strategy: llm_compare, override: None)
+DEBUG:   Inputs written: benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/inputs
+DEBUG:   Run directory: benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650
+INFO: --------------------------------------------------------------------------------
+INFO: Input Writer node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Runner node
+INFO: ================================================================================
+INFO: Validation passed: run_20260427_152014_309650
+DEBUG: LocalRunner initialized for local execution
+INFO: Using LocalRunner for local execution
+DEBUG: 
+=== Setting Up Job (Local) ===
+
+DEBUG:  Using existing run directory: benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650
+DEBUG: [ OK ] Copied 2 files to run directory
+INFO: Job setup complete: 
+DEBUG:    Using run directory: benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650
+DEBUG: 
+=== Submitting Job (Local) ===
+
+ERROR: Executable resolution failed: No executable found in benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650
+DEBUG: close.started
+DEBUG: close.complete
+WARNING: [ROUTE] Runtime failure → Analysis (retryable): 
+INFO: ================================================================================
+INFO: Starting Analysis node
+INFO: ================================================================================
+INFO: [INFO] Run mode dry - skipping analysis
+DEBUG: [ROUTE] Router: Analysis → Visualization (simulation passed)
+INFO: ================================================================================
+INFO: Starting Visualization node
+INFO: ================================================================================
+DEBUG: 
+[Step 1/4] Checking for plotfiles...
+WARNING: [WARN] No plotfiles found in run directory
+DEBUG:   Searched: benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650
+INFO: --------------------------------------------------------------------------------
+INFO: Workflow complete. Status: completed
+INFO: --------------------------------------------------------------------------------
+INFO: Metrics saved to benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/metrics.jsonl
+INFO: Workflow history saved to benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/workflow_history.json
+INFO: Agent transcript saved to benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/agent_transcript.txt
+{
+  "prompt": "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill",
+  "config": "llm_provider='cborg' llm_model='lbl/cborg-deepthought' llm_fast_onprem_model='lbl/cborg-mini' llm_fast_model='gcp/gpt-oss-120b-high' llm_thinking_model='claude-sonnet-4-5' llm_temperature=0.1 llm_max_tokens=4000 cborg_api_key='sk-3r5QhYlL8hGQxywoC_AWBw' cborg_base_url='https://api.cborg.lbl.gov/v1' alcf_api_key=None alcf_cluster=None alcf_base_url=None openai_api_key='sk-3r5QhYlL8hGQxywoC_AWBw' anthropic_api_key=None litellm_api_key=None litellm_base_url=None pnnl_api_key=None pnnl_base_url='https://ai-incubator-api.pnnl.gov' pnnl_default_model='claude-haiku-4-5-20251001-v1-birthright' pelec_executable=PosixPath('.') pelec_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC') pelelmex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX') erf_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF') erf_executable_path=None erf_central_build_dir=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests') warpx_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx') incflo_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo') remora_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA') amrex_tutorials_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials') amrex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex') repositories={'PeleC': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC'), 'PeleLMeX': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX'), 'ERF': PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF'), 'WarpX': PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx'), 'incflo': PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo'), 'REMORA': PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA'), 'amrex-tutorials': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials'), 'AMReX': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex')} knowledge_base_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports') pele_tools_path=PosixPath('utils/pele_tools.py') faiss_db_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/faiss/cborg') database_mismatch_policy='warn_continue' environment='local' embedding_provider='cborg' vector_store_backend='auto' faiss_embedding_model='lbl/nomic-embed-text' alcf_embedding_model=None openai_vector_store_id=None openai_vector_store_ids={} openai_base_url='https://api.cborg.lbl.gov' vector_store_base_url=None vector_store_manifest_url=None faiss_topk=3 faiss_cache_enabled=True faiss_fallback_to_llm=True embedding_chunk_size_chars=2000 embedding_rate_limit_rpm=20 embedding_retry_max_attempts=50 llm_retry_max_attempts=3 faiss_semantic_weight=0.5 simple_weight_kb_relevance=0.4 simple_weight_metrics=0.25 simple_weight_path_heuristics=0.1 simple_weight_domain_specific=0.25 simple_weight_faiss_semantic=0.5 simple_case_hint_min_total=0.0 simple_case_hint_max_gap=0.14 simple_case_hint_score_boost=0.2 hierarchical_weight_physics_parameters=0.3 hierarchical_weight_grid_specifications=0.2 hierarchical_weight_development_activity=0.1 hierarchical_weight_configuration_complexity=0.1 hierarchical_weight_path_hierarchy=0.15 hierarchical_weight_domain_models=0.1 hierarchical_weight_resource_requirements=0.05 indexing_strategy='simple' level2_override_enabled=True level2_override_l0_threshold=0.15 level2_override_case_match_threshold=0.9 level2_override_min_metadata_hits=3 routing_intent_enabled=True routing_intent_conflict_policy='block_then_clarify' routing_intent_anchor_min_segment_overlap=0.6 routing_intent_exact_path_boost=0.2 routing_intent_segment_boost=0.12 routing_intent_cross_solver_penalty=0.25 routing_intent_high_gap_clarification_threshold=0.2 routing_intent_apply_to_level2_override=True routing_intent_apply_to_near_tie=True inputs_file_strategy='llm_compare' remap_strategy='last_write' inputs_file_override=None inputs_default_precedence='strategy_first' retry_guidance_use_llm=False enable_intent_extraction=False enable_sweep_orchestration=False enable_clarification_subgraph=False clarification_route_on_intent_missing_only=True preexec_route_to_clarification_on_retry_exhausted=False reviewer_reflexive_guidance_enabled=True reviewer_reason_codes=['intent_missing', 'solver_mismatch', 'baseline_path_mismatch', 'domain_conflict', 'schema_unresolved', 'resource_conflict', 'rate_limit_pressure'] schema_escalation_policy='lightweight_first' reviewer_gated_schema_escalation_enabled=True benchmark_manifest_enabled=True llm_gate_strategy='off' llm_gate_auto_approve=False disable_embeddings=False baseline_switch_after_retries=3 baseline_override=None dry_run=True preconfirm_gate=False preconfirm_gate_auto_approve=False run_mode='dry' container_mode=False analysis_always_enabled=True allow_make_introspection=False make_introspection_command=None visualization_backend='auto' amrex_tools_path=None superfacility_account='amsc014' superfacility_client_id=None superfacility_secret=None superfacility_endpoint='https://api.nersc.gov/api/v1.2' remote_output_dir=None remote_run_dir=None remote_executable_path=None remote_executable_template=None remote_executable_find=True remote_staging_method='auto' monitor_job=True stage_out_outputs=True workflow_store_path=PosixPath('/home/jmsexton/.amrex_agent/workflow_store.db') max_iterations=3 allow_local_run=True use_mpi=True mpi_ranks=1 output_dir=PosixPath('benchmark_v2/results/full_cborg_20260427T202152Z/simple') metrics_output_dir=None metrics_filename='metrics.jsonl' privacy_mode='off' privacy_scrubber='builtin' privacy_hash_salt=None write_policy_mode='warn' allow_write_paths=[] require_run_dir_prefix=False run_dir_prefix='run_' save_intermediate=True metrics_enabled=True benchmark_environment_lockfile=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/utils/environment-frozen.yaml') benchmark_require_lockfile=True disabled_validators=[]",
+  "requested_plot_vars": [],
+  "visualization_config": {},
+  "selected_case": "Exec/RegTests/Couette_Poiseuille",
+  "modifications": [],
+  "reasoning": "Selected baseline: ERF/Exec/RegTests/Couette_Poiseuille. 0 modifications planned. 5-bucket scoring (weights: {'kb_relevance': 0.26666666666666666, 'metrics': 0.16666666666666666, 'path_heuristics': 0.06666666666666667, 'domain_specific': 0.16666666666666666, 'faiss_semantic': 0.3333333333333333})",
+  "case_candidates": [],
+  "baseline_confidence": 0.5128480974820762,
+  "plan": {
+    "selected_solver": "ERF",
+    "selected_case": "Exec/RegTests/Couette_Poiseuille",
+    "modifications": [],
+    "reasoning": "Selected baseline: ERF/Exec/RegTests/Couette_Poiseuille. 0 modifications planned. 5-bucket scoring (weights: {'kb_relevance': 0.26666666666666666, 'metrics': 0.16666666666666666, 'path_heuristics': 0.06666666666666667, 'domain_specific': 0.16666666666666666, 'faiss_semantic': 0.3333333333333333})",
+    "solver_confidence": 0.8,
+    "baseline_confidence": 0.5128480974820762,
+    "cbr_confidence": 0.0,
+    "prompt": "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill",
+    "requirements": {
+      "problem_type": "general flow",
+      "solver": "ERF",
+      "solver_source": "explicit_mention",
+      "user_prompt": "Use ERF case Exec/RegTests/ParticleTests with inputs_over_hill",
+      "router_branch": "simple",
+      "router_reason_code": "simple_primary"
+    },
+    "baseline": {
+      "code_name": "ERF",
+      "repo_path": "/home/jmsexton/codes/worktree_sandbox/ERF",
+      "case_path": "Exec/RegTests/Couette_Poiseuille",
+      "local_path": "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille"
+    },
+    "case_candidates": null,
+    "documentation_context": null,
+    "baseline_evidence_citations": null,
+    "visualization": {
+      "enabled": true,
+      "backend": "yt",
+      "plots": [
+        {
+          "type": "slice",
+          "field": "Temp",
+          "axis": "z",
+          "colormap": "hot"
+        }
+      ],
+      "timesteps": "latest",
+      "format": "png",
+      "container_mode": false
+    },
+    "analysis": {
+      "enabled": true,
+      "checks": [
+        "cfl",
+        "nan",
+        "conservation",
+        "convergence"
+      ],
+      "thresholds": {
+        "cfl_max": 1.0,
+        "conservation_tol": 1e-06
+      },
+      "report_format": "markdown",
+      "include_images": false,
+      "routing_intent_summary": {
+        "anchor_strength": "strong",
+        "explicit_solver": "ERF",
+        "explicit_case_path": "Exec/RegTests/ParticleTests",
+        "allowed_solvers": [
+          "ERF"
+        ],
+        "conflict_policy": "block_then_clarify",
+        "source_tags": [
+          "prompt",
+          "reviewer_guidance"
+        ]
+      },
+      "router_mapping": {
+        "router_branch": "simple",
+        "diagram_nodes": {
+          "router": "strategy_router",
+          "branch": "simple_strategy"
+        },
+        "strategy": "simple",
+        "baseline_override_active": false,
+        "fallback_to": null
+      }
+    },
+    "unresolved_parameters": null,
+    "suggested_mappings": null,
+    "resolution_guidance": null,
+    "requires_parameter_resolution": false,
+    "available_schema_params": null,
+    "level0_solver": null,
+    "level0_confidence": null,
+    "level2_override_applied": false,
+    "level2_override_solver": null,
+    "level2_override_case": null,
+    "level2_override_confidence": null,
+    "used_llm": false,
+    "indexing_strategy": "simple",
+    "baseline_inputs_path": "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_x",
+    "inputs_file_strategy": "llm_compare",
+    "inputs_file_override": null,
+    "inputs_candidates": [
+      "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_x",
+      "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_poiseuille_y",
+      "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_y",
+      "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_poiseuille_x"
+    ]
+  },
+  "baseline": {
+    "code_name": "ERF",
+    "repo_path": "/home/jmsexton/codes/worktree_sandbox/ERF",
+    "case_path": "Exec/RegTests/Couette_Poiseuille",
+    "local_path": "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille"
+  },
+  "review_analysis": {
+    "mode": "proceed",
+    "violations": [],
+    "summary": "All validation checks passed.",
+    "reviewer_guidance": {
+      "required_solver": "ERF",
+      "forbidden_path_patterns": [],
+      "preferred_path_patterns": [
+        "Exec/RegTests"
+      ],
+      "excluded_cases": [],
+      "schema_escalation_required": false,
+      "replan_reason_codes": []
+    }
+  },
+  "suggested_fixes": [],
+  "retry_guidance": {
+    "inputs_base_action": "keep",
+    "inputs_reason": null,
+    "baseline_base_action": "keep",
+    "baseline_reason": null
+  },
+  "reviewer_failure_category": null,
+  "run_directory": "benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650",
+  "inputs_file_path": "benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/inputs",
+  "inputs_file": "benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/inputs",
+  "ready_to_run": true,
+  "job_status": "completed",
+  "analysis_report": {
+    "status": "skipped",
+    "message": "Dry-run: analysis skipped"
+  },
+  "visualization_images": [],
+  "visualization_backend": "none",
+  "visualization_status": "skipped",
+  "visualization_metadata": {
+    "plotfile_count": 0,
+    "skip_reason": "no_plotfiles"
+  },
+  "mode": "proceed",
+  "iteration": 1,
+  "retry_count": 0,
+  "max_retries": 3,
+  "loop_count": 1,
+  "errors_active": [],
+  "errors_found": [],
+  "errors_fixed": [],
+  "error_logs": [],
+  "preconfirm_action": "proceed",
+  "workflow_history": [
+    {
+      "node": "architect",
+      "timestamp": "2026-04-27T22:20:14.291571Z",
+      "action": "plan_created",
+      "iteration": 1,
+      "details": {
+        "selected_case": "Exec/RegTests/Couette_Poiseuille",
+        "selected_solver": "ERF",
+        "modifications": [],
+        "reasoning": "Selected baseline: ERF/Exec/RegTests/Couette_Poiseuille. 0 modifications planned. 5-bucket scoring (weights: {'kb_relevance': 0.26666666666666666, 'metrics': 0.16666666666666666, 'path_heuristics': 0.06666666666666667, 'domain_specific': 0.16666666666666666, 'faiss_semantic': 0.3333333333333333})",
+        "baseline": {
+          "code_name": "ERF",
+          "repo_path": "/home/jmsexton/codes/worktree_sandbox/ERF",
+          "case_path": "Exec/RegTests/Couette_Poiseuille",
+          "local_path": "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille"
+        },
+        "case_candidates": [],
+        "baseline_evidence_citations": [],
+        "indexing_strategy": "simple",
+        "indexing_calls_count": 4,
+        "indexing_calls_total": 4,
+        "indexing_calls_detail": {
+          "embed_documents": 0,
+          "embed_query": 4
+        },
+        "confidence_score": 0.5128480974820762,
+        "level0_solver": "ERF",
+        "level0_confidence": 0.8,
+        "level2_override_applied": false,
+        "level2_override_solver": null,
+        "level2_override_case": null,
+        "level2_override_confidence": null,
+        "parameter_resolution_applied": true,
+        "reviewer_guidance": {},
+        "remapped_parameters": [],
+        "metrics": {
+          "llm": {
+            "total_calls": 1,
+            "prompt_tokens": 863,
+            "completion_tokens": 315,
+            "total_tokens": 1178,
+            "by_model": {
+              "lbl/cborg-deepthought": {
+                "calls": 1,
+                "prompt_tokens": 863,
+                "completion_tokens": 315,
+                "total_tokens": 1178,
+                "cost_usd": 0.0
+              }
+            },
+            "by_user": {
+              "unknown": {
+                "calls": 1,
+                "prompt_tokens": 863,
+                "completion_tokens": 315,
+                "total_tokens": 1178,
+                "cost_usd": 0.0
+              }
+            },
+            "cost_usd": 0.0
+          },
+          "retrieval": {
+            "strategies": {
+              "faiss": 1
+            },
+            "last": {
+              "strategy": "faiss",
+              "strategy_choice": "simple",
+              "indexing_strategy": "simple",
+              "confidence": 0.5828096884428385,
+              "faiss_confidence": null,
+              "source": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "node": "reviewer",
+      "timestamp": "2026-04-27T22:20:14.304981Z",
+      "action": "validation_completed",
+      "iteration": 1,
+      "details": {
+        "status": "approved",
+        "errors": [],
+        "warnings": [],
+        "validation_passed": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "newly_fixed": [],
+        "newly_found": [],
+        "errors_all_found": [],
+        "errors_all_fixed": [],
+        "suggested_fixes": [],
+        "available_schema_params": [
+          "amr.regrid_on_restart",
+          "amr.force_regrid_level_zero",
+          "amr.use_efficient_regrid",
+          "amr.plotfile_on_restart",
+          "amr.insitu_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr.compute_new_dt_on_regrid",
+          "amr.mffile_nstreams",
+          "amr.probinit_natonce",
+          "amr.file_name_digits",
+          "amr.initial_grid_file",
+          "amr.regrid_file",
+          "amr.message_int",
+          "amr.run_log",
+          "amr.run_log_terse",
+          "amr.grid_log",
+          "amr.data_log",
+          "amr.probin_file",
+          "amr.restart",
+          "amr.restart_from_plotfile",
+          "amr.regrid_int",
+          "amr.loadbalance_with_workestimates",
+          "amr.loadbalance_level0_int",
+          "amr.loadbalance_max_fac",
+          "amr.nosub",
+          "amr.subcycling_mode",
+          "amr.subcycling_iterations",
+          "amr.checkpoint_files_output",
+          "amr.plot_files_output",
+          "amr.plot_nfiles",
+          "amr.checkpoint_nfiles",
+          "amr.check_file",
+          "amr.check_int",
+          "amr.check_per",
+          "amr.plot_file",
+          "amr.plot_int",
+          "amr.plot_per",
+          "amr.plot_log_per",
+          "amr.plot_max_level",
+          "amr.small_plot_file",
+          "amr.small_plot_int",
+          "amr.small_plot_per",
+          "amr.small_plot_log_per",
+          "amr.write_plotfile_with_checkpoint",
+          "amr.stream_max_tries",
+          "amr.abort_on_stream_retry_failure",
+          "amr.precreateDirectories",
+          "amr.prereadFAHeaders",
+          "amr.plot_headerversion",
+          "amr.checkpoint_headerversion",
+          "amr.plot_vars",
+          "amr.derive_plot_vars",
+          "amr.small_plot_vars",
+          "amr.derive_small_plot_vars",
+          "eb2.max_grid_size",
+          "eb2.extend_domain_face",
+          "eb2.num_coarsen_opt",
+          "eb2.geom_type",
+          "eb2.box_lo",
+          "eb2.box_hi",
+          "eb2.box_has_fluid_inside",
+          "eb2.cylinder_center",
+          "eb2.cylinder_radius",
+          "eb2.cylinder_height",
+          "eb2.cylinder_direction",
+          "eb2.cylinder_has_fluid_inside",
+          "eb2.plane_point",
+          "eb2.plane_normal",
+          "eb2.sphere_center",
+          "eb2.sphere_radius",
+          "eb2.sphere_has_fluid_inside",
+          "eb2.torus_center",
+          "eb2.torus_small_radius",
+          "eb2.torus_large_radius",
+          "eb2.parser_function",
+          "eb2.stl_file",
+          "eb2.stl_scale",
+          "eb2.stl_center",
+          "eb2.stl_reverse_normal",
+          "eb2.stl_use_bvh",
+          "eb2.test_marching_cubes",
+          "amr.v",
+          "amr.verbose",
+          "amr.max_level",
+          "amr.n_proper",
+          "amr.grid_eff",
+          "amr.n_error_buf",
+          "amr.n_error_buf_x",
+          "amr.n_error_buf_y",
+          "amr.n_error_buf_z",
+          "amr.ref_ratio_vect",
+          "amr.ref_ratio",
+          "amr.max_grid_size",
+          "amr.max_grid_size_x",
+          "amr.max_grid_size_y",
+          "amr.max_grid_size_z",
+          "amr.blocking_factor",
+          "amr.blocking_factor_x",
+          "amr.blocking_factor_y",
+          "amr.blocking_factor_z",
+          "amr.n_cell",
+          "amr.refine_grid_layout",
+          "amr.refine_grid_layout_x",
+          "amr.refine_grid_layout_y",
+          "amr.refine_grid_layout_z",
+          "amr.check_input",
+          "amr.max_grid_iterations",
+          "amr.use_bittree",
+          "particles.particles_nfiles",
+          "particles.nreaders",
+          "particles.nparts_per_read",
+          "particles.aggregation_type",
+          "particles.aggregation_buffer",
+          "amrex.parmparse.v",
+          "amrex.parmparse.verbose",
+          "amrex.async_out",
+          "amrex.async_out_nfiles",
+          "amrex.forkjoin.verbose",
+          "amrex.team.use_gpu_aware_mpi",
+          "amrex.team.size",
+          "amrex.team.reduce",
+          "amrex.the_arena_init_size",
+          "amrex.the_device_arena_init_size",
+          "amrex.the_managed_arena_init_size",
+          "amrex.the_pinned_arena_init_size",
+          "amrex.the_comms_arena_init_size",
+          "amrex.the_arena_release_threshold",
+          "amrex.the_device_arena_release_threshold",
+          "amrex.the_managed_arena_release_threshold",
+          "amrex.the_pinned_arena_release_threshold",
+          "amrex.the_comms_arena_release_threshold",
+          "amrex.the_arena_defragmentation",
+          "amrex.the_device_arena_defragmentation",
+          "amrex.the_managed_arena_defragmentation",
+          "amrex.the_pinned_arena_defragmentation",
+          "amrex.the_comms_arena_defragmentation",
+          "amrex.the_arena_is_managed",
+          "amrex.abort_on_out_of_gpu_memory",
+          "vismf.v",
+          "vismf.headerversion",
+          "vismf.groupsets",
+          "vismf.setbuf",
+          "vismf.usesingleread",
+          "vismf.usesinglewrite",
+          "vismf.checkfilepositions",
+          "vismf.usepersistentifstreams",
+          "vismf.usesynchronousreads",
+          "vismf.usedynamicsetselection",
+          "vismf.iobuffersize",
+          "vismf.allowsparsewrites",
+          "vismf.noflushafterwrite",
+          "vismf.barrierafterlevel",
+          "amrex.v",
+          "amrex.verbose",
+          "amrex.init_snan",
+          "amrex.regtest_reduction",
+          "amrex.signal_handling",
+          "amrex.throw_exception",
+          "amrex.call_addr2line",
+          "amrex.abort_on_unused_inputs",
+          "amrex.handle_sigsegv",
+          "amrex.handle_sigterm",
+          "amrex.handle_sigint",
+          "amrex.handle_sigabrt",
+          "amrex.handle_sigfpe",
+          "amrex.handle_sigill",
+          "amrex.fpe_trap_invalid",
+          "amrex.fpe_trap_zero",
+          "amrex.fpe_trap_overflow",
+          "amrex.init_hypre",
+          "amrex.hypre_spgemm_use_vendor",
+          "amrex.hypre_spmv_use_vendor",
+          "amrex.hypre_sptrans_use_vendor",
+          "amrex.memory_log",
+          "amrex.max_gpu_streams",
+          "device.v",
+          "device.verbose",
+          "device.numThreads.x",
+          "device.numThreads.y",
+          "device.numThreads.z",
+          "device.numBlocks.x",
+          "device.numBlocks.y",
+          "device.numBlocks.z",
+          "device.graph_init",
+          "device.graph_init_nodes",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose",
+          "tiny_profiler.print_threshold",
+          "tiny_profiler.enabled",
+          "tiny_profiler.memprof_enabled",
+          "tiny_profiler.output_file",
+          "amrex.vector_growth_factor",
+          "amrex.pout_int",
+          "DistributionMapping.v",
+          "DistributionMapping.verbose",
+          "DistributionMapping.efficiency",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping.node_size",
+          "DistributionMapping.verbose_mapper",
+          "DistributionMapping.strategy",
+          "amrex.prof_nfiles",
+          "amrex.prof_csflushsize",
+          "amrex.prof_traceflushsize",
+          "amrex.prof_flushinterval",
+          "amrex.prof_flushtimeinterval",
+          "amrex.prof_flushprint",
+          "amrex.use_profiler_syncs",
+          "amrex.omp_threads",
+          "fab.format",
+          "fab.ordering",
+          "fab.initval",
+          "fab.do_initval",
+          "fabarray.mfiter_tile_size",
+          "fabarray.comm_tile_size",
+          "fabarray.maxcomp",
+          "amrex.mf.alloc_single_chunk",
+          "geometry.coord_sys",
+          "geometry.prob_lo",
+          "geometry.prob_hi",
+          "geometry.prob_extent",
+          "geometry.is_periodic",
+          "enabled",
+          "config",
+          "frequency",
+          "pin_mesh",
+          "hypre_solver",
+          "hypre_preconditioner",
+          "recompute_preconditioner",
+          "write_matrix_files",
+          "overwrite_existing_matrix_files",
+          "adjust_singular_matrix",
+          "bamg_non_galerkin_level_levels",
+          "bamg_non_galerkin_level_tols",
+          "bamg_smooth_type",
+          "bamg_euclid_file",
+          "bamg_use_old_default",
+          "eb2.small_volfrac",
+          "eb2.cover_multiple_cuts",
+          "eb2.maxiter",
+          "particles.do_tiling",
+          "particles.tile_size",
+          "particles.use_prepost",
+          "particles.do_unlink",
+          "particles.do_mem_efficient_sort",
+          "particles.use_comms_arena",
+          "particles.datadigits_read",
+          "plot.niter",
+          "plot.cell_size",
+          "plot.var",
+          "val",
+          "integration.use_adaptive_time_step",
+          "integration.time_step",
+          "integration.use_adaptive_fast_time_step",
+          "integration.fast_time_step",
+          "integration.rel_tol",
+          "integration.abs_tol",
+          "integration.fast_rel_tol",
+          "integration.fast_abs_tol",
+          "integration.type",
+          "integration.rk.type",
+          "integration.rk.weights",
+          "integration.rk.extended_weights",
+          "integration.rk.nodes",
+          "integration.rk.tableau",
+          "integration.sundials.type",
+          "integration.sundials.method",
+          "integration.sundials.method_e",
+          "integration.sundials.method_i",
+          "integration.sundials.fast_type",
+          "integration.sundials.fast_method",
+          "integration.sundials.nonlinear_solver",
+          "integration.sundials.max_nonlinear_iters",
+          "integration.sundials.fast_nonlinear_solver",
+          "integration.sundials.fast_max_nonlinear_iters",
+          "integration.sundials.linear_solver",
+          "integration.sundials.max_linear_iters",
+          "integration.sundials.fast_linear_solver",
+          "integration.sundials.fast_max_linear_iters",
+          "integration.sundials.stop_time",
+          "integration.sundials.max_num_steps",
+          "erf.fix_random_seed",
+          "eb2.geometry",
+          "erf.is_land",
+          "erf.data_log",
+          "erf.der_data_log",
+          "erf.energy_data_log",
+          "erf.sample_point",
+          "erf.sample_point_log",
+          "erf.sample_line",
+          "erf.sample_line_log",
+          "erf.do_line_sampling",
+          "erf.do_plane_sampling",
+          "erf.write_eb_surface",
+          "erf.prob_name",
+          "erf.regrid_level_0_on_restart",
+          "erf.regrid_int",
+          "erf.check_file",
+          "erf.check_int",
+          "erf.check_per",
+          "erf.restart",
+          "erf.v",
+          "erf.mg_v",
+          "erf.use_fft",
+          "erf.check_for_nans",
+          "erf.sum_interval",
+          "erf.sum_period",
+          "erf.pert_interval",
+          "erf.cfl",
+          "erf.substepping_cfl",
+          "erf.init_shrink",
+          "erf.change_max",
+          "erf.dt_max_initial",
+          "erf.dt_max",
+          "erf.fixed_dt",
+          "erf.fixed_fast_dt",
+          "erf.dt_ref_ratio",
+          "erf.fixed_mri_dt_ratio",
+          "erf.nc_bdy_file",
+          "erf.nc_low_file",
+          "erf.metgrid_debug_quiescent",
+          "erf.metgrid_debug_isothermal",
+          "erf.metgrid_debug_dry",
+          "erf.metgrid_debug_psfc",
+          "erf.metgrid_debug_msf",
+          "erf.metgrid_interp_theta",
+          "erf.metgrid_basic_linear",
+          "erf.metgrid_use_below_sfc",
+          "erf.metgrid_use_sfc",
+          "erf.metgrid_retain_sfc",
+          "erf.metgrid_proximity",
+          "erf.metgrid_order",
+          "erf.metgrid_force_sfc_k",
+          "erf.interpolation_type",
+          "erf.plotfile_type",
+          "erf.plotfile_type_1",
+          "erf.plotfile_type_2",
+          "erf.plotfile2d_type",
+          "erf.plotfile2d_type_1",
+          "erf.plotfile2d_type_2",
+          "erf.plot_file_1",
+          "erf.plot_file_2",
+          "erf.plot2d_file_1",
+          "erf.plot2d_file_2",
+          "erf.plot_int_1",
+          "erf.plot_int_2",
+          "erf.plot_per_1",
+          "erf.plot_per_2",
+          "erf.plot2d_int_1",
+          "erf.plot2d_int_2",
+          "erf.plot2d_per_1",
+          "erf.plot2d_per_2",
+          "erf.subvol_file",
+          "erf.use_real_time_in_pltname",
+          "erf.file_name_digits",
+          "erf.subvol_int",
+          "erf.subvol_per",
+          "erf.expand_plotvars_to_unif_rr",
+          "erf.plot_face_vels",
+          "erf.profile_int",
+          "erf.destag_profiles",
+          "erf.plot_lsm",
+          "erf.plot_rad",
+          "erf.profile_rad_int",
+          "erf.output_1d_column",
+          "erf.column_per",
+          "erf.column_interval",
+          "erf.column_loc_x",
+          "erf.column_loc_y",
+          "erf.column_file_name",
+          "erf.line_sampling_per",
+          "erf.line_sampling_interval",
+          "erf.plane_sampling_per",
+          "erf.plane_sampling_interval",
+          "erf.output_bndry_planes",
+          "erf.bndry_output_planes_interval",
+          "erf.bndry_output_planes_per",
+          "erf.bndry_output_start_time",
+          "erf.input_bndry_planes",
+          "erf.real_width",
+          "erf.real_extrap_w",
+          "erf.cf_width",
+          "erf.cf_set_width",
+          "amr.iterate_grids",
+          "max_step",
+          "start_datetime",
+          "start_time",
+          "stop_datetime",
+          "stop_time",
+          "erf.forest_file",
+          "refinement_indicators",
+          "value_greater",
+          "max_radius",
+          "max_level",
+          "in_box_lo",
+          "in_box_hi",
+          "in_box_lo_indices",
+          "in_box_hi_indices",
+          "in_box_lo_indices_crse",
+          "in_box_hi_indices_crse",
+          "end_time",
+          "field_name",
+          "value_less",
+          "adjacent_difference_greater",
+          "most.radius",
+          "most.time_average",
+          "most.terrain_rotate",
+          "most.use_interpolation",
+          "most.use_normal_vector",
+          "most.time_window",
+          "most.include_subgrid_vel",
+          "most.average_policy",
+          "most.zref",
+          "most.k_arr_in",
+          "erf.shoc.lambda_low",
+          "erf.shoc.lambda_high",
+          "erf.shoc.lambda_slope",
+          "erf.shoc.lambda_thresh",
+          "erf.shoc.thl2tune",
+          "erf.shoc.qw2tune",
+          "erf.shoc.qwthl2tune",
+          "erf.shoc.w2tune",
+          "erf.shoc.length_fac",
+          "erf.shoc.c_diag_3rd_mom",
+          "erf.shoc.coeff_kh",
+          "erf.shoc.coeff_km",
+          "erf.shoc.shoc_1p5tke",
+          "erf.shoc.extra_shoc_diags",
+          "erf.shoc.apply_tms",
+          "erf.shoc.check_flux_state",
+          "erf.shoc.column_conservation_check",
+          "erf.rad_t_sfc",
+          "erf.rad_freq_in_steps",
+          "erf.rad_write_fluxes",
+          "erf.rad_do_subcol_sampling",
+          "erf.rad_orbital_year",
+          "erf.rad_orbital_eccentricity",
+          "erf.rad_orbital_obliquity",
+          "erf.rad_orbital_mvelp",
+          "erf.rad_cons_lat",
+          "erf.rad_cons_lon",
+          "erf.fixed_total_solar_irradiance",
+          "erf.fixed_solar_zenith_angle",
+          "erf.co2vmr",
+          "erf.o3vmr",
+          "erf.n2ovmr",
+          "erf.covmr",
+          "erf.ch4vmr",
+          "erf.o2vmr",
+          "erf.n2vmr",
+          "erf.rad_do_aerosol",
+          "erf.rad_extra_clnclrsky_diag",
+          "erf.rad_extra_clnsky_diag",
+          "erf.rrtmgp_file_path",
+          "erf.rrtmgp_coeffs_sw",
+          "erf.rrtmgp_coeffs_lw",
+          "erf.rrtmgp_cloud_optics_sw",
+          "erf.rrtmgp_cloud_optics_lw",
+          "erf.in_rad",
+          "erf.bndry_output_box_lo",
+          "erf.bndry_output_box_hi",
+          "erf.bndry_output_planes_file",
+          "erf.bndry_output_var_names",
+          "erf.subvol.origin",
+          "erf.subvol.nxnynz",
+          "erf.subvol.dxdydz",
+          "erf.subvol.chunk_size",
+          "erf.use_real_bcs",
+          "erf.bndry_file",
+          "erf.bndry_input_var_names",
+          "erf.terrain_file_name_USGS",
+          "initial_distribution_type",
+          "particle_box_lo",
+          "particle_box_hi",
+          "place_randomly_in_cells",
+          "initial_particles_per_cell",
+          "advect_with_flow",
+          "advect_with_gravity",
+          "stable_redistribute",
+          "erf.density_scaling",
+          "erf.nucleate_particles",
+          "erf.advect_with_flow",
+          "erf.advect_with_gravity",
+          "erf.prescribed_advection",
+          "erf.newton_solver_rtol",
+          "erf.newton_solver_atol",
+          "erf.newton_solver_stol",
+          "erf.newton_solver_maxits",
+          "erf.mass_change_unconverged_log",
+          "erf.mass_change_unconverged_log_filename",
+          "erf.distribution_grid_size",
+          "erf.distribution_rmin",
+          "erf.distribution_rmax",
+          "erf.include_brownian_coalescence",
+          "erf.sigma0",
+          "erf.place_randomly_in_cells",
+          "erf.inactive_threshold",
+          "erf.write_inactive_plt",
+          "erf.recycle_xmin",
+          "erf.recycle_xmax",
+          "erf.recycle_ymin",
+          "erf.recycle_ymax",
+          "erf.recycle_zmin",
+          "erf.recycle_zmax",
+          "erf.mass_change_cfl",
+          "erf.mass_change_ti_method",
+          "erf.coalescence_kernel",
+          "erf.terminal_velocity_model",
+          "erf.coalescence_bin_size",
+          "erf.num_initializations",
+          "erf.num_injections",
+          "maximum_multiplicity",
+          "multiplicity_type",
+          "particle_bubble_center",
+          "particle_bubble_radius",
+          "initial_number_density",
+          "initial_super_droplet_density",
+          "rate",
+          "sd_rate",
+          "t_start",
+          "t_stop",
+          "domain_velocity",
+          "erf.terrain_smoothing",
+          "erf.terrain_gamma_m",
+          "erf.terrain_z_levels",
+          "erf.morrison_ndcnst",
+          "erf.use_morr_cpp_answer",
+          "erf.moisture_model",
+          "include_phase_change",
+          "include_advection",
+          "include_coalescence",
+          "radius_raindrop",
+          "kinematic_mode",
+          "dimensionality",
+          "recycle_particles",
+          "diagnostics_interval",
+          "num_substeps_phase_change",
+          "initial_phase_change_relaxation",
+          "initial_phase_change_relaxation_time",
+          "erf.test_mapfactor",
+          "prob.custom_terrain_type",
+          "prob.dir",
+          "prob.L",
+          "prob.z_offset",
+          "prob.hmax",
+          "prob.Ampl",
+          "prob.wavelength",
+          "erf.init_vels_from_checkpoint",
+          "type",
+          "dirichlet_file",
+          "read_prim_theta",
+          "velocity",
+          "density",
+          "theta",
+          "scalar",
+          "qv",
+          "qc",
+          "KE",
+          "theta_grad",
+          "density_grad",
+          "erf.buildings_file_name",
+          "erf.terrain_file_name",
+          "erf.most.z0",
+          "erf.surface_layer.flux_type",
+          "erf.most.include_wstar",
+          "erf.most.pblh_calc",
+          "erf.most.surf_temp",
+          "erf.most.surf_moist",
+          "erf.most.ustar",
+          "erf.most.tstar",
+          "erf.most.qstar",
+          "erf.most.rhosurf",
+          "erf.most.Cd",
+          "erf.most.Ch",
+          "erf.most.Cq",
+          "erf.most.surf_heating_rate",
+          "erf.most.surf_temp_flux",
+          "erf.most.surf_moist_flux",
+          "erf.most.rico.theta_z0",
+          "erf.most.rico.qsat_z0",
+          "erf.most.roughness_type",
+          "erf.most.roughness_type_land",
+          "erf.most.roughness_type_sea",
+          "erf.most.charnock_constant",
+          "erf.most.charnock_viscosity",
+          "erf.most.modified_charnock_depth",
+          "erf.most.ignore_sst",
+          "erf.most.roughness_file_name",
+          "prob.U_0",
+          "prob.advection_moisture_rate",
+          "prob.moisture_source_cutoff",
+          "prob.moisture_source_cutoff_transition",
+          "prob.x_c",
+          "prob.z_c",
+          "prob.x_r",
+          "prob.z_r",
+          "prob.T_pert",
+          "prob.rayleigh_U_0",
+          "prob.rayleigh_V_0",
+          "prob.rayleigh_W_0",
+          "prob.rayleigh_T_0",
+          "prob.rho_0",
+          "prob.T_0",
+          "prob.M_0",
+          "prob.V_0",
+          "prob.W_0",
+          "prob.z0",
+          "prob.zRef",
+          "prob.uRef",
+          "prob.prob_type",
+          "prob.p_inf",
+          "prob.T_inf",
+          "prob.M_inf",
+          "prob.alpha",
+          "prob.gamma",
+          "prob.beta",
+          "prob.sigma",
+          "prob.R",
+          "prob.xc",
+          "prob.yc",
+          "prob.A_0",
+          "prob.KE_0",
+          "prob.pert_deltaT",
+          "prob.pert_deltaQV",
+          "prob.pert_periods_T",
+          "prob.pert_periods_QV",
+          "prob.T_0_Pert_Mag",
+          "prob.qv_0_Pert_Mag",
+          "prob.wbar_sub_max",
+          "prob.pert_ref_height",
+          "prob.custom_TKE",
+          "prob.KE_decay_height",
+          "prob.KE_decay_order",
+          "prob.U_0_Pert_Mag",
+          "prob.V_0_Pert_Mag",
+          "prob.W_0_Pert_Mag",
+          "prob.pert_rhotheta",
+          "prob.pert_deltaU",
+          "prob.pert_deltaV",
+          "prob.pert_periods_U",
+          "prob.pert_periods_V",
+          "prob.qt_init",
+          "prob.eq_pot_temp",
+          "prob.use_empirical_psat",
+          "prob.height",
+          "prob.z_tr",
+          "prob.T_from_theta_in_moist_init",
+          "prob.theta_tr",
+          "prob.theta_0",
+          "prob.T_tr",
+          "prob.dtheta_dz",
+          "prob.y_r",
+          "prob.theta_c",
+          "prob.advection_heating_rate",
+          "prob.source_cutoff",
+          "prob.source_cutoff_transition",
+          "prob.y_c",
+          "prob.T_pert_is_airtemp",
+          "prob.perturb_rho",
+          "prob.do_moist_bubble",
+          "prob.theta_pert",
+          "prob.use_empircal_psat",
+          "prob.wbar_cutoff_max",
+          "prob.Q_0_Pert_Mag",
+          "prob.rhoKE_0",
+          "prob.B_0",
+          "prob.rad_0",
+          "prob.xc_frac",
+          "prob.yc_frac",
+          "prob.zc_frac",
+          "prob.xradius",
+          "prob.zradius",
+          "prob.pert_periods_u",
+          "prob.pert_periods_v",
+          "prob.pert_delta_u",
+          "prob.pert_lo",
+          "prob.pert_hi",
+          "prob.advection_heating_rate_base",
+          "prob.advection_moisture_rate_base",
+          "erf.init_type",
+          "erf.rotational_time_period",
+          "erf.dynamic_viscosity",
+          "erf.abl_geo_wind",
+          "prob.wbar_cutoff_min",
+          "erf.rad.datalog",
+          "erf.sample_line_lo",
+          "erf.sample_line_hi",
+          "erf.sample_line_dir",
+          "erf.sample_line_name",
+          "erf.line_sampling_vars",
+          "erf.line_sampling_text_output",
+          "erf.sample_plane_lo",
+          "erf.sample_plane_hi",
+          "erf.sample_plane_dir",
+          "erf.sample_plane_name",
+          "sponge_type",
+          "use_xlo_sponge_damping",
+          "use_xhi_sponge_damping",
+          "use_ylo_sponge_damping",
+          "use_yhi_sponge_damping",
+          "use_zlo_sponge_damping",
+          "use_zhi_sponge_damping",
+          "sponge_strength",
+          "xlo_sponge_end",
+          "xhi_sponge_start",
+          "ylo_sponge_end",
+          "yhi_sponge_start",
+          "zlo_sponge_end",
+          "zhi_sponge_start",
+          "sponge_density",
+          "sponge_x_velocity",
+          "sponge_y_velocity",
+          "sponge_z_velocity",
+          "erf.use_terrain",
+          "erf.use_moist_background",
+          "erf.gradp_type",
+          "erf.moisture_type",
+          "erf.moisture_tight_coupling",
+          "erf.land_surface_model",
+          "erf.radiation_model",
+          "erf.terrain_type",
+          "erf.buildings_type",
+          "erf.upwind_real_bcs",
+          "erf.rebalance_wrfinput",
+          "erf.sounding_type",
+          "erf.grid_stretching_ratio",
+          "erf.zsurface",
+          "erf.initial_dz",
+          "erf.use_lagged_delta_rt",
+          "erf.use_gravity",
+          "erf.c_p",
+          "erf.substepping_type",
+          "erf.substepping_diag",
+          "erf.beta_s",
+          "erf.ncorr",
+          "erf.poisson_abstol",
+          "erf.poisson_reltol",
+          "erf.force_stage1_single_substep",
+          "erf.use_coriolis",
+          "erf.variable_coriolis",
+          "erf.four_stream_radiation",
+          "erf.immersed_forcing_substep",
+          "erf.forest_substep",
+          "erf.if_Cd_scalar",
+          "erf.if_Cd_momentum",
+          "erf.if_z0",
+          "erf.if_surf_temp_flux",
+          "erf.if_init_surf_temp",
+          "erf.if_surf_heating_rate",
+          "erf.if_Olen",
+          "erf.if_use_most",
+          "erf.use_rotate_surface_flux",
+          "erf.abl_driver_type",
+          "erf.const_massflux_u",
+          "erf.const_massflux_v",
+          "erf.const_massflux_tau",
+          "erf.const_massflux_layer_lo",
+          "erf.const_massflux_layer_hi",
+          "erf.perturbation_type",
+          "erf.abl_pressure_grad",
+          "erf.abl_geo_forcing",
+          "erf.add_custom_rhotheta_forcing",
+          "erf.add_custom_moisture_forcing",
+          "erf.add_custom_w_subsidence",
+          "erf.add_do_theta_advection",
+          "erf.add_do_mom_advection",
+          "erf.add_custom_geostrophic_profile",
+          "erf.custom_forcing_uses_primitive_vars",
+          "erf.spatial_rhotheta_forcing",
+          "erf.spatial_moisture_forcing",
+          "erf.nudging_from_input_sounding",
+          "erf.Ave_Plane",
+          "erf.num_diff_coeff",
+          "erf.bdy_nudge_factor",
+          "erf.transport_scalar",
+          "erf.vert_implicit",
+          "erf.vert_implicit_fac",
+          "erf.implicit_thermal_diffusion",
+          "erf.implicit_momentum_diffusion",
+          "erf.implicit_before_substep",
+          "erf.coupling_type",
+          "erf.windfarm_type",
+          "erf.windfarm_loc_type",
+          "erf.windfarm_loc_table",
+          "erf.windfarm_spec_table",
+          "erf.windfarm_blade_table",
+          "erf.windfarm_airfoil_tables",
+          "erf.windfarm_spec_table_extra",
+          "erf.sampling_distance_by_D",
+          "erf.turb_disk_angle_from_x",
+          "erf.windfarm_x_shift",
+          "erf.windfarm_y_shift",
+          "erf.time_avg_vel",
+          "erf.hindcast_lateral_forcing",
+          "erf.hindcast_boundary_data_dir",
+          "erf.hindcast_data_interval_in_hrs",
+          "erf.hindcast_lateral_sponge_strength",
+          "erf.hindcast_lateral_sponge_length",
+          "erf.hindcast_zhi_sponge_length",
+          "erf.hindcast_zhi_sponge_strength",
+          "erf.hindcast_zhi_sponge_damping",
+          "erf.hindcast_surface_bcs",
+          "erf.hindcast_surface_data_dir",
+          "erf.io_hurricane_eye_tracker",
+          "erf.hurricane_eye_latitude",
+          "erf.hurricane_eye_longitude",
+          "ensemble.is_init_with_correlated_pert",
+          "ensemble.pert_correlated_radius",
+          "erf.latitude",
+          "erf.coriolis_3d",
+          "erf.abl_geo_wind_table",
+          "erf.tau_nudging",
+          "erf.input_sounding_file",
+          "erf.input_sounding_time",
+          "erf.perturbation_box_dims",
+          "erf.perturbation_direction",
+          "erf.perturbation_layers",
+          "erf.perturbation_offset",
+          "erf.perturbation_nondimensional",
+          "erf.perturbation_T_infinity",
+          "erf.perturbation_T_intensity",
+          "erf.perturbation_Ug",
+          "use_efficient_advection",
+          "dycore_horiz_adv_type",
+          "dycore_vert_adv_type",
+          "dryscal_horiz_adv_type",
+          "dryscal_vert_adv_type",
+          "moistscal_horiz_adv_type",
+          "moistscal_vert_adv_type",
+          "dycore_horiz_upw_frac",
+          "dycore_vert_upw_frac",
+          "dryscal_horiz_upw_frac",
+          "dryscal_vert_upw_frac",
+          "moistscal_horiz_upw_frac",
+          "moistscal_vert_upw_frac",
+          "terrain_type",
+          "zero_xflux_faces",
+          "zero_yflux_faces",
+          "zero_zflux_faces",
+          "erf.input_sponge_file",
+          "rayleigh_damping_type",
+          "rayleigh_damp_U",
+          "rayleigh_damp_V",
+          "rayleigh_damp_W",
+          "rayleigh_damp_T",
+          "rayleigh_dampcoef",
+          "rayleigh_zdamp",
+          "w_damping",
+          "w_damping_cfl",
+          "w_damping_const",
+          "w_damping_coeff",
+          "zlo.type",
+          "molec_diff_type",
+          "alpha_T",
+          "alpha_C",
+          "dynamic_viscosity",
+          "rho0_trans",
+          "eb_diff_constraint_x",
+          "eb_diff_constraint_y",
+          "eb_diff_constraint_z",
+          "eb_boundary_type",
+          "particles.disable_plt"
+        ],
+        "retry_guidance": {
+          "inputs_base_action": "keep",
+          "inputs_reason": null,
+          "baseline_base_action": "keep",
+          "baseline_reason": null
+        },
+        "reviewer_guidance": {
+          "required_solver": "ERF",
+          "forbidden_path_patterns": [],
+          "preferred_path_patterns": [
+            "Exec/RegTests"
+          ],
+          "excluded_cases": [],
+          "schema_escalation_required": false,
+          "replan_reason_codes": []
+        },
+        "review_context": "pre_execution",
+        "review_origin": "architect_validation",
+        "baseline_dir_rejected": false,
+        "plan_rejected_baseline": null,
+        "plan_rejected_inputs_file": null,
+        "postexec_repair_feedback": null,
+        "metrics": {
+          "validation": {
+            "validator_latency_ms": 6.497,
+            "validator_outcome": "proceed",
+            "review_outcome": "approved",
+            "transition_mode": "proceed",
+            "error_count": 0,
+            "warning_count": 0,
+            "violation_count": 0,
+            "unknown_param_count": 0,
+            "persistent_unknown_count": 0,
+            "schema_missing": false,
+            "solver_unknown": false
+          }
+        }
+      }
+    },
+    {
+      "node": "input_writer",
+      "timestamp": "2026-04-27T22:20:39.759622Z",
+      "action": "inputs_generated",
+      "iteration": 1,
+      "details": {
+        "run_directory": "benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650",
+        "inputs_file_path": "benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650/inputs",
+        "status": "success",
+        "modifications_applied": 0,
+        "file_size_bytes": 89,
+        "applied_modifications": [],
+        "requires_parameter_resolution": false,
+        "selected_case": "Exec/RegTests/Couette_Poiseuille",
+        "baseline_code": "ERF",
+        "inputs_file_selected": "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_x",
+        "inputs_file_strategy": "llm_compare",
+        "inputs_file_override": null,
+        "inputs_candidates": [
+          "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_x",
+          "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_poiseuille_y",
+          "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_couette_y",
+          "/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests/Couette_Poiseuille/inputs_poiseuille_x"
+        ],
+        "metrics": {
+          "llm": {
+            "total_calls": 1,
+            "prompt_tokens": 1905,
+            "completion_tokens": 3902,
+            "total_tokens": 5807,
+            "by_model": {
+              "lbl/cborg-deepthought": {
+                "calls": 1,
+                "prompt_tokens": 1905,
+                "completion_tokens": 3902,
+                "total_tokens": 5807,
+                "cost_usd": 0.0
+              }
+            },
+            "by_user": {
+              "unknown": {
+                "calls": 1,
+                "prompt_tokens": 1905,
+                "completion_tokens": 3902,
+                "total_tokens": 5807,
+                "cost_usd": 0.0
+              }
+            },
+            "cost_usd": 0.0
+          },
+          "retrieval": {
+            "strategies": {
+              "llm_compare": 1
+            },
+            "last": {
+              "strategy": "llm_compare",
+              "original_strategy": "llm_compare",
+              "fallback_reason": null,
+              "selected": "inputs_couette_x",
+              "candidate_count": 4,
+              "score": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "node": "runner",
+      "timestamp": "2026-04-27T22:20:39.769379Z",
+      "action": "write_failed",
+      "iteration": 1,
+      "details": {
+        "error": "No executable found in benchmark_v2/results/full_cborg_20260427T202152Z/simple/run_20260427_152014_309650"
+      }
+    },
+    {
+      "node": "analysis",
+      "timestamp": "2026-04-27T22:20:39.775086Z",
+      "action": "analysis_skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "dry"
+      }
+    },
+    {
+      "node": "visualization",
+      "timestamp": "2026-04-27T22:20:39.778133Z",
+      "action": "skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "no_plotfiles",
+        "plotfile_count": 0
+      }
+    }
+  ],
+  "history": []
+}

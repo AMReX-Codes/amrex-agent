@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/Couette_Poiseuille with inputs_couette_y
+
+================================================================================
+
+[2026-04-28T11:56:40.679189Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-28T11:56:40.691707Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-28T11:56:49.578769Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-28T11:56:49.586137Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-28T11:56:49.589044Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-28T11:56:49.590049Z] NODE: VISUALIZATION
+ACTION: skipped
+

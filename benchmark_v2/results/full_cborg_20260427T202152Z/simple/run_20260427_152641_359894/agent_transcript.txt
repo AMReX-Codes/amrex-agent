@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/ScalarAdvDiff with inputs_advect_shearU_no_msf
+
+================================================================================
+
+[2026-04-27T22:26:41.352194Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-27T22:26:41.358213Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-27T22:26:45.187156Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-27T22:26:45.193757Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-27T22:26:45.196835Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-27T22:26:45.198915Z] NODE: VISUALIZATION
+ACTION: skipped
+

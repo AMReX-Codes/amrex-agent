@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/Terrain3d_Hemisphere with inputs_FittedMesh
+
+================================================================================
+
+[2026-04-27T22:54:08.568316Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-27T22:54:08.575731Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-27T22:54:45.430435Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-27T22:54:45.438956Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-27T22:54:45.443501Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-27T22:54:45.446036Z] NODE: VISUALIZATION
+ACTION: skipped
+

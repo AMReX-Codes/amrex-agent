@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/SuperCell_3D with inputs_moisture_Tissaoui
+
+================================================================================
+
+[2026-04-27T21:46:22.215768Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-27T21:46:22.242959Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-27T21:46:22.271763Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-27T21:46:22.286821Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-27T21:46:22.291563Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-27T21:46:22.299248Z] NODE: VISUALIZATION
+ACTION: skipped
+
