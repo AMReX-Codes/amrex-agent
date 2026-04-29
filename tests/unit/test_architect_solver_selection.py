@@ -497,6 +497,75 @@ class TestSolverDisambiguationAlternatives:
 
 
 class TestSimpleRoutingIntentEnforcement:
+    def test_score_case_name_match_handles_scalar_adv_diff_phrasing(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        architect = ArchitectService(mock_config, Mock())
+
+        confidence = architect._score_case_name_match(
+            "Run scalar advection-diffusion in ERF with a gaussian blob.",
+            {
+                "solver": "ERF",
+                "case_name": "ScalarAdvDiff",
+                "repo_path": "Exec/RegTests/ScalarAdvDiff",
+            },
+        )
+
+        assert confidence >= 0.9
+
+    def test_build_routing_intent_uses_sparse_catalog_fallback_for_strong_match(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        architect = ArchitectService(mock_config, Mock())
+        architect.code_configs = {
+            "ERF": Mock(code_name="ERF"),
+            "PeleC": Mock(code_name="PeleC"),
+        }
+        architect._find_level2_case_name_candidate = Mock(
+            side_effect=[
+                None,
+                {
+                    "solver": "ERF",
+                    "repo_path": "Exec/RegTests/ScalarAdvDiff",
+                    "match_confidence": 0.95,
+                },
+            ]
+        )
+
+        intent = architect._build_routing_intent(
+            "Run scalar advection-diffusion in ERF on a periodic 2D domain."
+        )
+
+        assert intent.anchor_strength == "strong"
+        assert intent.explicit_case_path == "Exec/RegTests/ScalarAdvDiff"
+        assert intent.explicit_solver == "ERF"
+        assert "level2_case_catalog" in intent.source_tags
+
+    def test_build_routing_intent_accepts_sparse_fallback_at_ninety_confidence(self, tmp_path):
+        mock_config = Mock()
+        mock_config.faiss_db_path = tmp_path
+        architect = ArchitectService(mock_config, Mock())
+        architect.code_configs = {
+            "ERF": Mock(code_name="ERF"),
+        }
+        architect._find_level2_case_name_candidate = Mock(
+            side_effect=[
+                None,
+                {
+                    "solver": "ERF",
+                    "repo_path": "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL",
+                    "match_confidence": 0.90,
+                },
+            ]
+        )
+
+        intent = architect._build_routing_intent(
+            "Set up a neutral ABL LES in ERF with MOST and geostrophic forcing."
+        )
+
+        assert intent.explicit_case_path == "Exec/CanonicalFlows/Canonical_LES/Neutral_ABL"
+        assert intent.anchor_strength == "strong"
+
     def test_build_routing_intent_promotes_catalog_case_anchor(self, tmp_path):
         mock_config = Mock()
         mock_config.faiss_db_path = tmp_path

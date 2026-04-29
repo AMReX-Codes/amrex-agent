@@ -3197,7 +3197,7 @@
     "solver": "amrex",
     "schema_version": 1,
     "repo_commit": "bac24575",
-    "generated_at": "2026-03-12T11:12:07.807620+00:00"
+    "generated_at": "2026-04-20T17:14:41.273977+00:00"
   },
   "parameters": {
     "amr.regrid_on_restart": {

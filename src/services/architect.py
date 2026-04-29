@@ -303,12 +303,32 @@ class ArchitectService:
 
     @staticmethod
     def _normalize_match_text(value: str | None) -> str:
-        tokens = re.findall(r"[a-z0-9]+", str(value or "").lower())
+        raw = str(value or "")
+        # Split CamelCase tokens so case names like ScalarAdvDiff can match
+        # phrase-form prompts such as "scalar advection diffusion".
+        raw = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", raw)
+        tokens = re.findall(r"[a-z0-9]+", raw.lower())
         return "".join(tokens)
 
     @staticmethod
     def _tokenize_match_text(value: str | None) -> list[str]:
-        return re.findall(r"[a-z0-9]+", str(value or "").lower())
+        raw = str(value or "")
+        raw = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", raw)
+        base_tokens = re.findall(r"[a-z0-9]+", raw.lower())
+        if not base_tokens:
+            return []
+
+        synonym_map: dict[str, tuple[str, ...]] = {
+            "adv": ("advection",),
+            "advection": ("adv",),
+            "diff": ("diffusion",),
+            "diffusion": ("diff",),
+        }
+        tokens: list[str] = []
+        for token in base_tokens:
+            tokens.append(token)
+            tokens.extend(synonym_map.get(token, ()))
+        return tokens
 
     def _config_bool(self, name: str, default: bool) -> bool:
         raw = getattr(self.config, name, default)
@@ -382,6 +402,12 @@ class ArchitectService:
         min_hits = max(1, self._config_int("level2_override_min_metadata_hits", 3))
         try:
             candidate = self._find_level2_case_name_candidate(prompt, min_hits)
+            # Fallback for sparse metadata catalogs: allow one-hit matches only
+            # when lexical confidence is very strong.
+            if not candidate and min_hits > 1:
+                fallback = self._find_level2_case_name_candidate(prompt, 1)
+                if fallback and float(fallback.get("match_confidence", 0.0)) >= 0.90:
+                    candidate = fallback
         except Exception as exc:
             logger.debug("[Routing Intent] Case-anchor inference skipped: %s", exc)
             return None, None
@@ -673,6 +699,11 @@ class ArchitectService:
                 best = max(best, 0.9)
             elif field_norm in prompt_norm or prompt_norm in field_norm:
                 best = max(best, 0.9)
+            elif field_tokens:
+                shared = len(field_tokens.intersection(prompt_tokens))
+                overlap = shared / max(1, len(field_tokens))
+                if shared >= 2 and overlap >= 0.66:
+                    best = max(best, 0.95)
 
         return best
 
