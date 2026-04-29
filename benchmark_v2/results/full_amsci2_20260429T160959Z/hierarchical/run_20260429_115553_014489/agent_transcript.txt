@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/Channel_DNS with inputs_channel
+
+================================================================================
+
+[2026-04-29T18:55:52.994419Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T18:55:53.010435Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T18:55:55.214069Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T18:55:55.225293Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T18:55:55.230999Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T18:55:55.233538Z] NODE: VISUALIZATION
+ACTION: skipped
+

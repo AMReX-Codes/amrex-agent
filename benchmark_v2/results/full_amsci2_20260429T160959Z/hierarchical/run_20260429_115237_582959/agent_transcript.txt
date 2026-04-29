@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/Canonical_LES/Convective_ABL with inputs_specified_heating_rate
+
+================================================================================
+
+[2026-04-29T18:52:37.568600Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T18:52:37.580048Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T18:52:40.402596Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T18:52:40.408734Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T18:52:40.413064Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T18:52:40.415291Z] NODE: VISUALIZATION
+ACTION: skipped
+

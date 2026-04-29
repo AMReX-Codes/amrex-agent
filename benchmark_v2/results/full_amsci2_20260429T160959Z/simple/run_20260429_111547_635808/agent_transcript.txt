@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/Terrain3d_Hemisphere with inputs_EB_twolevel
+
+================================================================================
+
+[2026-04-29T18:15:47.623021Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T18:15:47.632984Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T18:15:47.641917Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T18:15:47.648145Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T18:15:47.649696Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T18:15:47.651605Z] NODE: VISUALIZATION
+ACTION: skipped
+

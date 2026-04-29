@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/EB_SquareCylinder with inputs_anelastic
+
+================================================================================
+
+[2026-04-29T19:26:11.156670Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:26:11.164429Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:26:11.170350Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:26:11.173904Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:26:11.174876Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:26:11.175833Z] NODE: VISUALIZATION
+ACTION: skipped
+

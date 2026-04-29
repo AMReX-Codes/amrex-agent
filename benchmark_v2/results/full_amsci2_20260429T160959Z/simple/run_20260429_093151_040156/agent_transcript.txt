@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/Canonical_LES/Neutral_ABL with inputs_anelastic
+
+================================================================================
+
+[2026-04-29T16:31:51.026622Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T16:31:51.037525Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T16:31:51.046714Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T16:31:51.052119Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T16:31:51.053528Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T16:31:51.055167Z] NODE: VISUALIZATION
+ACTION: skipped
+

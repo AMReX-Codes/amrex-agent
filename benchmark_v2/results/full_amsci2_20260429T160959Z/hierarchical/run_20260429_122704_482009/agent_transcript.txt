@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/FlowInABox with inputs
+
+================================================================================
+
+[2026-04-29T19:27:04.467360Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:27:04.478932Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:27:04.490112Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:27:04.498776Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:27:04.500945Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:27:04.503399Z] NODE: VISUALIZATION
+ACTION: skipped
+

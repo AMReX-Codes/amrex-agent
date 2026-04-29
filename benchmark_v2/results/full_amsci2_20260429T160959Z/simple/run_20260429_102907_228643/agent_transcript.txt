@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/IsentropicVortex with inputs_stationary
+
+================================================================================
+
+[2026-04-29T17:29:07.220576Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T17:29:07.226858Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T17:29:09.892643Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T17:29:09.906068Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T17:29:09.912006Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T17:29:09.915563Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/ImmersedForcingTest with inputs_if_terrain
+
+================================================================================
+
+[2026-04-29T17:24:44.491361Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T17:24:44.498834Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T17:24:46.363507Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T17:24:46.370026Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T17:24:46.374067Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T17:24:46.376398Z] NODE: VISUALIZATION
+ACTION: skipped
+

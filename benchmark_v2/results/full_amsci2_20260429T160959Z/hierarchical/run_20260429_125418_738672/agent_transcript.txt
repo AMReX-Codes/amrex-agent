@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/SineMassFlux with inputs_SDM_condBE
+
+================================================================================
+
+[2026-04-29T19:54:18.717316Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:54:18.733914Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:54:21.580664Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:54:21.583989Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:54:21.586055Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:54:21.587471Z] NODE: VISUALIZATION
+ACTION: skipped
+

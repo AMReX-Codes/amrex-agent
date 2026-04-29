@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/Canonical_LES/Convective_ABL with inputs_specified_flux
+
+================================================================================
+
+[2026-04-29T18:52:11.126853Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T18:52:11.136444Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T18:52:14.002822Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T18:52:14.009391Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T18:52:14.013208Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T18:52:14.015093Z] NODE: VISUALIZATION
+ACTION: skipped
+

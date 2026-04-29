@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/ABL with inputs_most_msf
+
+================================================================================
+
+[2026-04-29T16:20:52.549708Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T16:20:52.558099Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T16:20:54.465029Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T16:20:54.471355Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T16:20:54.474334Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T16:20:54.475838Z] NODE: VISUALIZATION
+ACTION: skipped
+

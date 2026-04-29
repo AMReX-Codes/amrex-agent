@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/Radiation with inputs_radiation
+
+================================================================================
+
+[2026-04-29T19:40:30.931112Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:40:30.937794Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:40:33.341081Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:40:33.350395Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:40:33.355669Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:40:33.358405Z] NODE: VISUALIZATION
+ACTION: skipped
+

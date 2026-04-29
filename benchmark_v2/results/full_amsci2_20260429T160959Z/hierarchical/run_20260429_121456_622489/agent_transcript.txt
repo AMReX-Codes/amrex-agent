@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/Bubble with inputs_BF02_moist_bubble
+
+================================================================================
+
+[2026-04-29T19:14:56.610928Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:14:56.620640Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:14:59.233847Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:14:59.239994Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:14:59.243414Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:14:59.245245Z] NODE: VISUALIZATION
+ACTION: skipped
+

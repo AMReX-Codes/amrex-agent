@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/StokesSecondProblem with inputs
+
+================================================================================
+
+[2026-04-29T19:55:04.069540Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:55:04.085102Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:55:04.100704Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:55:04.111567Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:55:04.114106Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:55:04.117099Z] NODE: VISUALIZATION
+ACTION: skipped
+

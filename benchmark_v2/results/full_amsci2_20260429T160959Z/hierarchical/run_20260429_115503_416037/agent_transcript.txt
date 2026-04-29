@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/Canonical_LES/Stable_ABL with inputs_with_const_massflux
+
+================================================================================
+
+[2026-04-29T18:55:03.403801Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T18:55:03.413073Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T18:55:05.454491Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T18:55:05.460676Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T18:55:05.463242Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T18:55:05.464419Z] NODE: VISUALIZATION
+ACTION: skipped
+

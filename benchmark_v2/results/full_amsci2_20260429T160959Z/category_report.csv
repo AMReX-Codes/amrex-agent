@@ -1,0 +1,5 @@
+strategy,category,weighted_score
+simple,CanonicalTests,0.958824
+simple,RegTests,0.901176
+hierarchical,CanonicalTests,0.958824
+hierarchical,RegTests,0.901176

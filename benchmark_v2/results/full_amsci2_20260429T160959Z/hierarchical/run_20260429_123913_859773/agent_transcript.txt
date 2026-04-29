@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/ParticleTests with inputs_over_flat
+
+================================================================================
+
+[2026-04-29T19:39:13.852161Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:39:13.858198Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:39:16.016321Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:39:16.024490Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:39:16.029223Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:39:16.031683Z] NODE: VISUALIZATION
+ACTION: skipped
+

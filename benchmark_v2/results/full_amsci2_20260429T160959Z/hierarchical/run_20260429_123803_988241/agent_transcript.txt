@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/MultiSpeciesBubble with inputs_moist_bubble.02species
+
+================================================================================
+
+[2026-04-29T19:38:03.974798Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:38:03.986097Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:38:06.478544Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:38:06.487160Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:38:06.491858Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:38:06.494401Z] NODE: VISUALIZATION
+ACTION: skipped
+

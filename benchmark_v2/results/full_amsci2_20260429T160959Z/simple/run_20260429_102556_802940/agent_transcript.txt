@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/InitFromNCFile with inputs
+
+================================================================================
+
+[2026-04-29T17:25:56.794940Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T17:25:56.801220Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T17:25:56.806846Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T17:25:56.811096Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T17:25:56.812051Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T17:25:56.813137Z] NODE: VISUALIZATION
+ACTION: skipped
+

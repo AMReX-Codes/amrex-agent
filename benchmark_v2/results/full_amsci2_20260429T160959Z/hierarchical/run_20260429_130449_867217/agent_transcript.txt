@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/TurbulentInflow with inputs_multilevel_ABL_source
+
+================================================================================
+
+[2026-04-29T20:04:49.854061Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T20:04:49.865056Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T20:04:51.968465Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T20:04:51.977479Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T20:04:51.981095Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T20:04:51.982146Z] NODE: VISUALIZATION
+ACTION: skipped
+

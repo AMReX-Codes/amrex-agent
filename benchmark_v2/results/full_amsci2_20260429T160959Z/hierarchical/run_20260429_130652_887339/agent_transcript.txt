@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/RegTests/WPS_Test with inputs_wps_noahmp
+
+================================================================================
+
+[2026-04-29T20:06:52.869069Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T20:06:52.883659Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T20:06:54.547076Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T20:06:54.554141Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T20:06:54.557756Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T20:06:54.560978Z] NODE: VISUALIZATION
+ACTION: skipped
+

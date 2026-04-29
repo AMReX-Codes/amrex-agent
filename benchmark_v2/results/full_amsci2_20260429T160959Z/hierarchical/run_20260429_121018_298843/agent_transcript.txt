@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/SquallLine_2D with inputs_ml
+
+================================================================================
+
+[2026-04-29T19:10:18.291067Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:10:18.297393Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:10:21.506892Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:10:21.511016Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:10:21.514555Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:10:21.516629Z] NODE: VISUALIZATION
+ACTION: skipped
+

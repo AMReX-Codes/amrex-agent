@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use ERF case Exec/CanonicalTests/SquallLine_2D with inputs_moisture_Morrison
+
+================================================================================
+
+[2026-04-29T19:11:40.439967Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-29T19:11:40.451359Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-29T19:11:42.364303Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-29T19:11:42.371068Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-29T19:11:42.374919Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-29T19:11:42.376935Z] NODE: VISUALIZATION
+ACTION: skipped
+
