@@ -304,7 +304,7 @@ class AMReXAgentConfig(BaseModel):
     """
     
     # === LLM Configuration ===
-    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm"] = Field(
+    llm_provider: Literal["cborg", "alcf", "openai", "anthropic", "pnnl", "litellm", "amsc-i2"] = Field(
         default="cborg",
         description="LLM provider to use"
     )
@@ -501,7 +501,7 @@ class AMReXAgentConfig(BaseModel):
 
     embedding_provider: str = Field(
         default="cborg",
-        description="Embedding model provider (cborg, alcf, openai, huggingface)"
+        description="Embedding model provider (cborg, alcf, openai, amsc-i2, huggingface)"
     )
 
     vector_store_backend: Literal["auto", "faiss_local", "faiss_download", "openai"] = Field(
@@ -1293,7 +1293,7 @@ def resolve_alcf_base_url(config: AMReXAgentConfig) -> str:
 
 def _provider_fallback_order(primary_provider: str) -> list[str]:
     """Return deterministic provider order beginning with the configured provider."""
-    providers = ["cborg", "alcf", "openai", "pnnl", "litellm", "anthropic"]
+    providers = ["cborg", "alcf", "openai", "pnnl", "litellm", "amsc-i2", "anthropic"]
     if primary_provider not in providers:
         raise ValueError(f"Unknown LLM provider: {primary_provider}")
     order = [primary_provider]
@@ -1321,6 +1321,14 @@ def _missing_provider_dependency_reason(config: AMReXAgentConfig, provider: str)
         if config.llm_model or os.getenv("LITELLM_MODEL"):
             return None
         return "llm_model not set for LiteLLM provider"
+    if provider == "amsc-i2":
+        base_url = config.litellm_base_url or os.getenv("AMSC_I2_BASE_URL")
+        if not base_url:
+            return "LITELLM_BASE_URL or AMSC_I2_BASE_URL not set for amsc-i2 provider"
+        api_key = config.litellm_api_key or os.getenv("AMSC_I2_API_KEY")
+        if not api_key:
+            return "LITELLM_API_KEY or AMSC_I2_API_KEY not set for amsc-i2 provider"
+        return None
     return f"Unknown LLM provider: {provider}"
 
 
@@ -1393,6 +1401,20 @@ def _build_llm_client_for_provider(config: AMReXAgentConfig, provider: str, open
         return openai_client_cls(
             api_key=api_key,
             base_url=config.litellm_base_url
+        )
+
+    if provider == "amsc-i2":
+        if not config.llm_model:
+            config.llm_model = (
+                os.getenv("AMSC_I2_MODEL")
+                or os.getenv("LITELLM_MODEL")
+                or "claude-sonnet-4-5"
+            )
+        api_key = config.litellm_api_key or os.getenv("AMSC_I2_API_KEY") or "litellm"
+        base_url = config.litellm_base_url or os.getenv("AMSC_I2_BASE_URL")
+        return openai_client_cls(
+            api_key=api_key,
+            base_url=base_url,
         )
 
     raise ValueError(f"Unknown LLM provider: {provider}")

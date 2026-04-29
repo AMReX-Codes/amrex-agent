@@ -109,9 +109,10 @@ def _extract_embedding_metadata(embedder: Any) -> tuple[str | None, str | None, 
 
 def _resolve_effective_provider(
     provider_arg: str | None,
-    config_provider: str | None,
+    embedding_arg: str | None = None,
+    config_provider: str | None = None,
 ) -> str:
-    for candidate in (provider_arg, config_provider):
+    for candidate in (provider_arg, embedding_arg, config_provider):
         if isinstance(candidate, str) and candidate.strip():
             return candidate.strip().lower()
     raise ValueError(
@@ -261,7 +262,11 @@ def _resolve_repo_root(args_repo: Path | None, code_name: str | None):
     return None
 
 
-def create_embedder(use_real: bool = True) -> Any:
+def create_embedder(
+    use_real: bool = True,
+    provider_override: str | None = None,
+    model_override: str | None = None,
+) -> Any:
     """
     Create a real or mock embedder for indexing.
 
@@ -286,6 +291,13 @@ def create_embedder(use_real: bool = True) -> Any:
         from src.services.embedding_service_factory import get_embedding_service
 
         config = ConfigService().initialize()
+        updates: dict[str, Any] = {}
+        if isinstance(provider_override, str) and provider_override.strip():
+            updates["embedding_provider"] = provider_override.strip().lower()
+        if isinstance(model_override, str) and model_override.strip():
+            updates["faiss_embedding_model"] = model_override.strip()
+        if updates:
+            config = config.model_copy(update=updates)
         embedder = get_embedding_service(config)
 
         class EmbedderAdapter:
@@ -531,6 +543,15 @@ Examples:
     parser.add_argument(
         '--provider',
         help='Embedding provider to scope output layout (e.g., cborg, amsc)',
+    )
+    parser.add_argument(
+        '--embedding',
+        help='Embedding provider alias (same meaning as --provider; kept for compatibility)',
+    )
+    parser.add_argument(
+        '--embedding-model',
+        default=None,
+        help='Optional embedding model override (defaults come from provider/config)',
     )
     parser.add_argument(
         '--check',
@@ -787,6 +808,7 @@ def _run_check_mode(output: Path, provider_override: str | None = None) -> int:
         runtime_config = _load_runtime_config()
         effective_provider = _resolve_effective_provider(
             provider_override,
+            None,
             str(getattr(runtime_config, "embedding_provider", "")).strip().lower() or None,
         )
         faiss_root = _provider_output_root(output, effective_provider)
@@ -818,10 +840,14 @@ def main() -> int:
     repo_root, config_class, solver_name = _resolve_build_context(args, parser)
 
     # Create embedder
-    embedder = create_embedder(use_real=not args.mock)
+    embedder = create_embedder(
+        use_real=not args.mock,
+        provider_override=(args.provider or args.embedding),
+        model_override=args.embedding_model,
+    )
     detected_provider, _, _ = _extract_embedding_metadata(embedder)
     try:
-        effective_provider = _resolve_effective_provider(args.provider, detected_provider)
+        effective_provider = _resolve_effective_provider(args.provider, args.embedding, detected_provider)
     except ValueError as exc:
         parser.error(str(exc))
 

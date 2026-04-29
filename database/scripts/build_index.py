@@ -973,7 +973,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--embedding',
         default='openai',
-        choices=['openai', 'huggingface', 'cborg'],
+        choices=['openai', 'huggingface', 'cborg', 'amsc-i2'],
         help='Embedding provider (default: openai)',
     )
     parser.add_argument(
@@ -983,7 +983,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--provider',
-        help='Provider namespace for FAISS output layout (e.g., cborg, amsc)',
+        help='Provider namespace for FAISS output layout (e.g., cborg, amsc-i2)',
     )
     parser.add_argument(
         '--max-cases',
@@ -1135,7 +1135,7 @@ def main() -> None:
 
     # Get embedding model
     embedding_provider = effective_provider
-    embedding_model = get_embedding_model(args.embedding, args.embedding_model)
+    embedding_model = get_embedding_model(effective_provider, args.embedding_model)
 
     _run_index_builder(
         args=args,

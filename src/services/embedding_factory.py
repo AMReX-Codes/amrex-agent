@@ -27,6 +27,14 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+PROVIDER_DEFAULT_MODELS = {
+    "cborg": "lbl/nomic-embed-text",
+    "amsc-i2": "text-embedding-ada-002",
+    "alcf": "mistralai/Mistral-7B-Instruct-v0.3-embed",
+}
+
+GLOBAL_FAISS_EMBEDDING_DEFAULT = PROVIDER_DEFAULT_MODELS["cborg"]
+
 def _resolve_api_key(provider: str, config: object | None = None) -> str | None:
     """
     Resolve API key from config or environment.
@@ -36,7 +44,7 @@ def _resolve_api_key(provider: str, config: object | None = None) -> str | None:
         2. Environment variable (CBORG_API_KEY, ALCF_API_KEY, OPENAI_API_KEY)
 
     Args:
-        provider: 'cborg', 'alcf', 'openai', or 'huggingface'
+        provider: 'cborg', 'alcf', 'openai', 'amsc-i2', or 'huggingface'
         config: AMReXAgentConfig object with API keys
 
     Returns
@@ -57,7 +65,8 @@ def _resolve_api_key(provider: str, config: object | None = None) -> str | None:
     env_var_map = {
         'cborg': 'CBORG_API_KEY',
         'alcf': 'ALCF_API_KEY',
-        'openai': 'OPENAI_API_KEY'
+        'openai': 'OPENAI_API_KEY',
+        'amsc-i2': 'AMSC_I2_API_KEY',
     }
 
     env_var = env_var_map.get(provider)
@@ -76,7 +85,7 @@ def _resolve_model_name(
     Resolve embedding model name based on provider and config.
 
     Args:
-        provider: 'cborg', 'alcf', 'openai', or 'huggingface'
+        provider: 'cborg', 'alcf', 'openai', 'amsc-i2', or 'huggingface'
         model_name: Optional override model name
         config: AMReXAgentConfig object with embedding settings
 
@@ -86,7 +95,15 @@ def _resolve_model_name(
     """
     provider = provider.lower()
 
-    if provider not in {"openai", "alcf"}:
+    if provider not in {"openai", "alcf", "amsc-i2"}:
+        return model_name
+
+    provider_default = PROVIDER_DEFAULT_MODELS.get(provider)
+    if model_name:
+        if model_name != GLOBAL_FAISS_EMBEDDING_DEFAULT:
+            return model_name
+        if provider_default:
+            return provider_default
         return model_name
 
     if model_name:
@@ -99,9 +116,16 @@ def _resolve_model_name(
                 return config_model
         if config and hasattr(config, "faiss_embedding_model"):
             config_model = getattr(config, "faiss_embedding_model")
-            if config_model and config_model != "text-embedding-3-small":
+            if config_model and config_model != GLOBAL_FAISS_EMBEDDING_DEFAULT:
                 return config_model
-        return "mistralai/Mistral-7B-Instruct-v0.3-embed"
+        return provider_default or "mistralai/Mistral-7B-Instruct-v0.3-embed"
+
+    if provider == "amsc-i2":
+        if config and hasattr(config, "faiss_embedding_model"):
+            config_model = getattr(config, "faiss_embedding_model")
+            if config_model and config_model != GLOBAL_FAISS_EMBEDDING_DEFAULT:
+                return config_model
+        return provider_default or "cohere-embed-english-v3"
 
     if config and hasattr(config, "faiss_embedding_model"):
         config_model = config.faiss_embedding_model
@@ -253,6 +277,50 @@ def _create_openai_embeddings(
         return None
 
 
+def _wrap_bad_request_with_context(
+    embeddings: Any,
+    *,
+    provider: str,
+    model_name: str,
+) -> Any:
+    """Wrap embedding calls to add provider/model context for BadRequestError failures."""
+    try:
+        from openai import BadRequestError as OpenAIBadRequestError
+    except Exception:
+        return embeddings
+
+    class _EmbeddingErrorContextWrapper:
+        def __init__(self, inner: Any, provider_name: str, model: str) -> None:
+            self._inner = inner
+            self._provider = provider_name
+            self._model = model
+
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
+            try:
+                return self._inner.embed_documents(texts)
+            except OpenAIBadRequestError as exc:
+                raise RuntimeError(
+                    f"Embedding request failed for provider='{self._provider}' model='{self._model}'. "
+                    "Check available models on the configured endpoint via /v1/models. "
+                    f"Original error: {exc}"
+                ) from exc
+
+        def embed_query(self, text: str) -> list[float]:
+            try:
+                return self._inner.embed_query(text)
+            except OpenAIBadRequestError as exc:
+                raise RuntimeError(
+                    f"Embedding request failed for provider='{self._provider}' model='{self._model}'. "
+                    "Check available models on the configured endpoint via /v1/models. "
+                    f"Original error: {exc}"
+                ) from exc
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._inner, name)
+
+    return _EmbeddingErrorContextWrapper(embeddings, provider, model_name)
+
+
 def _resolve_alcf_base_url(
     config: Optional[object] = None,
     base_url: Optional[str] = None,
@@ -294,11 +362,59 @@ def _create_alcf_embeddings(
     Returns:
         Embeddings instance or None on failure
     """
-    return _create_openai_embeddings(
+    embeddings = _create_openai_embeddings(
         api_key=api_key or _resolve_api_key("alcf", config),
         model_name=model_name,
         config=config,
         base_url=_resolve_alcf_base_url(config, base_url),
+    )
+    if embeddings is None:
+        return None
+    return _wrap_bad_request_with_context(
+        embeddings,
+        provider="alcf",
+        model_name=model_name,
+    )
+
+
+def _create_amsc_i2_embeddings(
+    api_key: str | None = None,
+    model_name: str = "text-embedding-ada-002",
+    config: object | None = None,
+    base_url: str | None = None,
+):
+    """
+    Initialize AMSC-I2 embeddings via OpenAI-compatible endpoint.
+
+    Args:
+        api_key: AMSC-I2 API key (defaults to AMSC_I2_API_KEY env).
+        model_name: Embedding model name (default: cohere-embed-english-v3).
+        base_url: AMSC-I2 base URL (defaults to AMSC_I2_BASE_URL env).
+
+    Returns
+    -------
+        Embeddings instance or None on failure
+    """
+    resolved_base_url = base_url or os.getenv("AMSC_I2_BASE_URL")
+    if not resolved_base_url:
+        logger.warning(
+            "AMSC-I2 embeddings require AMSC_I2_BASE_URL; provider 'amsc-i2' was requested but no base URL is configured."
+        )
+        return None
+
+    resolved_api_key = api_key or _resolve_api_key("amsc-i2", config)
+    embeddings = _create_openai_embeddings(
+        api_key=resolved_api_key,
+        model_name=model_name,
+        config=config,
+        base_url=resolved_base_url,
+    )
+    if embeddings is None:
+        return None
+    return _wrap_bad_request_with_context(
+        embeddings,
+        provider="amsc-i2",
+        model_name=model_name,
     )
 
 
@@ -355,7 +471,7 @@ def create_embeddings(
     Parameters
     ----------
     provider : str
-        "cborg", "alcf", "openai", or "huggingface".
+        "cborg", "alcf", "openai", "amsc-i2", or "huggingface".
     api_key : str or None, optional
         Direct API key (overrides config/env).
     model_name : str or None, optional
@@ -422,7 +538,18 @@ def create_embeddings(
     elif provider == "huggingface":
         return _create_huggingface_embeddings()
 
+    elif provider == "amsc-i2":
+        model = _resolve_model_name(provider, model_name=model_name, config=config)
+        return _create_amsc_i2_embeddings(
+            api_key=api_key,
+            model_name=model or "text-embedding-ada-002",
+            config=config,
+            base_url=base_url or os.getenv("AMSC_I2_BASE_URL"),
+        )
+
     else:
         logger.debug(f"Warning: Unknown embedding provider '{provider}'")
-        logger.debug(f"         Supported providers: 'cborg', 'alcf', 'openai', 'huggingface'")
+        logger.debug(
+            "         Supported providers: 'cborg', 'alcf', 'openai', 'huggingface', 'amsc-i2'"
+        )
         return None

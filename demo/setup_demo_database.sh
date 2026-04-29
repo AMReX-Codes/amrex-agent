@@ -13,6 +13,7 @@
 #   bash demo/setup_demo_database.sh --code erf         # Build ERF only
 #   bash demo/setup_demo_database.sh --code amrex       # Build AMReX only
 #   bash demo/setup_demo_database.sh --code pelelmex    # Build PeleLMeX only
+#   bash demo/setup_demo_database.sh --provider cborg   # Use specific embedding provider
 #   bash demo/setup_demo_database.sh --upload-openai    # Upload docs to OpenAI vector store
 #   bash demo/setup_demo_database.sh --mock             # Use mock embeddings (no API calls)
 #   bash demo/setup_demo_database.sh --clone-missing    # Clone missing repos (requires network)
@@ -34,6 +35,7 @@ TARGET_CODE="all"
 UPLOAD_OPENAI=0
 USE_MOCK=0
 CLONE_MISSING=0
+PROVIDER="cborg"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -47,6 +49,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --clone-missing)
       CLONE_MISSING=1
+      shift
+      ;;
+    --provider)
+      PROVIDER="$2"
+      shift 2
+      ;;
+    --provider=*)
+      PROVIDER="${1#*=}"
       shift
       ;;
     --code)
@@ -136,6 +146,7 @@ else
 fi
 
 log "Code filter: $TARGET_CODE"
+log "Embedding provider: $PROVIDER"
 log "Upload to OpenAI: $UPLOAD_OPENAI"
 if [[ $USE_MOCK -eq 1 ]]; then
   log "Embedding mode: MOCK (no API calls)"
@@ -311,7 +322,7 @@ fi
 
 if [[ $BUILD_L0 -eq 1 ]]; then
   log "  Building Level 0 indices (solver selection)..."
-  python database/scripts/build_all_indices.py --level 0 --output database/faiss "${MOCK_ARGS[@]}" \
+  python database/scripts/build_all_indices.py --level 0 --output database/faiss --provider "$PROVIDER" --embedding "$PROVIDER" "${MOCK_ARGS[@]}" \
     && log "  ✓ Level 0 complete" || log "  ✗ Level 0 FAILED"
 fi
 
@@ -385,11 +396,11 @@ PY
 
   log "  Building ${name} Level 1 & 2 indices..."
   if [[ $build_l1 -eq 1 ]]; then
-    python database/scripts/build_all_indices.py --level 1 --repo "$repo" --output database/faiss "${MOCK_ARGS[@]}" \
+    python database/scripts/build_all_indices.py --level 1 --repo "$repo" --output database/faiss --provider "$PROVIDER" --embedding "$PROVIDER" "${MOCK_ARGS[@]}" \
       && log "    ✓ ${name} Level 1 complete" || log "    ⚠️  ${name} Level 1 had issues"
   fi
   if [[ $build_l2 -eq 1 ]]; then
-    python database/scripts/build_all_indices.py --level 2 --repo "$repo" --output database/faiss "${MOCK_ARGS[@]}" \
+    python database/scripts/build_all_indices.py --level 2 --repo "$repo" --output database/faiss --provider "$PROVIDER" --embedding "$PROVIDER" "${MOCK_ARGS[@]}" \
       && log "    ✓ ${name} Level 2 complete" || log "    ⚠️  ${name} Level 2 had issues"
   fi
 }
@@ -449,7 +460,7 @@ build_simple_indices() {
   log "  Building $code simple indices..."
   for type in "${SIMPLE_TYPES[@]}"; do
     log "    - ${type}..."
-    python database/scripts/build_index.py --type ${type} --config ${code,,} --embedding cborg --source "$repo" \
+    python database/scripts/build_index.py --type ${type} --config ${code,,} --embedding "$PROVIDER" --provider "$PROVIDER" --source "$repo" \
       && log "      ✓" || log "      ✗ FAILED"
   done
 }
@@ -491,11 +502,11 @@ fi
 
 log ""
 log "Indices:"
-if [[ -d "database/faiss" ]]; then
-  L0_COUNT=$(find database/faiss/level0 -name '*.faiss' 2>/dev/null | wc -l || true)
-  L1_COUNT=$(find database/faiss/level1 -name '*.faiss' 2>/dev/null | wc -l || true)
-  L2_COUNT=$(find database/faiss/level2 -name '*.faiss' 2>/dev/null | wc -l || true)
-  SIMPLE_COUNT=$(find database/faiss -maxdepth 2 -name 'index.faiss' 2>/dev/null | wc -l || true)
+if [[ -d "database/faiss/$PROVIDER" ]]; then
+  L0_COUNT=$(find "database/faiss/$PROVIDER/level0" -name '*.faiss' 2>/dev/null | wc -l || true)
+  L1_COUNT=$(find "database/faiss/$PROVIDER/level1" -name '*.faiss' 2>/dev/null | wc -l || true)
+  L2_COUNT=$(find "database/faiss/$PROVIDER/level2" -name '*.faiss' 2>/dev/null | wc -l || true)
+  SIMPLE_COUNT=$(find "database/faiss/$PROVIDER" -maxdepth 2 -name 'index.faiss' 2>/dev/null | wc -l || true)
 
   log "  Level 0 (Solver selection):    $L0_COUNT indices (4 expected)"
   log "  Level 1 (Documentation):       $L1_COUNT indices"
@@ -504,11 +515,11 @@ if [[ -d "database/faiss" ]]; then
 
   log ""
   log "Breakdown by code:"
-  log "  PeleC:    $(find database/faiss -maxdepth 2 -path '*pelec_*/index.faiss' 2>/dev/null | wc -l || true) indices"
-  log "  PeleLMeX: $(find database/faiss -maxdepth 2 -path '*pelelmex_*/index.faiss' 2>/dev/null | wc -l || true) indices"
-  log "  ERF:      $(find database/faiss -maxdepth 2 -path '*erf_*/index.faiss' 2>/dev/null | wc -l || true) indices"
-  log "  AMReX:    $(find database/faiss -maxdepth 2 -path '*amrex_*/index.faiss' 2>/dev/null | wc -l || true) indices"
-  log "  REMORA:   $(find database/faiss -maxdepth 2 -path '*remora_*/index.faiss' 2>/dev/null | wc -l || true) indices"
+  log "  PeleC:    $(find "database/faiss/$PROVIDER" -maxdepth 2 -path '*pelec_*/index.faiss' 2>/dev/null | wc -l || true) indices"
+  log "  PeleLMeX: $(find "database/faiss/$PROVIDER" -maxdepth 2 -path '*pelelmex_*/index.faiss' 2>/dev/null | wc -l || true) indices"
+  log "  ERF:      $(find "database/faiss/$PROVIDER" -maxdepth 2 -path '*erf_*/index.faiss' 2>/dev/null | wc -l || true) indices"
+  log "  AMReX:    $(find "database/faiss/$PROVIDER" -maxdepth 2 -path '*amrex_*/index.faiss' 2>/dev/null | wc -l || true) indices"
+  log "  REMORA:   $(find "database/faiss/$PROVIDER" -maxdepth 2 -path '*remora_*/index.faiss' 2>/dev/null | wc -l || true) indices"
 else
   log "  (not built)"
 fi

@@ -29,3 +29,7 @@ max_iterations: 3
 
 # Output
 output_dir: output
+
+# Provider wiring
+litellm_base_url: https://api.i2-core.american-science-cloud.org/v1
+embedding_provider: amsc-i2

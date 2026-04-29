@@ -99,6 +99,7 @@ class ERFConfig(BaseAMReXConfig):
     faiss_indices = [
         'erf_case_structure',
         'erf_case_details',
+        'erf_case_names',
     ]
 
     documentation_map = {

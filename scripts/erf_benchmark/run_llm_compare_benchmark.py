@@ -716,19 +716,36 @@ def main() -> int:
     if "hierarchical" in runs_by_strategy:
         hierarchical_candidates_rows = runs_by_strategy["hierarchical"].get("hierarchical_candidates", [])
     hierarchical_candidates_by_row = {entry.get("row_id"): entry for entry in hierarchical_candidates_rows}
+    evidence_by_key: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in strategy_runs:
+        strategy_name = str(item.get("strategy") or "")
+        for evidence in item.get("evidences", []) or []:
+            if not isinstance(evidence, dict):
+                continue
+            row_id = evidence.get("row_id")
+            if not isinstance(row_id, str) or not row_id:
+                continue
+            evidence_by_key[(strategy_name, row_id)] = evidence
+
     enriched_results_rows: list[dict[str, Any]] = []
     for row in results_rows:
-        if row.get("strategy") == "hierarchical":
-            candidate_row = hierarchical_candidates_by_row.get(row.get("row_id"), {})
-            enriched_results_rows.append(
+        strategy_name = str(row.get("strategy") or "")
+        row_id = str(row.get("row_id") or "")
+        evidence = evidence_by_key.get((strategy_name, row_id), {})
+        enriched_row = {
+            **row,
+            "selected_case": evidence.get("selected_case", ""),
+            "selected_inputs": evidence.get("selected_inputs", ""),
+        }
+        if strategy_name == "hierarchical":
+            candidate_row = hierarchical_candidates_by_row.get(row_id, {})
+            enriched_row.update(
                 {
-                    **row,
                     "hierarchical_selected_case": candidate_row.get("selected_case", ""),
                     "hierarchical_candidates_top_n": candidate_row.get("candidates_top_n", []),
                 }
             )
-        else:
-            enriched_results_rows.append(row)
+        enriched_results_rows.append(enriched_row)
 
     repo_root = Path(__file__).resolve().parents[2]
     prompt_checksum = _sha256_file(args.prompt_matrix) if args.prompt_matrix.exists() else None

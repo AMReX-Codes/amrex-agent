@@ -12,6 +12,7 @@ Features:
 """
 
 import logging
+from pathlib import Path
 import random
 import time
 from typing import Any
@@ -212,6 +213,10 @@ class EmbeddingService:
             return
 
         # Load indices for each code
+        # Ensure path semantics even when config YAML provided a raw string.
+        if isinstance(self.config.faiss_db_path, str):
+            self.config.faiss_db_path = Path(self.config.faiss_db_path)
+
         indices_loaded = 0
         for code_config in code_configs:
             for index_name in code_config.get_faiss_indices():
