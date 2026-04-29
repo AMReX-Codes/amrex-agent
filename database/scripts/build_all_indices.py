@@ -95,8 +95,12 @@ def _extract_embedding_metadata(embedder: Any) -> tuple[str | None, str | None, 
     model_name: str | None = None
     dimension: int | None = None
     if config is not None:
-        provider = getattr(config, "embedding_provider", None) or provider
-        model_name = getattr(config, "faiss_embedding_model", None) or model_name
+        raw_provider = getattr(config, "embedding_provider", None)
+        if isinstance(raw_provider, str) and raw_provider.strip():
+            provider = raw_provider.strip()
+        raw_model = getattr(config, "faiss_embedding_model", None)
+        if isinstance(raw_model, str) and raw_model.strip():
+            model_name = raw_model.strip()
         raw_dim = (
             getattr(config, "embedding_dimension", None)
             or getattr(config, "faiss_embedding_dimension", None)
@@ -283,6 +287,11 @@ def create_embedder(
     if not use_real:
         mock = Mock()
         mock.embed_texts.return_value = [[0.1] * 384] * 100
+        # Level builders call expand_documents() before embedding; mirror adapter contract.
+        mock.expand_documents.side_effect = lambda documents, metadata=None: (
+            documents,
+            metadata if metadata is not None else [{} for _ in documents],
+        )
         logger.debug("[LIST] Using mock embedder (test mode, no API calls)")
         return mock
 
