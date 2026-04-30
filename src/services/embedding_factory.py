@@ -396,9 +396,11 @@ def _create_amsc_i2_embeddings(
         Embeddings instance or None on failure
     """
     resolved_base_url = base_url or os.getenv("AMSC_I2_BASE_URL")
+    if not resolved_base_url and config and hasattr(config, "litellm_base_url"):
+        resolved_base_url = getattr(config, "litellm_base_url")
     if not resolved_base_url:
         logger.warning(
-            "AMSC-I2 embeddings require AMSC_I2_BASE_URL; provider 'amsc-i2' was requested but no base URL is configured."
+            "AMSC-I2 embeddings require AMSC_I2_BASE_URL or config.litellm_base_url; provider 'amsc-i2' was requested but no base URL is configured."
         )
         return None
 

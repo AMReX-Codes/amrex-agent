@@ -2,7 +2,6 @@
 llm_provider: amsc-i2
 llm_model: claude-sonnet-4-5
 embedding_provider: amsc-i2
-faiss_db_path: database/faiss/amsc-i2
 litellm_base_url: https://api.i2-core.american-science-cloud.org/v1
 
 # Matching CBORG defaults exactly

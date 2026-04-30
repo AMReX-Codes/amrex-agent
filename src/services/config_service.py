@@ -10,9 +10,16 @@ import logging
 import os
 from pathlib import Path
 
-from src.config import AMReXAgentConfig, resolve_alcf_base_url, wrap_llm_client_with_retry
+from src.config import (
+    AMReXAgentConfig,
+    resolve_alcf_base_url,
+    resolve_database_path,
+    resolve_faiss_db_path_for_provider,
+    wrap_llm_client_with_retry,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class ConfigService:
     """Manages configuration initialization with side effects.
@@ -406,6 +413,18 @@ class ConfigService:
         unknown = [k for k in merged if k not in allowed_keys]
         if unknown:
             logger.warning(f"Ignoring unknown config keys: {unknown}")
+
+        # If provider changed and faiss_db_path was not explicitly set,
+        # recalculate provider-scoped FAISS root now (model_copy bypasses validation).
+        if "embedding_provider" in filtered and "faiss_db_path" not in filtered:
+            provider = str(filtered.get("embedding_provider") or "").strip()
+            if provider:
+                filtered["faiss_db_path"] = resolve_faiss_db_path_for_provider(
+                    faiss_root=resolve_database_path("faiss"),
+                    provider=provider,
+                )
+        elif "faiss_db_path" in filtered and isinstance(filtered["faiss_db_path"], str):
+            filtered["faiss_db_path"] = Path(filtered["faiss_db_path"])
         return config.model_copy(update=filtered)
 
     def initialize(self, config_path: Path | None = None) -> AMReXAgentConfig:

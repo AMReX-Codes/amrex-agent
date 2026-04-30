@@ -125,6 +125,10 @@ class ArchitectService:
         self.embedder = embedding_service
         self._knowledge = None
 
+        # Ensure path semantics even when config YAML provided a raw string.
+        if hasattr(self.config, "faiss_db_path") and isinstance(self.config.faiss_db_path, str):
+            self.config.faiss_db_path = Path(self.config.faiss_db_path)
+
         # Initialize Level 0 Searcher (Architect Service: Solver Selection)
         if embedding_service and hasattr(config, "faiss_db_path"):
             from database.indexing.level0_searcher import Level0Searcher

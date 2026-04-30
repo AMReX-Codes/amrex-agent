@@ -241,10 +241,14 @@ def resolve_faiss_db_path_for_provider(
     if provider_root.exists():
         return provider_root
 
-    if provider_slug == "cborg":
-        migrate_flat_faiss_to_provider(faiss_root, provider_slug)
-        if provider_root.exists():
-            return provider_root
+    # Keep backward compatibility for legacy flat CBORG layouts.
+    # Non-CBORG providers should always resolve to their provider namespace.
+    if provider_slug != "cborg":
+        return provider_root
+
+    migrate_flat_faiss_to_provider(faiss_root, provider_slug)
+    if provider_root.exists():
+        return provider_root
 
     if _has_flat_faiss_artifacts(faiss_root):
         return faiss_root
