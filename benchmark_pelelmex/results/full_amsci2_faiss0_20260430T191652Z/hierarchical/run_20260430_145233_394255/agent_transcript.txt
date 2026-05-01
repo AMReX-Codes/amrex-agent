@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/TaylorGreen with input.3d_PLM
+
+================================================================================
+
+[2026-04-30T21:52:06.418181Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 112 changes
+    - geometry.is_periodic = 0 0
+    - geometry.prob_lo = 0.0 0.0 0.0
+    - geometry.prob_hi = 0.02 0.04 0.0
+
+[2026-04-30T21:52:19.980100Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T21:52:33.368135Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T21:52:33.390105Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T21:52:35.310203Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T21:52:35.326842Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T21:52:35.331281Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T21:52:35.342512Z] NODE: VISUALIZATION
+ACTION: skipped
+

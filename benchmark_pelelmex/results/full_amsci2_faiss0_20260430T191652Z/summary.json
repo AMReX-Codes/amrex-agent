@@ -1,0 +1,70 @@
+{
+  "simple_weighted_score": 0.770455,
+  "hierarchical_weighted_score": 0.102273,
+  "simple_failed_rows": 0,
+  "hierarchical_failed_rows": 0,
+  "total_failed_rows": 0,
+  "holdout_weighted_score": 0.436364,
+  "paraphrase_weighted_score": 0.436364,
+  "category_min_weighted_score": 0.04375,
+  "non_erf_sanity_weighted_score": 0.436364,
+  "explainability_pass": false,
+  "explainability_mean_score": 0.354907,
+  "correctness_mean_score": 0.354759,
+  "generalizability_mean_score": 0.355253,
+  "explainability_fail_count": 522,
+  "max_rate_limit_retries": 1,
+  "max_unavailable_attempts": 1,
+  "checkpoint_every_row": true,
+  "checkpoint_prefix": "partial",
+  "continue_on_catastrophic": false,
+  "audit": {
+    "started_at": "2026-04-30T19:16:52.735330+00:00",
+    "finished_at": "2026-04-30T22:08:07.273170+00:00",
+    "cli": {
+      "argv": [
+        "scripts/erf_benchmark/run_llm_compare_benchmark.py",
+        "--prompt-matrix",
+        "benchmark_pelelmex/prompt_matrix.jsonl",
+        "--out-dir",
+        "benchmark_pelelmex/results/full_amsci2_faiss0_20260430T191652Z",
+        "--agent-config",
+        "/tmp/config_amsc_i2_faiss0.yaml",
+        "--save-workflow",
+        "--save-transcript",
+        "--save-log",
+        "--verbose-cli",
+        "--flush-prints"
+      ],
+      "cwd": "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf"
+    },
+    "inputs": {
+      "prompt_matrix": "benchmark_pelelmex/prompt_matrix.jsonl",
+      "prompt_matrix_sha256": "ed63d4b88d11b3958ad8e4228dc93650c5f975ad78d8db5d42356cac26fcc57e",
+      "agent_config": "/tmp/config_amsc_i2_faiss0.yaml",
+      "agent_config_sha256": "9d7b1d45d31e84ea1e034731bdb9e57c08d9eff2f5a2703532bbd52ada143614"
+    },
+    "git": {
+      "sha": "0aad617b8b5982445b1498aa69056a2811630a64",
+      "dirty": true
+    },
+    "faiss_provenance": {
+      "path": null,
+      "digest": null
+    },
+    "artifacts": {
+      "summary": "summary.json",
+      "results": "results.jsonl",
+      "category_report": "category_report.csv",
+      "failures": "failures.csv",
+      "console_logs": "console_logs.jsonl",
+      "catastrophic_events": "catastrophic_events.jsonl",
+      "explainability_calls": "explainability_calls.jsonl",
+      "explainability_failures": "explainability_failures.csv"
+    },
+    "hierarchical_candidates": {
+      "embedded_in": "results.jsonl",
+      "rows_with_candidates": 88
+    }
+  }
+}

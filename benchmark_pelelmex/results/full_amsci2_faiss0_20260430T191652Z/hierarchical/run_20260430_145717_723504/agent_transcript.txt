@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/TurbInflow with input.3d
+
+================================================================================
+
+[2026-04-30T21:56:56.795412Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 105 changes
+    - geometry.is_periodic = 1 0
+    - geometry.prob_lo = 0.0  -0.005 0.0
+    - geometry.prob_hi = 0.08  0.005 0.0
+
+[2026-04-30T21:57:07.393481Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T21:57:17.708228Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T21:57:17.720497Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T21:57:19.764955Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T21:57:19.772970Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T21:57:19.779984Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T21:57:19.783910Z] NODE: VISUALIZATION
+ACTION: skipped
+

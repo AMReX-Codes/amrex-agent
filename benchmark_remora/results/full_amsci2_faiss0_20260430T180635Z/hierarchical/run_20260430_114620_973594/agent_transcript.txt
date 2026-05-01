@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use REMORA case Exec/Advection with inputs
+
+================================================================================
+
+[2026-04-30T18:45:48.201138Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 43 changes
+    - remora.omp_tile_size = 8 8 1024
+    - remora.prob_lo = 0.       0.  -5000.
+    - remora.prob_hi = 320000.  320000.       0.
+
+[2026-04-30T18:45:59.805777Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T18:46:20.956765Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T18:46:20.970373Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T18:46:20.989640Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T18:46:20.996653Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T18:46:20.998272Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T18:46:21.000241Z] NODE: VISUALIZATION
+ACTION: skipped
+

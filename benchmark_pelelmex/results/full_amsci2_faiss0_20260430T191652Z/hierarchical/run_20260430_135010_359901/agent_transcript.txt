@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/EB_FlowPastCylinder with input.2d-regt
+
+================================================================================
+
+[2026-04-30T20:49:50.785627Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 69 changes
+    - geometry.is_periodic = 1 0
+    - geometry.prob_lo = 0.0  -0.005 0.0
+    - geometry.prob_hi = 0.08  0.005 0.0
+
+[2026-04-30T20:49:58.751169Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T20:50:10.342098Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T20:50:10.358042Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T20:50:12.179827Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T20:50:12.192733Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T20:50:12.204346Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T20:50:12.208210Z] NODE: VISUALIZATION
+ACTION: skipped
+

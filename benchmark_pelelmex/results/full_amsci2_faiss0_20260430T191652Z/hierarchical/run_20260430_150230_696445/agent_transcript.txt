@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/TurbInflow with input.3d_twoInjsOverlap
+
+================================================================================
+
+[2026-04-30T22:01:59.253515Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 120 changes
+    - geometry.is_periodic = 0 0 0
+    - geometry.prob_lo = 0.0 -0.0381 -0.09525
+    - geometry.prob_hi = 0.127 0.0381 0.15875
+
+[2026-04-30T22:02:19.663222Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T22:02:30.684667Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T22:02:30.693721Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T22:02:32.848418Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T22:02:32.858006Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T22:02:32.862651Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T22:02:32.863817Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use REMORA case Exec/Dogbone with inputs
+
+================================================================================
+
+[2026-04-30T18:17:08.105738Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-30T18:17:08.118389Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T18:17:08.127995Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T18:17:08.139623Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T18:17:08.142842Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T18:17:08.147265Z] NODE: VISUALIZATION
+ACTION: skipped
+

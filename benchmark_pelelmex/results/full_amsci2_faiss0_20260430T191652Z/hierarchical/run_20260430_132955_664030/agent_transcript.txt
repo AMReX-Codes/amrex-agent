@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Production/JetInCrossflow with input_reacting_additions.inp
+
+================================================================================
+
+[2026-04-30T20:29:27.755246Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 109 changes
+    - geometry.is_periodic = 0 0
+    - geometry.prob_lo = -0.01 -0.01 0.0
+    - geometry.prob_hi = 0.01  0.01 0.016
+
+[2026-04-30T20:29:45.423895Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T20:29:55.604186Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T20:29:55.658628Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T20:29:57.774567Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T20:29:57.784151Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T20:29:57.790788Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T20:29:57.793886Z] NODE: VISUALIZATION
+ACTION: skipped
+

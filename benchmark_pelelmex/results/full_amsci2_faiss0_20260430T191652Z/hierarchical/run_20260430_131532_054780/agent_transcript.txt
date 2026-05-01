@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Production/CounterFlow with input.2d-regt
+
+================================================================================
+
+[2026-04-30T20:15:02.470421Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 84 changes
+    - geometry.prob_lo = -0.01 -0.01 0.0
+    - geometry.prob_hi = 0.01  0.01 0.016
+    - amr.n_cell = 128 128 32
+
+[2026-04-30T20:15:17.226657Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T20:15:32.046231Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T20:15:32.053486Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T20:15:35.274473Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T20:15:35.283010Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T20:15:35.288159Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T20:15:35.290751Z] NODE: VISUALIZATION
+ACTION: skipped
+

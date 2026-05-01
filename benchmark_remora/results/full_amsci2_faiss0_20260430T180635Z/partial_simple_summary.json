@@ -1,0 +1,10 @@
+{
+  "strategy": "simple",
+  "rows_completed": 24,
+  "rows_total": 24,
+  "weighted_score": 0.404167,
+  "failed_rows": 0,
+  "elapsed_seconds": 2336.444,
+  "max_rate_limit_retries": 1,
+  "max_unavailable_attempts": 1
+}

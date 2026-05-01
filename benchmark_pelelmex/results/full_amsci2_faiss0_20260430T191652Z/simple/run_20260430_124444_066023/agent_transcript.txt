@@ -1,0 +1,27 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/HotBubble with input.3d-regt
+
+================================================================================
+
+[2026-04-30T19:44:44.055695Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 1 changes
+    - ode.atol = 1e-12
+
+[2026-04-30T19:44:44.064320Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T19:44:46.073566Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T19:44:46.077440Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T19:44:46.078435Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T19:44:46.079404Z] NODE: VISUALIZATION
+ACTION: skipped
+

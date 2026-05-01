@@ -1,0 +1,9 @@
+strategy,category,weighted_score
+simple,Plasma,0.8125
+simple,Production,0.80625
+simple,RegTests,0.748387
+simple,UnitTests,1.0
+hierarchical,Plasma,0.3
+hierarchical,Production,0.04375
+hierarchical,RegTests,0.079032
+hierarchical,UnitTests,0.5

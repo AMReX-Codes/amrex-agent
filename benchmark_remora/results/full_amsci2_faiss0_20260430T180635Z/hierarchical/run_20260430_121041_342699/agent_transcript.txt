@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use REMORA case Exec/ParticlesOverSeaMount with inputs
+
+================================================================================
+
+[2026-04-30T19:10:19.666473Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 32 changes
+    - remora.max_step = 80
+    - remora.prob_lo = 0.     0.    -150.
+    - remora.prob_hi = 41000. 80000.       0.
+
+[2026-04-30T19:10:31.154514Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T19:10:41.324220Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T19:10:41.337652Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T19:10:41.351534Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T19:10:41.362079Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T19:10:41.364519Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T19:10:41.367109Z] NODE: VISUALIZATION
+ACTION: skipped
+

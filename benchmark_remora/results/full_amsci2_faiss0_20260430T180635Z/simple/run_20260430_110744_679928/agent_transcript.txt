@@ -1,0 +1,25 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use REMORA case Exec/Advection with inputs
+
+================================================================================
+
+[2026-04-30T18:07:44.672351Z] NODE: ARCHITECT
+ACTION: plan_created
+
+[2026-04-30T18:07:44.678194Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T18:07:44.692981Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T18:07:44.698104Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T18:07:44.699233Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T18:07:44.700432Z] NODE: VISUALIZATION
+ACTION: skipped
+

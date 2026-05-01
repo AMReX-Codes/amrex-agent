@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/FlameSheet with input.3d-regt
+
+================================================================================
+
+[2026-04-30T21:08:45.849559Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 89 changes
+    - geometry.is_periodic = 0 0
+    - geometry.prob_hi = 0.02 0.04 0.0
+    - peleLM.lo_bc = Symmetry Inflow
+
+[2026-04-30T21:08:54.700151Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T21:09:10.216498Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T21:09:10.238383Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T21:09:12.108739Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T21:09:12.118342Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T21:09:12.122122Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T21:09:12.124152Z] NODE: VISUALIZATION
+ACTION: skipped
+

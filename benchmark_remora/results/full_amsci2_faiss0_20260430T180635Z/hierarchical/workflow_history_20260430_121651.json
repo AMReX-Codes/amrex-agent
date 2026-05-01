@@ -1,0 +1,2267 @@
+[
+  {
+    "node": "architect",
+    "timestamp": "2026-04-30T19:16:11.142425Z",
+    "action": "plan_created",
+    "iteration": 1,
+    "details": {
+      "selected_case": "Exec/Upwelling_ML",
+      "selected_solver": "REMORA",
+      "modifications": [
+        [
+          "remora.omp_tile_size",
+          "1024 1024 1024"
+        ],
+        [
+          "remora.is_periodic",
+          "1 0 0"
+        ],
+        [
+          "remora.bc.ylo.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.bc.yhi.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.fixed_dt",
+          "300.0"
+        ],
+        [
+          "remora.fixed_fast_dt",
+          "10.0"
+        ],
+        [
+          "remora.v",
+          "0"
+        ],
+        [
+          "remora.plot_file",
+          "plt"
+        ],
+        [
+          "remora.plot_int",
+          "100"
+        ],
+        [
+          "remora.plot_vars_3d",
+          "salt temp x_velocity y_velocity z_velocity"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"upstream3\""
+        ],
+        [
+          "remora.use_coriolis",
+          "true"
+        ],
+        [
+          "remora.stop_time",
+          "30000.0"
+        ],
+        [
+          "remora.prob_hi",
+          "41000. 41000.       0."
+        ],
+        [
+          "remora.n_cell",
+          "81     81      16"
+        ],
+        [
+          "remora.fixed_ndtfast_ratio",
+          "30"
+        ],
+        [
+          "remora.sum_interval",
+          "10"
+        ],
+        [
+          "remora.plot_vars_3d",
+          "salt temp tracer x_velocity y_velocity z_velocity"
+        ],
+        [
+          "remora.flat_bathymetry",
+          "true"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"centered4\""
+        ],
+        [
+          "remora.Scoef",
+          "1.0e-4"
+        ],
+        [
+          "remora.coriolis_f0",
+          "0.0"
+        ],
+        [
+          "remora.prob.u_0",
+          "1.0e-1"
+        ],
+        [
+          "remora.prob.v_0",
+          "-1.0e-1"
+        ]
+      ],
+      "reasoning": "CBR plan based on Exec/Upwelling_ML (patterns from: Exec/Upwelling, Exec/Advection) Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+      "baseline": {
+        "code_name": "REMORA",
+        "repo_path": "/home/jmsexton/codes/worktree_sandbox/REMORA",
+        "case_path": "Exec/Upwelling_ML",
+        "local_path": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML"
+      },
+      "case_candidates": [
+        {
+          "case": "Exec/Upwelling_ML",
+          "score": 0.9676795542240144,
+          "metadata": {
+            "case_name": "Upwelling_ML",
+            "repo_path": "Exec/Upwelling_ML",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.prob_lo": "0.     0.    -150.",
+              "remora.prob_hi": "41000. 80000.       0.",
+              "remora.n_cell": "41     80      16",
+              "remora.is_periodic": "1 1 0",
+              "remora.fixed_dt": "5",
+              "remora.fixed_ndtfast_ratio": "1",
+              "remora.sum_interval": "1",
+              "remora.v": "1",
+              "amr.max_level": "1",
+              "amr.ref_ratio_vect": "3 3  1",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt_",
+              "remora.plot_int": "1",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity tracer",
+              "remora.plotfile_type": "amrex",
+              "remora.flat_bathymetry": "false",
+              "remora.horizontal_advection_scheme": "\"upstream3\"",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "14.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "0.0",
+              "remora.rho0": "1025.0",
+              "remora.prob.u_0": "80.0e-4",
+              "remora.tcline": "25.0",
+              "remora.rdrag": "0.0",
+              "remora.init_l1ad_h": "false",
+              "remora.init_l1ad_T": "false",
+              "remora.init_ana_h": "true",
+              "remora.init_ana_T": "true",
+              "remora.init_l0int_h": "false",
+              "remora.init_l0int_T": "false",
+              "remora.use_coriolis": "false",
+              "remora.use_uv3dmix": "true",
+              "remora.coriolis_type": "beta_plane",
+              "remora.coriolis_f0": "-8.26e-5",
+              "remora.coriolis_beta": "0.0",
+              "remora.refinement_indicators": "bx1",
+              "remora.bx1.max_level": "1",
+              "remora.bx1.in_box_lo": "10000 5000 -150",
+              "remora.bx1.in_box_hi": "20000 20000 0",
+              "remora.coupling_type": "\"TwoWay\""
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 13,
+            "chunk_index": 13
+          },
+          "breakdown": {
+            "development_activity": "0.7519838",
+            "domain_models": "0.78869003",
+            "resource_requirements": "0.7926616",
+            "path_hierarchy": "0.7342494",
+            "physics_parameters": "0.7618075",
+            "grid_specifications": "0.77501214",
+            "configuration_complexity": "0.80297"
+          },
+          "routing_intent_adjustment": 0.2,
+          "routing_intent_overlap": 1.0,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        }
+      ],
+      "baseline_evidence_citations": [
+        {
+          "citation_type": "baseline",
+          "case": "Exec/Upwelling_ML"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Upwelling"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Advection"
+        }
+      ],
+      "indexing_strategy": "hierarchical",
+      "indexing_calls_count": 19,
+      "indexing_calls_total": 19,
+      "indexing_calls_detail": {
+        "embed_documents": 0,
+        "embed_query": 19
+      },
+      "confidence_score": 0.9676795542240144,
+      "level0_solver": "REMORA",
+      "level0_confidence": 0.722604364156723,
+      "level2_override_applied": false,
+      "level2_override_solver": null,
+      "level2_override_case": null,
+      "level2_override_confidence": null,
+      "parameter_resolution_applied": true,
+      "reviewer_guidance": {},
+      "remapped_parameters": []
+    }
+  },
+  {
+    "node": "reviewer",
+    "timestamp": "2026-04-30T19:16:19.416146Z",
+    "action": "parameter_resolution_retry",
+    "iteration": 1,
+    "details": {
+      "status": "retry",
+      "reason": "schema_resolution",
+      "unresolved_parameters": [
+        [
+          "remora.omp_tile_size",
+          "1024 1024 1024"
+        ],
+        [
+          "remora.bc.ylo.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.bc.yhi.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.fixed_fast_dt",
+          "10.0"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"centered4\""
+        ],
+        [
+          "remora.stop_time",
+          "30000.0"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"centered4\""
+        ],
+        [
+          "remora.prob.v_0",
+          "-1.0e-1"
+        ]
+      ],
+      "resolution_guidance": "8 parameters could not be mapped to schema: ['remora.omp_tile_size', 'remora.bc.ylo.type', 'remora.bc.yhi.type', 'remora.fixed_fast_dt', 'remora.tracer_horizontal_advection_scheme', 'remora.stop_time', 'remora.tracer_horizontal_advection_scheme', 'remora.prob.v_0']. Remap attempted: 0 succeeded.",
+      "available_schema_params_count": 542,
+      "suggested_params": {
+        "remora.omp_tile_size": [
+          "recompute_preconditioner"
+        ],
+        "remora.bc.ylo.type": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.bc.yhi.type": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.fixed_fast_dt": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.tracer_horizontal_advection_scheme": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.stop_time": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.prob.v_0": [
+          "vismf_v",
+          "vismf.v",
+          "vismf_headerversion",
+          "vismf.headerversion",
+          "vismf_groupsets",
+          "vismf.groupsets",
+          "vismf_setbuf",
+          "vismf.setbuf",
+          "vismf_usesingleread",
+          "vismf.usesingleread",
+          "device_v",
+          "device.v",
+          "device_verbose",
+          "device.verbose",
+          "device_numThreads_x",
+          "device.numThreads.x",
+          "device_numThreads_y",
+          "device.numThreads.y",
+          "device_numThreads_z",
+          "device.numThreads.z"
+        ]
+      },
+      "remap_mapping": {},
+      "remap_success_count": 0,
+      "retry_count": 1
+    }
+  },
+  {
+    "node": "architect",
+    "timestamp": "2026-04-30T19:16:26.661037Z",
+    "action": "plan_created_with_parameter_remapping",
+    "iteration": 2,
+    "details": {
+      "selected_case": "Exec/Upwelling",
+      "selected_solver": "REMORA",
+      "modifications": [
+        [
+          "remora.is_periodic",
+          "1 1 0"
+        ],
+        [
+          "remora.fixed_dt",
+          "5"
+        ],
+        [
+          "remora.fixed_ndtfast_ratio",
+          "1"
+        ],
+        [
+          "remora.v",
+          "1"
+        ],
+        [
+          "amr.max_level",
+          "1"
+        ],
+        [
+          "amr.ref_ratio_vect",
+          "3 3  1"
+        ],
+        [
+          "remora.plot_file",
+          "plt_"
+        ],
+        [
+          "remora.plot_int",
+          "1"
+        ],
+        [
+          "remora.plot_vars_3d",
+          "salt temp x_velocity y_velocity z_velocity tracer"
+        ],
+        [
+          "remora.horizontal_advection_scheme",
+          "\"upstream3\""
+        ],
+        [
+          "remora.prob.u_0",
+          "80.0e-4"
+        ],
+        [
+          "remora.rdrag",
+          "0.0"
+        ],
+        [
+          "remora.init_l1ad_h",
+          "false"
+        ],
+        [
+          "remora.init_l1ad_T",
+          "false"
+        ],
+        [
+          "remora.init_ana_h",
+          "true"
+        ],
+        [
+          "remora.init_ana_T",
+          "true"
+        ],
+        [
+          "remora.init_l0int_h",
+          "false"
+        ],
+        [
+          "remora.init_l0int_T",
+          "false"
+        ],
+        [
+          "remora.use_coriolis",
+          "false"
+        ],
+        [
+          "remora.use_uv3dmix",
+          "true"
+        ],
+        [
+          "remora.refinement_indicators",
+          "bx1"
+        ],
+        [
+          "remora.bx1.max_level",
+          "1"
+        ],
+        [
+          "remora.bx1.in_box_lo",
+          "10000 5000 -150"
+        ],
+        [
+          "remora.bx1.in_box_hi",
+          "20000 20000 0"
+        ],
+        [
+          "remora.coupling_type",
+          "\"TwoWay\""
+        ],
+        [
+          "remora.stop_time",
+          "30000.0"
+        ],
+        [
+          "remora.prob_hi",
+          "41000. 41000.       0."
+        ],
+        [
+          "remora.n_cell",
+          "81     81      16"
+        ],
+        [
+          "remora.fixed_ndtfast_ratio",
+          "30"
+        ],
+        [
+          "remora.sum_interval",
+          "10"
+        ],
+        [
+          "remora.plot_vars_3d",
+          "salt temp tracer x_velocity y_velocity z_velocity"
+        ],
+        [
+          "remora.flat_bathymetry",
+          "true"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"centered4\""
+        ],
+        [
+          "remora.Scoef",
+          "1.0e-4"
+        ],
+        [
+          "remora.coriolis_f0",
+          "0.0"
+        ],
+        [
+          "remora.prob.u_0",
+          "1.0e-1"
+        ],
+        [
+          "remora.prob.v_0",
+          "-1.0e-1"
+        ]
+      ],
+      "reasoning": "CBR plan based on Exec/Upwelling (patterns from: Exec/Upwelling_ML, Exec/Advection) Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+      "baseline": {
+        "code_name": "REMORA",
+        "repo_path": "/home/jmsexton/codes/worktree_sandbox/REMORA",
+        "case_path": "Exec/Upwelling",
+        "local_path": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling"
+      },
+      "case_candidates": [
+        {
+          "case": "Exec/Upwelling",
+          "score": 0.8612885677814484,
+          "metadata": {
+            "case_name": "Upwelling",
+            "repo_path": "Exec/Upwelling",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.omp_tile_size": "1024 1024 1024",
+              "remora.prob_lo": "0.     0.    -150.",
+              "remora.prob_hi": "41000. 80000.       0.",
+              "remora.n_cell": "41     80      16",
+              "remora.is_periodic": "1 0 0",
+              "remora.bc.ylo.type": "\"SlipWall\"",
+              "remora.bc.yhi.type": "\"SlipWall\"",
+              "remora.fixed_dt": "300.0",
+              "remora.fixed_fast_dt": "10.0",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "100",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.flat_bathymetry": "false",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "14.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "0.0",
+              "remora.rho0": "1025.0",
+              "remora.tcline": "25.0",
+              "remora.use_coriolis": "true",
+              "remora.coriolis_type": "beta_plane",
+              "remora.coriolis_f0": "-8.26e-5",
+              "remora.coriolis_beta": "0.0"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 12,
+            "chunk_index": 12
+          },
+          "breakdown": {
+            "development_activity": "0.68215126",
+            "domain_models": "0.70860285",
+            "resource_requirements": "0.710416",
+            "path_hierarchy": "0.6838271",
+            "physics_parameters": "0.7095907",
+            "grid_specifications": "0.77487963",
+            "configuration_complexity": "0.7626516"
+          },
+          "score_raw": 0.7212885677814485,
+          "score_bonus": 0.08,
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/Seamount",
+          "score": 0.7873098069429398,
+          "metadata": {
+            "case_name": "Seamount",
+            "repo_path": "Exec/Seamount",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.stop_time": "30000.0",
+              "remora.prob_lo": "0.       0.  -5000.",
+              "remora.prob_hi": "320000.  320000.       0.",
+              "remora.n_cell": "49   48   13",
+              "remora.is_periodic": "1 1 0",
+              "remora.fixed_dt": "60.0",
+              "remora.fixed_ndtfast_ratio": "20",
+              "remora.flat_bathymetry": "0",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "1",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.use_coriolis": "true",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.coriolis_f0": "1.0e-4",
+              "remora.theta_s": "6.5",
+              "remora.theta_b": "2.0",
+              "remora.tcline": "100.",
+              "remora.R0": "1027.0",
+              "remora.S0": "32.0",
+              "remora.T0": "10.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "0.0",
+              "remora.rho0": "1025.0"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 11,
+            "chunk_index": 11
+          },
+          "breakdown": {
+            "development_activity": "0.6155778",
+            "domain_models": "0.63522303",
+            "resource_requirements": "0.64000386",
+            "path_hierarchy": "0.5974227",
+            "physics_parameters": "0.65290016",
+            "grid_specifications": "0.68070257",
+            "configuration_complexity": "0.6860556"
+          },
+          "score_raw": 0.6473098069429398,
+          "score_bonus": 0.08,
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/Channel_Test",
+          "score": 0.7656906956434251,
+          "metadata": {
+            "case_name": "Channel_Test",
+            "repo_path": "Exec/Channel_Test",
+            "inputs_content": {
+              "remora.max_step": "0",
+              "remora.prob_lo": "0.      0.     -50.",
+              "remora.prob_hi": "100000. 300000.       0.",
+              "remora.n_cell": "20     60      50",
+              "remora.is_periodic": "1 0 0",
+              "remora.bc.ylo.type": "\"SlipWall\"",
+              "remora.bc.yhi.type": "\"SlipWall\"",
+              "remora.fixed_dt": "400.0",
+              "remora.fixed_ndtfast_ratio": "10",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "1",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity tracer",
+              "remora.plotfile_type": "amrex",
+              "remora.flat_bathymetry": "false",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.vertical_mixing_type": "gls",
+              "remora.gls_P": "3.0",
+              "remora.gls_M": "1.5",
+              "remora.gls_N": "-1.0",
+              "remora.gls_Kmin": "7.6e-6",
+              "remora.gls_Pmin": "1.0e-12",
+              "remora.gls_cmu0": "0.5477",
+              "remora.gls_c1": "1.44",
+              "remora.gls_c2": "1.92",
+              "remora.gls_c3m": "-0.4",
+              "remora.gls_c3p": "1.0",
+              "remora.gls_sigk": "1.0",
+              "remora.gls_sigp": "1.3",
+              "remora.Zob": "0.002",
+              "remora.Zos": "0.002",
+              "remora.Akk_bak": "5.0e-6",
+              "remora.Akp_bak": "5.0e-6",
+              "remora.Akv_bak": "1.0e-5",
+              "remora.R0": "1027.0",
+              "remora.S0": "15.0",
+              "remora.T0": "10.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "7.6e-4",
+              "remora.rho0": "1025.0",
+              "remora.tcline": "25.0",
+              "remora.use_coriolis": "true",
+              "remora.coriolis_type": "beta_plane",
+              "remora.coriolis_f0": "1.0e-4",
+              "remora.coriolis_beta": "0.0"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 3,
+            "chunk_index": 3
+          },
+          "breakdown": {
+            "development_activity": "0.5898618",
+            "domain_models": "0.5930855",
+            "resource_requirements": "0.6002143",
+            "path_hierarchy": "0.5679351",
+            "physics_parameters": "0.64239216",
+            "grid_specifications": "0.662176",
+            "configuration_complexity": "0.6704213"
+          },
+          "score_raw": 0.625690695643425,
+          "score_bonus": 0.08,
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/DoubleGyre",
+          "score": 0.7532037252187729,
+          "metadata": {
+            "case_name": "DoubleGyre",
+            "repo_path": "Exec/DoubleGyre",
+            "inputs_content": {
+              "remora.max_step": "100",
+              "remora.prob_lo": "0.      0.     -500.",
+              "remora.prob_hi": "1000000. 2000000.       0.",
+              "remora.n_cell": "54     108      4",
+              "remora.is_periodic": "0 0 0",
+              "remora.bc.xlo.type": "\"SlipWall\"",
+              "remora.bc.xhi.type": "\"SlipWall\"",
+              "remora.bc.ylo.type": "\"SlipWall\"",
+              "remora.bc.yhi.type": "\"SlipWall\"",
+              "remora.fixed_dt": "3600.0",
+              "remora.fixed_ndtfast_ratio": "20",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "100",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.flat_bathymetry": "false",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.Zob": "0.02",
+              "remora.Zos": "0.02",
+              "remora.rdrag": "8.0e-7",
+              "remora.Akk_bak": "5.0e-6",
+              "remora.Akp_bak": "5.0e-6",
+              "remora.Akv_bak": "1.0",
+              "remora.Akt_bak": "1.0",
+              "remora.theta_s": "0.0",
+              "remora.theta_b": "0.0",
+              "remora.tcline": "1e16",
+              "remora.R0": "1028.0",
+              "remora.S0": "35.0",
+              "remora.T0": "5.0",
+              "remora.Tcoef": "1.0e-4",
+              "remora.Scoef": "7.6e-4",
+              "remora.rho0": "1025.0",
+              "remora.use_coriolis": "true",
+              "remora.coriolis_type": "beta_plane",
+              "remora.coriolis_f0": "7.3e-5",
+              "remora.coriolis_beta": "2.0e-11"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 6,
+            "chunk_index": 6
+          },
+          "breakdown": {
+            "development_activity": "0.5801695",
+            "domain_models": "0.59496546",
+            "resource_requirements": "0.59457576",
+            "path_hierarchy": "0.5625786",
+            "physics_parameters": "0.6252638",
+            "grid_specifications": "0.6505044",
+            "configuration_complexity": "0.63894624"
+          },
+          "score_raw": 0.613203725218773,
+          "score_bonus": 0.08,
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/DoublyPeriodic",
+          "score": 0.743098538517952,
+          "metadata": {
+            "case_name": "DoublyPeriodic",
+            "repo_path": "Exec/DoublyPeriodic",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.stop_time": "30000.0",
+              "remora.prob_lo": "0.     0.    -150.",
+              "remora.prob_hi": "41000. 80000.       0.",
+              "remora.n_cell": "41     80      16",
+              "remora.is_periodic": "1 1 0",
+              "remora.fixed_dt": "300.0",
+              "remora.fixed_fast_dt": "10.0",
+              "remora.fixed_ndtfast_ratio": "30",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "100",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.use_coriolis": "true",
+              "remora.flat_bathymetry": "true",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "14.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "0.0",
+              "remora.rho0": "1025.0",
+              "remora.coriolis_f0": "-8.26e-5",
+              "remora.coriolis_beta": "0.0",
+              "remora.prob.u_0": "0.0",
+              "remora.prob.v_0": "0.0",
+              "remora.prob.z0": "0.1",
+              "remora.prob.zRef": "80.0e-3",
+              "remora.prob.uRef": "8.0e-3"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 7,
+            "chunk_index": 7
+          },
+          "breakdown": {
+            "development_activity": "0.57424605",
+            "domain_models": "0.57014406",
+            "resource_requirements": "0.57327276",
+            "path_hierarchy": "0.5444652",
+            "physics_parameters": "0.62817526",
+            "grid_specifications": "0.6303301",
+            "configuration_complexity": "0.6380752"
+          },
+          "score_raw": 0.603098538517952,
+          "score_bonus": 0.08,
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/Advection",
+          "score": 0.7086952066421508,
+          "metadata": {
+            "case_name": "Advection",
+            "repo_path": "Exec/Advection",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.stop_time": "30000.0",
+              "remora.prob_lo": "0.     0.    -150.",
+              "remora.prob_hi": "41000. 41000.       0.",
+              "remora.n_cell": "81     81      16",
+              "remora.is_periodic": "1 1 0",
+              "remora.fixed_dt": "300.0",
+              "remora.fixed_fast_dt": "10.0",
+              "remora.fixed_ndtfast_ratio": "30",
+              "remora.sum_interval": "10",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "100",
+              "remora.plot_vars_3d": "salt temp tracer x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.use_coriolis": "false",
+              "remora.flat_bathymetry": "true",
+              "remora.tracer_horizontal_advection_scheme": "\"centered4\"",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "14.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "1.0e-4",
+              "remora.rho0": "1025.0",
+              "remora.coriolis_f0": "0.0",
+              "remora.coriolis_beta": "0.0",
+              "remora.rdrag": "0.0",
+              "remora.prob.u_0": "1.0e-1",
+              "remora.prob.v_0": "-1.0e-1"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 0,
+            "chunk_index": 0
+          },
+          "breakdown": {
+            "development_activity": "0.6190946",
+            "domain_models": "0.64030075",
+            "resource_requirements": "0.6399798",
+            "path_hierarchy": "0.6002217",
+            "physics_parameters": "0.65607065",
+            "grid_specifications": "0.676882",
+            "configuration_complexity": "0.68525827"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/BoundaryLayer",
+          "score": 0.7014988964796067,
+          "metadata": {
+            "case_name": "BoundaryLayer",
+            "repo_path": "Exec/BoundaryLayer",
+            "inputs_content": {
+              "remora.max_step": "100",
+              "remora.prob_lo": "0.     0.    -47.5",
+              "remora.prob_hi": "100000. 5000.       0.",
+              "remora.n_cell": "39     4      30",
+              "remora.is_periodic": "0 1 0",
+              "remora.boundary_per_variable": "1",
+              "remora.bc.temp.type": "slipwall         periodic          orlanski_rad      periodic",
+              "remora.bc.salt.type": "slipwall         periodic          orlanski_rad      periodic",
+              "remora.bc.scalar.type": "slipwall         periodic          orlanski_rad      periodic",
+              "remora.bc.u.type": "slipwall         periodic          orlanski_rad      periodic",
+              "remora.bc.v.type": "slipwall         periodic          orlanski_rad      periodic",
+              "remora.bc.ubar.type": "slipwall         periodic          outflow           periodic",
+              "remora.bc.vbar.type": "slipwall         periodic          outflow           periodic",
+              "remora.bc.zeta.type": "slipwall         periodic          outflow           periodic",
+              "remora.bc.tke.type": "slipwall         periodic          outflow           periodic",
+              "remora.fixed_dt": "50.0",
+              "remora.fixed_ndtfast_ratio": "30",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.bottom_stress_type": "\"quadratic\"",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "100",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.flat_bathymetry": "false",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.horizontal_mixing_type": "\"constant\"",
+              "remora.visc2": "0.0",
+              "remora.grid_scale_type": "\"analytic\"",
+              "remora.eos_type": "\"nonlinear\"",
+              "remora.bulk_fluxes": "true",
+              "remora.air_temperature": "23.567",
+              "remora.air_humidity": "0.776",
+              "remora.air_pressure": "1013.48",
+              "remora.cloud": "0.5",
+              "remora.rain": "0.002",
+              "remora.eminusp": "true",
+              "remora.eminusp_correct_ssh": "true",
+              "remora.R0": "1027.0",
+              "remora.S0": "31.0",
+              "remora.T0": "17.25",
+              "remora.rho0": "1025.0",
+              "remora.theta_s": "5.0",
+              "remora.theta_b": "1.5",
+              "remora.tcline": "20.0",
+              "remora.vertical_mixing_type": "\"gls\"",
+              "remora.Akt_bak": "1.0e-6",
+              "remora.Akv_bak": "1.0e-5",
+              "remora.use_coriolis": "true",
+              "remora.coriolis_type": "beta_plane",
+              "remora.coriolis_f0": "9.25e-4",
+              "remora.coriolis_beta": "0.0"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 2,
+            "chunk_index": 2
+          },
+          "breakdown": {
+            "development_activity": "0.607443",
+            "domain_models": "0.61725277",
+            "resource_requirements": "0.61856395",
+            "path_hierarchy": "0.58900845",
+            "physics_parameters": "0.64792717",
+            "grid_specifications": "0.6832774",
+            "configuration_complexity": "0.6871622"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/IdealRivGrid",
+          "score": 0.700294912457466,
+          "metadata": {
+            "case_name": "IdealRivGrid",
+            "repo_path": "Exec/IdealRivGrid",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.omp_tile_size": "8 8 1024",
+              "remora.prob_lo": "0.       0.  -5000.",
+              "remora.prob_hi": "320000.  320000.       0.",
+              "remora.n_cell": "10 16 20",
+              "remora.is_periodic": "0 0 0",
+              "remora.bc.xlo.type": "\"clamped\"",
+              "remora.bc.xhi.type": "\"clamped\"",
+              "remora.bc.ylo.type": "\"clamped\"",
+              "remora.bc.yhi.type": "\"clamped\"",
+              "remora.fixed_dt": "4000.0",
+              "remora.fixed_ndtfast_ratio": "10",
+              "remora.flat_bathymetry": "0",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "10",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.use_coriolis": "true",
+              "remora.coriolis_type": "netcdf",
+              "remora.coriolis_f0": "1.0e-4",
+              "remora.theta_s": "5.0",
+              "remora.theta_b": "0.5",
+              "remora.tcline": "100.",
+              "remora.R0": "1027.0",
+              "remora.S0": "32.0",
+              "remora.T0": "10.0",
+              "remora.Tcoef": "0.0",
+              "remora.Scoef": "0.0",
+              "remora.rho0": "1025.0",
+              "remora.do_rivers": "true",
+              "remora.bulk_fluxes": "false",
+              "remora.ic_bc_type": "\"netcdf\"",
+              "remora.nc_init_file_0": "\"idRiv_ini_consTS_v0.2_classic64.nc\"",
+              "remora.nc_grid_file_0": "\"idRiv_grd_masked_v0.2_classic64.nc\"",
+              "remora.nc_bdry_file": "\"idRiv_bry_consTS_v0.2_classic64.nc\"",
+              "remora.nc_river_file": "\"idRiv_riv_v0.2_classic64.nc\""
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 9,
+            "chunk_index": 9
+          },
+          "breakdown": {
+            "development_activity": "0.6042561",
+            "domain_models": "0.60853446",
+            "resource_requirements": "0.60928464",
+            "path_hierarchy": "0.59438664",
+            "physics_parameters": "0.65284663",
+            "grid_specifications": "0.68182945",
+            "configuration_complexity": "0.6717375"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/IdealMiniGrid",
+          "score": 0.6940757250785827,
+          "metadata": {
+            "case_name": "IdealMiniGrid",
+            "repo_path": "Exec/IdealMiniGrid",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.prob_lo": "0.       0.  -5000.",
+              "remora.prob_hi": "320000.  320000.       0.",
+              "remora.n_cell": "10 16 20",
+              "remora.is_periodic": "0 0 0",
+              "remora.bc.xlo.type": "\"clamped\"",
+              "remora.bc.xhi.type": "\"clamped\"",
+              "remora.bc.ylo.type": "\"clamped\"",
+              "remora.bc.yhi.type": "\"clamped\"",
+              "remora.fixed_dt": "200.0",
+              "remora.fixed_ndtfast_ratio": "1",
+              "remora.flat_bathymetry": "0",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "1",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.use_coriolis": "true",
+              "remora.coriolis_type": "netcdf",
+              "remora.coriolis_f0": "1.0e-4",
+              "remora.theta_s": "5.0",
+              "remora.theta_b": "0.5",
+              "remora.tcline": "100.",
+              "remora.R0": "1027.0",
+              "remora.S0": "32.0",
+              "remora.T0": "10.0",
+              "remora.Tcoef": "0.0",
+              "remora.Scoef": "0.0",
+              "remora.rho0": "1025.0",
+              "remora.ic_bc_type": "\"netcdf\"",
+              "remora.nc_init_file_0": "\"idmini_ini_v1_classic64.nc\"",
+              "remora.nc_grid_file_0": "\"idmini_grd_v1_classic64.nc\"",
+              "remora.nc_bdry_file": "\"idmini_bry_Salt_classic64.nc\""
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 8,
+            "chunk_index": 8
+          },
+          "breakdown": {
+            "development_activity": "0.59435755",
+            "domain_models": "0.6012608",
+            "resource_requirements": "0.5979341",
+            "path_hierarchy": "0.58242595",
+            "physics_parameters": "0.6499892",
+            "grid_specifications": "0.6791974",
+            "configuration_complexity": "0.6641706"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/ParticlesOverSeaMount",
+          "score": 0.6825868105888366,
+          "metadata": {
+            "case_name": "ParticlesOverSeaMount",
+            "repo_path": "Exec/ParticlesOverSeaMount",
+            "inputs_content": {
+              "remora.max_step": "80",
+              "remora.stop_time": "30000.0",
+              "remora.prob_lo": "0.     0.    -150.",
+              "remora.prob_hi": "41000. 80000.       0.",
+              "remora.n_cell": "41     80      16",
+              "remora.is_periodic": "1 1 0",
+              "remora.fixed_dt": "300.0",
+              "remora.fixed_fast_dt": "10.0",
+              "remora.fixed_ndtfast_ratio": "30",
+              "remora.use_tracer_particles": "1",
+              "remora.tracer_particles.initial_distribution_type": "box",
+              "remora.tracer_particles.particle_box_lo": "20000.  20000.  -100000.",
+              "remora.tracer_particles.particle_box_hi": "25000.  40000.   100000.",
+              "remora.tracer_particles.place_randomly_in_cells": "false",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "5",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity tracer_particles_count",
+              "remora.plotfile_type": "amrex",
+              "remora.flat_bathymetry": "true",
+              "remora.use_coriolis": "true",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.coriolis_f0": "-8.26e-5",
+              "remora.coriolis_beta": "0.0",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "14.0",
+              "remora.prob.u_0": "0.0",
+              "remora.prob.v_0": "0.0",
+              "remora.prob.z0": "0.1",
+              "remora.prob.zRef": "80.0e-3",
+              "remora.prob.uRef": "8.0e-3"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 10,
+            "chunk_index": 10
+          },
+          "breakdown": {
+            "development_activity": "0.60126805",
+            "domain_models": "0.59981775",
+            "resource_requirements": "0.5986637",
+            "path_hierarchy": "0.578171",
+            "physics_parameters": "0.6336576",
+            "grid_specifications": "0.6469393",
+            "configuration_complexity": "0.66334265"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/BlankProblem",
+          "score": 0.6823218590021134,
+          "metadata": {
+            "case_name": "BlankProblem",
+            "repo_path": "Exec/BlankProblem",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.stop_time": "30000.0",
+              "remora.prob_lo": "0.     0.    -150.",
+              "remora.prob_hi": "41000. 41000.       0.",
+              "remora.n_cell": "81     81      16",
+              "remora.is_periodic": "1 1 0",
+              "remora.fixed_dt": "300.0",
+              "remora.fixed_ndtfast_ratio": "30",
+              "remora.sum_interval": "10",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "100",
+              "remora.plot_vars_3d": "salt temp tracer x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex"
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 1,
+            "chunk_index": 1
+          },
+          "breakdown": {
+            "development_activity": "0.5914852",
+            "domain_models": "0.59991235",
+            "resource_requirements": "0.59887475",
+            "path_hierarchy": "0.5619205",
+            "physics_parameters": "0.6530051",
+            "grid_specifications": "0.634615",
+            "configuration_complexity": "0.6612575"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/Dogbone",
+          "score": 0.6811619734764098,
+          "metadata": {
+            "case_name": "Dogbone",
+            "repo_path": "Exec/Dogbone",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.prob_lo": "0.       0.  -5000.",
+              "remora.prob_hi": "320000.  320000.       0.",
+              "remora.n_cell": "42 15 10",
+              "remora.is_periodic": "0 0 0",
+              "remora.bc.xlo.type": "\"slipwall\"",
+              "remora.bc.xhi.type": "\"slipwall\"",
+              "remora.bc.ylo.type": "\"slipwall\"",
+              "remora.bc.yhi.type": "\"slipwall\"",
+              "remora.fixed_dt": "6.0",
+              "remora.fixed_ndtfast_ratio": "20",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "10",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.Akt_bak": "1e-6",
+              "remora.Akv_bak": "1e-5",
+              "remora.use_coriolis": "false",
+              "remora.coriolis_type": "netcdf",
+              "remora.theta_s": "0.0",
+              "remora.theta_b": "0.0",
+              "remora.tcline": "1e16",
+              "remora.bottom_stress_type": "\"quadratic\"",
+              "remora.rdrag2": "3.0e-3",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "10.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "7.6e-4",
+              "remora.rho0": "1025.0",
+              "remora.ic_type": "\"netcdf\"",
+              "remora.nc_init_file_0": "\"dogbone_ini_whole_classic64.nc\"",
+              "remora.nc_grid_file_0": "\"dogbone_grd_whole_classic64.nc\""
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 4,
+            "chunk_index": 4
+          },
+          "breakdown": {
+            "development_activity": "0.573527",
+            "domain_models": "0.583241",
+            "resource_requirements": "0.58706516",
+            "path_hierarchy": "0.5566974",
+            "physics_parameters": "0.6315149",
+            "grid_specifications": "0.6849192",
+            "configuration_complexity": "0.66189"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        },
+        {
+          "case": "Exec/DogboneAnalytic",
+          "score": 0.6775208032131195,
+          "metadata": {
+            "case_name": "DogboneAnalytic",
+            "repo_path": "Exec/DogboneAnalytic",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.prob_lo": "0.       0.  -10.",
+              "remora.prob_hi": "8400.  750.       0.",
+              "remora.n_cell": "42 15 16",
+              "remora.is_periodic": "0 0 0",
+              "remora.bc.xlo.type": "\"slipwall\"",
+              "remora.bc.xhi.type": "\"slipwall\"",
+              "remora.bc.ylo.type": "\"slipwall\"",
+              "remora.bc.yhi.type": "\"slipwall\"",
+              "remora.fixed_dt": "6.0",
+              "remora.fixed_ndtfast_ratio": "20",
+              "remora.sum_interval": "1",
+              "remora.v": "0",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt",
+              "remora.plot_int": "10",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity",
+              "remora.plotfile_type": "amrex",
+              "remora.tracer_horizontal_advection_scheme": "\"upstream3\"",
+              "remora.prob.traditional": "1",
+              "remora.Akt_bak": "1e-6",
+              "remora.Akv_bak": "1e-5",
+              "remora.use_coriolis": "false",
+              "remora.theta_s": "0.0",
+              "remora.theta_b": "0.0",
+              "remora.tcline": "1e16",
+              "remora.flat_bathymetry": "false",
+              "remora.bottom_stress_type": "\"quadratic\"",
+              "remora.rdrag2": "3.0e-3",
+              "remora.mask_type": "\"analytic\"",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "10.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "7.6e-4",
+              "remora.rho0": "1025.0",
+              "remora.ic_type": "\"analytic\""
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 5,
+            "chunk_index": 5
+          },
+          "breakdown": {
+            "development_activity": "0.57959723",
+            "domain_models": "0.58082116",
+            "resource_requirements": "0.5884436",
+            "path_hierarchy": "0.5584852",
+            "physics_parameters": "0.6331824",
+            "grid_specifications": "0.6605095",
+            "configuration_complexity": "0.66227376"
+          },
+          "routing_intent_adjustment": 0.06,
+          "routing_intent_overlap": 0.5,
+          "admissibility_status": "inadmissible",
+          "admissibility_reason": "path_anchor_conflict"
+        }
+      ],
+      "baseline_evidence_citations": [
+        {
+          "citation_type": "baseline",
+          "case": "Exec/Upwelling"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Upwelling_ML"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Advection"
+        }
+      ],
+      "indexing_strategy": "hierarchical",
+      "indexing_calls_count": 19,
+      "indexing_calls_total": 38,
+      "indexing_calls_detail": {
+        "embed_documents": 0,
+        "embed_query": 19
+      },
+      "confidence_score": 0.8612885677814484,
+      "level0_solver": "REMORA",
+      "level0_confidence": 0.7225800573825836,
+      "level2_override_applied": false,
+      "level2_override_solver": null,
+      "level2_override_case": null,
+      "level2_override_confidence": null,
+      "parameter_resolution_applied": true,
+      "reviewer_guidance": {},
+      "remapped_parameters": [
+        "remora.omp_tile_size",
+        "remora.bc.ylo.type",
+        "remora.bc.yhi.type",
+        "remora.fixed_fast_dt",
+        "remora.tracer_horizontal_advection_scheme",
+        "remora.stop_time",
+        "remora.tracer_horizontal_advection_scheme",
+        "remora.prob.v_0"
+      ]
+    }
+  },
+  {
+    "node": "reviewer",
+    "timestamp": "2026-04-30T19:16:38.448179Z",
+    "action": "parameter_resolution_retry",
+    "iteration": 2,
+    "details": {
+      "status": "retry",
+      "reason": "schema_resolution",
+      "unresolved_parameters": [
+        [
+          "remora.fixed_ndtfast_ratio",
+          "30"
+        ],
+        [
+          "remora.horizontal_advection_scheme",
+          "\"upstream3\""
+        ],
+        [
+          "remora.prob.u_0",
+          "1.0e-1"
+        ],
+        [
+          "remora.rdrag",
+          "0.0"
+        ],
+        [
+          "remora.init_l1ad_h",
+          "false"
+        ],
+        [
+          "remora.init_l1ad_T",
+          "false"
+        ],
+        [
+          "remora.init_ana_h",
+          "true"
+        ],
+        [
+          "remora.init_ana_T",
+          "true"
+        ],
+        [
+          "remora.init_l0int_h",
+          "false"
+        ],
+        [
+          "remora.init_l0int_T",
+          "false"
+        ],
+        [
+          "remora.use_uv3dmix",
+          "true"
+        ],
+        [
+          "remora.refinement_indicators",
+          "bx1"
+        ],
+        [
+          "remora.bx1.max_level",
+          "1"
+        ],
+        [
+          "remora.bx1.in_box_lo",
+          "10000 5000 -150"
+        ],
+        [
+          "remora.bx1.in_box_hi",
+          "20000 20000 0"
+        ],
+        [
+          "remora.coupling_type",
+          "\"TwoWay\""
+        ],
+        [
+          "remora.stop_time",
+          "30000.0"
+        ],
+        [
+          "remora.fixed_ndtfast_ratio",
+          "30"
+        ],
+        [
+          "remora.prob.u_0",
+          "1.0e-1"
+        ],
+        [
+          "remora.prob.v_0",
+          "-1.0e-1"
+        ]
+      ],
+      "resolution_guidance": "20 parameters could not be mapped to schema: ['remora.fixed_ndtfast_ratio', 'remora.horizontal_advection_scheme', 'remora.prob.u_0', 'remora.rdrag', 'remora.init_l1ad_h', 'remora.init_l1ad_T', 'remora.init_ana_h', 'remora.init_ana_T', 'remora.init_l0int_h', 'remora.init_l0int_T', 'remora.use_uv3dmix', 'remora.refinement_indicators', 'remora.bx1.max_level', 'remora.bx1.in_box_lo', 'remora.bx1.in_box_hi', 'remora.coupling_type', 'remora.stop_time', 'remora.fixed_ndtfast_ratio', 'remora.prob.u_0', 'remora.prob.v_0']. Remap attempted: 1 succeeded.",
+      "available_schema_params_count": 542,
+      "suggested_params": {
+        "remora.fixed_ndtfast_ratio": [
+          "integration_use_adaptive_time_step",
+          "integration.use_adaptive_time_step",
+          "integration_time_step",
+          "integration.time_step",
+          "integration_use_adaptive_fast_time_step",
+          "integration.use_adaptive_fast_time_step",
+          "integration_fast_time_step",
+          "integration.fast_time_step",
+          "integration_rel_tol",
+          "integration.rel_tol"
+        ],
+        "remora.horizontal_advection_scheme": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.prob.u_0": [
+          "DistributionMapping_v",
+          "DistributionMapping.v",
+          "DistributionMapping_verbose",
+          "DistributionMapping.verbose",
+          "DistributionMapping_efficiency",
+          "DistributionMapping.efficiency",
+          "DistributionMapping_sfc_threshold",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping_node_size",
+          "DistributionMapping.node_size",
+          "frequency",
+          "recompute_preconditioner",
+          "adjust_singular_matrix"
+        ],
+        "remora.rdrag": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.init_l1ad_h": [
+          "hypre_solver",
+          "hypre_preconditioner"
+        ],
+        "remora.init_l1ad_T": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer",
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose"
+        ],
+        "remora.init_ana_h": [
+          "hypre_solver",
+          "hypre_preconditioner"
+        ],
+        "remora.init_ana_T": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer",
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose"
+        ],
+        "remora.init_l0int_h": [
+          "hypre_solver",
+          "hypre_preconditioner"
+        ],
+        "remora.init_l0int_T": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer",
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose"
+        ],
+        "remora.use_uv3dmix": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.refinement_indicators": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.bx1.max_level": [
+          "amr.max_level"
+        ],
+        "remora.bx1.in_box_lo": [
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose",
+          "tiny_profiler.print_threshold",
+          "tiny_profiler.enabled",
+          "tiny_profiler.memprof_enabled",
+          "tiny_profiler.output_file",
+          "DistributionMapping_v",
+          "DistributionMapping.v",
+          "DistributionMapping_verbose",
+          "DistributionMapping.verbose",
+          "DistributionMapping_efficiency",
+          "DistributionMapping.efficiency"
+        ],
+        "remora.bx1.in_box_hi": [
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose",
+          "tiny_profiler.print_threshold",
+          "tiny_profiler.enabled",
+          "tiny_profiler.memprof_enabled",
+          "tiny_profiler.output_file",
+          "DistributionMapping_v",
+          "DistributionMapping.v",
+          "DistributionMapping_verbose",
+          "DistributionMapping.verbose",
+          "DistributionMapping_efficiency",
+          "DistributionMapping.efficiency"
+        ],
+        "remora.coupling_type": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.stop_time": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.prob.v_0": [
+          "vismf_v",
+          "vismf.v",
+          "vismf_headerversion",
+          "vismf.headerversion",
+          "vismf_groupsets",
+          "vismf.groupsets",
+          "vismf_setbuf",
+          "vismf.setbuf",
+          "vismf_usesingleread",
+          "vismf.usesingleread",
+          "device_v",
+          "device.v",
+          "device_verbose",
+          "device.verbose",
+          "device_numThreads_x",
+          "device.numThreads.x",
+          "device_numThreads_y",
+          "device.numThreads.y",
+          "device_numThreads_z",
+          "device.numThreads.z"
+        ]
+      },
+      "remap_mapping": {
+        "remora.bx1.max_level": "amr.max_level"
+      },
+      "remap_success_count": 1,
+      "retry_count": 2
+    }
+  },
+  {
+    "node": "architect",
+    "timestamp": "2026-04-30T19:16:45.025439Z",
+    "action": "plan_created_with_parameter_remapping",
+    "iteration": 3,
+    "details": {
+      "selected_case": "Exec/Upwelling_ML",
+      "selected_solver": "REMORA",
+      "modifications": [
+        [
+          "remora.omp_tile_size",
+          "1024 1024 1024"
+        ],
+        [
+          "remora.is_periodic",
+          "1 0 0"
+        ],
+        [
+          "remora.bc.ylo.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.bc.yhi.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.fixed_dt",
+          "300.0"
+        ],
+        [
+          "remora.fixed_fast_dt",
+          "10.0"
+        ],
+        [
+          "remora.v",
+          "0"
+        ],
+        [
+          "remora.plot_file",
+          "plt"
+        ],
+        [
+          "remora.plot_int",
+          "100"
+        ],
+        [
+          "remora.plot_vars_3d",
+          "salt temp x_velocity y_velocity z_velocity"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"upstream3\""
+        ],
+        [
+          "remora.use_coriolis",
+          "true"
+        ],
+        [
+          "remora.stop_time",
+          "30000.0"
+        ],
+        [
+          "remora.prob_hi",
+          "41000. 41000.       0."
+        ],
+        [
+          "remora.n_cell",
+          "81     81      16"
+        ],
+        [
+          "remora.fixed_ndtfast_ratio",
+          "30"
+        ],
+        [
+          "remora.sum_interval",
+          "10"
+        ],
+        [
+          "remora.plot_vars_3d",
+          "salt temp tracer x_velocity y_velocity z_velocity"
+        ],
+        [
+          "remora.flat_bathymetry",
+          "true"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"centered4\""
+        ],
+        [
+          "remora.Scoef",
+          "1.0e-4"
+        ],
+        [
+          "remora.coriolis_f0",
+          "0.0"
+        ],
+        [
+          "remora.prob.u_0",
+          "1.0e-1"
+        ],
+        [
+          "remora.prob.v_0",
+          "-1.0e-1"
+        ]
+      ],
+      "reasoning": "CBR plan based on Exec/Upwelling_ML (patterns from: Exec/Upwelling, Exec/Advection) Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+      "baseline": {
+        "code_name": "REMORA",
+        "repo_path": "/home/jmsexton/codes/worktree_sandbox/REMORA",
+        "case_path": "Exec/Upwelling_ML",
+        "local_path": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML"
+      },
+      "case_candidates": [
+        {
+          "case": "Exec/Upwelling_ML",
+          "score": 0.9676795542240144,
+          "metadata": {
+            "case_name": "Upwelling_ML",
+            "repo_path": "Exec/Upwelling_ML",
+            "inputs_content": {
+              "remora.max_step": "10",
+              "remora.prob_lo": "0.     0.    -150.",
+              "remora.prob_hi": "41000. 80000.       0.",
+              "remora.n_cell": "41     80      16",
+              "remora.is_periodic": "1 1 0",
+              "remora.fixed_dt": "5",
+              "remora.fixed_ndtfast_ratio": "1",
+              "remora.sum_interval": "1",
+              "remora.v": "1",
+              "amr.max_level": "1",
+              "amr.ref_ratio_vect": "3 3  1",
+              "remora.check_file": "chk",
+              "remora.check_int": "-57600",
+              "remora.plot_file": "plt_",
+              "remora.plot_int": "1",
+              "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity tracer",
+              "remora.plotfile_type": "amrex",
+              "remora.flat_bathymetry": "false",
+              "remora.horizontal_advection_scheme": "\"upstream3\"",
+              "remora.R0": "1027.0",
+              "remora.S0": "35.0",
+              "remora.T0": "14.0",
+              "remora.Tcoef": "1.7e-4",
+              "remora.Scoef": "0.0",
+              "remora.rho0": "1025.0",
+              "remora.prob.u_0": "80.0e-4",
+              "remora.tcline": "25.0",
+              "remora.rdrag": "0.0",
+              "remora.init_l1ad_h": "false",
+              "remora.init_l1ad_T": "false",
+              "remora.init_ana_h": "true",
+              "remora.init_ana_T": "true",
+              "remora.init_l0int_h": "false",
+              "remora.init_l0int_T": "false",
+              "remora.use_coriolis": "false",
+              "remora.use_uv3dmix": "true",
+              "remora.coriolis_type": "beta_plane",
+              "remora.coriolis_f0": "-8.26e-5",
+              "remora.coriolis_beta": "0.0",
+              "remora.refinement_indicators": "bx1",
+              "remora.bx1.max_level": "1",
+              "remora.bx1.in_box_lo": "10000 5000 -150",
+              "remora.bx1.in_box_hi": "20000 20000 0",
+              "remora.coupling_type": "\"TwoWay\""
+            },
+            "index_type": "development_activity",
+            "chunk_parent": 13,
+            "chunk_index": 13
+          },
+          "breakdown": {
+            "development_activity": "0.7519838",
+            "domain_models": "0.78869003",
+            "resource_requirements": "0.7926616",
+            "path_hierarchy": "0.7342494",
+            "physics_parameters": "0.7618075",
+            "grid_specifications": "0.77501214",
+            "configuration_complexity": "0.80297"
+          },
+          "routing_intent_adjustment": 0.2,
+          "routing_intent_overlap": 1.0,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        }
+      ],
+      "baseline_evidence_citations": [
+        {
+          "citation_type": "baseline",
+          "case": "Exec/Upwelling_ML"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Upwelling"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Advection"
+        }
+      ],
+      "indexing_strategy": "hierarchical",
+      "indexing_calls_count": 19,
+      "indexing_calls_total": 57,
+      "indexing_calls_detail": {
+        "embed_documents": 0,
+        "embed_query": 19
+      },
+      "confidence_score": 0.9676795542240144,
+      "level0_solver": "REMORA",
+      "level0_confidence": 0.722604364156723,
+      "level2_override_applied": false,
+      "level2_override_solver": null,
+      "level2_override_case": null,
+      "level2_override_confidence": null,
+      "parameter_resolution_applied": true,
+      "reviewer_guidance": {},
+      "remapped_parameters": [
+        "remora.fixed_ndtfast_ratio",
+        "remora.horizontal_advection_scheme",
+        "remora.prob.u_0",
+        "remora.rdrag",
+        "remora.init_l1ad_h",
+        "remora.init_l1ad_T",
+        "remora.init_ana_h",
+        "remora.init_ana_T",
+        "remora.init_l0int_h",
+        "remora.init_l0int_T",
+        "remora.use_uv3dmix",
+        "remora.refinement_indicators",
+        "remora.bx1.max_level",
+        "remora.bx1.in_box_lo",
+        "remora.bx1.in_box_hi",
+        "remora.coupling_type",
+        "remora.stop_time",
+        "remora.fixed_ndtfast_ratio",
+        "remora.prob.u_0",
+        "remora.prob.v_0"
+      ]
+    }
+  },
+  {
+    "node": "reviewer",
+    "timestamp": "2026-04-30T19:16:51.725412Z",
+    "action": "parameter_resolution_retry",
+    "iteration": 3,
+    "details": {
+      "status": "retry",
+      "reason": "schema_resolution",
+      "unresolved_parameters": [
+        [
+          "remora.omp_tile_size",
+          "1024 1024 1024"
+        ],
+        [
+          "remora.bc.ylo.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.bc.yhi.type",
+          "\"SlipWall\""
+        ],
+        [
+          "remora.fixed_fast_dt",
+          "10.0"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"centered4\""
+        ],
+        [
+          "remora.stop_time",
+          "30000.0"
+        ],
+        [
+          "remora.tracer_horizontal_advection_scheme",
+          "\"centered4\""
+        ],
+        [
+          "remora.prob.v_0",
+          "-1.0e-1"
+        ]
+      ],
+      "resolution_guidance": "8 parameters could not be mapped to schema: ['remora.omp_tile_size', 'remora.bc.ylo.type', 'remora.bc.yhi.type', 'remora.fixed_fast_dt', 'remora.tracer_horizontal_advection_scheme', 'remora.stop_time', 'remora.tracer_horizontal_advection_scheme', 'remora.prob.v_0']. Remap attempted: 0 succeeded.",
+      "available_schema_params_count": 542,
+      "suggested_params": {
+        "remora.omp_tile_size": [
+          "recompute_preconditioner"
+        ],
+        "remora.bc.ylo.type": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.bc.yhi.type": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.fixed_fast_dt": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.tracer_horizontal_advection_scheme": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.stop_time": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amr_checkpoint_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr_compute_new_dt_on_regrid",
+          "amr.compute_new_dt_on_regrid",
+          "amr_mffile_nstreams",
+          "amr.mffile_nstreams",
+          "amr_probinit_natonce",
+          "amr.probinit_natonce",
+          "amr_file_name_digits",
+          "amr.file_name_digits"
+        ],
+        "remora.prob.v_0": [
+          "vismf_v",
+          "vismf.v",
+          "vismf_headerversion",
+          "vismf.headerversion",
+          "vismf_groupsets",
+          "vismf.groupsets",
+          "vismf_setbuf",
+          "vismf.setbuf",
+          "vismf_usesingleread",
+          "vismf.usesingleread",
+          "device_v",
+          "device.v",
+          "device_verbose",
+          "device.verbose",
+          "device_numThreads_x",
+          "device.numThreads.x",
+          "device_numThreads_y",
+          "device.numThreads.y",
+          "device_numThreads_z",
+          "device.numThreads.z"
+        ]
+      },
+      "remap_mapping": {},
+      "remap_success_count": 0,
+      "retry_count": 4
+    }
+  }
+]

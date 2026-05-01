@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/HotBubble with input.2d-regt
+
+================================================================================
+
+[2026-04-30T21:15:13.425712Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 76 changes
+    - geometry.prob_lo = 0.0  -0.005 0.0
+    - geometry.prob_hi = 0.08  0.005 0.0
+    - peleLM.lo_bc = Interior NoSlipWallAdiab
+
+[2026-04-30T21:15:18.928974Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T21:15:32.036326Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T21:15:32.052169Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T21:15:34.228957Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T21:15:34.235082Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T21:15:34.238861Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T21:15:34.240749Z] NODE: VISUALIZATION
+ACTION: skipped
+

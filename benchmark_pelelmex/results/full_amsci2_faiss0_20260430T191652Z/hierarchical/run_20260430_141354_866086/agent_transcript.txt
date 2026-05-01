@@ -1,0 +1,26 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/FlameSheet with inputs.3d_DodecaneQSS
+
+================================================================================
+
+[2026-04-30T21:13:54.833160Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 31 changes
+    - peleLM.run_mode = evaluate
+    - peleLM.evaluate_vars = avg_pressure mag_vort diffTerm divU temp instRR transportCC
+    - peleLM.chem_integrator = "ReactorNull"
+
+[2026-04-30T21:13:54.861720Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T21:14:04.984356Z] NODE: INPUT_WRITER
+ACTION: parameter_resolution_failed
+
+[2026-04-30T21:14:04.989957Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T21:14:04.993022Z] NODE: VISUALIZATION
+ACTION: skipped
+

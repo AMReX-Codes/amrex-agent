@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Production/JetInCrossflow with input.3d
+
+================================================================================
+
+[2026-04-30T20:21:55.617980Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 86 changes
+    - geometry.prob_lo = -0.025 -0.025 0.0
+    - geometry.prob_hi = 0.025  0.025 0.05
+    - peleLM.lo_bc = Outflow Outflow Inflow
+
+[2026-04-30T20:22:04.552322Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T20:22:16.934871Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T20:22:16.946318Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T20:22:18.686734Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T20:22:18.709872Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T20:22:18.717761Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T20:22:18.721123Z] NODE: VISUALIZATION
+ACTION: skipped
+

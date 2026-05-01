@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use REMORA case Exec/Channel_Test with inputs_orlanski
+
+================================================================================
+
+[2026-04-30T18:55:30.288511Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 38 changes
+    - remora.max_step = 10
+    - remora.stop_time = 30000.0
+    - remora.prob_lo = 0.     0.    -150.
+
+[2026-04-30T18:55:41.694327Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-04-30T18:55:54.184804Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-04-30T18:55:54.221833Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-04-30T18:55:54.259220Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-04-30T18:55:54.285247Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-04-30T18:55:54.295162Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-04-30T18:55:54.300756Z] NODE: VISUALIZATION
+ACTION: skipped
+

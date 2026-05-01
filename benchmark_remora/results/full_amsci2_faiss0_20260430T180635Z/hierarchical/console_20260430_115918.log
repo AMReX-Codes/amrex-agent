@@ -1,0 +1,1413 @@
+DEBUG: === CBORG API Configuration ===
+
+INFO: Using LLM model: amsc-i2/claude-sonnet-4-5
+DEBUG:  Set PELE_REPORTS_DIR=/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports
+DEBUG: 
+============================================================
+
+DEBUG: Starting AMReXAgent workflow...
+INFO: ================================================================================
+INFO: Starting AMReXAgent workflow
+INFO: ================================================================================
+DEBUG: Prompt: Use REMORA case Exec/DogboneAnalytic with inputs_m...
+INFO: ================================================================================
+INFO: Starting Architect node
+INFO: ================================================================================
+DEBUG: Mode: initial (initial planning)
+DEBUG: Initialized OpenAI embeddings: text-embedding-ada-002
+DEBUG: Loaded FAISS index: pelelmex_case_names
+DEBUG: Loaded FAISS index: pelelmex_case_structure
+DEBUG: Loaded FAISS index: pelelmex_case_details
+DEBUG: Loaded FAISS index: pelelmex_input_templates
+DEBUG: Loaded FAISS index: erf_case_structure
+DEBUG: Loaded FAISS index: erf_case_details
+DEBUG: Loaded FAISS index: erf_case_names
+DEBUG: Loaded FAISS index: remora_case_structure
+DEBUG: Loaded FAISS index: remora_case_details
+DEBUG: FAISS cache initialized with 9 indices
+DEBUG: EmbeddingService initialized: True
+DEBUG: Embeddings available: True
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG: ArchitectService instantiated with RAG support: True
+DEBUG: Total exclusions: 0 cases, 0 inputs files
+INFO: Using indexing strategy: hierarchical
+INFO: [Strategy Router] strategy_router -> hierarchical_strategy (branch=hierarchical, strategy=hierarchical)
+DEBUG:  Level0 searching for: 'Use REMORA case Exec/DogboneAnalytic with inputs_ml_mid'
+DEBUG: Loaded physics_regimes: 9 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-fb2cde0a-2025-43ef-8419-22f83a01432a', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681ec0fba0>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: connect_tcp.started host='api.i2-core.american-science-cloud.org' port=443 local_address=None timeout=None socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x74681e533c90>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x74681f3ea840> server_hostname='api.i2-core.american-science-cloud.org' timeout=None
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x74681e557e90>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:30 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'ee11b29b-28d9-4946-a406-365a67bcfe5c'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.357122605'), (b'x-litellm-response-duration-ms', b'163.062'), (b'x-litellm-overhead-duration-ms', b'0.785'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:30 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8b08ebfc095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-75874d98d8-p4kql'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'63'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_6e87c99bf4084f968fbf488fa31f5494'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'set-cookie', b'__cf_bm=WoWqN4mNKVq6YzP5IqO5V6v9TpWEhx0wgiUiKDLXIZQ-1777575569.9356265-1.0.1.1-dNMWu1kyVQQSiHnbzBu4M2AqmJTdzX6rt41gjQatbIVmlP1hQnSupxOXYn1CDKoBmO07SwXEriUGC5vCCQ8Q.YMF8sQnvqNWDM.YN2m7B5ZUS823tGT2_IgYav9Iwjkl; HttpOnly; Secure; Path=/; Domain=american-science-cloud.org; Expires=Thu, 30 Apr 2026 19:29:30 GMT'), (b'CF-RAY', b'9f48c8b01b1e759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:30 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'ee11b29b-28d9-4946-a406-365a67bcfe5c', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.357122605', 'x-litellm-response-duration-ms': '163.062', 'x-litellm-overhead-duration-ms': '0.785', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:30 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8b08ebfc095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-75874d98d8-p4kql', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '63', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_6e87c99bf4084f968fbf488fa31f5494', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'set-cookie': '__cf_bm=WoWqN4mNKVq6YzP5IqO5V6v9TpWEhx0wgiUiKDLXIZQ-1777575569.9356265-1.0.1.1-dNMWu1kyVQQSiHnbzBu4M2AqmJTdzX6rt41gjQatbIVmlP1hQnSupxOXYn1CDKoBmO07SwXEriUGC5vCCQ8Q.YMF8sQnvqNWDM.YN2m7B5ZUS823tGT2_IgYav9Iwjkl; HttpOnly; Secure; Path=/; Domain=american-science-cloud.org; Expires=Thu, 30 Apr 2026 19:29:30 GMT', 'cf-ray': '9f48c8b01b1e759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded solver_capabilities: 101 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-35245ed0-4bf5-41b7-8256-c6c0765a9efb', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681ec0fba0>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:30 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'0bca6a56-24f9-489d-ba11-a50f5704460b'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369017135000014'), (b'x-litellm-response-duration-ms', b'152.013'), (b'x-litellm-overhead-duration-ms', b'0.734'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:30 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8b2ff72c095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-canary-8589897d7d-6hdw6'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'57'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_71391e1e805d4fe1a1aff37e6dc97cb8'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8b28dc9759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:30 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '0bca6a56-24f9-489d-ba11-a50f5704460b', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369017135000014', 'x-litellm-response-duration-ms': '152.013', 'x-litellm-overhead-duration-ms': '0.734', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:30 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8b2ff72c095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-canary-8589897d7d-6hdw6', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '57', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_71391e1e805d4fe1a1aff37e6dc97cb8', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8b28dc9759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded code_lineage: 7 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-6680e2f9-5a22-42bf-a1b8-3ac07f642bfc', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7468200f65c0>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:30 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'ce4c4eea-67c6-487b-ac52-e0e96138bde0'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369018535000015'), (b'x-litellm-response-duration-ms', b'150.18'), (b'x-litellm-overhead-duration-ms', b'0.76'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:30 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8b4de76c095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-79b556ffb-b996z'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'47'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_6b29b8ac245845a48147da3e0fcbdbd1'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8b47fb0759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:30 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'ce4c4eea-67c6-487b-ac52-e0e96138bde0', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369018535000015', 'x-litellm-response-duration-ms': '150.18', 'x-litellm-overhead-duration-ms': '0.76', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:30 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8b4de76c095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-79b556ffb-b996z', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '47', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_6b29b8ac245845a48147da3e0fcbdbd1', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8b47fb0759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded cross_cutting_guidance: 7 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-009fdf4c-59d3-4d98-b969-79994a721b45', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681ec0fba0>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:31 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'b12459ef-1e25-46ca-ac08-1dac897d1f28'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369019935000015'), (b'x-litellm-response-duration-ms', b'186.95999999999998'), (b'x-litellm-overhead-duration-ms', b'0.725'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:31 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8b6ce3fc095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-b69b9f586-brknx'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'58'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_6d60d3701a514c1dabd1c3f39410df5e'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8b679aa759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:31 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'b12459ef-1e25-46ca-ac08-1dac897d1f28', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369019935000015', 'x-litellm-response-duration-ms': '186.95999999999998', 'x-litellm-overhead-duration-ms': '0.725', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:31 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8b6ce3fc095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-b69b9f586-brknx', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '58', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_6d60d3701a514c1dabd1c3f39410df5e', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8b679aa759a-SEA'})
+DEBUG: request_id: None
+DEBUG:  Level0 results: [('REMORA', 0.6129392445087433), ('AMReX', 0.3936874032020569), ('ERF', 0.38393421173095704), ('PeleLMeX', 0.382338559627533), ('PeleC', 0.37340274453163147)]
+INFO: Selected solver: REMORA (confidence: 0.61)
+DEBUG: Discovered 1 doc indices for REMORA
+DEBUG: Loaded solver_readme: 7 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-b9759fc2-807e-4279-bbbb-8b6ac59b02fb', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:31 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'd3bd7d2f-f9bf-4199-ad9a-a2446ae234c6'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369021335000015'), (b'x-litellm-response-duration-ms', b'230.129'), (b'x-litellm-overhead-duration-ms', b'0.77'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:31 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8b8fea3c095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-956d4c886-kn9hm'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'107'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_f9b6500bd56e46c98dc8711a5e8287ba'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8b8ab97759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:31 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'd3bd7d2f-f9bf-4199-ad9a-a2446ae234c6', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369021335000015', 'x-litellm-response-duration-ms': '230.129', 'x-litellm-overhead-duration-ms': '0.77', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:31 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8b8fea3c095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-956d4c886-kn9hm', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '107', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_f9b6500bd56e46c98dc8711a5e8287ba', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8b8ab97759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Retrieved 5 context documents for REMORA
+DEBUG: Discovered 7 case indices for REMORA
+INFO: Hierarchical Level2 weights (config): configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050
+DEBUG: Loaded development_activity: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-88f67c6c-d40f-4cf4-81b9-294e040b2c1b', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:31 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'c000844f-a5ff-400e-bb3e-68719d7859db'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369022735000016'), (b'x-litellm-response-duration-ms', b'186.29399999999998'), (b'x-litellm-overhead-duration-ms', b'0.725'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:31 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8bb7f8bc095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-b69b9f586-btxpp'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'64'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_fe9117b908ae421693122c5ccbb62961'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8bb2e29759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:31 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'c000844f-a5ff-400e-bb3e-68719d7859db', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369022735000016', 'x-litellm-response-duration-ms': '186.29399999999998', 'x-litellm-overhead-duration-ms': '0.725', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:31 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8bb7f8bc095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-b69b9f586-btxpp', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '64', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_fe9117b908ae421693122c5ccbb62961', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8bb2e29759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded domain_models: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-1b6d38c1-7676-414a-b706-d03679c0f55b', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:32 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'3c76f7f6-24f5-4289-964c-d55e9aa3cb05'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369024135000016'), (b'x-litellm-response-duration-ms', b'213.892'), (b'x-litellm-overhead-duration-ms', b'0.723'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:32 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8bdaf39c095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-776dd5dc76-l26hr'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'75'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_02263e709643468fa08fb45c913d24f0'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8bd5874759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:32 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '3c76f7f6-24f5-4289-964c-d55e9aa3cb05', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369024135000016', 'x-litellm-response-duration-ms': '213.892', 'x-litellm-overhead-duration-ms': '0.723', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:32 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8bdaf39c095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-776dd5dc76-l26hr', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '75', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_02263e709643468fa08fb45c913d24f0', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8bd5874759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded resource_requirements: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-6b53977c-2dd4-4529-8cf0-c5b3745a8a37', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:32 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'5174953c-7893-49da-b4ff-bd254788f7eb'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364192835000011'), (b'x-litellm-response-duration-ms', b'150.588'), (b'x-litellm-overhead-duration-ms', b'0.783'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:32 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8c00e72d69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-b69b9f586-v6df8'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'62'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_77136bbf3a764c4189c380726fedd4bd'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8bfaae7759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:32 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '5174953c-7893-49da-b4ff-bd254788f7eb', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364192835000011', 'x-litellm-response-duration-ms': '150.588', 'x-litellm-overhead-duration-ms': '0.783', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:32 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8c00e72d69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-b69b9f586-v6df8', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '62', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_77136bbf3a764c4189c380726fedd4bd', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8bfaae7759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded path_hierarchy: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-a9e39ebb-cca9-4ba5-9e0b-d3ce3a248f16', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:33 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'94e7552f-0862-476b-b7c5-db0c6ad1281b'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364194235000012'), (b'x-litellm-response-duration-ms', b'214.205'), (b'x-litellm-overhead-duration-ms', b'0.761'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:33 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8c1fce0d69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-75b8777d4-tsnqp'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'93'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_bae1eea2385b4d968b7845d0ebcd9f09'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8c19cb0759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:33 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '94e7552f-0862-476b-b7c5-db0c6ad1281b', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364194235000012', 'x-litellm-response-duration-ms': '214.205', 'x-litellm-overhead-duration-ms': '0.761', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:33 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8c1fce0d69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-75b8777d4-tsnqp', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '93', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_bae1eea2385b4d968b7845d0ebcd9f09', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8c19cb0759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded physics_parameters: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-ccdd5e17-c42d-415c-bc7f-994bc16833c1', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:33 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'74d43d79-eeb8-421e-b732-e935c13bb461'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369025535000016'), (b'x-litellm-response-duration-ms', b'327.369'), (b'x-litellm-overhead-duration-ms', b'0.756'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:33 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8c43eb2c095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-canary-65f7d87fb6-bmwf5'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'71'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_fdc4331ae5414a6d908eac4b46744927'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8c3eeb8759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:33 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '74d43d79-eeb8-421e-b732-e935c13bb461', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369025535000016', 'x-litellm-response-duration-ms': '327.369', 'x-litellm-overhead-duration-ms': '0.756', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:33 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8c43eb2c095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-canary-65f7d87fb6-bmwf5', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '71', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_fdc4331ae5414a6d908eac4b46744927', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8c3eeb8759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded grid_specifications: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-9583be0e-ca27-4906-a656-ec0a63fed481', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:33 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'db870a5c-1fd9-4483-ad5c-364cafc357e2'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369026935000017'), (b'x-litellm-response-duration-ms', b'277.4'), (b'x-litellm-overhead-duration-ms', b'0.742'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:33 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8c748ecc095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-776dd5dc76-ftm7v'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'168'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_806dbbbd3b9a40dbabbb355b992c79b5'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8c6e9b5759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:33 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'db870a5c-1fd9-4483-ad5c-364cafc357e2', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369026935000017', 'x-litellm-response-duration-ms': '277.4', 'x-litellm-overhead-duration-ms': '0.742', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:33 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8c748ecc095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-776dd5dc76-ftm7v', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '168', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_806dbbbd3b9a40dbabbb355b992c79b5', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8c6e9b5759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded configuration_complexity: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-452fb115-c803-4442-8e01-05094da18d58', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:34 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'ec33bfbe-7f39-4b86-bf52-980082df5cda'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364195635000012'), (b'x-litellm-response-duration-ms', b'164.518'), (b'x-litellm-overhead-duration-ms', b'0.77'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:34 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8c9fa41d69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-956d4c886-trthh'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'68'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_78de3082f0254fb19c9e6bd0d412f459'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8c99bf5759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:34 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'ec33bfbe-7f39-4b86-bf52-980082df5cda', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364195635000012', 'x-litellm-response-duration-ms': '164.518', 'x-litellm-overhead-duration-ms': '0.77', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:34 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8c9fa41d69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-956d4c886-trthh', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '68', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_78de3082f0254fb19c9e6bd0d412f459', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8c99bf5759a-SEA'})
+DEBUG: request_id: None
+INFO: Hierarchical baseline candidates (top 1 of 1):
+INFO:   1. Exec/Upwelling_ML score=0.8279 weighted=0.6279 priority_bonus=0.0000 path_quality=0.500 path_bonus=0.0000
+INFO:      contributions: configuration_complexity:0.657*0.100=0.066, development_activity:0.619*0.100=0.062, domain_models:0.646*0.100=0.065, grid_specifications:0.628*0.200=0.126, path_hierarchy:0.618*0.150=0.093, physics_parameters:0.617*0.300=0.185, resource_requirements:0.647*0.050=0.032
+INFO: Selected baseline: Exec/Upwelling_ML (score: 0.83)
+DEBUG: [Level2] Using solver: REMORA
+DEBUG: Discovered 7 case indices for REMORA
+DEBUG: [Level2] Searching for parameter patterns matching: Use REMORA case Exec/DogboneAnalytic with inputs_ml_mid
+DEBUG: Loaded development_activity: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-b2f4bf2b-ce95-48d6-9123-8600ec96c089', 'post_parser': <function Embeddings.create.<locals>.parser at 0x74681fb8b100>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:34 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'29e82332-b988-4428-ba16-8410e54ad29d'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364197035000013'), (b'x-litellm-response-duration-ms', b'280.851'), (b'x-litellm-overhead-duration-ms', b'0.783'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:34 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8cbf957d69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-65cbbbcc76-946gc'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'95'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_66ea9aaa2f90465088d824bfb839730d'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8cb9db9759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:34 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '29e82332-b988-4428-ba16-8410e54ad29d', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364197035000013', 'x-litellm-response-duration-ms': '280.851', 'x-litellm-overhead-duration-ms': '0.783', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:34 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8cbf957d69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-65cbbbcc76-946gc', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '95', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_66ea9aaa2f90465088d824bfb839730d', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8cb9db9759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded domain_models: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-47a1fd8b-6a34-4f87-9360-764496d5dfe7', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7468200cfb00>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:35 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'349528ed-49ed-459e-b22f-9b70c5618d74'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369028335000017'), (b'x-litellm-response-duration-ms', b'162.341'), (b'x-litellm-overhead-duration-ms', b'0.75'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:34 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8cebaa3c095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-65cbbbcc76-72kcz'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'58'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_44c3060954c545e5bd243c8912407116'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8ce5833759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:35 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '349528ed-49ed-459e-b22f-9b70c5618d74', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369028335000017', 'x-litellm-response-duration-ms': '162.341', 'x-litellm-overhead-duration-ms': '0.75', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:34 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8cebaa3c095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-65cbbbcc76-72kcz', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '58', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_44c3060954c545e5bd243c8912407116', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8ce5833759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded resource_requirements: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-4e512e2a-dea1-4036-9e89-64913f6b0188', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7468200cfb00>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:35 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'49df95da-f4fb-4488-8e38-7867d97f34dc'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364198435000013'), (b'x-litellm-response-duration-ms', b'169.537'), (b'x-litellm-overhead-duration-ms', b'0.768'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:35 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8d0ba7dd69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-7b4776f958-mhw2j'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'59'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_9fe7a72888d744538b92d6d8bd61eee5'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8d06a52759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:35 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '49df95da-f4fb-4488-8e38-7867d97f34dc', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364198435000013', 'x-litellm-response-duration-ms': '169.537', 'x-litellm-overhead-duration-ms': '0.768', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:35 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8d0ba7dd69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-7b4776f958-mhw2j', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '59', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_9fe7a72888d744538b92d6d8bd61eee5', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8d06a52759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded path_hierarchy: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-93857c20-37b5-411f-b74c-b57bccef5628', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7468200cfb00>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:35 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'1e13e1c2-5ff4-455d-b151-90f129090189'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364199835000013'), (b'x-litellm-response-duration-ms', b'176.811'), (b'x-litellm-overhead-duration-ms', b'0.762'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:35 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8d2db50d69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-5f798bbb74-mzhgq'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'71'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_8a4982279b5a4bed82f2567f55a49ac8'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8d28c90759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:35 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '1e13e1c2-5ff4-455d-b151-90f129090189', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364199835000013', 'x-litellm-response-duration-ms': '176.811', 'x-litellm-overhead-duration-ms': '0.762', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:35 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8d2db50d69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-5f798bbb74-mzhgq', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '71', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_8a4982279b5a4bed82f2567f55a49ac8', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8d28c90759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded physics_parameters: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-400507d7-0d23-4aae-82c2-aafc62355c18', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7468200cfb00>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:36 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'22def6f3-932b-48c8-87cf-f53dda7db816'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364201235000014'), (b'x-litellm-response-duration-ms', b'144.784'), (b'x-litellm-overhead-duration-ms', b'0.797'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:35 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8d4fb7dd69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-75b8777d4-tv2fl'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'64'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_d5f74ccb66a247a7abc3efc4851baa16'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8d49e74759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:36 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '22def6f3-932b-48c8-87cf-f53dda7db816', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364201235000014', 'x-litellm-response-duration-ms': '144.784', 'x-litellm-overhead-duration-ms': '0.797', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:35 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8d4fb7dd69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-75b8777d4-tv2fl', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '64', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_d5f74ccb66a247a7abc3efc4851baa16', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8d49e74759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded grid_specifications: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-5c93f89a-b008-423e-80fd-4cdb7a61b306', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7468200cfb00>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:36 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'9e383901-5aaa-484f-b9fe-5a5c5c4762ed'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.364202635000014'), (b'x-litellm-response-duration-ms', b'141.37199999999999'), (b'x-litellm-overhead-duration-ms', b'0.765'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:36 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8d6fab4d69c-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-7b4776f958-9vsxv'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'43'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_3a79caa0932b4b778276655ec58aa5e8'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8d68851759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:36 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '9e383901-5aaa-484f-b9fe-5a5c5c4762ed', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.364202635000014', 'x-litellm-response-duration-ms': '141.37199999999999', 'x-litellm-overhead-duration-ms': '0.765', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:36 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8d6fab4d69c-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-7b4776f958-9vsxv', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '43', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_3a79caa0932b4b778276655ec58aa5e8', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8d68851759a-SEA'})
+DEBUG: request_id: None
+DEBUG: Loaded configuration_complexity: 14 vectors
+DEBUG: Request options: {'method': 'post', 'url': '/embeddings', 'files': None, 'idempotency_key': 'stainless-python-retry-42785b22-e717-48a0-9339-0bfde28d65ed', 'post_parser': <function Embeddings.create.<locals>.parser at 0x7468200cfb00>, 'content': None, 'json_data': {'input': [[10464, 26669, 52577, 1162, 10502, 15302, 540, 20337, 74407, 29150, 449, 11374, 77667, 44833]], 'model': 'text-embedding-ada-002', 'encoding_format': 'base64'}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:36 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'fb07901a-d64a-48c9-bce5-efcaae2481e6'), (b'x-litellm-model-id', b'7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4'), (b'x-litellm-model-api-base', b'https://api.openai.com'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'1.4e-06'), (b'x-litellm-response-cost-original', b'1.4e-06'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369029735000018'), (b'x-litellm-response-duration-ms', b'299.692'), (b'x-litellm-overhead-duration-ms', b'0.777'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-limit-tokens', b'5000000'), (b'x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-date', b'Thu, 30 Apr 2026 18:59:36 GMT'), (b'llm_provider-content-type', b'application/json'), (b'llm_provider-transfer-encoding', b'chunked'), (b'llm_provider-connection', b'keep-alive'), (b'llm_provider-cf-ray', b'9f48c8d8cd51c095-IAD'), (b'llm_provider-cf-cache-status', b'DYNAMIC'), (b'llm_provider-access-control-allow-origin', b'*'), (b'llm_provider-server', b'cloudflare'), (b'llm_provider-strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'llm_provider-via', b'envoy-router-canary-7cf7cf5fd8-zxp2k'), (b'llm_provider-x-content-type-options', b'nosniff'), (b'llm_provider-access-control-expose-headers', b'X-Request-ID'), (b'llm_provider-openai-model', b'text-embedding-ada-002-v2'), (b'llm_provider-openai-organization', b'americansciencecloud'), (b'llm_provider-openai-processing-ms', b'117'), (b'llm_provider-openai-project', b'proj_FD2HLAxKKoHNlPF1oVVwulRa'), (b'llm_provider-openai-version', b'2020-10-01'), (b'llm_provider-x-engine-geography', b'US'), (b'llm_provider-x-openai-proxy-wasm', b'v0.1'), (b'llm_provider-x-ratelimit-limit-requests', b'5000'), (b'llm_provider-x-ratelimit-limit-tokens', b'5000000'), (b'llm_provider-x-ratelimit-remaining-requests', b'4999'), (b'llm_provider-x-ratelimit-remaining-tokens', b'4999986'), (b'llm_provider-x-ratelimit-reset-requests', b'12ms'), (b'llm_provider-x-ratelimit-reset-tokens', b'0s'), (b'llm_provider-x-request-id', b'req_4123d3bc912642a0b3b5976007c22e48'), (b'llm_provider-content-encoding', b'gzip'), (b'llm_provider-alt-svc', b'h3=":443"; ma=86400'), (b'x-litellm-model-group', b'text-embedding-ada-002'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'CF-RAY', b'9f48c8d87a34759a-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/embeddings "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:36 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': 'fb07901a-d64a-48c9-bce5-efcaae2481e6', 'x-litellm-model-id': '7a26345a00d4220658486065c06a1eeb881c84f4ad79b8b8590b11fdb5a38bb4', 'x-litellm-model-api-base': 'https://api.openai.com', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '1.4e-06', 'x-litellm-response-cost-original': '1.4e-06', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369029735000018', 'x-litellm-response-duration-ms': '299.692', 'x-litellm-overhead-duration-ms': '0.777', 'x-litellm-callback-duration-ms': '0.0', 'x-ratelimit-limit-requests': '5000', 'x-ratelimit-remaining-requests': '4999', 'x-ratelimit-limit-tokens': '5000000', 'x-ratelimit-remaining-tokens': '4999986', 'llm_provider-date': 'Thu, 30 Apr 2026 18:59:36 GMT', 'llm_provider-content-type': 'application/json', 'llm_provider-transfer-encoding': 'chunked', 'llm_provider-connection': 'keep-alive', 'llm_provider-cf-ray': '9f48c8d8cd51c095-IAD', 'llm_provider-cf-cache-status': 'DYNAMIC', 'llm_provider-access-control-allow-origin': '*', 'llm_provider-server': 'cloudflare', 'llm_provider-strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'llm_provider-via': 'envoy-router-canary-7cf7cf5fd8-zxp2k', 'llm_provider-x-content-type-options': 'nosniff', 'llm_provider-access-control-expose-headers': 'X-Request-ID', 'llm_provider-openai-model': 'text-embedding-ada-002-v2', 'llm_provider-openai-organization': 'americansciencecloud', 'llm_provider-openai-processing-ms': '117', 'llm_provider-openai-project': 'proj_FD2HLAxKKoHNlPF1oVVwulRa', 'llm_provider-openai-version': '2020-10-01', 'llm_provider-x-engine-geography': 'US', 'llm_provider-x-openai-proxy-wasm': 'v0.1', 'llm_provider-x-ratelimit-limit-requests': '5000', 'llm_provider-x-ratelimit-limit-tokens': '5000000', 'llm_provider-x-ratelimit-remaining-requests': '4999', 'llm_provider-x-ratelimit-remaining-tokens': '4999986', 'llm_provider-x-ratelimit-reset-requests': '12ms', 'llm_provider-x-ratelimit-reset-tokens': '0s', 'llm_provider-x-request-id': 'req_4123d3bc912642a0b3b5976007c22e48', 'llm_provider-content-encoding': 'gzip', 'llm_provider-alt-svc': 'h3=":443"; ma=86400', 'x-litellm-model-group': 'text-embedding-ada-002', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'cf-ray': '9f48c8d87a34759a-SEA'})
+DEBUG: request_id: None
+DEBUG: [Level2] Found 27 modifications from Exec/DogboneAnalytic
+DEBUG: [Level2] Found 28 modifications from Exec/Dogbone
+DEBUG: [Level2] Returning 34 modifications
+DEBUG: Patching `client.chat.completions.create` with mode=<Mode.TOOLS: 'tool_call'>
+DEBUG: Instructor Request: mode.value='tool_call', response_model=<class 'src.services.architect.ArchitectService._llm_plan.<locals>.LLMPlanResponse'>, new_kwargs={'messages': [{'role': 'system', 'content': 'Return JSON only with keys: modifications, reasoning. Do not include markdown.'}, {'role': 'user', 'content': 'Use REMORA case Exec/DogboneAnalytic with inputs_ml_mid'}], 'model': 'claude-sonnet-4-5', 'temperature': 0.1, 'tools': [{'type': 'function', 'function': {'name': 'LLMPlanResponse', 'description': 'Correctly extracted `LLMPlanResponse` with all the required parameters with correct types', 'parameters': {'$defs': {'Modification': {'properties': {'parameter': {'title': 'Parameter', 'type': 'string'}, 'value': {'title': 'Value', 'type': 'string'}}, 'required': ['parameter', 'value'], 'title': 'Modification', 'type': 'object'}}, 'properties': {'modifications': {'items': {'$ref': '#/$defs/Modification'}, 'title': 'Modifications', 'type': 'array'}, 'reasoning': {'default': '', 'title': 'Reasoning', 'type': 'string'}}, 'required': ['modifications'], 'type': 'object'}}}], 'tool_choice': {'type': 'function', 'function': {'name': 'LLMPlanResponse'}}}
+DEBUG: max_retries: 3, timeout: None
+DEBUG: Retrying, attempt: 1
+DEBUG: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-928c8a77-ea90-4805-9c6c-12e44f5dc344', 'content': None, 'json_data': {'messages': [{'role': 'system', 'content': 'Return JSON only with keys: modifications, reasoning. Do not include markdown.'}, {'role': 'user', 'content': 'Use REMORA case Exec/DogboneAnalytic with inputs_ml_mid'}], 'model': 'claude-sonnet-4-5', 'temperature': 0.1, 'tool_choice': {'type': 'function', 'function': {'name': 'LLMPlanResponse'}}, 'tools': [{'type': 'function', 'function': {'name': 'LLMPlanResponse', 'description': 'Correctly extracted `LLMPlanResponse` with all the required parameters with correct types', 'parameters': {'$defs': {'Modification': {'properties': {'parameter': {'title': 'Parameter', 'type': 'string'}, 'value': {'title': 'Value', 'type': 'string'}}, 'required': ['parameter', 'value'], 'title': 'Modification', 'type': 'object'}}, 'properties': {'modifications': {'items': {'$ref': '#/$defs/Modification'}, 'title': 'Modifications', 'type': 'array'}, 'reasoning': {'default': '', 'title': 'Reasoning', 'type': 'string'}}, 'required': ['modifications'], 'type': 'object'}}}]}}
+DEBUG: Sending HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/chat/completions
+DEBUG: connect_tcp.started host='api.i2-core.american-science-cloud.org' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x74681c5a78d0>
+DEBUG: start_tls.started ssl_context=<ssl.SSLContext object at 0x74681e5185f0> server_hostname='api.i2-core.american-science-cloud.org' timeout=5.0
+DEBUG: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x74681c5a7890>
+DEBUG: send_request_headers.started request=<Request [b'POST']>
+DEBUG: send_request_headers.complete
+DEBUG: send_request_body.started request=<Request [b'POST']>
+DEBUG: send_request_body.complete
+DEBUG: receive_response_headers.started request=<Request [b'POST']>
+DEBUG: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 30 Apr 2026 18:59:44 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'cloudflare'), (b'x-litellm-call-id', b'3ca5596d-1402-478a-b2f9-1e42b74f53f3'), (b'x-litellm-model-id', b'97a2cb371c6fdc21bc23e56e4786938a2bf1dc9738692ec46df9fc41cc6316c6'), (b'x-litellm-version', b'1.83.10'), (b'x-litellm-response-cost', b'0.0049269'), (b'x-litellm-response-cost-original', b'0.0049269'), (b'x-litellm-response-cost-discount-amount', b'0.0'), (b'x-litellm-response-cost-margin-amount', b'0.0'), (b'x-litellm-response-cost-margin-percent', b'0.0'), (b'x-litellm-key-spend', b'11.369129535000013'), (b'x-litellm-response-duration-ms', b'4307.468'), (b'x-litellm-overhead-duration-ms', b'2.789'), (b'x-litellm-callback-duration-ms', b'0.0'), (b'x-litellm-model-group', b'claude-sonnet-4-5'), (b'x-litellm-attempted-retries', b'0'), (b'x-litellm-attempted-fallbacks', b'0'), (b'Content-Encoding', b'gzip'), (b'cf-cache-status', b'DYNAMIC'), (b'vary', b'accept-encoding'), (b'set-cookie', b'__cf_bm=KSAlrZmgdtCOaiHA_bNLOMoswt1t_4.jwV9EJ_kPnbI-1777575579.9721584-1.0.1.1-AjaEc9Xr27qM3YmVzdObUIc.d8ZsDNazqFvcjjJ2FYA41Jmjr9jRqRZk4oi_5G0FVU7rsho_kambpdwTnhcWLnjl8kP.p_TbopnEf3TJVRILHHkEOeRHLGZd.pWTMUR0; HttpOnly; Secure; Path=/; Domain=american-science-cloud.org; Expires=Thu, 30 Apr 2026 19:29:44 GMT'), (b'CF-RAY', b'9f48c8eedda67609-SEA')])
+INFO: HTTP Request: POST https://api.i2-core.american-science-cloud.org/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: receive_response_body.started request=<Request [b'POST']>
+DEBUG: receive_response_body.complete
+DEBUG: response_closed.started
+DEBUG: response_closed.complete
+DEBUG: HTTP Response: POST https://api.i2-core.american-science-cloud.org/v1/chat/completions "200 OK" Headers({'date': 'Thu, 30 Apr 2026 18:59:44 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'cloudflare', 'x-litellm-call-id': '3ca5596d-1402-478a-b2f9-1e42b74f53f3', 'x-litellm-model-id': '97a2cb371c6fdc21bc23e56e4786938a2bf1dc9738692ec46df9fc41cc6316c6', 'x-litellm-version': '1.83.10', 'x-litellm-response-cost': '0.0049269', 'x-litellm-response-cost-original': '0.0049269', 'x-litellm-response-cost-discount-amount': '0.0', 'x-litellm-response-cost-margin-amount': '0.0', 'x-litellm-response-cost-margin-percent': '0.0', 'x-litellm-key-spend': '11.369129535000013', 'x-litellm-response-duration-ms': '4307.468', 'x-litellm-overhead-duration-ms': '2.789', 'x-litellm-callback-duration-ms': '0.0', 'x-litellm-model-group': 'claude-sonnet-4-5', 'x-litellm-attempted-retries': '0', 'x-litellm-attempted-fallbacks': '0', 'content-encoding': 'gzip', 'cf-cache-status': 'DYNAMIC', 'vary': 'accept-encoding', 'set-cookie': '__cf_bm=KSAlrZmgdtCOaiHA_bNLOMoswt1t_4.jwV9EJ_kPnbI-1777575579.9721584-1.0.1.1-AjaEc9Xr27qM3YmVzdObUIc.d8ZsDNazqFvcjjJ2FYA41Jmjr9jRqRZk4oi_5G0FVU7rsho_kambpdwTnhcWLnjl8kP.p_TbopnEf3TJVRILHHkEOeRHLGZd.pWTMUR0; HttpOnly; Secure; Path=/; Domain=american-science-cloud.org; Expires=Thu, 30 Apr 2026 19:29:44 GMT', 'cf-ray': '9f48c8eedda67609-SEA'})
+DEBUG: request_id: None
+DEBUG: Instructor Raw Response: ChatCompletion(id='chatcmpl-391f4ed7-8e56-4809-8f25-bc3fc882f026', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='tooluse_uwVPhtrATRU2eCv6u6hS7q', function=Function(arguments='{"modifications": [{"parameter": "case", "value": "Exec/DogboneAnalytic"}, {"parameter": "inputs", "value": "inputs_ml_mid"}], "reasoning": "The user wants to use the REMORA case located at Exec/DogboneAnalytic with the inputs file named inputs_ml_mid. This requires setting the case parameter to the specified path and the inputs parameter to the specified inputs file name."}', name='LLMPlanResponse'), type='function', index=0)]))], created=1777575584, model='claude-sonnet-4-5', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=139, prompt_tokens=798, total_tokens=937, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+DEBUG: Hierarchical indexing succeeded
+DEBUG: [DATA TRANSFER] Called architect service with feedback=True
+INFO: Plan created: Exec/Upwelling_ML
+DEBUG: History entry appended: plan_created at iteration 1
+DEBUG: Baseline metadata computed: /home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML
+INFO: Iteration 1, Retry 0, Mode: proceed
+INFO: --------------------------------------------------------------------------------
+INFO: Architect node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Reviewer node
+INFO: ================================================================================
+DEBUG: [DATA TRANSFER] Checking for parameter resolution requirement
+DEBUG: [DATA TRANSFER] requires_parameter_resolution = False
+DEBUG: Plan loaded from workflow_history (canonical path)
+INFO: Reviewing plan...
+DEBUG: Using newest schema: amrex_schema_53dc0a47.json
+WARNING: No build config found - skipping dependency checks
+DEBUG: Using flat schema: 0 params found
+DEBUG: Rule 'SchemaExistence' found 0 violation(s)
+DEBUG: Rule 'BuildFlagDependency' found 0 violation(s)
+DEBUG: Rule 'GridConsistency' found 0 violation(s)
+DEBUG: Rule 'TimestepBounds' found 0 violation(s)
+DEBUG: [REVIEWER SERVICE] Returning ValidationResult with 279 schema params
+INFO: Plan approved - proceeding to execution
+DEBUG: [REVIEWER NODE] Creating history entry
+DEBUG: [REVIEWER NODE] validation_result.available_schema_params: 279 items
+DEBUG: [REVIEWER NODE] Sample schema params: ['amr.regrid_on_restart', 'amr.force_regrid_level_zero', 'amr.use_efficient_regrid', 'amr.plotfile_on_restart', 'amr.insitu_on_restart', 'amr.checkpoint_on_restart', 'amr.compute_new_dt_on_regrid', 'amr.mffile_nstreams', 'amr.probinit_natonce', 'amr.file_name_digits']
+INFO: Review complete: proceed (errors: 0)
+INFO: --------------------------------------------------------------------------------
+INFO: Reviewer node complete
+INFO: --------------------------------------------------------------------------------
+DEBUG: [ROUTE] Reviewer → Input Writer (Approved)
+INFO: ================================================================================
+INFO: Starting Input Writer node
+INFO: ================================================================================
+DEBUG: [InputWriter] Plan extracted from workflow_history: Exec/Upwelling_ML
+DEBUG: [InputWriter] Extracted 0 modifications: []...
+DEBUG: [InputWriter] Baseline: {'code_name': 'REMORA', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/REMORA', 'case_path': 'Exec/Upwelling_ML', 'local_path': '/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML'}
+DEBUG: Target directory: benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [LOCAL] AMReX: basic, 1 cases
+DEBUG:  [LOCAL] PeleC: excellent, 4 cases
+DEBUG:  [LOCAL] PeleLMeX: excellent, 4 cases
+DEBUG:  [LOCAL] incflo: good, 6 cases
+DEBUG:  [LOCAL] WarpX: excellent, 3 cases
+DEBUG:  [LOCAL] ERF: good, 5 cases
+DEBUG:  [LOCAL] REMORA: good, 5 cases
+DEBUG:  [OK] FAISS embeddings initialized for input writer
+DEBUG: InputWriterService instantiated with cases service
+DEBUG: [Input Writer] Starting Load-Modify-Write pipeline
+DEBUG: [DEBUG] baseline dict keys: ['code_name', 'repo_path', 'case_path', 'local_path']
+DEBUG: [DEBUG] baseline dict: {'code_name': 'REMORA', 'repo_path': '/home/jmsexton/codes/worktree_sandbox/REMORA', 'case_path': 'Exec/Upwelling_ML', 'local_path': '/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML'}
+DEBUG: Plan: solver=REMORA, case=Exec/Upwelling_ML
+DEBUG: Reasoning: The user wants to use the REMORA case located at Exec/DogboneAnalytic with the inputs file named inputs_ml_mid. This requires setting the case parameter to the specified path and the inputs parameter to the specified inputs file name. Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.
+DEBUG: [1/5] Loading baseline: Exec/Upwelling_ML
+INFO: Default inputs path is outside selected case directory; strategy_first will ignore it: /home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Seamount/inputs (case: /home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML)
+INFO: Selected inputs file: inputs (strategy: prompt_anchor)
+DEBUG: Loading baseline from: /home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs (strategy: llm_compare)
+INFO: [2/5] Skipping model hydration (no modifications)
+INFO: Wrote 2783 bytes to benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/inputs
+INFO: Files written to: benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063
+DEBUG: [DATA TRANSFER] Checking InputWriterService result
+DEBUG: [DATA TRANSFER] Service result keys: ['inputs_path', 'output_dir', 'run_dir', 'modifications_applied', 'inputs_file_selected', 'inputs_file_strategy', 'inputs_file_override', 'inputs_candidates', 'solver', 'status', 'requires_parameter_resolution']
+INFO: Input Writer complete: run_20260430_115940_960063
+INFO:   Inputs selected: /home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs (strategy: llm_compare, override: None)
+DEBUG:   Inputs written: benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/inputs
+DEBUG:   Run directory: benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063
+INFO: --------------------------------------------------------------------------------
+INFO: Input Writer node complete
+INFO: --------------------------------------------------------------------------------
+INFO: ================================================================================
+INFO: Starting Runner node
+INFO: ================================================================================
+INFO: Validation passed: run_20260430_115940_960063
+DEBUG: LocalRunner initialized for local execution
+INFO: Using LocalRunner for local execution
+DEBUG: 
+=== Setting Up Job (Local) ===
+
+DEBUG:  Using existing run directory: benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063
+DEBUG: [ OK ] Copied 2 files to run directory
+INFO: Job setup complete: 
+DEBUG:    Using run directory: benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063
+DEBUG: 
+=== Submitting Job (Local) ===
+
+ERROR: Executable resolution failed: No executable found in benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063
+WARNING: [ROUTE] Runtime failure → Analysis (retryable): 
+INFO: ================================================================================
+INFO: Starting Analysis node
+INFO: ================================================================================
+INFO: [INFO] Run mode dry - skipping analysis
+DEBUG: [ROUTE] Router: Analysis → Visualization (simulation passed)
+INFO: ================================================================================
+INFO: Starting Visualization node
+INFO: ================================================================================
+DEBUG: 
+[Step 1/4] Checking for plotfiles...
+WARNING: [WARN] No plotfiles found in run directory
+DEBUG:   Searched: benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063
+INFO: --------------------------------------------------------------------------------
+INFO: Workflow complete. Status: completed
+INFO: --------------------------------------------------------------------------------
+INFO: Metrics saved to benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/metrics.jsonl
+INFO: Workflow history saved to benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/workflow_history.json
+INFO: Agent transcript saved to benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/agent_transcript.txt
+{
+  "prompt": "Use REMORA case Exec/DogboneAnalytic with inputs_ml_mid",
+  "config": "llm_provider='amsc-i2' llm_model='claude-sonnet-4-5' llm_fast_onprem_model='lbl/cborg-mini' llm_fast_model='gcp/gpt-oss-120b-high' llm_thinking_model='claude-sonnet-4-5' llm_temperature=0.1 llm_max_tokens=4000 cborg_api_key='' cborg_base_url='https://api.cborg.lbl.gov/v1' alcf_api_key=None alcf_cluster=None alcf_base_url=None openai_api_key='sk-3r5QhYlL8hGQxywoC_AWBw' anthropic_api_key=None litellm_api_key=None litellm_base_url='https://api.i2-core.american-science-cloud.org/v1' pnnl_api_key=None pnnl_base_url='https://ai-incubator-api.pnnl.gov' pnnl_default_model='claude-haiku-4-5-20251001-v1-birthright' pelec_executable=PosixPath('.') pelec_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC') pelelmex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX') erf_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF') erf_executable_path=None erf_central_build_dir=PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF/Exec/RegTests') warpx_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx') incflo_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo') remora_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA') amrex_tutorials_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials') amrex_repo_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex') repositories={'PeleC': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleC'), 'PeleLMeX': PosixPath('/home/jmsexton/codes/worktree_sandbox/PeleLMeX'), 'ERF': PosixPath('/home/jmsexton/codes/worktree_sandbox/ERF'), 'WarpX': PosixPath('/home/jmsexton/codes/worktree_sandbox/warpx'), 'incflo': PosixPath('/home/jmsexton/codes/worktree_sandbox/incflo'), 'REMORA': PosixPath('/home/jmsexton/codes/worktree_sandbox/REMORA'), 'amrex-tutorials': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-tutorials'), 'AMReX': PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex')} knowledge_base_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/reports') pele_tools_path=PosixPath('utils/pele_tools.py') faiss_db_path=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/database/faiss/amsc-i2') database_mismatch_policy='warn_continue' environment='local' embedding_provider='amsc-i2' vector_store_backend='auto' faiss_embedding_model='lbl/nomic-embed-text' alcf_embedding_model=None openai_vector_store_id=None openai_vector_store_ids={} openai_base_url='https://api.cborg.lbl.gov' vector_store_base_url=None vector_store_manifest_url=None faiss_topk=3 faiss_cache_enabled=True faiss_fallback_to_llm=True embedding_chunk_size_chars=2000 embedding_rate_limit_rpm=20 embedding_retry_max_attempts=50 llm_retry_max_attempts=3 faiss_semantic_weight=0.0 simple_weight_kb_relevance=0.4 simple_weight_metrics=0.25 simple_weight_path_heuristics=0.1 simple_weight_domain_specific=0.25 simple_weight_faiss_semantic=0.5 simple_case_hint_min_total=0.0 simple_case_hint_max_gap=0.14 simple_case_hint_score_boost=0.2 hierarchical_weight_physics_parameters=0.3 hierarchical_weight_grid_specifications=0.2 hierarchical_weight_development_activity=0.1 hierarchical_weight_configuration_complexity=0.1 hierarchical_weight_path_hierarchy=0.15 hierarchical_weight_domain_models=0.1 hierarchical_weight_resource_requirements=0.05 indexing_strategy='hierarchical' level2_override_enabled=True level2_override_l0_threshold=0.15 level2_override_case_match_threshold=0.9 level2_override_min_metadata_hits=3 routing_intent_enabled=True routing_intent_conflict_policy='block_then_clarify' routing_intent_anchor_min_segment_overlap=0.6 routing_intent_exact_path_boost=0.2 routing_intent_segment_boost=0.12 routing_intent_cross_solver_penalty=0.25 routing_intent_high_gap_clarification_threshold=0.2 routing_intent_apply_to_level2_override=True routing_intent_apply_to_near_tie=True inputs_file_strategy='llm_compare' remap_strategy='last_write' inputs_file_override=None inputs_default_precedence='strategy_first' retry_guidance_use_llm=False enable_intent_extraction=False enable_sweep_orchestration=False enable_clarification_subgraph=False clarification_route_on_intent_missing_only=True preexec_route_to_clarification_on_retry_exhausted=False reviewer_reflexive_guidance_enabled=True reviewer_reason_codes=['intent_missing', 'solver_mismatch', 'baseline_path_mismatch', 'domain_conflict', 'schema_unresolved', 'resource_conflict', 'rate_limit_pressure'] schema_escalation_policy='lightweight_first' reviewer_gated_schema_escalation_enabled=True benchmark_manifest_enabled=True llm_gate_strategy='off' llm_gate_auto_approve=False disable_embeddings=False baseline_switch_after_retries=3 baseline_override=None dry_run=True preconfirm_gate=False preconfirm_gate_auto_approve=False run_mode='dry' container_mode=False analysis_always_enabled=True allow_make_introspection=False make_introspection_command=None visualization_backend='auto' amrex_tools_path=None superfacility_account='amsc014' superfacility_client_id=None superfacility_secret=None superfacility_endpoint='https://api.nersc.gov/api/v1.2' remote_output_dir=None remote_run_dir=None remote_executable_path=None remote_executable_template=None remote_executable_find=True remote_staging_method='auto' monitor_job=True stage_out_outputs=True workflow_store_path=PosixPath('/home/jmsexton/.amrex_agent/workflow_store.db') max_iterations=3 allow_local_run=True use_mpi=True mpi_ranks=1 output_dir=PosixPath('benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical') metrics_output_dir=None metrics_filename='metrics.jsonl' privacy_mode='off' privacy_scrubber='builtin' privacy_hash_salt=None write_policy_mode='warn' allow_write_paths=[] require_run_dir_prefix=False run_dir_prefix='run_' save_intermediate=True metrics_enabled=True benchmark_environment_lockfile=PosixPath('/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/utils/environment-frozen.yaml') benchmark_require_lockfile=True disabled_validators=[]",
+  "requested_plot_vars": [],
+  "visualization_config": {},
+  "selected_case": "Exec/Upwelling_ML",
+  "modifications": [],
+  "reasoning": "The user wants to use the REMORA case located at Exec/DogboneAnalytic with the inputs file named inputs_ml_mid. This requires setting the case parameter to the specified path and the inputs parameter to the specified inputs file name. Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+  "case_candidates": [
+    {
+      "case": "Exec/Upwelling_ML",
+      "score": 0.8278613865375519,
+      "metadata": {
+        "case_name": "Upwelling_ML",
+        "repo_path": "Exec/Upwelling_ML",
+        "inputs_content": {
+          "remora.max_step": "10",
+          "remora.prob_lo": "0.     0.    -150.",
+          "remora.prob_hi": "41000. 80000.       0.",
+          "remora.n_cell": "41     80      16",
+          "remora.is_periodic": "1 1 0",
+          "remora.fixed_dt": "5",
+          "remora.fixed_ndtfast_ratio": "1",
+          "remora.sum_interval": "1",
+          "remora.v": "1",
+          "amr.max_level": "1",
+          "amr.ref_ratio_vect": "3 3  1",
+          "remora.check_file": "chk",
+          "remora.check_int": "-57600",
+          "remora.plot_file": "plt_",
+          "remora.plot_int": "1",
+          "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity tracer",
+          "remora.plotfile_type": "amrex",
+          "remora.flat_bathymetry": "false",
+          "remora.horizontal_advection_scheme": "\"upstream3\"",
+          "remora.R0": "1027.0",
+          "remora.S0": "35.0",
+          "remora.T0": "14.0",
+          "remora.Tcoef": "1.7e-4",
+          "remora.Scoef": "0.0",
+          "remora.rho0": "1025.0",
+          "remora.prob.u_0": "80.0e-4",
+          "remora.tcline": "25.0",
+          "remora.rdrag": "0.0",
+          "remora.init_l1ad_h": "false",
+          "remora.init_l1ad_T": "false",
+          "remora.init_ana_h": "true",
+          "remora.init_ana_T": "true",
+          "remora.init_l0int_h": "false",
+          "remora.init_l0int_T": "false",
+          "remora.use_coriolis": "false",
+          "remora.use_uv3dmix": "true",
+          "remora.coriolis_type": "beta_plane",
+          "remora.coriolis_f0": "-8.26e-5",
+          "remora.coriolis_beta": "0.0",
+          "remora.refinement_indicators": "bx1",
+          "remora.bx1.max_level": "1",
+          "remora.bx1.in_box_lo": "10000 5000 -150",
+          "remora.bx1.in_box_hi": "20000 20000 0",
+          "remora.coupling_type": "\"TwoWay\""
+        },
+        "index_type": "development_activity",
+        "chunk_parent": 13,
+        "chunk_index": 13
+      },
+      "breakdown": {
+        "development_activity": "0.6189261",
+        "domain_models": "0.64602256",
+        "resource_requirements": "0.64727116",
+        "path_hierarchy": "0.61782086",
+        "physics_parameters": "0.6170734",
+        "grid_specifications": "0.6277248",
+        "configuration_complexity": "0.65662843"
+      },
+      "routing_intent_adjustment": 0.2,
+      "routing_intent_overlap": 1.0,
+      "admissibility_status": "admissible",
+      "admissibility_reason": null
+    }
+  ],
+  "baseline_confidence": 0.8278613865375519,
+  "plan": {
+    "selected_solver": "REMORA",
+    "selected_case": "Exec/Upwelling_ML",
+    "modifications": [],
+    "reasoning": "The user wants to use the REMORA case located at Exec/DogboneAnalytic with the inputs file named inputs_ml_mid. This requires setting the case parameter to the specified path and the inputs parameter to the specified inputs file name. Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+    "solver_confidence": 0.6129392445087433,
+    "baseline_confidence": 0.8278613865375519,
+    "cbr_confidence": 0.5,
+    "prompt": "Use REMORA case Exec/DogboneAnalytic with inputs_ml_mid",
+    "requirements": {
+      "router_branch": "hierarchical",
+      "router_reason_code": "hierarchical_primary"
+    },
+    "baseline": {
+      "code_name": "REMORA",
+      "repo_path": "/home/jmsexton/codes/worktree_sandbox/REMORA",
+      "case_path": "Exec/Upwelling_ML",
+      "local_path": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML"
+    },
+    "case_candidates": [
+      {
+        "case": "Exec/Upwelling_ML",
+        "score": 0.8278613865375519,
+        "metadata": {
+          "case_name": "Upwelling_ML",
+          "repo_path": "Exec/Upwelling_ML",
+          "inputs_content": {
+            "remora.max_step": "10",
+            "remora.prob_lo": "0.     0.    -150.",
+            "remora.prob_hi": "41000. 80000.       0.",
+            "remora.n_cell": "41     80      16",
+            "remora.is_periodic": "1 1 0",
+            "remora.fixed_dt": "5",
+            "remora.fixed_ndtfast_ratio": "1",
+            "remora.sum_interval": "1",
+            "remora.v": "1",
+            "amr.max_level": "1",
+            "amr.ref_ratio_vect": "3 3  1",
+            "remora.check_file": "chk",
+            "remora.check_int": "-57600",
+            "remora.plot_file": "plt_",
+            "remora.plot_int": "1",
+            "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity tracer",
+            "remora.plotfile_type": "amrex",
+            "remora.flat_bathymetry": "false",
+            "remora.horizontal_advection_scheme": "\"upstream3\"",
+            "remora.R0": "1027.0",
+            "remora.S0": "35.0",
+            "remora.T0": "14.0",
+            "remora.Tcoef": "1.7e-4",
+            "remora.Scoef": "0.0",
+            "remora.rho0": "1025.0",
+            "remora.prob.u_0": "80.0e-4",
+            "remora.tcline": "25.0",
+            "remora.rdrag": "0.0",
+            "remora.init_l1ad_h": "false",
+            "remora.init_l1ad_T": "false",
+            "remora.init_ana_h": "true",
+            "remora.init_ana_T": "true",
+            "remora.init_l0int_h": "false",
+            "remora.init_l0int_T": "false",
+            "remora.use_coriolis": "false",
+            "remora.use_uv3dmix": "true",
+            "remora.coriolis_type": "beta_plane",
+            "remora.coriolis_f0": "-8.26e-5",
+            "remora.coriolis_beta": "0.0",
+            "remora.refinement_indicators": "bx1",
+            "remora.bx1.max_level": "1",
+            "remora.bx1.in_box_lo": "10000 5000 -150",
+            "remora.bx1.in_box_hi": "20000 20000 0",
+            "remora.coupling_type": "\"TwoWay\""
+          },
+          "index_type": "development_activity",
+          "chunk_parent": 13,
+          "chunk_index": 13
+        },
+        "breakdown": {
+          "development_activity": "0.6189261",
+          "domain_models": "0.64602256",
+          "resource_requirements": "0.64727116",
+          "path_hierarchy": "0.61782086",
+          "physics_parameters": "0.6170734",
+          "grid_specifications": "0.6277248",
+          "configuration_complexity": "0.65662843"
+        },
+        "routing_intent_adjustment": 0.2,
+        "routing_intent_overlap": 1.0,
+        "admissibility_status": "admissible",
+        "admissibility_reason": null
+      }
+    ],
+    "documentation_context": [
+      {
+        "score": "0.6472763",
+        "metadata": {
+          "source": "README.rst",
+          "index_type": "solver_readme",
+          "chunk_parent": 0,
+          "chunk_index": 0
+        },
+        "distance": 0.4349820613861084,
+        "rank": 1,
+        "source": "solver_readme",
+        "doc_type": "solver_readme",
+        "input_reference": "README.rst"
+      },
+      {
+        "score": "0.6407194",
+        "metadata": {
+          "source": "README.rst",
+          "index_type": "solver_readme",
+          "chunk_parent": 6,
+          "chunk_index": 6
+        },
+        "distance": 0.4451637268066406,
+        "rank": 2,
+        "source": "solver_readme",
+        "doc_type": "solver_readme",
+        "input_reference": "README.rst"
+      },
+      {
+        "score": "0.61929107",
+        "metadata": {
+          "source": "README.rst",
+          "index_type": "solver_readme",
+          "chunk_parent": 1,
+          "chunk_index": 1
+        },
+        "distance": 0.47917991876602173,
+        "rank": 3,
+        "source": "solver_readme",
+        "doc_type": "solver_readme",
+        "input_reference": "README.rst"
+      },
+      {
+        "score": "0.6182553",
+        "metadata": {
+          "source": "README.rst",
+          "index_type": "solver_readme",
+          "chunk_parent": 2,
+          "chunk_index": 2
+        },
+        "distance": 0.480853796005249,
+        "rank": 4,
+        "source": "solver_readme",
+        "doc_type": "solver_readme",
+        "input_reference": "README.rst"
+      },
+      {
+        "score": "0.6162425",
+        "metadata": {
+          "source": "README.rst",
+          "index_type": "solver_readme",
+          "chunk_parent": 3,
+          "chunk_index": 3
+        },
+        "distance": 0.4841146469116211,
+        "rank": 5,
+        "source": "solver_readme",
+        "doc_type": "solver_readme",
+        "input_reference": "README.rst"
+      }
+    ],
+    "baseline_evidence_citations": [
+      {
+        "citation_type": "baseline",
+        "case": "Exec/Upwelling_ML"
+      },
+      {
+        "citation_type": "similar_case",
+        "case": "Exec/Upwelling_ML"
+      }
+    ],
+    "visualization": null,
+    "analysis": {
+      "routing_intent_summary": {
+        "anchor_strength": "strong",
+        "explicit_solver": "REMORA",
+        "explicit_case_path": "Exec/Upwelling_ML",
+        "allowed_solvers": [
+          "REMORA"
+        ],
+        "conflict_policy": "block_then_clarify",
+        "source_tags": [
+          "prompt",
+          "level2_case_catalog",
+          "reviewer_guidance"
+        ]
+      },
+      "router_mapping": {
+        "router_branch": "hierarchical",
+        "diagram_nodes": {
+          "router": "strategy_router",
+          "branch": "hierarchical_strategy"
+        },
+        "strategy": "hierarchical",
+        "baseline_override_active": false,
+        "fallback_to": null
+      }
+    },
+    "unresolved_parameters": null,
+    "suggested_mappings": null,
+    "resolution_guidance": null,
+    "requires_parameter_resolution": false,
+    "available_schema_params": null,
+    "level0_solver": "REMORA",
+    "level0_confidence": 0.6129392445087433,
+    "level2_override_applied": false,
+    "level2_override_solver": null,
+    "level2_override_case": null,
+    "level2_override_confidence": null,
+    "used_llm": true,
+    "indexing_strategy": "hierarchical",
+    "baseline_inputs_path": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs",
+    "inputs_file_strategy": "llm_compare",
+    "inputs_file_override": null,
+    "inputs_candidates": [
+      "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs",
+      "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs"
+    ]
+  },
+  "baseline": {
+    "code_name": "REMORA",
+    "repo_path": "/home/jmsexton/codes/worktree_sandbox/REMORA",
+    "case_path": "Exec/Upwelling_ML",
+    "local_path": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML"
+  },
+  "review_analysis": {
+    "mode": "proceed",
+    "violations": [],
+    "summary": "All validation checks passed.",
+    "reviewer_guidance": {
+      "required_solver": "REMORA",
+      "forbidden_path_patterns": [],
+      "preferred_path_patterns": [
+        "Exec"
+      ],
+      "excluded_cases": [],
+      "schema_escalation_required": false,
+      "replan_reason_codes": []
+    }
+  },
+  "suggested_fixes": [],
+  "retry_guidance": {
+    "inputs_base_action": "keep",
+    "inputs_reason": null,
+    "baseline_base_action": "keep",
+    "baseline_reason": null
+  },
+  "reviewer_failure_category": null,
+  "run_directory": "benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063",
+  "inputs_file_path": "benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/inputs",
+  "inputs_file": "benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/inputs",
+  "ready_to_run": true,
+  "job_status": "completed",
+  "analysis_report": {
+    "status": "skipped",
+    "message": "Dry-run: analysis skipped"
+  },
+  "visualization_images": [],
+  "visualization_backend": "none",
+  "visualization_status": "skipped",
+  "visualization_metadata": {
+    "plotfile_count": 0,
+    "skip_reason": "no_plotfiles"
+  },
+  "mode": "proceed",
+  "iteration": 1,
+  "retry_count": 0,
+  "max_retries": 3,
+  "loop_count": 1,
+  "errors_active": [],
+  "errors_found": [],
+  "errors_fixed": [],
+  "error_logs": [],
+  "preconfirm_action": "proceed",
+  "workflow_history": [
+    {
+      "node": "architect",
+      "timestamp": "2026-04-30T18:59:40.870732Z",
+      "action": "plan_created",
+      "iteration": 1,
+      "details": {
+        "selected_case": "Exec/Upwelling_ML",
+        "selected_solver": "REMORA",
+        "modifications": [],
+        "reasoning": "The user wants to use the REMORA case located at Exec/DogboneAnalytic with the inputs file named inputs_ml_mid. This requires setting the case parameter to the specified path and the inputs parameter to the specified inputs file name. Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+        "baseline": {
+          "code_name": "REMORA",
+          "repo_path": "/home/jmsexton/codes/worktree_sandbox/REMORA",
+          "case_path": "Exec/Upwelling_ML",
+          "local_path": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML"
+        },
+        "case_candidates": [
+          {
+            "case": "Exec/Upwelling_ML",
+            "score": 0.8278613865375519,
+            "metadata": {
+              "case_name": "Upwelling_ML",
+              "repo_path": "Exec/Upwelling_ML",
+              "inputs_content": {
+                "remora.max_step": "10",
+                "remora.prob_lo": "0.     0.    -150.",
+                "remora.prob_hi": "41000. 80000.       0.",
+                "remora.n_cell": "41     80      16",
+                "remora.is_periodic": "1 1 0",
+                "remora.fixed_dt": "5",
+                "remora.fixed_ndtfast_ratio": "1",
+                "remora.sum_interval": "1",
+                "remora.v": "1",
+                "amr.max_level": "1",
+                "amr.ref_ratio_vect": "3 3  1",
+                "remora.check_file": "chk",
+                "remora.check_int": "-57600",
+                "remora.plot_file": "plt_",
+                "remora.plot_int": "1",
+                "remora.plot_vars_3d": "salt temp x_velocity y_velocity z_velocity tracer",
+                "remora.plotfile_type": "amrex",
+                "remora.flat_bathymetry": "false",
+                "remora.horizontal_advection_scheme": "\"upstream3\"",
+                "remora.R0": "1027.0",
+                "remora.S0": "35.0",
+                "remora.T0": "14.0",
+                "remora.Tcoef": "1.7e-4",
+                "remora.Scoef": "0.0",
+                "remora.rho0": "1025.0",
+                "remora.prob.u_0": "80.0e-4",
+                "remora.tcline": "25.0",
+                "remora.rdrag": "0.0",
+                "remora.init_l1ad_h": "false",
+                "remora.init_l1ad_T": "false",
+                "remora.init_ana_h": "true",
+                "remora.init_ana_T": "true",
+                "remora.init_l0int_h": "false",
+                "remora.init_l0int_T": "false",
+                "remora.use_coriolis": "false",
+                "remora.use_uv3dmix": "true",
+                "remora.coriolis_type": "beta_plane",
+                "remora.coriolis_f0": "-8.26e-5",
+                "remora.coriolis_beta": "0.0",
+                "remora.refinement_indicators": "bx1",
+                "remora.bx1.max_level": "1",
+                "remora.bx1.in_box_lo": "10000 5000 -150",
+                "remora.bx1.in_box_hi": "20000 20000 0",
+                "remora.coupling_type": "\"TwoWay\""
+              },
+              "index_type": "development_activity",
+              "chunk_parent": 13,
+              "chunk_index": 13
+            },
+            "breakdown": {
+              "development_activity": "0.6189261",
+              "domain_models": "0.64602256",
+              "resource_requirements": "0.64727116",
+              "path_hierarchy": "0.61782086",
+              "physics_parameters": "0.6170734",
+              "grid_specifications": "0.6277248",
+              "configuration_complexity": "0.65662843"
+            },
+            "routing_intent_adjustment": 0.2,
+            "routing_intent_overlap": 1.0,
+            "admissibility_status": "admissible",
+            "admissibility_reason": null
+          }
+        ],
+        "baseline_evidence_citations": [
+          {
+            "citation_type": "baseline",
+            "case": "Exec/Upwelling_ML"
+          },
+          {
+            "citation_type": "similar_case",
+            "case": "Exec/Upwelling_ML"
+          }
+        ],
+        "indexing_strategy": "hierarchical",
+        "indexing_calls_count": 19,
+        "indexing_calls_total": 19,
+        "indexing_calls_detail": {
+          "embed_documents": 0,
+          "embed_query": 19
+        },
+        "confidence_score": 0.8278613865375519,
+        "level0_solver": "REMORA",
+        "level0_confidence": 0.6129392445087433,
+        "level2_override_applied": false,
+        "level2_override_solver": null,
+        "level2_override_case": null,
+        "level2_override_confidence": null,
+        "parameter_resolution_applied": true,
+        "reviewer_guidance": {},
+        "remapped_parameters": [],
+        "metrics": {
+          "llm": {
+            "total_calls": 1,
+            "prompt_tokens": 798,
+            "completion_tokens": 139,
+            "total_tokens": 937,
+            "by_model": {
+              "claude-sonnet-4-5": {
+                "calls": 1,
+                "prompt_tokens": 798,
+                "completion_tokens": 139,
+                "total_tokens": 937,
+                "cost_usd": 0.0
+              }
+            },
+            "by_user": {
+              "unknown": {
+                "calls": 1,
+                "prompt_tokens": 798,
+                "completion_tokens": 139,
+                "total_tokens": 937,
+                "cost_usd": 0.0
+              }
+            },
+            "cost_usd": 0.0
+          }
+        }
+      }
+    },
+    {
+      "node": "reviewer",
+      "timestamp": "2026-04-30T18:59:40.941536Z",
+      "action": "validation_completed",
+      "iteration": 1,
+      "details": {
+        "status": "approved",
+        "errors": [],
+        "warnings": [],
+        "validation_passed": true,
+        "error_count": 0,
+        "warning_count": 0,
+        "newly_fixed": [],
+        "newly_found": [],
+        "errors_all_found": [],
+        "errors_all_fixed": [],
+        "suggested_fixes": [],
+        "available_schema_params": [
+          "amr.regrid_on_restart",
+          "amr.force_regrid_level_zero",
+          "amr.use_efficient_regrid",
+          "amr.plotfile_on_restart",
+          "amr.insitu_on_restart",
+          "amr.checkpoint_on_restart",
+          "amr.compute_new_dt_on_regrid",
+          "amr.mffile_nstreams",
+          "amr.probinit_natonce",
+          "amr.file_name_digits",
+          "amr.initial_grid_file",
+          "amr.regrid_file",
+          "amr.message_int",
+          "amr.run_log",
+          "amr.run_log_terse",
+          "amr.grid_log",
+          "amr.data_log",
+          "amr.probin_file",
+          "amr.restart",
+          "amr.restart_from_plotfile",
+          "amr.regrid_int",
+          "amr.loadbalance_with_workestimates",
+          "amr.loadbalance_level0_int",
+          "amr.loadbalance_max_fac",
+          "amr.nosub",
+          "amr.subcycling_mode",
+          "amr.subcycling_iterations",
+          "amr.checkpoint_files_output",
+          "amr.plot_files_output",
+          "amr.plot_nfiles",
+          "amr.checkpoint_nfiles",
+          "amr.check_file",
+          "amr.check_int",
+          "amr.check_per",
+          "amr.plot_file",
+          "amr.plot_int",
+          "amr.plot_per",
+          "amr.plot_log_per",
+          "amr.plot_max_level",
+          "amr.small_plot_file",
+          "amr.small_plot_int",
+          "amr.small_plot_per",
+          "amr.small_plot_log_per",
+          "amr.write_plotfile_with_checkpoint",
+          "amr.stream_max_tries",
+          "amr.abort_on_stream_retry_failure",
+          "amr.precreateDirectories",
+          "amr.prereadFAHeaders",
+          "amr.plot_headerversion",
+          "amr.checkpoint_headerversion",
+          "amr.plot_vars",
+          "amr.derive_plot_vars",
+          "amr.small_plot_vars",
+          "amr.derive_small_plot_vars",
+          "eb2.max_grid_size",
+          "eb2.extend_domain_face",
+          "eb2.num_coarsen_opt",
+          "eb2.geom_type",
+          "eb2.box_lo",
+          "eb2.box_hi",
+          "eb2.box_has_fluid_inside",
+          "eb2.cylinder_center",
+          "eb2.cylinder_radius",
+          "eb2.cylinder_height",
+          "eb2.cylinder_direction",
+          "eb2.cylinder_has_fluid_inside",
+          "eb2.plane_point",
+          "eb2.plane_normal",
+          "eb2.sphere_center",
+          "eb2.sphere_radius",
+          "eb2.sphere_has_fluid_inside",
+          "eb2.torus_center",
+          "eb2.torus_small_radius",
+          "eb2.torus_large_radius",
+          "eb2.parser_function",
+          "eb2.stl_file",
+          "eb2.stl_scale",
+          "eb2.stl_center",
+          "eb2.stl_reverse_normal",
+          "eb2.stl_use_bvh",
+          "amr.v",
+          "amr.verbose",
+          "amr.max_level",
+          "amr.n_proper",
+          "amr.grid_eff",
+          "amr.n_error_buf",
+          "amr.n_error_buf_x",
+          "amr.n_error_buf_y",
+          "amr.n_error_buf_z",
+          "amr.ref_ratio_vect",
+          "amr.ref_ratio",
+          "amr.max_grid_size",
+          "amr.max_grid_size_x",
+          "amr.max_grid_size_y",
+          "amr.max_grid_size_z",
+          "amr.blocking_factor",
+          "amr.blocking_factor_x",
+          "amr.blocking_factor_y",
+          "amr.blocking_factor_z",
+          "amr.n_cell",
+          "amr.refine_grid_layout",
+          "amr.refine_grid_layout_x",
+          "amr.refine_grid_layout_y",
+          "amr.refine_grid_layout_z",
+          "amr.check_input",
+          "amr.use_bittree",
+          "particles.particles_nfiles",
+          "particles.nreaders",
+          "particles.nparts_per_read",
+          "particles.aggregation_type",
+          "particles.aggregation_buffer",
+          "amrex.parmparse.v",
+          "amrex.parmparse.verbose",
+          "amrex.async_out",
+          "amrex.async_out_nfiles",
+          "amrex.forkjoin.verbose",
+          "amrex.team.use_gpu_aware_mpi",
+          "amrex.team.size",
+          "amrex.team.reduce",
+          "amrex.the_arena_init_size",
+          "amrex.the_device_arena_init_size",
+          "amrex.the_managed_arena_init_size",
+          "amrex.the_pinned_arena_init_size",
+          "amrex.the_comms_arena_init_size",
+          "amrex.the_arena_release_threshold",
+          "amrex.the_device_arena_release_threshold",
+          "amrex.the_managed_arena_release_threshold",
+          "amrex.the_pinned_arena_release_threshold",
+          "amrex.the_comms_arena_release_threshold",
+          "amrex.the_arena_defragmentation",
+          "amrex.the_device_arena_defragmentation",
+          "amrex.the_managed_arena_defragmentation",
+          "amrex.the_pinned_arena_defragmentation",
+          "amrex.the_comms_arena_defragmentation",
+          "amrex.the_arena_is_managed",
+          "amrex.abort_on_out_of_gpu_memory",
+          "vismf.v",
+          "vismf.headerversion",
+          "vismf.groupsets",
+          "vismf.setbuf",
+          "vismf.usesingleread",
+          "vismf.usesinglewrite",
+          "vismf.checkfilepositions",
+          "vismf.usepersistentifstreams",
+          "vismf.usesynchronousreads",
+          "vismf.usedynamicsetselection",
+          "vismf.iobuffersize",
+          "vismf.allowsparsewrites",
+          "vismf.noflushafterwrite",
+          "vismf.barrierafterlevel",
+          "amrex.v",
+          "amrex.verbose",
+          "amrex.init_snan",
+          "amrex.regtest_reduction",
+          "amrex.signal_handling",
+          "amrex.throw_exception",
+          "amrex.call_addr2line",
+          "amrex.abort_on_unused_inputs",
+          "amrex.handle_sigsegv",
+          "amrex.handle_sigterm",
+          "amrex.handle_sigint",
+          "amrex.handle_sigabrt",
+          "amrex.handle_sigfpe",
+          "amrex.handle_sigill",
+          "amrex.fpe_trap_invalid",
+          "amrex.fpe_trap_zero",
+          "amrex.fpe_trap_overflow",
+          "amrex.init_hypre",
+          "amrex.hypre_spgemm_use_vendor",
+          "amrex.hypre_spmv_use_vendor",
+          "amrex.hypre_sptrans_use_vendor",
+          "amrex.memory_log",
+          "amrex.max_gpu_streams",
+          "device.v",
+          "device.verbose",
+          "device.numThreads.x",
+          "device.numThreads.y",
+          "device.numThreads.z",
+          "device.numBlocks.x",
+          "device.numBlocks.y",
+          "device.numBlocks.z",
+          "device.graph_init",
+          "device.graph_init_nodes",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose",
+          "tiny_profiler.print_threshold",
+          "tiny_profiler.enabled",
+          "tiny_profiler.memprof_enabled",
+          "tiny_profiler.output_file",
+          "amrex.vector_growth_factor",
+          "amrex.pout_int",
+          "DistributionMapping.v",
+          "DistributionMapping.verbose",
+          "DistributionMapping.efficiency",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping.node_size",
+          "DistributionMapping.verbose_mapper",
+          "DistributionMapping.strategy",
+          "amrex.prof_nfiles",
+          "amrex.prof_csflushsize",
+          "amrex.prof_traceflushsize",
+          "amrex.prof_flushinterval",
+          "amrex.prof_flushtimeinterval",
+          "amrex.prof_flushprint",
+          "amrex.use_profiler_syncs",
+          "amrex.omp_threads",
+          "fab.format",
+          "fab.ordering",
+          "fab.initval",
+          "fab.do_initval",
+          "fabarray.mfiter_tile_size",
+          "fabarray.comm_tile_size",
+          "fabarray.maxcomp",
+          "amrex.mf.alloc_single_chunk",
+          "geometry.coord_sys",
+          "geometry.prob_lo",
+          "geometry.prob_hi",
+          "geometry.prob_extent",
+          "geometry.is_periodic",
+          "enabled",
+          "config",
+          "frequency",
+          "pin_mesh",
+          "hypre_solver",
+          "hypre_preconditioner",
+          "recompute_preconditioner",
+          "write_matrix_files",
+          "overwrite_existing_matrix_files",
+          "adjust_singular_matrix",
+          "bamg_non_galerkin_level_levels",
+          "bamg_non_galerkin_level_tols",
+          "bamg_smooth_type",
+          "bamg_euclid_file",
+          "bamg_use_old_default",
+          "eb2.small_volfrac",
+          "eb2.cover_multiple_cuts",
+          "eb2.maxiter",
+          "particles.do_tiling",
+          "particles.tile_size",
+          "particles.use_prepost",
+          "particles.do_unlink",
+          "particles.do_mem_efficient_sort",
+          "particles.use_comms_arena",
+          "particles.datadigits_read",
+          "plot.niter",
+          "plot.cell_size",
+          "plot.var",
+          "val",
+          "integration.use_adaptive_time_step",
+          "integration.time_step",
+          "integration.use_adaptive_fast_time_step",
+          "integration.fast_time_step",
+          "integration.rel_tol",
+          "integration.abs_tol",
+          "integration.fast_rel_tol",
+          "integration.fast_abs_tol",
+          "integration.type",
+          "integration.rk.type",
+          "integration.rk.weights",
+          "integration.rk.extended_weights",
+          "integration.rk.nodes",
+          "integration.rk.tableau",
+          "integration.sundials.type",
+          "integration.sundials.method",
+          "integration.sundials.method_e",
+          "integration.sundials.method_i",
+          "integration.sundials.fast_type",
+          "integration.sundials.fast_method",
+          "integration.sundials.nonlinear_solver",
+          "integration.sundials.max_nonlinear_iters",
+          "integration.sundials.fast_nonlinear_solver",
+          "integration.sundials.fast_max_nonlinear_iters",
+          "integration.sundials.linear_solver",
+          "integration.sundials.max_linear_iters",
+          "integration.sundials.fast_linear_solver",
+          "integration.sundials.fast_max_linear_iters",
+          "integration.sundials.stop_time",
+          "integration.sundials.max_num_steps"
+        ],
+        "retry_guidance": {
+          "inputs_base_action": "keep",
+          "inputs_reason": null,
+          "baseline_base_action": "keep",
+          "baseline_reason": null
+        },
+        "reviewer_guidance": {
+          "required_solver": "REMORA",
+          "forbidden_path_patterns": [],
+          "preferred_path_patterns": [
+            "Exec"
+          ],
+          "excluded_cases": [],
+          "schema_escalation_required": false,
+          "replan_reason_codes": []
+        },
+        "review_context": "pre_execution",
+        "review_origin": "architect_validation",
+        "baseline_dir_rejected": false,
+        "plan_rejected_baseline": null,
+        "plan_rejected_inputs_file": null,
+        "postexec_repair_feedback": null,
+        "metrics": {
+          "validation": {
+            "validator_latency_ms": 37.247,
+            "validator_outcome": "proceed",
+            "review_outcome": "approved",
+            "transition_mode": "proceed",
+            "error_count": 0,
+            "warning_count": 0,
+            "violation_count": 0,
+            "unknown_param_count": 0,
+            "persistent_unknown_count": 0,
+            "schema_missing": false,
+            "solver_unknown": false
+          }
+        }
+      }
+    },
+    {
+      "node": "input_writer",
+      "timestamp": "2026-04-30T18:59:41.048279Z",
+      "action": "inputs_generated",
+      "iteration": 1,
+      "details": {
+        "run_directory": "benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063",
+        "inputs_file_path": "benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063/inputs",
+        "status": "success",
+        "modifications_applied": 0,
+        "file_size_bytes": 107,
+        "applied_modifications": [],
+        "requires_parameter_resolution": false,
+        "selected_case": "Exec/Upwelling_ML",
+        "baseline_code": "REMORA",
+        "inputs_file_selected": "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs",
+        "inputs_file_strategy": "llm_compare",
+        "inputs_file_override": null,
+        "inputs_candidates": [
+          "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs",
+          "/home/jmsexton/codes/worktree_sandbox/REMORA/Exec/Upwelling_ML/inputs"
+        ],
+        "metrics": {
+          "retrieval": {
+            "strategies": {
+              "prompt_anchor": 1
+            },
+            "last": {
+              "strategy": "prompt_anchor",
+              "original_strategy": "llm_compare",
+              "fallback_reason": null,
+              "selected": "inputs",
+              "candidate_count": 2,
+              "score": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "node": "runner",
+      "timestamp": "2026-04-30T18:59:41.080985Z",
+      "action": "write_failed",
+      "iteration": 1,
+      "details": {
+        "error": "No executable found in benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/hierarchical/run_20260430_115940_960063"
+      }
+    },
+    {
+      "node": "analysis",
+      "timestamp": "2026-04-30T18:59:41.087313Z",
+      "action": "analysis_skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "dry"
+      }
+    },
+    {
+      "node": "visualization",
+      "timestamp": "2026-04-30T18:59:41.092345Z",
+      "action": "skipped",
+      "iteration": 1,
+      "details": {
+        "status": "skipped",
+        "reason": "no_plotfiles",
+        "plotfile_count": 0
+      }
+    }
+  ],
+  "history": []
+}
