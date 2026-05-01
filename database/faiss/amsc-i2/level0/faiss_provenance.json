@@ -4,7 +4,7 @@
   "embedding_dimension": null,
   "embedding_model": "lbl/nomic-embed-text",
   "embedding_provider": "amsc-i2",
-  "generated_at": "2026-04-20T17:15:09.601268+00:00",
+  "generated_at": "2026-04-30T13:35:12.290541+00:00",
   "level": "0",
   "repo_commit": null,
   "solver": null,

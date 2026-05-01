@@ -1,6 +1,6 @@
 {
   "metric_name": "level0_framework_reuse_loc_savings",
-  "generated_at_utc": "2026-04-20T17:15:09.598395+00:00",
+  "generated_at_utc": "2026-04-30T13:35:12.289862+00:00",
   "solver_count": 7,
   "subindex_count": 4,
   "baseline_manual_loc": 700,

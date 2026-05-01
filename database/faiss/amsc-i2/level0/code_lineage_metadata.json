@@ -4,12 +4,12 @@
     "lineage_info": {
       "description": "AMReX is the base framework supporting solver applications."
     },
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "AMReX@bac24575",
-      "l1": "AMReX@bac24575",
-      "l2": "AMReX@bac24575"
+      "l0": "AMReX@53dc0a47",
+      "l1": "AMReX@53dc0a47",
+      "l2": "AMReX@53dc0a47"
     },
     "chunk_parent": 0,
     "chunk_index": 0
@@ -54,12 +54,12 @@
     "lineage_info": {
       "description": "incflo is an AMReX incompressible flow application."
     },
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "incflo@bac24575",
-      "l1": "incflo@bac24575",
-      "l2": "incflo@bac24575"
+      "l0": "incflo@53dc0a47",
+      "l1": "incflo@53dc0a47",
+      "l2": "incflo@53dc0a47"
     },
     "chunk_parent": 3,
     "chunk_index": 3
@@ -69,12 +69,12 @@
     "lineage_info": {
       "description": "WarpX is an AMReX-based electromagnetic PIC solver."
     },
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "WarpX@bac24575",
-      "l1": "WarpX@bac24575",
-      "l2": "WarpX@bac24575"
+      "l0": "WarpX@53dc0a47",
+      "l1": "WarpX@53dc0a47",
+      "l2": "WarpX@53dc0a47"
     },
     "chunk_parent": 4,
     "chunk_index": 4
@@ -102,12 +102,12 @@
       ],
       "description": "REMORA shares setup patterns with ERF and specializes them for ocean/coastal circulation."
     },
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "REMORA@bac24575",
-      "l1": "REMORA@bac24575",
-      "l2": "REMORA@bac24575"
+      "l0": "REMORA@53dc0a47",
+      "l1": "REMORA@53dc0a47",
+      "l2": "REMORA@53dc0a47"
     },
     "chunk_parent": 6,
     "chunk_index": 6

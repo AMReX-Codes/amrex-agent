@@ -8,12 +8,12 @@
       "core amr",
       "tutorial"
     ],
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "AMReX@bac24575",
-      "l1": "AMReX@bac24575",
-      "l2": "AMReX@bac24575"
+      "l0": "AMReX@53dc0a47",
+      "l1": "AMReX@53dc0a47",
+      "l2": "AMReX@53dc0a47"
     },
     "chunk_parent": 0,
     "chunk_index": 0
@@ -105,12 +105,12 @@
       "navier-stokes",
       "low speed flow"
     ],
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "incflo@bac24575",
-      "l1": "incflo@bac24575",
-      "l2": "incflo@bac24575"
+      "l0": "incflo@53dc0a47",
+      "l1": "incflo@53dc0a47",
+      "l2": "incflo@53dc0a47"
     },
     "chunk_parent": 5,
     "chunk_index": 5
@@ -125,12 +125,12 @@
       "accelerator",
       "laser-plasma"
     ],
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "WarpX@bac24575",
-      "l1": "WarpX@bac24575",
-      "l2": "WarpX@bac24575"
+      "l0": "WarpX@53dc0a47",
+      "l1": "WarpX@53dc0a47",
+      "l2": "WarpX@53dc0a47"
     },
     "chunk_parent": 6,
     "chunk_index": 6
@@ -165,12 +165,12 @@
       "upwelling",
       "channel circulation"
     ],
-    "solver_commit": "bac24575",
-    "solver_schema_file": "amrex_schema_bac24575.json",
+    "solver_commit": "53dc0a47",
+    "solver_schema_file": "amrex_schema_53dc0a47.json",
     "level_versions": {
-      "l0": "REMORA@bac24575",
-      "l1": "REMORA@bac24575",
-      "l2": "REMORA@bac24575"
+      "l0": "REMORA@53dc0a47",
+      "l1": "REMORA@53dc0a47",
+      "l2": "REMORA@53dc0a47"
     },
     "chunk_parent": 8,
     "chunk_index": 8
