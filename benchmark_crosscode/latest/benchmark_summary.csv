@@ -1,0 +1,9 @@
+code,provider,run_dir,strategy,rows,case_match_hits,case_match_pct,inputs_match_hits,inputs_match_pct,row_score_mean
+ERF,amsci2,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_amsci2_20260429T160959Z,hierarchical,136,136,100.0,101,74.26470588235294,0.9227941176470593
+ERF,amsci2,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_amsci2_20260429T160959Z,simple,136,136,100.0,101,74.26470588235294,0.9227941176470593
+ERF,cborg,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_cborg_20260427T202152Z,hierarchical,136,69,50.73529411764706,57,41.911764705882355,0.48088235294117654
+ERF,cborg,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_cborg_20260427T202152Z,simple,136,64,47.05882352941177,51,37.5,0.44191176470588245
+PeleLMeX,amsci2_faiss0,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_pelelmex/results/full_amsci2_faiss0_20260430T191652Z,hierarchical,88,12,13.636363636363637,2,2.272727272727273,0.10227272727272728
+PeleLMeX,amsci2_faiss0,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_pelelmex/results/full_amsci2_faiss0_20260430T191652Z,simple,88,87,98.86363636363636,23,26.136363636363637,0.7704545454545465
+REMORA,amsci2_faiss0,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z,hierarchical,24,10,41.666666666666664,4,16.666666666666668,0.34166666666666673
+REMORA,amsci2_faiss0,/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z,simple,24,10,41.666666666666664,9,37.5,0.4041666666666666

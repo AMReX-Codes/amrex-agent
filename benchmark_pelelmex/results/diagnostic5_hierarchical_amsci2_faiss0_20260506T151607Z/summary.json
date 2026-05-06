@@ -1,0 +1,107 @@
+{
+  "simple_weighted_score": 0.0,
+  "hierarchical_weighted_score": 0.82,
+  "simple_failed_rows": 0,
+  "hierarchical_failed_rows": 0,
+  "total_failed_rows": 0,
+  "holdout_weighted_score": 0.82,
+  "paraphrase_weighted_score": 0.82,
+  "category_min_weighted_score": 0.82,
+  "non_erf_sanity_weighted_score": 0.82,
+  "explainability_pass": false,
+  "explainability_mean_score": 0.490769,
+  "correctness_mean_score": 0.615385,
+  "generalizability_mean_score": 0.2,
+  "explainability_fail_count": 5,
+  "max_rate_limit_retries": 1,
+  "max_unavailable_attempts": 1,
+  "checkpoint_every_row": true,
+  "checkpoint_prefix": "partial",
+  "continue_on_catastrophic": false,
+  "audit": {
+    "started_at": "2026-05-06T15:16:07.767838+00:00",
+    "finished_at": "2026-05-06T15:22:53.576630+00:00",
+    "cli": {
+      "argv": [
+        "scripts/erf_benchmark/run_llm_compare_benchmark.py",
+        "--frozen-inputs",
+        "benchmark_pelelmex/inputs/frozen_inputs_20260506.jsonl",
+        "--strategy",
+        "hierarchical",
+        "--max-rows",
+        "5",
+        "--out-dir",
+        "benchmark_pelelmex/results/diagnostic5_hierarchical_amsci2_faiss0_20260506T151607Z",
+        "--agent-config",
+        "/tmp/config_amsci2_faiss0.XkCl.yaml",
+        "--allow-dirty",
+        "--save-workflow",
+        "--save-transcript",
+        "--save-log",
+        "--verbose-cli",
+        "--flush-prints"
+      ],
+      "cwd": "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf"
+    },
+    "inputs": {
+      "row_source_file": "benchmark_pelelmex/inputs/frozen_inputs_20260506.jsonl",
+      "row_source_sha256": "50339330c453937ffe70c51fd2f07926bd56570d6b259a6e45d17acb48ba9451",
+      "prompt_matrix": "benchmark/erf_llm_compare/prompt_matrix.jsonl",
+      "frozen_inputs": "benchmark_pelelmex/inputs/frozen_inputs_20260506.jsonl",
+      "agent_config": "/tmp/config_amsci2_faiss0.XkCl.yaml",
+      "agent_config_sha256": "9d7b1d45d31e84ea1e034731bdb9e57c08d9eff2f5a2703532bbd52ada143614"
+    },
+    "git": {
+      "sha": "cfcc68f2c9e61990ad76a9b6db48a00bf34df967",
+      "dirty": true,
+      "dirty_files": [
+        "scripts/erf_benchmark/README.md",
+        "scripts/erf_benchmark/run_llm_compare_benchmark.py",
+        "src/nodes/architect_node.py",
+        "src/nodes/reviewer_node.py",
+        "tests/unit/test_erf_benchmark.py",
+        ".codex",
+        "benchmark/erf_llm_compare/recovery_prompt_matrix/erf_wave_phase2_canary_8rows.jsonl",
+        "benchmark_crosscode/",
+        "benchmark_final/",
+        "benchmark_pelelmex/inputs/",
+        "benchmark_remora/inputs/",
+        "benchmark_updated/",
+        "benchmark_v2/inputs/",
+        "database/schemas/ERF_schema_5613ec39.json",
+        "database/schemas/erf_complete_v1_amrexbac2457_erf5613ec3.json",
+        "demo/setup_demo_database_dev.sh",
+        "scripts/diagnostics/",
+        "scripts/erf_benchmark/diagnostic5_pelelmex_hierarchical_amsci2_faiss0.sh",
+        "scripts/erf_benchmark/freeze_prompt_inputs.py",
+        "scripts/erf_benchmark/make_crosscode_benchmark_report.py",
+        "scripts/fixes/",
+        "tests/unit/test_architect_retry.py",
+        "tools/"
+      ]
+    },
+    "faiss_provenance": {
+      "path": null,
+      "size_kb": null,
+      "modified": null,
+      "hash_or_mtime": null
+    },
+    "input_provenance": {
+      "frozen_file": "/home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_pelelmex/inputs/frozen_inputs_20260506.jsonl"
+    },
+    "artifacts": {
+      "summary": "summary.json",
+      "results": "results.jsonl",
+      "category_report": "category_report.csv",
+      "failures": "failures.csv",
+      "console_logs": "console_logs.jsonl",
+      "catastrophic_events": "catastrophic_events.jsonl",
+      "explainability_calls": "explainability_calls.jsonl",
+      "explainability_failures": "explainability_failures.csv"
+    },
+    "hierarchical_candidates": {
+      "embedded_in": "results.jsonl",
+      "rows_with_candidates": 5
+    }
+  }
+}

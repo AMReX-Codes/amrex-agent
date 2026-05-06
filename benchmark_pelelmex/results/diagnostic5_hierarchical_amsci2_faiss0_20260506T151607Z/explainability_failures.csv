@@ -1,0 +1,6 @@
+strategy,row_id,stage,purpose,correctness_score,generalizability_score,explainability_score,fail_reasons
+hierarchical,4d2843a6c6926ca2,input_writer,inputs_selection,0.0,0.2,0.06,"['inputs_mismatch', 'warn_signal', 'error_signal', 'literal_case_in_prompt']"
+hierarchical,dc8d8225950a1bfd,input_writer,inputs_selection,0.0,0.2,0.06,"['inputs_mismatch', 'warn_signal', 'error_signal', 'literal_case_in_prompt']"
+hierarchical,93dddd9cc1500cbd,architect,solver_baseline_selection,0.0,0.2,0.06,"['solver_mismatch', 'warn_signal', 'error_signal', 'literal_case_in_prompt']"
+hierarchical,93dddd9cc1500cbd,input_writer,inputs_selection,0.0,0.2,0.06,"['inputs_mismatch', 'warn_signal', 'error_signal', 'literal_case_in_prompt']"
+hierarchical,93dddd9cc1500cbd,input_writer,inputs_selection,0.0,0.2,0.06,"['inputs_mismatch', 'warn_signal', 'error_signal', 'literal_case_in_prompt']"

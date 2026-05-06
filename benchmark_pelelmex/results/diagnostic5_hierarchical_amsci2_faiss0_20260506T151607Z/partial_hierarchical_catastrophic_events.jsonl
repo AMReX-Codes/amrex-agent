@@ -1,0 +1,15 @@
+{"reason": "error_token", "row_id": "0d1a5f1c84e20e16", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "0d1a5f1c84e20e16", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "0d1a5f1c84e20e16", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "4d2843a6c6926ca2", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "4d2843a6c6926ca2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "4d2843a6c6926ca2", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "dc8d8225950a1bfd", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "dc8d8225950a1bfd", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "dc8d8225950a1bfd", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "74ba9feb56efd323", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "74ba9feb56efd323", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "74ba9feb56efd323", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "error_token", "row_id": "93dddd9cc1500cbd", "severity": "error", "strategy": "hierarchical"}
+{"reason": "warn_log_statement", "row_id": "93dddd9cc1500cbd", "severity": "warning", "strategy": "hierarchical"}
+{"reason": "warning_token", "row_id": "93dddd9cc1500cbd", "severity": "warning", "strategy": "hierarchical"}

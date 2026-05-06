@@ -1,0 +1,4 @@
+strategy,row_id,expected_case,expected_inputs
+hierarchical,4d2843a6c6926ca2,Exec/Plasma/FlameSheetIons,Exec/Plasma/FlameSheetIons/input.2d-regt_flipped
+hierarchical,dc8d8225950a1bfd,Exec/Plasma/IonizedAirWave,Exec/Plasma/IonizedAirWave/input.2d-regt
+hierarchical,93dddd9cc1500cbd,Exec/Plasma/PremBunsen3DKuhl,Exec/Plasma/PremBunsen3DKuhl/input.3d_lean
