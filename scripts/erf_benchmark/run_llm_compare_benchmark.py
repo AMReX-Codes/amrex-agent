@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 import time
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,20 @@ try:
     )
 except ModuleNotFoundError:
     from lib.explainability_scoring import build_call_records, summarize_explainability
+
+NOT_FOUND = "NOT_FOUND"
+RUN_ID_RE = re.compile(r"(20\d{6}T\d{6}Z)")
+
+
+@dataclass(frozen=True)
+class RowProvenance:
+    run_id: str
+    git_sha: str
+    faiss_index_path: str
+    faiss_index_size_kb: float | None
+    faiss_index_modified: str | None
+    faiss_index_hash_or_mtime: str | None
+    frozen_input_file: str
 
 
 def detect_llm_unavailable(
@@ -119,6 +134,44 @@ def extract_selected_inputs(payload: dict[str, Any]) -> str:
     if hist_inputs:
         return _extract_exec_relpath(hist_inputs, kind="inputs")
     return ""
+
+
+def extract_iteration1_case(payload: dict[str, Any]) -> str:
+    value = payload.get("iteration1_case")
+    if isinstance(value, str) and value.strip():
+        return _extract_exec_relpath(value, kind="case")
+    history = payload.get("workflow_history", [])
+    if not isinstance(history, list):
+        return ""
+    for entry in history:
+        if not isinstance(entry, dict) or entry.get("node") != "architect":
+            continue
+        details = entry.get("details", {})
+        if not isinstance(details, dict):
+            continue
+        selected = details.get("selected_case")
+        if isinstance(selected, str) and selected.strip():
+            return _extract_exec_relpath(selected, kind="case")
+    return ""
+
+
+def extract_case_reselection_fallback(payload: dict[str, Any]) -> bool:
+    value = payload.get("case_reselection_fallback")
+    if isinstance(value, bool):
+        return value
+    history = payload.get("workflow_history", [])
+    if not isinstance(history, list):
+        return False
+    for entry in reversed(history):
+        if not isinstance(entry, dict):
+            continue
+        details = entry.get("details", {})
+        if not isinstance(details, dict):
+            continue
+        marker = details.get("case_reselection_fallback")
+        if isinstance(marker, bool):
+            return marker
+    return False
 
 
 def _load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -323,9 +376,117 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _load_yaml_or_json(path: Path) -> dict[str, Any]:
+    try:
+        import yaml  # type: ignore
+    except Exception:
+        yaml = None
+
+    text = path.read_text(encoding="utf-8")
+    if yaml is not None:
+        payload = yaml.safe_load(text)
+        if isinstance(payload, dict):
+            return payload
+    try:
+        payload = json.loads(text)
+        if isinstance(payload, dict):
+            return payload
+    except Exception:
+        pass
+    return {}
+
+
+def _resolve_faiss_path(config_path: Path | None) -> Path | None:
+    if config_path is None or not config_path.exists():
+        return None
+
+    payload = _load_yaml_or_json(config_path)
+    if not payload:
+        return None
+
+    raw_path = payload.get("faiss_db_path")
+    if raw_path:
+        path = Path(str(raw_path)).expanduser()
+        if not path.is_absolute():
+            path = (config_path.parent / path).resolve()
+        return path
+
+    # Use config defaults when faiss_db_path is omitted.
+    provider = str(payload.get("embedding_provider") or payload.get("llm_provider") or "cborg")
+    try:
+        from src.config import resolve_database_path, resolve_faiss_db_path_for_provider
+
+        faiss_root = resolve_database_path("faiss")
+        return resolve_faiss_db_path_for_provider(faiss_root, provider).resolve()
+    except Exception:
+        return None
+
+
+def _faiss_provenance(config_path: Path | None) -> dict[str, Any]:
+    resolved = _resolve_faiss_path(config_path)
+    if resolved is None:
+        return {
+            "path": None,
+            "size_kb": None,
+            "modified": None,
+            "hash_or_mtime": None,
+        }
+
+    path = resolved.resolve()
+    if not path.exists():
+        return {
+            "path": str(path),
+            "size_kb": None,
+            "modified": None,
+            "hash_or_mtime": None,
+        }
+
+    if path.is_file():
+        stat = path.stat()
+        modified = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat()
+        return {
+            "path": str(path),
+            "size_kb": round(stat.st_size / 1024.0, 3),
+            "modified": modified,
+            "hash_or_mtime": f"sha256:{_sha256_file(path)}",
+        }
+
+    files = sorted(p for p in path.rglob("*") if p.is_file())
+    if not files:
+        stat = path.stat()
+        modified = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat()
+        return {
+            "path": str(path),
+            "size_kb": 0.0,
+            "modified": modified,
+            "hash_or_mtime": f"mtime:{modified}",
+        }
+
+    digest = hashlib.sha256()
+    total_bytes = 0
+    max_mtime = 0.0
+    for file_path in files:
+        stat = file_path.stat()
+        rel = str(file_path.relative_to(path))
+        total_bytes += stat.st_size
+        if stat.st_mtime > max_mtime:
+            max_mtime = stat.st_mtime
+        digest.update(rel.encode("utf-8"))
+        digest.update(str(stat.st_size).encode("utf-8"))
+        digest.update(str(int(stat.st_mtime)).encode("utf-8"))
+    modified = datetime.fromtimestamp(max_mtime, tz=timezone.utc).isoformat()
+    return {
+        "path": str(path),
+        "size_kb": round(total_bytes / 1024.0, 3),
+        "modified": modified,
+        "hash_or_mtime": f"tree-sha256:{digest.hexdigest()}",
+    }
+
+
 def _git_provenance(repo_root: Path) -> dict[str, Any]:
     sha = None
     dirty = None
+    dirty_files: list[str] | None = None
     try:
         sha = subprocess.check_output(
             ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
@@ -339,33 +500,56 @@ def _git_provenance(repo_root: Path) -> dict[str, Any]:
             text=True,
         )
         dirty = bool(status.strip())
+        dirty_files = []
+        for line in status.splitlines():
+            if not line.strip():
+                continue
+            # porcelain format: XY <path>
+            dirty_files.append(line[3:] if len(line) > 3 else line)
     except Exception:
         dirty = None
-    return {"sha": sha, "dirty": dirty}
+    return {"sha": sha, "dirty": dirty, "dirty_files": dirty_files or []}
 
 
-def _faiss_provenance_digest(config_path: Path | None) -> dict[str, Any]:
-    if config_path is None or not config_path.exists():
-        return {"path": None, "digest": None}
-    try:
-        payload = json.loads(config_path.read_text(encoding="utf-8"))
-    except Exception:
-        return {"path": None, "digest": None}
-    faiss_path = payload.get("faiss_db_path")
-    if not faiss_path:
-        return {"path": None, "digest": None}
-    root = Path(str(faiss_path))
-    if not root.exists():
-        return {"path": str(root), "digest": None}
-    files = sorted(p for p in root.rglob("*") if p.is_file())
-    digest = hashlib.sha256()
-    for file_path in files[:1000]:
-        rel = str(file_path.relative_to(root))
-        stat = file_path.stat()
-        digest.update(rel.encode("utf-8"))
-        digest.update(str(stat.st_size).encode("utf-8"))
-        digest.update(str(int(stat.st_mtime)).encode("utf-8"))
-    return {"path": str(root), "digest": digest.hexdigest(), "file_count_sampled": min(len(files), 1000)}
+def _confirm_dirty_run(git_info: dict[str, Any], *, allow_dirty: bool) -> None:
+    dirty = bool(git_info.get("dirty"))
+    if not dirty:
+        return
+
+    dirty_files = git_info.get("dirty_files") or []
+    print("WARNING: git working tree is dirty.", flush=True)
+    if dirty_files:
+        print("Dirty files:", flush=True)
+        for file_path in dirty_files:
+            print(f"  - {file_path}", flush=True)
+
+    if allow_dirty:
+        print("Proceeding because --allow-dirty is set.", flush=True)
+        return
+
+    print("Run paused: confirm dirty-run continuation.", flush=True)
+    if not sys.stdin.isatty():
+        raise RuntimeError(
+            "Dirty working tree detected in non-interactive mode. Re-run with --allow-dirty to override."
+        )
+    answer = input("Proceed with dirty working tree? [y/N]: ").strip().lower()
+    if answer not in {"y", "yes"}:
+        raise RuntimeError("Aborted by user due to dirty working tree.")
+
+
+def _short_git_sha(git_info: dict[str, Any]) -> str:
+    sha = str(git_info.get("sha") or "")
+    short = sha[:7] if sha else "unknown"
+    if git_info.get("dirty"):
+        short += "+dirty"
+    return short
+
+
+def _infer_run_id(out_dir: Path) -> str:
+    found = RUN_ID_RE.findall(str(out_dir))
+    if found:
+        return found[-1]
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _extract_hierarchical_candidates(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -391,6 +575,7 @@ def _run_strategy(
     rows: list[dict[str, Any]],
     strategy: str,
     *,
+    row_provenance: RowProvenance,
     strategy_output_root: Path | None = None,
     agent_config: Path | None = None,
     inputs_file_strategy: str = "llm_compare",
@@ -488,6 +673,8 @@ def _run_strategy(
                         "warning": "catastrophic_execution_failure",
                         "attempt": attempt,
                         "run_directory": console.get("run_directory"),
+                        "iteration1_case": extract_iteration1_case(payload) or NOT_FOUND,
+                        "case_reselection_fallback": extract_case_reselection_fallback(payload),
                     }
                 )
                 print(
@@ -529,6 +716,8 @@ def _run_strategy(
                         "strategy": strategy,
                         "selected_case": failed_sentinel,
                         "selected_inputs": failed_sentinel,
+                        "iteration1_case": extract_iteration1_case(payload) or NOT_FOUND,
+                        "case_reselection_fallback": extract_case_reselection_fallback(payload),
                     }
                 )
                 llm_usage = [event for event in metrics if event.get("type") == "llm_usage"]
@@ -546,9 +735,18 @@ def _run_strategy(
                 )
                 break
             selected_case = extract_selected_case(payload)
-            selected_inputs = extract_selected_inputs(payload)
+            selected_inputs = extract_selected_inputs(payload) or NOT_FOUND
             predictions[row["row_id"]] = {"selected_case": selected_case, "selected_inputs": selected_inputs}
-            evidences.append({"row_id": row["row_id"], "strategy": strategy, "selected_case": predictions[row["row_id"]]["selected_case"], "selected_inputs": predictions[row["row_id"]]["selected_inputs"]})
+            evidences.append(
+                {
+                    "row_id": row["row_id"],
+                    "strategy": strategy,
+                    "selected_case": predictions[row["row_id"]]["selected_case"],
+                    "selected_inputs": predictions[row["row_id"]]["selected_inputs"],
+                    "iteration1_case": extract_iteration1_case(payload) or NOT_FOUND,
+                    "case_reselection_fallback": extract_case_reselection_fallback(payload),
+                }
+            )
             llm_usage = [event for event in metrics if event.get("type") == "llm_usage"]
             explainability_rows.extend(
                 build_call_records(
@@ -588,10 +786,21 @@ def _run_strategy(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run ERF llm_compare benchmark.")
     parser.add_argument("--prompt-matrix", type=Path, default=Path("benchmark/erf_llm_compare/prompt_matrix.jsonl"))
+    parser.add_argument(
+        "--frozen-inputs",
+        type=Path,
+        default=None,
+        help="Optional frozen benchmark inputs JSONL. If provided, it is used instead of --prompt-matrix.",
+    )
     parser.add_argument("--out-dir", type=Path, default=None)
     parser.add_argument("--strategy", choices=["simple", "hierarchical"], default=None)
     parser.add_argument("--max-rows", type=int, default=0)
     parser.add_argument("--row-offset", type=int, default=0, help="Skip first N rows before evaluation.")
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="Allow execution when git working tree is dirty without interactive confirmation.",
+    )
     parser.add_argument("--verbose-cli", action="store_true")
     parser.add_argument("--explainability-threshold", type=float, default=0.9)
     parser.add_argument("--agent-config", type=Path, default=None)
@@ -617,8 +826,13 @@ def main() -> int:
     if args.flush_prints:
         flush_prints = True
 
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    out_dir = args.out_dir or Path(f"benchmark/erf_llm_compare/runs/{run_id}_benchmark")
+    repo_root = Path(__file__).resolve().parents[2]
+    git_info = _git_provenance(repo_root)
+    _confirm_dirty_run(git_info, allow_dirty=bool(args.allow_dirty))
+
+    default_run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out_dir = args.out_dir or Path(f"benchmark/erf_llm_compare/runs/{default_run_stamp}_benchmark")
+    run_id = _infer_run_id(out_dir)
     strategy_roots: dict[str, Path]
     if args.out_dir:
         strategy_roots = {
@@ -631,34 +845,58 @@ def main() -> int:
             "simple": base / f"{run_id}_simple",
             "hierarchical": base / f"{run_id}_hierarchical",
         }
-    rows = _load_jsonl(args.prompt_matrix)
-    if args.row_offset > 0:
-        rows = rows[args.row_offset :]
-    if args.max_rows > 0:
-        rows = rows[: args.max_rows]
+
+    input_rows_path = args.frozen_inputs if args.frozen_inputs else args.prompt_matrix
+    rows = _load_jsonl(input_rows_path)
+    rows_have_strategy = any("strategy" in row for row in rows)
+
+    faiss_info = _faiss_provenance(args.agent_config)
+    row_provenance = RowProvenance(
+        run_id=run_id,
+        git_sha=_short_git_sha(git_info),
+        faiss_index_path=str(faiss_info.get("path") or NOT_FOUND),
+        faiss_index_size_kb=faiss_info.get("size_kb"),
+        faiss_index_modified=faiss_info.get("modified"),
+        faiss_index_hash_or_mtime=faiss_info.get("hash_or_mtime"),
+        frozen_input_file=str(args.frozen_inputs.resolve()) if args.frozen_inputs else "LIVE_GENERATED",
+    )
 
     selected_strategies = [args.strategy] if args.strategy else ["simple", "hierarchical"]
-    strategy_runs = [
-        _run_strategy(
-            rows,
-            strategy,
-            strategy_output_root=strategy_roots[strategy],
-            agent_config=args.agent_config,
-            inputs_file_strategy=args.inputs_file_strategy,
-            verbose_cli=args.verbose_cli,
-            save_workflow=args.save_workflow,
-            save_transcript=args.save_transcript,
-            save_log=args.save_log,
-            max_rate_limit_retries=max(0, args.max_rate_limit_retries),
-            max_unavailable_attempts=max(1, args.max_unavailable_attempts),
-            checkpoint_root=out_dir,
-            checkpoint_prefix=args.checkpoint_prefix,
-            checkpoint_every_row=checkpoint_every_row,
-            flush_prints=flush_prints,
-            continue_on_catastrophic=args.continue_on_catastrophic,
+    strategy_runs = []
+    for strategy in selected_strategies:
+        strategy_rows = rows
+        if rows_have_strategy:
+            strategy_rows = [row for row in rows if str(row.get("strategy", "")).lower() == strategy]
+        if args.row_offset > 0:
+            strategy_rows = strategy_rows[args.row_offset :]
+        if args.max_rows > 0:
+            strategy_rows = strategy_rows[: args.max_rows]
+        if not strategy_rows:
+            raise RuntimeError(
+                f"No rows to evaluate for strategy={strategy} from input file {input_rows_path}."
+            )
+
+        strategy_runs.append(
+            _run_strategy(
+                strategy_rows,
+                strategy,
+                row_provenance=row_provenance,
+                strategy_output_root=strategy_roots[strategy],
+                agent_config=args.agent_config,
+                inputs_file_strategy=args.inputs_file_strategy,
+                verbose_cli=args.verbose_cli,
+                save_workflow=args.save_workflow,
+                save_transcript=args.save_transcript,
+                save_log=args.save_log,
+                max_rate_limit_retries=max(0, args.max_rate_limit_retries),
+                max_unavailable_attempts=max(1, args.max_unavailable_attempts),
+                checkpoint_root=out_dir,
+                checkpoint_prefix=args.checkpoint_prefix,
+                checkpoint_every_row=checkpoint_every_row,
+                flush_prints=flush_prints,
+                continue_on_catastrophic=args.continue_on_catastrophic,
+            )
         )
-        for strategy in selected_strategies
-    ]
     results_rows: list[dict[str, Any]] = []
     category_rows: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
@@ -732,10 +970,20 @@ def main() -> int:
         strategy_name = str(row.get("strategy") or "")
         row_id = str(row.get("row_id") or "")
         evidence = evidence_by_key.get((strategy_name, row_id), {})
+        selected_inputs = str(evidence.get("selected_inputs") or NOT_FOUND)
         enriched_row = {
             **row,
             "selected_case": evidence.get("selected_case", ""),
-            "selected_inputs": evidence.get("selected_inputs", ""),
+            "selected_inputs": selected_inputs,
+            "iteration1_case": str(evidence.get("iteration1_case") or NOT_FOUND),
+            "case_reselection_fallback": bool(evidence.get("case_reselection_fallback", False)),
+            "run_id": row_provenance.run_id,
+            "git_sha": row_provenance.git_sha,
+            "faiss_index_path": row_provenance.faiss_index_path,
+            "faiss_index_size_kb": row_provenance.faiss_index_size_kb,
+            "faiss_index_modified": row_provenance.faiss_index_modified,
+            "faiss_index_hash_or_mtime": row_provenance.faiss_index_hash_or_mtime,
+            "frozen_input_file": row_provenance.frozen_input_file,
         }
         if strategy_name == "hierarchical":
             candidate_row = hierarchical_candidates_by_row.get(row_id, {})
@@ -747,8 +995,7 @@ def main() -> int:
             )
         enriched_results_rows.append(enriched_row)
 
-    repo_root = Path(__file__).resolve().parents[2]
-    prompt_checksum = _sha256_file(args.prompt_matrix) if args.prompt_matrix.exists() else None
+    input_checksum = _sha256_file(input_rows_path) if input_rows_path.exists() else None
     config_checksum = _sha256_file(args.agent_config) if args.agent_config and args.agent_config.exists() else None
     summary["audit"] = {
         "started_at": started_at,
@@ -758,13 +1005,18 @@ def main() -> int:
             "cwd": os.getcwd(),
         },
         "inputs": {
+            "row_source_file": str(input_rows_path),
+            "row_source_sha256": input_checksum,
             "prompt_matrix": str(args.prompt_matrix),
-            "prompt_matrix_sha256": prompt_checksum,
+            "frozen_inputs": str(args.frozen_inputs) if args.frozen_inputs else None,
             "agent_config": str(args.agent_config) if args.agent_config else None,
             "agent_config_sha256": config_checksum,
         },
-        "git": _git_provenance(repo_root),
-        "faiss_provenance": _faiss_provenance_digest(args.agent_config),
+        "git": git_info,
+        "faiss_provenance": faiss_info,
+        "input_provenance": {
+            "frozen_file": row_provenance.frozen_input_file,
+        },
         "artifacts": {
             "summary": "summary.json",
             "results": "results.jsonl",
