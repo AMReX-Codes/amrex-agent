@@ -112,6 +112,22 @@ def _apply_reviewer_constraints_to_plan(plan_result, reviewer_guidance: dict[str
     return plan_result, warnings
 
 
+def _first_architect_selection(workflow_history: list[dict[str, Any]]) -> tuple[str, str]:
+    if not isinstance(workflow_history, list):
+        return "", ""
+    for entry in workflow_history:
+        if not isinstance(entry, dict) or entry.get("node") != "architect":
+            continue
+        details = entry.get("details", {})
+        if not isinstance(details, dict):
+            continue
+        selected_case = str(details.get("selected_case") or "").strip()
+        selected_solver = str(details.get("selected_solver") or "").strip()
+        if selected_case:
+            return selected_case, selected_solver
+    return "", ""
+
+
 def architect_node(state: GraphState) -> dict[str, Any]:
     """
     Orchestrate simulation planning for the workflow graph.
@@ -186,10 +202,14 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     # ========================================
 
     workflow_history_temp = state.get("workflow_history", [])
+    first_architect_case, first_architect_solver = _first_architect_selection(workflow_history_temp)
     reviewer_guidance = _extract_reviewer_guidance(state, workflow_history_temp)
     previous_feedback: dict[str, Any] | None = None
     parameter_resolution_feedback: dict[str, Any] | None = None  # Initialize for both modes
     intent_coverage_feedback: dict[str, Any] | None = None
+    constrained_baseline_override: str | None = None
+    case_selection_locked = False
+    case_reselection_fallback = False
 
     if mode == "retry":
         logger.debug("Retry mode detected - extracting feedback")
@@ -321,6 +341,51 @@ def architect_node(state: GraphState) -> dict[str, Any]:
                 parameter_resolution_feedback["required_assignments_meta"] = dict(required_assignments_meta)
             if isinstance(suggested_params, dict) and suggested_params:
                 parameter_resolution_feedback["suggested_params"] = dict(suggested_params)
+
+        if isinstance(parameter_resolution_feedback, dict):
+            unresolved_parameters = parameter_resolution_feedback.get("unresolved_parameters", [])
+            if unresolved_parameters:
+                locked_case = str(
+                    parameter_resolution_feedback.get("locked_case")
+                    or state.get("iteration1_case")
+                    or first_architect_case
+                    or state.get("selected_case")
+                    or ""
+                ).strip()
+                locked_solver = str(
+                    parameter_resolution_feedback.get("locked_solver")
+                    or state.get("iteration1_solver")
+                    or first_architect_solver
+                    or state.get("selected_solver")
+                    or ""
+                ).strip()
+                if locked_case.lower() == "unknown":
+                    locked_case = ""
+                if locked_solver.lower() == "unknown":
+                    locked_solver = ""
+
+                allow_case_reselection_fallback = bool(
+                    parameter_resolution_feedback.get("allow_case_reselection_fallback", False)
+                )
+                if locked_case and locked_solver and not allow_case_reselection_fallback:
+                    constrained_baseline_override = f"{locked_solver}/{locked_case}"
+                    case_selection_locked = True
+                    logger.info(
+                        "Parameter-resolution retry locked to iteration-1 case: %s",
+                        constrained_baseline_override,
+                    )
+                elif allow_case_reselection_fallback:
+                    case_reselection_fallback = True
+                    logger.warning(
+                        "Parameter-resolution retries exhausted; enabling open case reselection fallback."
+                    )
+                else:
+                    case_reselection_fallback = True
+                    logger.warning(
+                        "Parameter-resolution retry could not lock case (locked_case=%r, locked_solver=%r); using open reselection.",
+                        locked_case,
+                        locked_solver,
+                    )
 
         # ----------------------------------------
         # 9c-i: STANDARD ERROR FEEDBACK (from reviewer)
@@ -462,7 +527,12 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         rejected_inputs = previous_feedback.get("rejected_inputs_file")
         retry_guidance = previous_feedback.get("retry_guidance", {}) or {}
 
-        if rejected_case and rejected_case not in excluded_cases:
+        if case_selection_locked and rejected_case:
+            logger.debug(
+                "Locked retry case enabled; not excluding previously selected baseline: %s",
+                rejected_case,
+            )
+        elif rejected_case and rejected_case not in excluded_cases:
             excluded_cases.append(rejected_case)
             logger.debug(f"Excluding baseline: {rejected_case}")
 
@@ -470,7 +540,11 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             excluded_inputs_files.append(rejected_inputs)
             logger.debug(f"Excluding inputs file: {rejected_inputs}")
 
-        if retry_guidance.get("baseline_base_action") == "switch" and rejected_case:
+        if (
+            not case_selection_locked
+            and retry_guidance.get("baseline_base_action") == "switch"
+            and rejected_case
+        ):
             if rejected_case not in excluded_cases:
                 excluded_cases.append(rejected_case)
             logger.debug(f"Retry guidance suggests switching baseline: {rejected_case}")
@@ -502,15 +576,18 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         # This calls create_plan_rag() or create_plan() based on config.indexing_strategy
         # and normalizes the output to canonical format
         with metrics_context("architect", node="architect", iteration=new_iteration):
-            plan_result = service.execute_planning(
-                user_prompt=prompt,
-                prefer_quality="excellent",
-                excluded_cases=excluded_cases,
-                excluded_inputs_files=excluded_inputs_files,
-                parameter_resolution_feedback=parameter_resolution_feedback,  # NEW: pass to service
-                forced_solver=solver_hint,
-                reviewer_guidance=reviewer_guidance,
-            )
+            planning_kwargs = {
+                "user_prompt": prompt,
+                "prefer_quality": "excellent",
+                "excluded_cases": excluded_cases,
+                "excluded_inputs_files": excluded_inputs_files,
+                "parameter_resolution_feedback": parameter_resolution_feedback,
+                "forced_solver": solver_hint,
+                "reviewer_guidance": reviewer_guidance,
+            }
+            if constrained_baseline_override:
+                planning_kwargs["baseline_override"] = constrained_baseline_override
+            plan_result = service.execute_planning(**planning_kwargs)
         logger.debug(f"[DATA TRANSFER] Called architect service with feedback={parameter_resolution_feedback is not None}")
         plan_result, guidance_warnings = _apply_reviewer_constraints_to_plan(plan_result, reviewer_guidance)
         if guidance_warnings:
@@ -577,7 +654,10 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     # Extract key metrics from plan (now SimulationPlan object)
     current_mods = plan_result.modifications
     current_reasoning = plan_result.reasoning
+    code_name = plan_result.selected_solver
     selected_case = plan_result.selected_case
+    iteration1_case = str(state.get("iteration1_case") or first_architect_case or selected_case or "")
+    iteration1_solver = str(state.get("iteration1_solver") or first_architect_solver or code_name or "")
 
     embed_counts_after = embed_counts_before
     if embedding_service and hasattr(embedding_service, "get_embedding_call_counts"):
@@ -600,7 +680,6 @@ def architect_node(state: GraphState) -> dict[str, Any]:
     indexing_strategy = plan_result.indexing_strategy
 
     # Compute baseline metadata (Fix #1 - needed by runner)
-    code_name = plan_result.selected_solver
     repo_path = config.repositories.get(code_name) if hasattr(config, 'repositories') else None
 
     baseline = None
@@ -667,6 +746,10 @@ def architect_node(state: GraphState) -> dict[str, Any]:
             "level2_override_confidence": level2_override_confidence,
             # Parameter resolution context (if applicable)
             "parameter_resolution_applied": parameter_resolution_feedback is not None,
+            "iteration1_case": iteration1_case,
+            "iteration1_solver": iteration1_solver,
+            "case_selection_locked": case_selection_locked,
+            "case_reselection_fallback": case_reselection_fallback,
             "reviewer_guidance": reviewer_guidance,
             "remapped_parameters": (
                 [p[0] for p in parameter_resolution_feedback.get("unresolved_parameters", [])]
@@ -727,6 +810,10 @@ def architect_node(state: GraphState) -> dict[str, Any]:
         "baseline": baseline,           # For runner to find executable
         "selected_case": selected_case, # For reviewer/downstream convenience
         "selected_solver": code_name,   # Solver selection for validation/downstream
+        "iteration1_case": iteration1_case,  # Persist first-pass case for drift diagnostics.
+        "iteration1_solver": iteration1_solver,
+        "case_selection_locked": case_selection_locked,
+        "case_reselection_fallback": case_reselection_fallback,
         "modifications": current_mods,  # For review/visualization
         "reasoning": current_reasoning, # For visualization
         "case_candidates": plan_result.case_candidates or [],  # For visualization

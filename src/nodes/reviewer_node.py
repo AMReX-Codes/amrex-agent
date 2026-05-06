@@ -584,6 +584,7 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
     )
     plan_details = architect_entry.get("details", {}) if architect_entry else {}
     selected_case = plan_details.get("selected_case", "unknown")
+    selected_solver = plan_details.get("selected_solver", state.get("selected_solver", "unknown"))
     modifications = plan_details.get("modifications", []) or []
 
     auto_approve = getattr(config, "preconfirm_gate_auto_approve", False) is True
@@ -752,6 +753,12 @@ def reviewer_node(state: GraphState) -> dict[str, Any]:
                 "resolution_guidance": guidance,
                 "available_schema_params": available,
                 "suggested_params": suggested,
+                # Preserve iteration-1 case selection during schema-resolution retries.
+                "locked_case": selected_case,
+                "locked_solver": selected_solver,
+                "retry_attempt": retry_count + 1,
+                "max_retries": max_retries,
+                "allow_case_reselection_fallback": (retry_count + 1) >= max_retries,
             },
 
             # Error tracking

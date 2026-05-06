@@ -15,6 +15,8 @@ from scripts.erf_benchmark.lib.explainability_scoring import (
 from scripts.erf_benchmark.generate_prompt_matrix import build_prompt_matrix_rows
 from scripts.erf_benchmark.make_splits import build_splits
 from scripts.erf_benchmark.run_llm_compare_benchmark import (
+    extract_case_reselection_fallback,
+    extract_iteration1_case,
     detect_llm_unavailable,
     extract_selected_case,
     extract_selected_inputs,
@@ -163,6 +165,40 @@ def test_extract_selected_values_from_workflow_history() -> None:
     }
     assert extract_selected_case(payload) == "Exec/Wave/CaseA"
     assert extract_selected_inputs(payload) == "Exec/Wave/CaseA/inputs_base"
+
+
+def test_extract_iteration1_case_prefers_explicit_field() -> None:
+    payload = {
+        "iteration1_case": "/tmp/PeleLMeX/Exec/Plasma/FlameSheetIons",
+        "workflow_history": [
+            {"node": "architect", "details": {"selected_case": "Exec/Plasma/PremBunsen3DKuhl"}}
+        ],
+    }
+    assert extract_iteration1_case(payload) == "Exec/Plasma/FlameSheetIons"
+
+
+def test_extract_iteration1_case_falls_back_to_first_architect_entry() -> None:
+    payload = {
+        "workflow_history": [
+            {"node": "reviewer", "details": {}},
+            {"node": "architect", "details": {"selected_case": "/repo/Exec/Plasma/IonizedAirWave"}},
+            {"node": "architect", "details": {"selected_case": "Exec/Plasma/PremBunsen3DKuhl"}},
+        ]
+    }
+    assert extract_iteration1_case(payload) == "Exec/Plasma/IonizedAirWave"
+
+
+def test_extract_case_reselection_fallback_checks_payload_then_history() -> None:
+    payload_top = {"case_reselection_fallback": True}
+    assert extract_case_reselection_fallback(payload_top) is True
+
+    payload_history = {
+        "workflow_history": [
+            {"node": "architect", "details": {"case_reselection_fallback": False}},
+            {"node": "architect", "details": {"case_reselection_fallback": True}},
+        ]
+    }
+    assert extract_case_reselection_fallback(payload_history) is True
 
 
 def test_compare_runs_acceptance_logic() -> None:
