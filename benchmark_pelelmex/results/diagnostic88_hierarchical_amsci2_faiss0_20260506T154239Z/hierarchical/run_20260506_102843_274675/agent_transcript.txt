@@ -1,0 +1,45 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/TripleFlame with input.2d-regt
+
+================================================================================
+
+[2026-05-06T17:28:21.405082Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 46 changes
+    - geometry.prob_lo = -0.02 -0.02 0.0
+    - geometry.prob_hi = 0.02  0.02 0.016
+    - peleLM.lo_bc = NoSlipWallAdiab NoSlipWallAdiab
+
+[2026-05-06T17:28:26.442271Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T17:28:32.558190Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+  Planned Modifications: 3 changes
+    - amr.max_level = 5
+    - amr.yH.value_greater = 3.0e-7
+    - amr.yH.field_name = Y(H)
+
+[2026-05-06T17:28:36.508243Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T17:28:43.258059Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T17:28:43.272296Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T17:28:45.261040Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T17:28:45.271318Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T17:28:45.272871Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T17:28:45.274292Z] NODE: VISUALIZATION
+ACTION: skipped
+

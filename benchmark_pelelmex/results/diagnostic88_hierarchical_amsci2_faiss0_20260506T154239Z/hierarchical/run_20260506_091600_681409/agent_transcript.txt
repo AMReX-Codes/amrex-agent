@@ -1,0 +1,45 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Production/PremBunsen3D with input.3d
+
+================================================================================
+
+[2026-05-06T16:15:39.212121Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 39 changes
+    - geometry.is_periodic = 0 0
+    - geometry.prob_lo = -0.025 0.0 0.0
+    - geometry.prob_hi = 0.025 0.05 0.016
+
+[2026-05-06T16:15:44.340870Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:15:49.983719Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+  Planned Modifications: 6 changes
+    - prob.r_int = 0.0065
+    - prob.r_ext = 0.0075
+    - prob.equivalence_ratio = 2
+
+[2026-05-06T16:15:54.875071Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:16:00.653297Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:16:00.676481Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:16:02.269073Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:16:02.281511Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:16:02.284580Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:16:02.287999Z] NODE: VISUALIZATION
+ACTION: skipped
+

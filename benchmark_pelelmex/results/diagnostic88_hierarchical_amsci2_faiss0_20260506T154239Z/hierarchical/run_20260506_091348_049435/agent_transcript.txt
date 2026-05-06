@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Production/NormalJet_OpenDomain with inputs.3d-regt
+
+================================================================================
+
+[2026-05-06T16:13:27.248793Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 109 changes
+    - geometry.prob_lo = -0.025 -0.025 0.0
+    - geometry.prob_hi = 0.025  0.025 0.05
+    - peleLM.lo_bc = Outflow Outflow Inflow
+
+[2026-05-06T16:13:45.486563Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:13:48.033452Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:13:48.046276Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:13:49.944526Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:13:49.953078Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:13:49.959367Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:13:49.961895Z] NODE: VISUALIZATION
+ACTION: skipped
+

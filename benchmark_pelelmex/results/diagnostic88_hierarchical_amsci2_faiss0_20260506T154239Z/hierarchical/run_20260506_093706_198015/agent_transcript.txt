@@ -1,0 +1,45 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/EB_PipeFlow with input.2d-regt
+
+================================================================================
+
+[2026-05-06T16:36:43.374890Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 62 changes
+    - geometry.is_periodic = 0 1
+    - geometry.prob_lo = -0.02 0.0 0.0
+    - geometry.prob_hi = 0.06 0.04 1.0
+
+[2026-05-06T16:36:48.480057Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:36:55.807536Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+  Planned Modifications: 3 changes
+    - amr.max_level = 5
+    - amr.yH.value_greater = 3.0e-7
+    - amr.yH.field_name = Y(H)
+
+[2026-05-06T16:36:59.590575Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:37:06.182408Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:37:06.195723Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:37:08.251986Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:37:08.259189Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:37:08.260916Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:37:08.265118Z] NODE: VISUALIZATION
+ACTION: skipped
+

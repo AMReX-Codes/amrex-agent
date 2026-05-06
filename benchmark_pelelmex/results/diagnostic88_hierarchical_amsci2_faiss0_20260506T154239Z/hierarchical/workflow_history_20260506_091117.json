@@ -1,0 +1,3266 @@
+[
+  {
+    "node": "architect",
+    "timestamp": "2026-05-06T16:10:28.554883Z",
+    "action": "plan_created",
+    "iteration": 1,
+    "details": {
+      "selected_case": "Exec/Production/JetInCrossflow",
+      "selected_solver": "PeleLMeX",
+      "modifications": [
+        [
+          "geometry.is_periodic",
+          "0 0"
+        ],
+        [
+          "geometry.prob_lo",
+          "-0.01 -0.01 0.0"
+        ],
+        [
+          "geometry.prob_hi",
+          "0.01  0.01 0.016"
+        ],
+        [
+          "peleLM.lo_bc",
+          "Inflow Outflow"
+        ],
+        [
+          "peleLM.hi_bc",
+          "Inflow Outflow"
+        ],
+        [
+          "amr.n_cell",
+          "128 128 32"
+        ],
+        [
+          "amr.v",
+          "1"
+        ],
+        [
+          "amr.max_level",
+          "1"
+        ],
+        [
+          "amr.regrid_int",
+          "5"
+        ],
+        [
+          "amr.grid_eff",
+          "0.7"
+        ],
+        [
+          "prob.T_ox",
+          "298.0"
+        ],
+        [
+          "prob.T_fuel",
+          "298.0"
+        ],
+        [
+          "prob.massflow",
+          "2.0"
+        ],
+        [
+          "prob.jet_radius",
+          "0.005"
+        ],
+        [
+          "prob.inert_radius",
+          "0.0075"
+        ],
+        [
+          "prob.inert_velocity",
+          "1.5"
+        ],
+        [
+          "prob.pertmag",
+          "0.000"
+        ],
+        [
+          "prob.do_ignition",
+          "0"
+        ],
+        [
+          "prob.ignition_SphT",
+          "2000.0"
+        ],
+        [
+          "prob.ignition_SphRad",
+          "0.006"
+        ],
+        [
+          "spray.jet1.jet_cent",
+          "0.01 0. 0."
+        ],
+        [
+          "spray.jet1.jet_norm",
+          "-1. 0. 0."
+        ],
+        [
+          "spray.jet1.mass_flow_rate",
+          "9.8E-4"
+        ],
+        [
+          "spray.jet1.T",
+          "300."
+        ],
+        [
+          "spray.jet1.jet_vel",
+          "2."
+        ],
+        [
+          "spray.jet1.jet_dia",
+          "0.01"
+        ],
+        [
+          "spray.jet1.dist_type",
+          "Uniform"
+        ],
+        [
+          "spray.jet1.diameter",
+          "5.E-5"
+        ],
+        [
+          "spray.jet1.spread_angle",
+          "0."
+        ],
+        [
+          "peleLM.do_spray_particles",
+          "1"
+        ],
+        [
+          "particles.v",
+          "4"
+        ],
+        [
+          "particles.plot_src",
+          "1"
+        ],
+        [
+          "particles.mom_transfer",
+          "1"
+        ],
+        [
+          "particles.mass_transfer",
+          "1"
+        ],
+        [
+          "particles.init_function",
+          "1"
+        ],
+        [
+          "particles.parcel_size",
+          "2."
+        ],
+        [
+          "particles.fuel_species",
+          "NXC7H16"
+        ],
+        [
+          "particles.fuel_ref_temp",
+          "298.15"
+        ],
+        [
+          "particles.NXC7H16_crit_temp",
+          "540."
+        ],
+        [
+          "particles.NXC7H16_boil_temp",
+          "371.6"
+        ],
+        [
+          "particles.NXC7H16_latent",
+          "3.69E5"
+        ],
+        [
+          "particles.NXC7H16_cp",
+          "2.2483E3"
+        ],
+        [
+          "particles.NXC7H16_rho",
+          "681.43"
+        ],
+        [
+          "particles.NXC7H16_psat",
+          "4.02832 1268.636 -56.199 1.E5"
+        ],
+        [
+          "particles.use_splash_model",
+          "false"
+        ],
+        [
+          "peleLM.v",
+          "3"
+        ],
+        [
+          "peleLM.sdc_iterMax",
+          "2"
+        ],
+        [
+          "peleLM.floor_species",
+          "1"
+        ],
+        [
+          "peleLM.deltaT_verbose",
+          "0"
+        ],
+        [
+          "amr.check_int",
+          "50"
+        ],
+        [
+          "amr.plot_int",
+          "20"
+        ],
+        [
+          "amr.max_step",
+          "200"
+        ],
+        [
+          "amr.dt_shrink",
+          "0.01"
+        ],
+        [
+          "amr.init_dt",
+          "1.0e-6"
+        ],
+        [
+          "amr.stop_time",
+          "1.1"
+        ],
+        [
+          "amr.cfl",
+          "0.5"
+        ],
+        [
+          "amr.derive_plot_vars",
+          "avg_pressure mag_vort mass_fractions mixture_fraction"
+        ],
+        [
+          "peleLM.fuel_name",
+          "NXC7H16"
+        ],
+        [
+          "peleLM.mixtureFraction.format",
+          "Cantera"
+        ],
+        [
+          "peleLM.mixtureFraction.type",
+          "mass"
+        ],
+        [
+          "peleLM.mixtureFraction.oxidTank",
+          "O2:0.233 N2:0.767"
+        ],
+        [
+          "peleLM.mixtureFraction.fuelTank",
+          "NXC7H16:1.0"
+        ],
+        [
+          "peleLM.chem_integrator",
+          "\"ReactorCvode\""
+        ],
+        [
+          "nodal_proj.verbose",
+          "2"
+        ],
+        [
+          "mac_proj.verbose",
+          "2"
+        ],
+        [
+          "mac_proj.rtol",
+          "1.0e-10"
+        ],
+        [
+          "nodal_proj.rtol",
+          "1.0e-10"
+        ],
+        [
+          "amr.refinement_indicators",
+          "temp"
+        ],
+        [
+          "amr.temp.max_level",
+          "2"
+        ],
+        [
+          "amr.temp.value_greater",
+          "1500"
+        ],
+        [
+          "amr.temp.field_name",
+          "temp"
+        ],
+        [
+          "geometry.prob_lo",
+          "-0.0075 -0.0075 0.0"
+        ],
+        [
+          "geometry.prob_hi",
+          "0.0075  0.0075 0.0"
+        ],
+        [
+          "amr.n_cell",
+          "64 64 32"
+        ],
+        [
+          "amr.max_level",
+          "2"
+        ],
+        [
+          "amr.blocking_factor",
+          "4"
+        ],
+        [
+          "prob.P_mean",
+          "792897.5"
+        ],
+        [
+          "prob.T_ox",
+          "450.0"
+        ],
+        [
+          "prob.T_fuel",
+          "450.0"
+        ],
+        [
+          "prob.T_inert",
+          "450.0"
+        ],
+        [
+          "prob.Y_O2_ox",
+          "0.233"
+        ],
+        [
+          "prob.Y_N2_ox",
+          "0.767"
+        ],
+        [
+          "prob.Y_N2_fuel",
+          "0.0"
+        ],
+        [
+          "prob.Y_fuel",
+          "1.0"
+        ],
+        [
+          "prob.massflow_ox",
+          "0.9171"
+        ],
+        [
+          "prob.massflow_fuel",
+          "2.228"
+        ],
+        [
+          "prob.jet_radius",
+          "0.0025"
+        ],
+        [
+          "prob.inert_velocity_ox",
+          "0.1500"
+        ],
+        [
+          "prob.inert_velocity_fuel",
+          "0.0617"
+        ],
+        [
+          "prob.do_ignition",
+          "1"
+        ],
+        [
+          "prob.ignition_SphT",
+          "1000.0"
+        ],
+        [
+          "prob.ignition_SphRad",
+          "0.0015"
+        ],
+        [
+          "amr.initDataPlt",
+          "plt02656_coolflow"
+        ],
+        [
+          "peleLM.initDataPlt_patch_flow_variables",
+          "true"
+        ],
+        [
+          "amr.regrid_on_restart",
+          "1"
+        ],
+        [
+          "amr.check_int",
+          "2000"
+        ],
+        [
+          "amr.plot_per",
+          "0.005"
+        ],
+        [
+          "amr.plot_per_exact",
+          "1"
+        ],
+        [
+          "amr.stop_time",
+          "0.150"
+        ],
+        [
+          "amr.cfl",
+          "0.1"
+        ],
+        [
+          "peleLM.fuel_name",
+          "NC12H26"
+        ],
+        [
+          "peleLM.mixtureFraction.fuelTank",
+          "NC12H26:1.0"
+        ],
+        [
+          "nodal_proj.verbose",
+          "0"
+        ],
+        [
+          "mac_proj.verbose",
+          "0"
+        ],
+        [
+          "diffusion.verbose",
+          "0"
+        ],
+        [
+          "amr.refinement_indicators",
+          "gradT"
+        ],
+        [
+          "amr.gradT.max_level",
+          "2"
+        ],
+        [
+          "amr.gradT.adjacent_difference_greater",
+          "100"
+        ],
+        [
+          "amr.gradT.field_name",
+          "temp"
+        ]
+      ],
+      "reasoning": "CBR plan based on Exec/Production/JetInCrossflow (patterns from: Exec/Production/CounterFlowSpray, Exec/Production/CounterFlow) Baseline weights: configuration_complexity=0.100, development_activity=0.100, domain_models=0.100, grid_specifications=0.200, path_hierarchy=0.150, physics_parameters=0.300, resource_requirements=0.050.",
+      "baseline": {
+        "code_name": "PeleLMeX",
+        "repo_path": "/home/jmsexton/codes/worktree_sandbox/PeleLMeX",
+        "case_path": "Exec/Production/JetInCrossflow",
+        "local_path": "/home/jmsexton/codes/worktree_sandbox/PeleLMeX/Exec/Production/JetInCrossflow"
+      },
+      "case_candidates": [
+        {
+          "case": "Exec/Production/JetInCrossflow",
+          "score": 0.9880665856599808,
+          "metadata": {
+            "case_name": "JetInCrossflow",
+            "repo_path": "Exec/Production/JetInCrossflow",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.0 -0.0381 -0.09525",
+              "geometry.prob_hi": "0.127 0.0381 0.15875",
+              "peleLM.lo_bc": "Inflow NoSlipWallAdiab Inflow",
+              "peleLM.hi_bc": "NoSlipWallAdiab NoSlipWallAdiab Outflow",
+              "amr.n_cell": "80 48 160",
+              "amr.v": "2",
+              "amr.max_level": "4",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "6",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.85",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "prob.P_mean": "101325.0",
+              "prob.cf_velocity": "19.1",
+              "prob.cf_temp": "1236",
+              "prob.cf_composition": "O2:0.1291 N2:0.7611 CO2:0.0366 H2O:0.0732 OH:1.9629e-5",
+              "prob.cf_composition_type": "mole",
+              "prob.cf_dir": "2",
+              "prob.jet_velocity": "42.2",
+              "prob.jet_temp": "300",
+              "prob.jet_composition": "H2:0.7 N2:0.18 HE:0.12",
+              "prob.jet_composition_type": "mole",
+              "prob.jet_dir": "0",
+              "prob.jet_rad": "0.0015875",
+              "prob.jet_bl_thickness": "-1.0",
+              "prob.jet_init_time": "1.0e-6",
+              "prob.jet_start_time": "0.0",
+              "prob.double_jet": "0",
+              "peleLM.v": "2",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "1",
+              "peleLM.advection_scheme": "\"Godunov_BDS\"",
+              "peleLM.deltaT_crashIfFailing": "0",
+              "amr.plot_int": "50",
+              "amr.check_int": "200",
+              "amr.check_file": "chk",
+              "amr.plot_file": "plt",
+              "amr.max_step": "50000",
+              "amr.dt_shrink": "1e-2",
+              "amr.stop_time": "0.02",
+              "amr.cfl": "0.7",
+              "amr.derive_plot_vars": "avg_pressure mag_vort mass_fractions",
+              "peleLM.chem_integrator": "\"ReactorNull\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-6",
+              "ode.atol": "1.0e-5",
+              "cvode.solve_type": "denseAJ_direct",
+              "cvode.max_order": "4",
+              "amr.refinement_indicators": "overYH2 diffYH2 diffRho diffT bottom_box",
+              "amr.overYH2.max_level": "4",
+              "amr.overYH2.value_greater": "0.1",
+              "amr.overYH2.field_name": "Y(H2)",
+              "amr.diffYH2.max_level": "5",
+              "amr.diffYH2.adjacent_difference_greater": "0.005",
+              "amr.diffYH2.field_name": "Y(H2)",
+              "amr.diffRho.max_level": "1",
+              "amr.diffRho.adjacent_difference_greater": "0.8",
+              "amr.diffRho.field_name": "density",
+              "amr.diffT.max_level": "5",
+              "amr.diffT.adjacent_difference_greater": "50",
+              "amr.diffT.field_name": "temp",
+              "amr.bottom_box.max_level": "2",
+              "amr.bottom_box.in_box_lo": "0.000 -0.04 -0.1",
+              "amr.bottom_box.in_box_hi": "0.004 0.04 0.16",
+              "amrex.the_arena_is_managed": "0",
+              "peleLM.diagnostics": "ynormalplt znormalplt",
+              "peleLM.ynormalplt.type": "DiagFramePlane",
+              "peleLM.ynormalplt.normal": "1",
+              "peleLM.ynormalplt.center": "0.0",
+              "peleLM.ynormalplt.int": "25",
+              "peleLM.ynormalplt.interpolation": "Linear",
+              "peleLM.ynormalplt.field_names": "Y(H2) Y(H2O) Y(H) Y(OH) x_velocity y_velocity z_velocity temp HeatRelease",
+              "peleLM.znormalplt.type": "DiagFramePlane",
+              "peleLM.znormalplt.normal": "2",
+              "peleLM.znormalplt.center": "0.008",
+              "peleLM.znormalplt.int": "25",
+              "peleLM.znormalplt.interpolation": "Linear",
+              "peleLM.znormalplt.field_names": "Y(H2) Y(H2O) Y(H) Y(OH) x_velocity y_velocity z_velocity temp HeatRelease",
+              "peleLM.xnormalplt.type": "DiagFramePlane",
+              "peleLM.xnormalplt.normal": "0",
+              "peleLM.xnormalplt.center": "0.008",
+              "peleLM.xnormalplt.int": "25",
+              "peleLM.xnormalplt.interpolation": "Linear",
+              "peleLM.xnormalplt.field_names": "Y(H2) Y(H2O) Y(H) Y(OH) x_velocity y_velocity z_velocity temp HeatRelease",
+              "peleLM.do_temporals": "1",
+              "peleLM.temporal_dir": "temporals",
+              "peleLM.temporal_int": "10",
+              "peleLM.do_extremas": "1",
+              "peleLM.do_mass_balance": "1",
+              "peleLM.do_species_balance": "1",
+              "peleLM.base_output_prefix": "output_nonreacting/"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "JetInCrossflow"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 7,
+            "chunk_index": 7
+          },
+          "breakdown": {
+            "path_hierarchy": "0.70327634",
+            "development_activity": "0.69336456",
+            "configuration_complexity": "0.7026943",
+            "physics_parameters": "0.71213496",
+            "domain_models": "0.7549721",
+            "resource_requirements": "0.7238177",
+            "grid_specifications": "0.68820333"
+          },
+          "score_raw": 0.7080665856599809,
+          "score_bonus": 0.08,
+          "routing_intent_adjustment": 0.2,
+          "routing_intent_overlap": 1.0,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/CounterFlow",
+          "score": 0.8352373367547988,
+          "metadata": {
+            "case_name": "CounterFlow",
+            "repo_path": "Exec/Production/CounterFlow",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "-0.0075 -0.0075 0.0",
+              "geometry.prob_hi": "0.0075  0.0075 0.0",
+              "peleLM.lo_bc": "Inflow Outflow",
+              "peleLM.hi_bc": "Inflow Outflow",
+              "amr.n_cell": "64 64 32",
+              "amr.v": "1",
+              "amr.max_level": "2",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "5",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.blocking_factor": "4",
+              "amr.max_grid_size": "64",
+              "prob.P_mean": "792897.5",
+              "prob.T_ox": "450.0",
+              "prob.T_fuel": "450.0",
+              "prob.T_inert": "450.0",
+              "prob.Y_O2_ox": "0.233",
+              "prob.Y_N2_ox": "0.767",
+              "prob.Y_N2_fuel": "0.0",
+              "prob.Y_fuel": "1.0",
+              "prob.massflow_ox": "0.9171",
+              "prob.massflow_fuel": "2.228",
+              "prob.jet_radius": "0.0025",
+              "prob.inert_velocity_ox": "0.1500",
+              "prob.inert_velocity_fuel": "0.0617",
+              "prob.do_ignition": "1",
+              "prob.ignition_SphT": "1000.0",
+              "prob.ignition_SphRad": "0.0015",
+              "peleLM.v": "3",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "2",
+              "peleLM.floor_species": "1",
+              "peleLM.deltaT_verbose": "0",
+              "amr.initDataPlt": "plt02656_coolflow",
+              "peleLM.initDataPlt_patch_flow_variables": "true",
+              "amr.regrid_on_restart": "1",
+              "amr.check_int": "2000",
+              "amr.plot_per": "0.005",
+              "amr.plot_per_exact": "1",
+              "amr.dt_shrink": "0.01",
+              "amr.init_dt": "1.0e-6",
+              "amr.stop_time": "0.150",
+              "amr.cfl": "0.1",
+              "amr.derive_plot_vars": "avg_pressure mag_vort mass_fractions mixture_fraction",
+              "peleLM.fuel_name": "NC12H26",
+              "peleLM.mixtureFraction.format": "Cantera",
+              "peleLM.mixtureFraction.type": "mass",
+              "peleLM.mixtureFraction.oxidTank": "O2:0.233 N2:0.767",
+              "peleLM.mixtureFraction.fuelTank": "NC12H26:1.0",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-6",
+              "ode.atol": "1.0e-5",
+              "cvode.solve_type": "denseAJ_direct",
+              "cvode.max_order": "4",
+              "nodal_proj.verbose": "0",
+              "mac_proj.verbose": "0",
+              "diffusion.verbose": "0",
+              "mac_proj.rtol": "1.0e-10",
+              "nodal_proj.rtol": "1.0e-10",
+              "peleLM.do_temporals": "1",
+              "peleLM.do_mass_balance": "1",
+              "amr.refinement_indicators": "gradT",
+              "amr.gradT.max_level": "2",
+              "amr.gradT.adjacent_difference_greater": "100",
+              "amr.gradT.field_name": "temp"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "CounterFlow"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 4,
+            "chunk_index": 4
+          },
+          "breakdown": {
+            "path_hierarchy": "0.64764667",
+            "development_activity": "0.6391503",
+            "configuration_complexity": "0.68774915",
+            "physics_parameters": "0.6950835",
+            "domain_models": "0.704174",
+            "resource_requirements": "0.66953975",
+            "grid_specifications": "0.6649048"
+          },
+          "score_raw": 0.6752373367547989,
+          "score_bonus": 0.08,
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/CounterFlowSpray",
+          "score": 0.7574667531251907,
+          "metadata": {
+            "case_name": "CounterFlowSpray",
+            "repo_path": "Exec/Production/CounterFlowSpray",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "-0.01 -0.01 0.0",
+              "geometry.prob_hi": "0.01  0.01 0.016",
+              "peleLM.lo_bc": "Inflow Outflow",
+              "peleLM.hi_bc": "Inflow Outflow",
+              "amr.n_cell": "128 128 32",
+              "amr.v": "1",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "5",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "prob.P_mean": "101325.0",
+              "prob.T_ox": "298.0",
+              "prob.T_fuel": "298.0",
+              "prob.massflow": "2.0",
+              "prob.jet_radius": "0.005",
+              "prob.inert_radius": "0.0075",
+              "prob.inert_velocity": "1.5",
+              "prob.pertmag": "0.000",
+              "prob.do_ignition": "0",
+              "prob.ignition_SphT": "2000.0",
+              "prob.ignition_SphRad": "0.006",
+              "spray.jet1.jet_cent": "0.01 0. 0.",
+              "spray.jet1.jet_norm": "-1. 0. 0.",
+              "spray.jet1.mass_flow_rate": "9.8E-4",
+              "spray.jet1.T": "300.",
+              "spray.jet1.jet_vel": "2.",
+              "spray.jet1.jet_dia": "0.01",
+              "spray.jet1.dist_type": "Uniform",
+              "spray.jet1.diameter": "5.E-5",
+              "spray.jet1.spread_angle": "0.",
+              "peleLM.do_spray_particles": "1",
+              "particles.v": "4",
+              "particles.plot_src": "1",
+              "particles.mom_transfer": "1",
+              "particles.mass_transfer": "1",
+              "particles.init_function": "1",
+              "particles.parcel_size": "2.",
+              "particles.fuel_species": "NXC7H16",
+              "particles.fuel_ref_temp": "298.15",
+              "particles.NXC7H16_crit_temp": "540.",
+              "particles.NXC7H16_boil_temp": "371.6",
+              "particles.NXC7H16_latent": "3.69E5",
+              "particles.NXC7H16_cp": "2.2483E3",
+              "particles.NXC7H16_rho": "681.43",
+              "particles.NXC7H16_psat": "4.02832 1268.636 -56.199 1.E5",
+              "particles.use_splash_model": "false",
+              "peleLM.v": "3",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "2",
+              "peleLM.floor_species": "1",
+              "peleLM.deltaT_verbose": "0",
+              "amr.check_int": "50",
+              "amr.plot_int": "20",
+              "amr.max_step": "200",
+              "amr.dt_shrink": "0.01",
+              "amr.init_dt": "1.0e-6",
+              "amr.stop_time": "1.1",
+              "amr.cfl": "0.5",
+              "amr.derive_plot_vars": "avg_pressure mag_vort mass_fractions mixture_fraction",
+              "peleLM.fuel_name": "NXC7H16",
+              "peleLM.mixtureFraction.format": "Cantera",
+              "peleLM.mixtureFraction.type": "mass",
+              "peleLM.mixtureFraction.oxidTank": "O2:0.233 N2:0.767",
+              "peleLM.mixtureFraction.fuelTank": "NXC7H16:1.0",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-6",
+              "ode.atol": "1.0e-5",
+              "cvode.solve_type": "denseAJ_direct",
+              "cvode.max_order": "4",
+              "nodal_proj.verbose": "2",
+              "mac_proj.verbose": "2",
+              "mac_proj.rtol": "1.0e-10",
+              "nodal_proj.rtol": "1.0e-10",
+              "peleLM.do_temporals": "1",
+              "peleLM.do_mass_balance": "1",
+              "amr.refinement_indicators": "temp",
+              "amr.temp.max_level": "2",
+              "amr.temp.value_greater": "1500",
+              "amr.temp.field_name": "temp"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "CounterFlowSpray"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 5,
+            "chunk_index": 5
+          },
+          "breakdown": {
+            "path_hierarchy": "0.6629805",
+            "development_activity": "0.65754145",
+            "configuration_complexity": "0.69794565",
+            "physics_parameters": "0.687844",
+            "domain_models": "0.69473624",
+            "resource_requirements": "0.6773907",
+            "grid_specifications": "0.6638731"
+          },
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/PremBunsen2D",
+          "score": 0.7479959893226622,
+          "metadata": {
+            "case_name": "PremBunsen2D",
+            "repo_path": "Exec/Production/PremBunsen2D",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "-0.025 0.0 0.0",
+              "geometry.prob_hi": "0.025 0.05 0.016",
+              "peleLM.lo_bc": "Outflow Inflow",
+              "peleLM.hi_bc": "Outflow Outflow",
+              "amr.n_cell": "128 128 32",
+              "amr.v": "1",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "5",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "prob.P_mean": "101325.0",
+              "prob.standoff": "0.1085",
+              "prob.pertmag": "0.000",
+              "prob.Vin": "2.0",
+              "prob.Vcoflow": "0.4",
+              "prob.slot_width": "0.003",
+              "pmf.datafile": "\"drm_CH4Air_stoich.dat\"",
+              "peleLM.v": "2",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "2",
+              "peleLM.floor_species": "0",
+              "peleLM.advection_scheme": "Godunov_BDS",
+              "amr.check_int": "100",
+              "amr.plot_int": "100",
+              "amr.max_step": "200",
+              "amr.dt_shrink": "0.001",
+              "amr.stop_time": "1.1",
+              "amr.cfl": "0.3",
+              "amr.derive_plot_vars": "avg_pressure mag_vort mass_fractions",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-8",
+              "ode.atol": "1.0e-7",
+              "ode.clean_init_massfrac": "1",
+              "cvode.solve_type": "denseAJ_direct",
+              "cvode.max_order": "4",
+              "amr.refinement_indicators": "yH_Crse yH_Fine CH2O",
+              "amr.yH_Crse.max_level": "1",
+              "amr.yH_Crse.value_greater": "1.50e-4",
+              "amr.yH_Crse.field_name": "Y(H)",
+              "amr.yH_Fine.max_level": "3",
+              "amr.yH_Fine.value_greater": "2.00e-4",
+              "amr.yH_Fine.field_name": "Y(H)",
+              "amr.CH2O.max_level": "4",
+              "amr.CH2O.value_greater": "1.00e-3",
+              "amr.CH2O.field_name": "Y(CH2O)"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "PremBunsen2D"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 10,
+            "chunk_index": 10
+          },
+          "breakdown": {
+            "path_hierarchy": "0.6462612",
+            "development_activity": "0.66186607",
+            "configuration_complexity": "0.6846516",
+            "physics_parameters": "0.6724567",
+            "domain_models": "0.7059405",
+            "resource_requirements": "0.6819519",
+            "grid_specifications": "0.64988196"
+          },
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/PremBunsen3D",
+          "score": 0.7470461982488632,
+          "metadata": {
+            "case_name": "PremBunsen3D",
+            "repo_path": "Exec/Production/PremBunsen3D",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "-0.025 -0.025 0.0",
+              "geometry.prob_hi": "0.025  0.025 0.05",
+              "peleLM.lo_bc": "Outflow Outflow Inflow",
+              "peleLM.hi_bc": "Outflow Outflow Outflow",
+              "amr.n_cell": "96 96 96",
+              "amr.v": "1",
+              "amr.max_level": "2",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "5",
+              "amr.n_error_buf": "2 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "prob.P_mean": "101325.0",
+              "prob.standoff": "0.1085",
+              "prob.pertmag": "0.000",
+              "prob.Vin": "2.0",
+              "prob.Vcoflow": "0.4",
+              "prob.slot_width": "0.003",
+              "pmf.datafile": "\"drm_CH4Air_stoich.dat\"",
+              "peleLM.v": "2",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "1",
+              "peleLM.floor_species": "0",
+              "peleLM.deltaT_verbose": "0",
+              "amr.check_int": "100",
+              "amr.plot_int": "10",
+              "amr.max_step": "100",
+              "amr.dt_shrink": "0.001",
+              "amr.stop_time": "1.1",
+              "amr.cfl": "0.3",
+              "amr.derive_plot_vars": "avg_pressure mag_vort mass_fractions",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-6",
+              "ode.atol": "1.0e-5",
+              "cvode.solve_type": "dense_direct",
+              "cvode.max_order": "4",
+              "amr.refinement_indicators": "yH_Crse yH_Fine CH2O",
+              "amr.yH_Crse.max_level": "1",
+              "amr.yH_Crse.value_greater": "1.50e-4",
+              "amr.yH_Crse.field_name": "Y(H)",
+              "amr.yH_Fine.max_level": "3",
+              "amr.yH_Fine.value_greater": "2.00e-4",
+              "amr.yH_Fine.field_name": "Y(H)",
+              "amr.CH2O.max_level": "4",
+              "amr.CH2O.value_greater": "1.00e-3",
+              "amr.CH2O.field_name": "Y(CH2O)"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "PremBunsen3D"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 11,
+            "chunk_index": 11
+          },
+          "breakdown": {
+            "path_hierarchy": "0.6509825",
+            "development_activity": "0.6505211",
+            "configuration_complexity": "0.6843959",
+            "physics_parameters": "0.6720984",
+            "domain_models": "0.7108405",
+            "resource_requirements": "0.6750372",
+            "grid_specifications": "0.64720845"
+          },
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/SwirlFlowWallInteractions",
+          "score": 0.7428947973251342,
+          "metadata": {
+            "case_name": "SwirlFlowWallInteractions",
+            "repo_path": "Exec/Production/SwirlFlowWallInteractions",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "0.00 0.00  0.0",
+              "geometry.prob_hi": "0.32 0.32  0.32",
+              "peleLM.lo_bc": "Outflow Outflow Inflow",
+              "peleLM.hi_bc": "Outflow Outflow Outflow",
+              "amr.n_cell": "256 256 256",
+              "amr.v": "1",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "1",
+              "amr.n_error_buf": "1 1 1 2",
+              "amr.grid_eff": "0.7",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "128",
+              "prob.standoff": "-0.29",
+              "prob.pertmag": "0.004",
+              "prob.amplification": "10",
+              "pmf.datafile": "\"pmfdata.dat\"",
+              "amr.max_step": "50",
+              "amr.stop_time": "1.001",
+              "amr.cfl": "0.75",
+              "amr.dt_shrink": "0.001",
+              "amr.change_max": "1.1",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "10",
+              "amr.derive_plot_vars": "mag_vort avg_pressure mass_fractions",
+              "amr.grid_log": "grdlog",
+              "peleLM.v": "1",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "1",
+              "peleLM.floor_species": "0",
+              "amr.refinement_indicators": "magvort",
+              "amr.HR.max_level": "3",
+              "amr.HR.value_greater": "1.e8",
+              "amr.HR.field_name": "HeatRelease",
+              "amr.magvort.max_level": "3",
+              "amr.magvort.vorticity_greater": "1000",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-6",
+              "ode.atol": "1.0e-5",
+              "cvode.solve_type": "GMRES",
+              "cvode.max_order": "4",
+              "amrex.regtest_reduction": "0",
+              "amrex.fpe_trap_invalid": "0",
+              "amrex.fpe_trap_zero": "0",
+              "amrex.fpe_trap_overflow": "0",
+              "eb2.geom_type": "plane",
+              "eb2.plane_point": "0.00556 0.0018564 -0.006451",
+              "eb2.plane_normal": "0 -1 0.6",
+              "eb2.small_volfrac": "1.0e-3"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "SwirlFlowWallInteractions"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 12,
+            "chunk_index": 12
+          },
+          "breakdown": {
+            "path_hierarchy": "0.6478834",
+            "development_activity": "0.6347614",
+            "configuration_complexity": "0.6748794",
+            "physics_parameters": "0.6746457",
+            "domain_models": "0.707307",
+            "resource_requirements": "0.6513599",
+            "grid_specifications": "0.645279"
+          },
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/JetInCrossflow/LiDryer_CO2_He",
+          "score": 0.6566494297981262,
+          "metadata": {
+            "case_name": "LiDryer_CO2_He",
+            "repo_path": "Exec/Production/JetInCrossflow/LiDryer_CO2_He",
+            "inputs_content": {
+              "! BLOCK FOR THE REACTION H+O2(+M)": "HO2(+M), AND COMMENT THE BLOCK FOR OTHER DILUTANT(S).",
+              "!2.update the rate constant of H+O2": "O+OH as proposed by Hessler (J. Phys. Chem. A, 1998,",
+              "!3.update the low-pressure-limit rate constant of H+O2(+M)": "HO2(+M) with bath gases: H2,",
+              "!5.modify the A factor of the rate constant of H+OH+M": "H2O+M to 3.8E+22.",
+              "H+O2": "O+OH                 3.547e+15 -0.406  1.6599E+4",
+              "O+H2": "H+OH                 0.508E+05  2.67  0.629E+04",
+              "H2+OH": "H2O+H               0.216E+09  1.51  0.343E+04",
+              "O+H2O": "OH+OH               2.97e+06   2.02  1.34e+4",
+              "H2+M": "H+H+M                4.577E+19 -1.40  1.0438E+05",
+              "!H2+AR": "H+H+AR              5.84e18   -1.1   1.0438E+05",
+              "!H2+HE": "H+H+HE              5.84e18   -1.1   1.0438E+05",
+              "O+O+M": "O2+M                6.165E+15 -0.50  0.000E+00",
+              "!O+O+AR": "O2+AR              1.886E+13 0.00  -1.788E+03",
+              "!O+O+HE": "O2+HE              1.886E+13 0.00  -1.788E+03",
+              "O+H+M": "OH+M                4.714E+18 -1.00  0.000E+00",
+              "!H+OH+M": "H2O+M              2.212E+22 -2.00  0.000E+00",
+              "H+OH+M": "H2O+M               3.800E+22 -2.00  0.000E+00",
+              "H+O2(+M)": "HO2(+M)      1.475E+12  0.60  0.00E+00",
+              "!H+O2(+M)": "HO2(+M)      1.475E+12  0.60  0.00E+00",
+              "HO2+H": "OH+OH               7.079E+13   0.00   2.95E+02",
+              "HO2+O": "O2+OH               0.325E+14  0.00   0.00E+00",
+              "HO2+OH": "H2O+O2             2.890E+13  0.00 -4.970E+02",
+              "HO2+HO2": "H2O2+O2            1.300e+11  0.00 -1.6293e+3",
+              "H2O2(+M)": "OH+OH(+M)         2.951e+14   0.00  4.843E+04",
+              "H2O2+H": "HO2+H2             0.482E+14  0.00  0.795E+04",
+              "H2O2+O": "OH+HO2 \t\t  9.550E+06  2.00  3.970E+03",
+              "H2O2+OH": "HO2+H2O           5.800E+14  0.00  9.557E+03"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "JetInCrossflow",
+              "LiDryer_CO2_He"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 8,
+            "chunk_index": 8
+          },
+          "breakdown": {
+            "path_hierarchy": "0.6760626",
+            "development_activity": "0.66174585",
+            "physics_parameters": "0.6625371",
+            "resource_requirements": "0.68124235",
+            "grid_specifications": "0.68121105"
+          },
+          "routing_intent_adjustment": 0.12,
+          "routing_intent_overlap": 1.0,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/ChallengeProblem",
+          "score": 0.5810523289442062,
+          "metadata": {
+            "case_name": "ChallengeProblem",
+            "repo_path": "Exec/Production/ChallengeProblem",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "-0.014 -0.014 -0.00275",
+              "geometry.prob_hi": "0.014  0.014  0.00425",
+              "peleLM.lo_bc": "NoSlipWallAdiab NoSlipWallAdiab NoSlipWallAdiab",
+              "peleLM.hi_bc": "NoSlipWallAdiab NoSlipWallAdiab Inflow",
+              "amr.n_cell": "512 512 128",
+              "amr.v": "1",
+              "amr.max_level": "5",
+              "amr.ref_ratio": "2 2 2 2 2 2",
+              "amr.regrid_int": "5",
+              "amr.n_error_buf": "2 2 2 2 2 2",
+              "amr.grid_eff": "0.95",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "32",
+              "prob.P_mean": "6079500.0",
+              "prob.T_mean": "900.0",
+              "prob.centx": "0.0",
+              "prob.centy": "0.0",
+              "prob.r_circ": "0.0015",
+              "prob.r_hole": "0.000085",
+              "prob.nholes": "4",
+              "prob.cone_angle": "45.0",
+              "prob.T_jet": "470.0",
+              "prob.vel_jet": "28.0",
+              "prob.Z": "0.45",
+              "prob.injection_start": "0.0",
+              "prob.injection_duration": "0.0005",
+              "ic.hitIC": "1",
+              "ic.input_resolution": "128",
+              "ic.input_binaryformat": "1",
+              "ic.input_name": "\"hit_ic_ut_128.in\"",
+              "ic.uin_norm": "1.3231790983814187",
+              "ic.lscale": "241.66097335",
+              "ic.offset": "-3.1415926536",
+              "ic.urms0": "4.0",
+              "ic.win_lo": "-0.007 -0.007 0.0015",
+              "ic.win_hi": "0.007 0.007 0.003",
+              "ic.win_slope": "1000.0",
+              "turbinflows": "inj1 inj2 inj3 inj4",
+              "turbinflow.inj1.turb_file": "Turb.test2",
+              "turbinflow.inj1.dir": "2",
+              "turbinflow.inj1.side": "high",
+              "turbinflow.inj1.turb_scale_loc": "1.0",
+              "turbinflow.inj1.turb_scale_vel": "1.0",
+              "turbinflow.inj1.turb_center": "0.0 0.0015",
+              "turbinflow.inj1.turb_conv_vel": "28.0",
+              "turbinflow.inj1.turb_nplane": "32",
+              "turbinflow.inj1.time_offset": "0.0",
+              "turbinflow.inj2.turb_file": "Turb.test2",
+              "turbinflow.inj2.dir": "2",
+              "turbinflow.inj2.side": "high",
+              "turbinflow.inj2.turb_scale_loc": "1.0",
+              "turbinflow.inj2.turb_scale_vel": "1.0",
+              "turbinflow.inj2.turb_center": "-0.0015 0.0",
+              "turbinflow.inj2.turb_conv_vel": "28.0",
+              "turbinflow.inj2.turb_nplane": "32",
+              "turbinflow.inj2.time_offset": "0.000014",
+              "turbinflow.inj3.turb_file": "Turb.test2",
+              "turbinflow.inj3.dir": "2",
+              "turbinflow.inj3.side": "high",
+              "turbinflow.inj3.turb_scale_loc": "1.0",
+              "turbinflow.inj3.turb_scale_vel": "1.0",
+              "turbinflow.inj3.turb_center": "0.0 -0.0015",
+              "turbinflow.inj3.turb_conv_vel": "28.0",
+              "turbinflow.inj3.turb_nplane": "32",
+              "turbinflow.inj3.time_offset": "0.000028",
+              "turbinflow.inj4.turb_file": "Turb.test2",
+              "turbinflow.inj4.dir": "2",
+              "turbinflow.inj4.side": "high",
+              "turbinflow.inj4.turb_scale_loc": "1.0",
+              "turbinflow.inj4.turb_scale_vel": "1.0",
+              "turbinflow.inj4.turb_center": "0.0015 0.0",
+              "turbinflow.inj4.turb_conv_vel": "28.0",
+              "turbinflow.inj4.turb_nplane": "32",
+              "turbinflow.inj4.time_offset": "0.000056",
+              "peleLM.v": "3",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "2",
+              "peleLM.floor_species": "1",
+              "peleLM.num_divu_iter": "1",
+              "peleLM.num_init_iter": "1",
+              "peleLM.deltaT_verbose": "1",
+              "peleLM.deltaT_iterMax": "15",
+              "peleLM.deltaT_crashIfFailing": "0",
+              "peleLM.do_temporals": "1",
+              "peleLM.temporal_int": "5",
+              "peleLM.do_extremas": "1",
+              "amr.check_int": "50",
+              "amr.plot_int": "100",
+              "amr.max_step": "6102",
+              "amr.dt_shrink": "0.1",
+              "amr.stop_time": "1.0",
+              "amr.init_dt": "0.000001",
+              "amr.cfl": "0.5",
+              "amr.derive_plot_vars": "avg_pressure mag_vort mass_fractions",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-7",
+              "ode.atol": "1.0e-6",
+              "ode.clean_init_massfrac": "1",
+              "cvode.solve_type": "magma_direct",
+              "cvode.max_order": "4",
+              "eb2.geom_type": "UserDefined",
+              "eb2.maxiter": "500",
+              "eb2.num_coarsen_opt": "3",
+              "eb2.max_grid_size": "64",
+              "peleLM.fuel_name": "NC12H26",
+              "peleLM.mixtureFraction.format": "Cantera",
+              "peleLM.mixtureFraction.type": "mass",
+              "peleLM.mixtureFraction.oxidTank": "O2:0.233 N2:0.767",
+              "peleLM.mixtureFraction.fuelTank": "NC12H26:1.0",
+              "peleLM.refine_EB_type": "Static",
+              "peleLM.refine_EB_max_level": "0",
+              "peleLM.refine_EB_buffer": "2.0",
+              "amr.refinement_indicators": "boxHZ fuel loTemp hiTemp yOH",
+              "amr.boxHZ.max_level": "1",
+              "amr.boxHZ.in_box_lo": "-0.003 -0.003 0.004",
+              "amr.boxHZ.in_box_hi": "0.003  0.003 0.0045",
+              "amr.fuel.max_level": "3",
+              "amr.fuel.value_greater": "0.05",
+              "amr.fuel.field_name": "Y(NC12H26)",
+              "amr.loTemp.max_level": "3",
+              "amr.loTemp.value_less": "850.0",
+              "amr.loTemp.field_name": "temp",
+              "amr.hiTemp.max_level": "3",
+              "amr.hiTemp.value_greater": "925.0",
+              "amr.hiTemp.field_name": "temp",
+              "amr.yOH.max_level": "3",
+              "amr.yOH.value_greater": "2e-6",
+              "amr.yOH.field_name": "Y(OH)",
+              "nodal_proj.verbose": "1",
+              "nodal_proj.rtol": "1.0e-11",
+              "nodal_proj.atol": "1.0e-11",
+              "fabarray.mfiter_tile_size": "1024 1024 1024",
+              "amrex.abort_on_out_of_gpu_memory": "1"
+            },
+            "param_count": 139,
+            "complexity_score": 1.0,
+            "index_type": "configuration_complexity",
+            "chunk_parent": 3,
+            "chunk_index": 3
+          },
+          "breakdown": {
+            "configuration_complexity": "0.65505826",
+            "physics_parameters": "0.6733682",
+            "domain_models": "0.6962809",
+            "resource_requirements": "0.633673",
+            "grid_specifications": "0.6611215"
+          },
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/DiffBunsen2D",
+          "score": 0.5391769009828568,
+          "metadata": {
+            "case_name": "DiffBunsen2D",
+            "repo_path": "Exec/Production/DiffBunsen2D",
+            "inputs_content": {
+              "prob.Xmax": "0.0185",
+              "prob.Ymax": "0.037",
+              "prob.Zmax": "0.0185",
+              "geometry.is_periodic": "0 0",
+              "geometry.coord_sys": "1",
+              "geometry.prob_lo": "0.0 0.0",
+              "geometry.prob_hi": "0.0185 0.037",
+              "peleLM.lo_bc": "Symmetry      Inflow",
+              "peleLM.hi_bc": "SlipWallAdiab Outflow",
+              "amr.n_cell": "128 256 32",
+              "amr.v": "1",
+              "amr.max_level": "1",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2",
+              "amr.n_error_buf": "4 2 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "prob.Xf": "0.0011",
+              "prob.Xe": "0.0001",
+              "prob.Xc": "0.0113",
+              "prob.Yin": "0.003",
+              "prob.V_fu": "0.15",
+              "prob.V_ox": "0.031",
+              "prob.V_air": "0.0",
+              "prob.T_fu": "300",
+              "prob.T_ox": "300",
+              "prob.T_air": "300",
+              "prob.T_obst": "450",
+              "prob.do_ignition": "1",
+              "prob.ign_rad": "0.001",
+              "prob.ign_T": "1900",
+              "prob.P_mean": "100000.0",
+              "prob.dilution": "0.7",
+              "peleLM.gravity": "0.0 -9.81 0.0",
+              "peleLM.v": "2",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "2",
+              "peleLM.floor_species": "0",
+              "peleLM.num_init_iter": "3",
+              "peleLM.advection_scheme": "\"Godunov_PLM\"",
+              "peleLM.do_temporals": "1",
+              "peleLM.do_mass_balance": "1",
+              "peleLM.deltaT_iterMax": "15",
+              "amr.check_int": "100",
+              "amr.plot_int": "100",
+              "amr.max_step": "100",
+              "amr.dt_shrink": "0.01",
+              "amr.init_dt": "0.000001",
+              "amr.cfl": "0.05",
+              "amr.derive_plot_vars": "avg_pressure mag_vort mass_fractions",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-7",
+              "ode.atol": "1.0e-6",
+              "cvode.solve_type": "denseAJ_direct",
+              "cvode.max_order": "4",
+              "amr.refinement_indicators": "HR",
+              "amr.HR.max_level": "1",
+              "amr.HR.value_greater": "5e7",
+              "amr.HR.field_name": "HeatRelease"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "DiffBunsen2D"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 6,
+            "chunk_index": 6
+          },
+          "breakdown": {
+            "path_hierarchy": "0.63568306",
+            "development_activity": "0.649269",
+            "configuration_complexity": "0.6652713",
+            "domain_models": "0.7054074",
+            "resource_requirements": "0.6652196",
+            "grid_specifications": "0.6428435"
+          },
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        },
+        {
+          "case": "Exec/Production/NormalJet_OpenDomain",
+          "score": 0.49988424360752104,
+          "metadata": {
+            "case_name": "NormalJet_OpenDomain",
+            "repo_path": "Exec/Production/NormalJet_OpenDomain",
+            "inputs_content": {
+              "geometry.is_periodic": "0 0 0",
+              "geometry.coord_sys": "0",
+              "geometry.prob_lo": "-.00256 -.00256 0.0",
+              "geometry.prob_hi": ".00256  .00256 0.01024",
+              "peleLM.lo_bc": "Outflow  Outflow Inflow",
+              "peleLM.hi_bc": "Outflow  Outflow Outflow",
+              "amr.n_cell": "64 64 128",
+              "amr.v": "1",
+              "amr.max_level": "2",
+              "amr.ref_ratio": "2 2 2 2",
+              "amr.regrid_int": "2",
+              "amr.n_error_buf": "1 1 2 2",
+              "amr.grid_eff": "0.7",
+              "amr.blocking_factor": "16",
+              "amr.max_grid_size": "64",
+              "amr.max_step": "10",
+              "amr.stop_time": "0.001",
+              "amr.cfl": "0.3",
+              "amr.dt_shrink": "0.0001",
+              "amr.change_max": "1.1",
+              "amr.checkpoint_files_output": "1",
+              "amr.check_file": "chk",
+              "amr.check_int": "100",
+              "amr.plot_file": "plt",
+              "amr.plot_int": "100",
+              "amr.derive_plot_vars": "mag_vort avg_pressure mass_fractions",
+              "amr.grid_log": "grdlog",
+              "prob.P_mean": "6079500.0",
+              "prob.inj_start": "4e-5",
+              "prob.inj_dur": ".5e-3",
+              "prob.v_in": "28.",
+              "prob.D": "1.7e-4",
+              "prob.fu_spec": "NC12H26",
+              "prob.fu_ox_spec": "CH4",
+              "prob.Y_O2_ox": "0.164305",
+              "prob.Y_fu_ox": "0.0205938",
+              "prob.T_ox": "900.",
+              "prob.T_fu": "470.",
+              "prob.tau": "0.01",
+              "prob.turb_scale_loc": "1.0",
+              "prob.turb_scale_vel": "1.0",
+              "prob.turb_center": "0.0 0.0",
+              "prob.turb_conv_vel": "28.",
+              "prob.turb_nplane": "1025",
+              "peleLM.v": "1",
+              "peleLM.incompressible": "0",
+              "peleLM.rho": "1.17",
+              "peleLM.mu": "0.0",
+              "peleLM.use_wbar": "1",
+              "peleLM.sdc_iterMax": "2",
+              "peleLM.floor_species": "0",
+              "amr.refinement_indicators": "magvort",
+              "amr.gradT.max_level": "3",
+              "amr.gradT.adjacent_difference_greater": "1",
+              "amr.gradT.field_name": "temp",
+              "amr.magvort.max_level": "3",
+              "amr.magvort.vorticity_greater": "10",
+              "peleLM.chem_integrator": "\"ReactorCvode\"",
+              "peleLM.use_typ_vals_chem": "1",
+              "ode.rtol": "1.0e-6",
+              "ode.atol": "1.0e-5",
+              "cvode.solve_type": "denseAJ_direct",
+              "cvode.max_order": "4",
+              "amrex.regtest_reduction": "1",
+              "amrex.fpe_trap_invalid": "1",
+              "amrex.fpe_trap_zero": "1",
+              "amrex.fpe_trap_overflow": "1"
+            },
+            "path_components": [
+              "Exec",
+              "Production",
+              "NormalJet_OpenDomain"
+            ],
+            "index_type": "path_hierarchy",
+            "chunk_parent": 9,
+            "chunk_index": 9
+          },
+          "breakdown": {
+            "path_hierarchy": "0.61821085",
+            "development_activity": "0.62080175",
+            "configuration_complexity": "0.6590222",
+            "domain_models": "0.70022976",
+            "grid_specifications": "0.6457362"
+          },
+          "routing_intent_adjustment": 0.07999999999999999,
+          "routing_intent_overlap": 0.6666666666666666,
+          "admissibility_status": "admissible",
+          "admissibility_reason": null
+        }
+      ],
+      "baseline_evidence_citations": [
+        {
+          "citation_type": "baseline",
+          "case": "Exec/Production/JetInCrossflow"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Production/CounterFlowSpray"
+        },
+        {
+          "citation_type": "similar_case",
+          "case": "Exec/Production/CounterFlow"
+        }
+      ],
+      "indexing_strategy": "hierarchical",
+      "indexing_calls_count": 21,
+      "indexing_calls_total": 21,
+      "indexing_calls_detail": {
+        "embed_documents": 0,
+        "embed_query": 21
+      },
+      "confidence_score": 0.9880665856599808,
+      "level0_solver": "PeleLMeX",
+      "level0_confidence": 0.9,
+      "level2_override_applied": false,
+      "level2_override_solver": null,
+      "level2_override_case": null,
+      "level2_override_confidence": null,
+      "parameter_resolution_applied": true,
+      "iteration1_case": "Exec/Production/JetInCrossflow",
+      "iteration1_solver": "PeleLMeX",
+      "case_selection_locked": false,
+      "case_reselection_fallback": false,
+      "reviewer_guidance": {},
+      "remapped_parameters": []
+    }
+  },
+  {
+    "node": "reviewer",
+    "timestamp": "2026-05-06T16:10:45.632599Z",
+    "action": "parameter_resolution_retry",
+    "iteration": 1,
+    "details": {
+      "status": "retry",
+      "reason": "schema_resolution",
+      "unresolved_parameters": [
+        [
+          "spray.jet1.jet_cent",
+          "0.01 0. 0."
+        ],
+        [
+          "spray.jet1.jet_norm",
+          "-1. 0. 0."
+        ],
+        [
+          "spray.jet1.mass_flow_rate",
+          "9.8E-4"
+        ],
+        [
+          "spray.jet1.T",
+          "300."
+        ],
+        [
+          "spray.jet1.jet_vel",
+          "2."
+        ],
+        [
+          "spray.jet1.jet_dia",
+          "0.01"
+        ],
+        [
+          "spray.jet1.dist_type",
+          "Uniform"
+        ],
+        [
+          "spray.jet1.diameter",
+          "5.E-5"
+        ],
+        [
+          "spray.jet1.spread_angle",
+          "0."
+        ],
+        [
+          "particles.init_function",
+          "1"
+        ],
+        [
+          "particles.parcel_size",
+          "2."
+        ],
+        [
+          "particles.NXC7H16_crit_temp",
+          "540."
+        ],
+        [
+          "particles.NXC7H16_boil_temp",
+          "371.6"
+        ],
+        [
+          "particles.NXC7H16_latent",
+          "3.69E5"
+        ],
+        [
+          "particles.NXC7H16_cp",
+          "2.2483E3"
+        ],
+        [
+          "particles.NXC7H16_rho",
+          "681.43"
+        ],
+        [
+          "particles.NXC7H16_psat",
+          "4.02832 1268.636 -56.199 1.E5"
+        ],
+        [
+          "amr.temp.max_level",
+          "2"
+        ],
+        [
+          "amr.temp.value_greater",
+          "1500"
+        ],
+        [
+          "amr.temp.field_name",
+          "temp"
+        ],
+        [
+          "amr.initDataPlt",
+          "plt02656_coolflow"
+        ],
+        [
+          "amr.plot_per_exact",
+          "1"
+        ],
+        [
+          "diffusion.verbose",
+          "0"
+        ],
+        [
+          "amr.gradT.max_level",
+          "2"
+        ],
+        [
+          "amr.gradT.adjacent_difference_greater",
+          "100"
+        ],
+        [
+          "amr.gradT.field_name",
+          "temp"
+        ]
+      ],
+      "resolution_guidance": "26 parameters could not be mapped to schema: ['spray.jet1.jet_cent', 'spray.jet1.jet_norm', 'spray.jet1.mass_flow_rate', 'spray.jet1.T', 'spray.jet1.jet_vel', 'spray.jet1.jet_dia', 'spray.jet1.dist_type', 'spray.jet1.diameter', 'spray.jet1.spread_angle', 'particles.init_function', 'particles.parcel_size', 'particles.NXC7H16_crit_temp', 'particles.NXC7H16_boil_temp', 'particles.NXC7H16_latent', 'particles.NXC7H16_cp', 'particles.NXC7H16_rho', 'particles.NXC7H16_psat', 'amr.temp.max_level', 'amr.temp.value_greater', 'amr.temp.field_name', 'amr.initDataPlt', 'amr.plot_per_exact', 'diffusion.verbose', 'amr.gradT.max_level', 'amr.gradT.adjacent_difference_greater', 'amr.gradT.field_name']. Remap attempted: 2 succeeded.",
+      "available_schema_params_count": 1810,
+      "suggested_params": {
+        "spray.jet1.jet_cent": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "center"
+        ],
+        "spray.jet1.jet_norm": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "normalized",
+          "normal"
+        ],
+        "spray.jet1.mass_flow_rate": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "turbinflows"
+        ],
+        "spray.jet1.T": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer",
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose"
+        ],
+        "spray.jet1.jet_vel": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "level"
+        ],
+        "spray.jet1.jet_dia": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "diameter"
+        ],
+        "spray.jet1.dist_type": [
+          "DistributionMapping_v",
+          "DistributionMapping.v",
+          "DistributionMapping_verbose",
+          "DistributionMapping.verbose",
+          "DistributionMapping_efficiency",
+          "DistributionMapping.efficiency",
+          "DistributionMapping_sfc_threshold",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping_node_size",
+          "DistributionMapping.node_size",
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic"
+        ],
+        "spray.jet1.diameter": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "diameter"
+        ],
+        "spray.jet1.spread_angle": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic"
+        ],
+        "particles.init_function": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.parcel_size": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_crit_temp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_boil_temp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_latent": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_cp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_rho": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_psat": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "amr.temp.max_level": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.temp.value_greater": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.temp.field_name": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.initDataPlt": [
+          "amr.restart_from_plotfile"
+        ],
+        "amr.plot_per_exact": [
+          "amr.plot_per"
+        ],
+        "diffusion.verbose": [
+          "verbose",
+          "tensor_diffusion.verbose",
+          "tensor_diffusion.atol",
+          "tensor_diffusion.rtol",
+          "tensor_diffusion.max_iter",
+          "tensor_diffusion.bottom_solver",
+          "tensor_diffusion.max_order",
+          "tensor_diffusion.mlmg_fail_sdc_miniter",
+          "tensor_diffusion.mlmg_fail_deltaT_miniter",
+          "tensor_diffusion.mlmg_fail_species_maxiter_after_sdc_miniter",
+          "tensor_diffusion.mlmg_fail_temp_maxiter_after_sdc_deltaT_miniter"
+        ],
+        "amr.gradT.max_level": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.gradT.adjacent_difference_greater": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.gradT.field_name": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ]
+      },
+      "remap_mapping": {
+        "amr.initDataPlt": "amr.restart_from_plotfile",
+        "amr.plot_per_exact": "amr.plot_per"
+      },
+      "remap_success_count": 2,
+      "retry_count": 0
+    }
+  },
+  {
+    "node": "architect",
+    "timestamp": "2026-05-06T16:10:50.933760Z",
+    "action": "plan_created_with_parameter_remapping",
+    "iteration": 2,
+    "details": {
+      "selected_case": "Exec/Production/JetInCrossflow",
+      "selected_solver": "PeleLMeX",
+      "modifications": [
+        [
+          "spray.jet1.jet_cent",
+          "0.01 0. 0."
+        ],
+        [
+          "spray.jet1.jet_norm",
+          "-1. 0. 0."
+        ],
+        [
+          "spray.jet1.mass_flow_rate",
+          "9.8E-4"
+        ],
+        [
+          "spray.jet1.T",
+          "300."
+        ],
+        [
+          "spray.jet1.jet_vel",
+          "2."
+        ],
+        [
+          "spray.jet1.jet_dia",
+          "0.01"
+        ],
+        [
+          "spray.jet1.dist_type",
+          "Uniform"
+        ],
+        [
+          "spray.jet1.diameter",
+          "5.E-5"
+        ],
+        [
+          "spray.jet1.spread_angle",
+          "0."
+        ],
+        [
+          "particles.init_function",
+          "1"
+        ],
+        [
+          "particles.parcel_size",
+          "2."
+        ],
+        [
+          "particles.NXC7H16_crit_temp",
+          "540."
+        ],
+        [
+          "particles.NXC7H16_boil_temp",
+          "371.6"
+        ],
+        [
+          "particles.NXC7H16_latent",
+          "3.69E5"
+        ],
+        [
+          "particles.NXC7H16_cp",
+          "2.2483E3"
+        ],
+        [
+          "particles.NXC7H16_rho",
+          "681.43"
+        ],
+        [
+          "particles.NXC7H16_psat",
+          "4.02832 1268.636 -56.199 1.E5"
+        ],
+        [
+          "amr.temp.max_level",
+          "2"
+        ],
+        [
+          "amr.temp.value_greater",
+          "1500"
+        ],
+        [
+          "amr.temp.field_name",
+          "temp"
+        ],
+        [
+          "amr.restart_from_plotfile",
+          "plt02656_coolflow"
+        ],
+        [
+          "amr.plot_per",
+          "1"
+        ],
+        [
+          "diffusion.verbose",
+          "0"
+        ],
+        [
+          "amr.gradT.max_level",
+          "2"
+        ],
+        [
+          "amr.gradT.adjacent_difference_greater",
+          "100"
+        ],
+        [
+          "amr.gradT.field_name",
+          "temp"
+        ]
+      ],
+      "reasoning": "CBR plan based on Exec/Production/JetInCrossflow",
+      "baseline": {
+        "code_name": "PeleLMeX",
+        "repo_path": "/home/jmsexton/codes/worktree_sandbox/PeleLMeX",
+        "case_path": "Exec/Production/JetInCrossflow",
+        "local_path": "/home/jmsexton/codes/worktree_sandbox/PeleLMeX/Exec/Production/JetInCrossflow"
+      },
+      "case_candidates": [],
+      "baseline_evidence_citations": [
+        {
+          "citation_type": "baseline",
+          "case": "Exec/Production/JetInCrossflow"
+        }
+      ],
+      "indexing_strategy": "hierarchical",
+      "indexing_calls_count": 7,
+      "indexing_calls_total": 28,
+      "indexing_calls_detail": {
+        "embed_documents": 0,
+        "embed_query": 7
+      },
+      "confidence_score": 1.0,
+      "level0_solver": "PeleLMeX",
+      "level0_confidence": 1.0,
+      "level2_override_applied": false,
+      "level2_override_solver": null,
+      "level2_override_case": null,
+      "level2_override_confidence": null,
+      "parameter_resolution_applied": true,
+      "iteration1_case": "Exec/Production/JetInCrossflow",
+      "iteration1_solver": "PeleLMeX",
+      "case_selection_locked": true,
+      "case_reselection_fallback": false,
+      "reviewer_guidance": {},
+      "remapped_parameters": [
+        "spray.jet1.jet_cent",
+        "spray.jet1.jet_norm",
+        "spray.jet1.mass_flow_rate",
+        "spray.jet1.T",
+        "spray.jet1.jet_vel",
+        "spray.jet1.jet_dia",
+        "spray.jet1.dist_type",
+        "spray.jet1.diameter",
+        "spray.jet1.spread_angle",
+        "particles.init_function",
+        "particles.parcel_size",
+        "particles.NXC7H16_crit_temp",
+        "particles.NXC7H16_boil_temp",
+        "particles.NXC7H16_latent",
+        "particles.NXC7H16_cp",
+        "particles.NXC7H16_rho",
+        "particles.NXC7H16_psat",
+        "amr.temp.max_level",
+        "amr.temp.value_greater",
+        "amr.temp.field_name",
+        "amr.initDataPlt",
+        "amr.plot_per_exact",
+        "diffusion.verbose",
+        "amr.gradT.max_level",
+        "amr.gradT.adjacent_difference_greater",
+        "amr.gradT.field_name"
+      ]
+    }
+  },
+  {
+    "node": "reviewer",
+    "timestamp": "2026-05-06T16:11:03.060578Z",
+    "action": "parameter_resolution_retry",
+    "iteration": 2,
+    "details": {
+      "status": "retry",
+      "reason": "schema_resolution",
+      "unresolved_parameters": [
+        [
+          "spray.jet1.jet_cent",
+          "0.01 0. 0."
+        ],
+        [
+          "spray.jet1.jet_norm",
+          "-1. 0. 0."
+        ],
+        [
+          "spray.jet1.mass_flow_rate",
+          "9.8E-4"
+        ],
+        [
+          "spray.jet1.T",
+          "300."
+        ],
+        [
+          "spray.jet1.jet_vel",
+          "2."
+        ],
+        [
+          "spray.jet1.jet_dia",
+          "0.01"
+        ],
+        [
+          "spray.jet1.dist_type",
+          "Uniform"
+        ],
+        [
+          "spray.jet1.diameter",
+          "5.E-5"
+        ],
+        [
+          "spray.jet1.spread_angle",
+          "0."
+        ],
+        [
+          "particles.init_function",
+          "1"
+        ],
+        [
+          "particles.parcel_size",
+          "2."
+        ],
+        [
+          "particles.NXC7H16_crit_temp",
+          "540."
+        ],
+        [
+          "particles.NXC7H16_boil_temp",
+          "371.6"
+        ],
+        [
+          "particles.NXC7H16_latent",
+          "3.69E5"
+        ],
+        [
+          "particles.NXC7H16_cp",
+          "2.2483E3"
+        ],
+        [
+          "particles.NXC7H16_rho",
+          "681.43"
+        ],
+        [
+          "particles.NXC7H16_psat",
+          "4.02832 1268.636 -56.199 1.E5"
+        ],
+        [
+          "amr.temp.max_level",
+          "2"
+        ],
+        [
+          "amr.temp.value_greater",
+          "1500"
+        ],
+        [
+          "amr.temp.field_name",
+          "temp"
+        ],
+        [
+          "diffusion.verbose",
+          "0"
+        ],
+        [
+          "amr.gradT.max_level",
+          "2"
+        ],
+        [
+          "amr.gradT.adjacent_difference_greater",
+          "100"
+        ],
+        [
+          "amr.gradT.field_name",
+          "temp"
+        ]
+      ],
+      "resolution_guidance": "24 parameters could not be mapped to schema: ['spray.jet1.jet_cent', 'spray.jet1.jet_norm', 'spray.jet1.mass_flow_rate', 'spray.jet1.T', 'spray.jet1.jet_vel', 'spray.jet1.jet_dia', 'spray.jet1.dist_type', 'spray.jet1.diameter', 'spray.jet1.spread_angle', 'particles.init_function', 'particles.parcel_size', 'particles.NXC7H16_crit_temp', 'particles.NXC7H16_boil_temp', 'particles.NXC7H16_latent', 'particles.NXC7H16_cp', 'particles.NXC7H16_rho', 'particles.NXC7H16_psat', 'amr.temp.max_level', 'amr.temp.value_greater', 'amr.temp.field_name', 'diffusion.verbose', 'amr.gradT.max_level', 'amr.gradT.adjacent_difference_greater', 'amr.gradT.field_name']. Remap attempted: 1 succeeded.",
+      "available_schema_params_count": 1810,
+      "suggested_params": {
+        "spray.jet1.jet_cent": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "center"
+        ],
+        "spray.jet1.jet_norm": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "normalized",
+          "normal"
+        ],
+        "spray.jet1.mass_flow_rate": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "turbinflows"
+        ],
+        "spray.jet1.T": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer",
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose"
+        ],
+        "spray.jet1.jet_vel": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "level"
+        ],
+        "spray.jet1.jet_dia": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "diameter"
+        ],
+        "spray.jet1.dist_type": [
+          "DistributionMapping_v",
+          "DistributionMapping.v",
+          "DistributionMapping_verbose",
+          "DistributionMapping.verbose",
+          "DistributionMapping_efficiency",
+          "DistributionMapping.efficiency",
+          "DistributionMapping_sfc_threshold",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping_node_size",
+          "DistributionMapping.node_size",
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic"
+        ],
+        "spray.jet1.diameter": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "diameter"
+        ],
+        "spray.jet1.spread_angle": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic"
+        ],
+        "particles.init_function": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.parcel_size": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_crit_temp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_boil_temp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_latent": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_cp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_rho": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_psat": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "amr.temp.max_level": [
+          "amr.max_level"
+        ],
+        "amr.temp.value_greater": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.temp.field_name": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "diffusion.verbose": [
+          "verbose",
+          "tensor_diffusion.verbose",
+          "tensor_diffusion.atol",
+          "tensor_diffusion.rtol",
+          "tensor_diffusion.max_iter",
+          "tensor_diffusion.bottom_solver",
+          "tensor_diffusion.max_order",
+          "tensor_diffusion.mlmg_fail_sdc_miniter",
+          "tensor_diffusion.mlmg_fail_deltaT_miniter",
+          "tensor_diffusion.mlmg_fail_species_maxiter_after_sdc_miniter",
+          "tensor_diffusion.mlmg_fail_temp_maxiter_after_sdc_deltaT_miniter"
+        ],
+        "amr.gradT.max_level": [
+          "amr.max_level"
+        ],
+        "amr.gradT.adjacent_difference_greater": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.gradT.field_name": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ]
+      },
+      "remap_mapping": {
+        "amr.temp.max_level": "amr.max_level",
+        "amr.gradT.max_level": "amr.max_level"
+      },
+      "remap_success_count": 2,
+      "retry_count": 1
+    }
+  },
+  {
+    "node": "architect",
+    "timestamp": "2026-05-06T16:11:05.818220Z",
+    "action": "plan_created_with_parameter_remapping",
+    "iteration": 3,
+    "details": {
+      "selected_case": "Exec/Production/JetInCrossflow",
+      "selected_solver": "PeleLMeX",
+      "modifications": [
+        [
+          "spray.jet1.jet_cent",
+          "0.01 0. 0."
+        ],
+        [
+          "spray.jet1.jet_norm",
+          "-1. 0. 0."
+        ],
+        [
+          "spray.jet1.mass_flow_rate",
+          "9.8E-4"
+        ],
+        [
+          "spray.jet1.T",
+          "300."
+        ],
+        [
+          "spray.jet1.jet_vel",
+          "2."
+        ],
+        [
+          "spray.jet1.jet_dia",
+          "0.01"
+        ],
+        [
+          "spray.jet1.dist_type",
+          "Uniform"
+        ],
+        [
+          "spray.jet1.diameter",
+          "5.E-5"
+        ],
+        [
+          "spray.jet1.spread_angle",
+          "0."
+        ],
+        [
+          "particles.init_function",
+          "1"
+        ],
+        [
+          "particles.parcel_size",
+          "2."
+        ],
+        [
+          "particles.NXC7H16_crit_temp",
+          "540."
+        ],
+        [
+          "particles.NXC7H16_boil_temp",
+          "371.6"
+        ],
+        [
+          "particles.NXC7H16_latent",
+          "3.69E5"
+        ],
+        [
+          "particles.NXC7H16_cp",
+          "2.2483E3"
+        ],
+        [
+          "particles.NXC7H16_rho",
+          "681.43"
+        ],
+        [
+          "particles.NXC7H16_psat",
+          "4.02832 1268.636 -56.199 1.E5"
+        ],
+        [
+          "amr.max_level",
+          "2"
+        ],
+        [
+          "amr.temp.value_greater",
+          "1500"
+        ],
+        [
+          "amr.temp.field_name",
+          "temp"
+        ],
+        [
+          "diffusion.verbose",
+          "0"
+        ],
+        [
+          "amr.max_level",
+          "2"
+        ],
+        [
+          "amr.gradT.adjacent_difference_greater",
+          "100"
+        ],
+        [
+          "amr.gradT.field_name",
+          "temp"
+        ]
+      ],
+      "reasoning": "CBR plan based on Exec/Production/JetInCrossflow",
+      "baseline": {
+        "code_name": "PeleLMeX",
+        "repo_path": "/home/jmsexton/codes/worktree_sandbox/PeleLMeX",
+        "case_path": "Exec/Production/JetInCrossflow",
+        "local_path": "/home/jmsexton/codes/worktree_sandbox/PeleLMeX/Exec/Production/JetInCrossflow"
+      },
+      "case_candidates": [],
+      "baseline_evidence_citations": [
+        {
+          "citation_type": "baseline",
+          "case": "Exec/Production/JetInCrossflow"
+        }
+      ],
+      "indexing_strategy": "hierarchical",
+      "indexing_calls_count": 7,
+      "indexing_calls_total": 35,
+      "indexing_calls_detail": {
+        "embed_documents": 0,
+        "embed_query": 7
+      },
+      "confidence_score": 1.0,
+      "level0_solver": "PeleLMeX",
+      "level0_confidence": 1.0,
+      "level2_override_applied": false,
+      "level2_override_solver": null,
+      "level2_override_case": null,
+      "level2_override_confidence": null,
+      "parameter_resolution_applied": true,
+      "iteration1_case": "Exec/Production/JetInCrossflow",
+      "iteration1_solver": "PeleLMeX",
+      "case_selection_locked": true,
+      "case_reselection_fallback": false,
+      "reviewer_guidance": {},
+      "remapped_parameters": [
+        "spray.jet1.jet_cent",
+        "spray.jet1.jet_norm",
+        "spray.jet1.mass_flow_rate",
+        "spray.jet1.T",
+        "spray.jet1.jet_vel",
+        "spray.jet1.jet_dia",
+        "spray.jet1.dist_type",
+        "spray.jet1.diameter",
+        "spray.jet1.spread_angle",
+        "particles.init_function",
+        "particles.parcel_size",
+        "particles.NXC7H16_crit_temp",
+        "particles.NXC7H16_boil_temp",
+        "particles.NXC7H16_latent",
+        "particles.NXC7H16_cp",
+        "particles.NXC7H16_rho",
+        "particles.NXC7H16_psat",
+        "amr.temp.max_level",
+        "amr.temp.value_greater",
+        "amr.temp.field_name",
+        "diffusion.verbose",
+        "amr.gradT.max_level",
+        "amr.gradT.adjacent_difference_greater",
+        "amr.gradT.field_name"
+      ]
+    }
+  },
+  {
+    "node": "reviewer",
+    "timestamp": "2026-05-06T16:11:17.352531Z",
+    "action": "parameter_resolution_retry",
+    "iteration": 3,
+    "details": {
+      "status": "retry",
+      "reason": "schema_resolution",
+      "unresolved_parameters": [
+        [
+          "spray.jet1.jet_cent",
+          "0.01 0. 0."
+        ],
+        [
+          "spray.jet1.jet_norm",
+          "-1. 0. 0."
+        ],
+        [
+          "spray.jet1.mass_flow_rate",
+          "9.8E-4"
+        ],
+        [
+          "spray.jet1.T",
+          "300."
+        ],
+        [
+          "spray.jet1.jet_vel",
+          "2."
+        ],
+        [
+          "spray.jet1.jet_dia",
+          "0.01"
+        ],
+        [
+          "spray.jet1.dist_type",
+          "Uniform"
+        ],
+        [
+          "spray.jet1.diameter",
+          "5.E-5"
+        ],
+        [
+          "spray.jet1.spread_angle",
+          "0."
+        ],
+        [
+          "particles.init_function",
+          "1"
+        ],
+        [
+          "particles.parcel_size",
+          "2."
+        ],
+        [
+          "particles.NXC7H16_crit_temp",
+          "540."
+        ],
+        [
+          "particles.NXC7H16_boil_temp",
+          "371.6"
+        ],
+        [
+          "particles.NXC7H16_latent",
+          "3.69E5"
+        ],
+        [
+          "particles.NXC7H16_cp",
+          "2.2483E3"
+        ],
+        [
+          "particles.NXC7H16_rho",
+          "681.43"
+        ],
+        [
+          "particles.NXC7H16_psat",
+          "4.02832 1268.636 -56.199 1.E5"
+        ],
+        [
+          "amr.temp.value_greater",
+          "1500"
+        ],
+        [
+          "amr.temp.field_name",
+          "temp"
+        ],
+        [
+          "diffusion.verbose",
+          "0"
+        ],
+        [
+          "amr.gradT.adjacent_difference_greater",
+          "100"
+        ],
+        [
+          "amr.gradT.field_name",
+          "temp"
+        ]
+      ],
+      "resolution_guidance": "22 parameters could not be mapped to schema: ['spray.jet1.jet_cent', 'spray.jet1.jet_norm', 'spray.jet1.mass_flow_rate', 'spray.jet1.T', 'spray.jet1.jet_vel', 'spray.jet1.jet_dia', 'spray.jet1.dist_type', 'spray.jet1.diameter', 'spray.jet1.spread_angle', 'particles.init_function', 'particles.parcel_size', 'particles.NXC7H16_crit_temp', 'particles.NXC7H16_boil_temp', 'particles.NXC7H16_latent', 'particles.NXC7H16_cp', 'particles.NXC7H16_rho', 'particles.NXC7H16_psat', 'amr.temp.value_greater', 'amr.temp.field_name', 'diffusion.verbose', 'amr.gradT.adjacent_difference_greater', 'amr.gradT.field_name']. Remap attempted: 0 succeeded.",
+      "available_schema_params_count": 1810,
+      "suggested_params": {
+        "spray.jet1.jet_cent": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "center"
+        ],
+        "spray.jet1.jet_norm": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "normalized",
+          "normal"
+        ],
+        "spray.jet1.mass_flow_rate": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "turbinflows"
+        ],
+        "spray.jet1.T": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer",
+          "tiny_profiler_device_synchronize_around_region",
+          "tiny_profiler_v",
+          "tiny_profiler_verbose",
+          "tiny_profiler_print_threshold",
+          "tiny_profiler_enabled",
+          "tiny_profiler_memprof_enabled",
+          "tiny_profiler_output_file",
+          "tiny_profiler.device_synchronize_around_region",
+          "tiny_profiler.v",
+          "tiny_profiler.verbose"
+        ],
+        "spray.jet1.jet_vel": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "level"
+        ],
+        "spray.jet1.jet_dia": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "diameter"
+        ],
+        "spray.jet1.dist_type": [
+          "DistributionMapping_v",
+          "DistributionMapping.v",
+          "DistributionMapping_verbose",
+          "DistributionMapping.verbose",
+          "DistributionMapping_efficiency",
+          "DistributionMapping.efficiency",
+          "DistributionMapping_sfc_threshold",
+          "DistributionMapping.sfc_threshold",
+          "DistributionMapping_node_size",
+          "DistributionMapping.node_size",
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic"
+        ],
+        "spray.jet1.diameter": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic",
+          "diameter"
+        ],
+        "spray.jet1.spread_angle": [
+          "spray_read_from_dpm_file",
+          "spray.read_from_dpm_file",
+          "spray_dpm_filename",
+          "spray.dpm_filename",
+          "spray_m_override_inj_plane_dir",
+          "spray.m_override_inj_plane_dir",
+          "spray_m_override_inj_plane_loc",
+          "spray.m_override_inj_plane_loc",
+          "spray_is_dpm_periodic",
+          "spray.is_dpm_periodic"
+        ],
+        "particles.init_function": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.parcel_size": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_crit_temp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_boil_temp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_latent": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_cp": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_rho": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "particles.NXC7H16_psat": [
+          "particles_particles_nfiles",
+          "particles.particles_nfiles",
+          "particles_nreaders",
+          "particles.nreaders",
+          "particles_nparts_per_read",
+          "particles.nparts_per_read",
+          "particles_aggregation_type",
+          "particles.aggregation_type",
+          "particles_aggregation_buffer",
+          "particles.aggregation_buffer"
+        ],
+        "amr.temp.value_greater": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.temp.field_name": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "diffusion.verbose": [
+          "verbose",
+          "tensor_diffusion.verbose",
+          "tensor_diffusion.atol",
+          "tensor_diffusion.rtol",
+          "tensor_diffusion.max_iter",
+          "tensor_diffusion.bottom_solver",
+          "tensor_diffusion.max_order",
+          "tensor_diffusion.mlmg_fail_sdc_miniter",
+          "tensor_diffusion.mlmg_fail_deltaT_miniter",
+          "tensor_diffusion.mlmg_fail_species_maxiter_after_sdc_miniter",
+          "tensor_diffusion.mlmg_fail_temp_maxiter_after_sdc_deltaT_miniter"
+        ],
+        "amr.gradT.adjacent_difference_greater": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ],
+        "amr.gradT.field_name": [
+          "amr_regrid_on_restart",
+          "amr.regrid_on_restart",
+          "amr_force_regrid_level_zero",
+          "amr.force_regrid_level_zero",
+          "amr_use_efficient_regrid",
+          "amr.use_efficient_regrid",
+          "amr_plotfile_on_restart",
+          "amr.plotfile_on_restart",
+          "amr_insitu_on_restart",
+          "amr.insitu_on_restart",
+          "amrex_parmparse_v",
+          "amrex.parmparse.v",
+          "amrex_parmparse_verbose",
+          "amrex.parmparse.verbose",
+          "amrex_async_out",
+          "amrex.async_out",
+          "amrex_async_out_nfiles",
+          "amrex.async_out_nfiles",
+          "amrex_forkjoin_verbose",
+          "amrex.forkjoin.verbose"
+        ]
+      },
+      "remap_mapping": {},
+      "remap_success_count": 0,
+      "retry_count": 3
+    }
+  }
+]

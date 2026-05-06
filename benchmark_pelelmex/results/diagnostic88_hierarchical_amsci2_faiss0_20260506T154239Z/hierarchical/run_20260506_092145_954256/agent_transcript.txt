@@ -1,0 +1,45 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/EB_EnclosedFlame with input.3d-regt
+
+================================================================================
+
+[2026-05-06T16:21:24.742984Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 57 changes
+    - amr.n_cell = 128 128 32
+    - amr.max_level = 2
+    - pmf.do_cellAverage = 0
+
+[2026-05-06T16:21:29.546922Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:21:35.209866Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+  Planned Modifications: 3 changes
+    - amr.max_level = 3
+    - amr.gradT.adjacent_difference_greater = 100
+    - amr.gradT.field_name = temp
+
+[2026-05-06T16:21:38.655416Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:21:45.934443Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:21:45.949935Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:21:47.699738Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:21:47.709131Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:21:47.711389Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:21:47.717443Z] NODE: VISUALIZATION
+ACTION: skipped
+

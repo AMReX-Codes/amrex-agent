@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/HotBubble with input.2d-regt_sym
+
+================================================================================
+
+[2026-05-06T16:49:46.105128Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 104 changes
+    - geometry.is_periodic = 0 0
+    - geometry.prob_lo = -0.02 -0.02 0.0
+    - geometry.prob_hi = 0.02  0.02 0.016
+
+[2026-05-06T16:49:56.454387Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:50:01.251804Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:50:01.268240Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:50:03.649692Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:50:03.662266Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:50:03.666359Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:50:03.668144Z] NODE: VISUALIZATION
+ACTION: skipped
+

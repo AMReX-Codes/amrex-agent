@@ -1,0 +1,45 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Production/JetInCrossflow with input.3d_reacting
+
+================================================================================
+
+[2026-05-06T16:04:06.363241Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 99 changes
+    - geometry.is_periodic = 0 0
+    - geometry.prob_lo = -0.01 -0.01 0.0
+    - geometry.prob_hi = 0.01  0.01 0.016
+
+[2026-05-06T16:04:21.035635Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:04:23.724148Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+  Planned Modifications: 29 changes
+    - spray.jet1.jet_cent = 0.01 0. 0.
+    - spray.jet1.jet_norm = -1. 0. 0.
+    - spray.jet1.mass_flow_rate = 9.8E-4
+
+[2026-05-06T16:04:35.367509Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:04:37.953472Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:04:37.969711Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:04:40.725187Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:04:40.734264Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:04:40.739867Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:04:40.742245Z] NODE: VISUALIZATION
+ACTION: skipped
+

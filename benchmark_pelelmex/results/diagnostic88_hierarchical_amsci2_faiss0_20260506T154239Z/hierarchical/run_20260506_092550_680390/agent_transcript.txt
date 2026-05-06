@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/EB_EnclosedVortex with input.2d-regt_incomp
+
+================================================================================
+
+[2026-05-06T16:25:39.191567Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 60 changes
+    - amr.n_cell = 512 512 32
+    - amr.max_level = 0
+    - amr.blocking_factor = 16
+
+[2026-05-06T16:25:44.991796Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:25:50.661368Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:25:50.677121Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:25:52.922945Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:25:52.933193Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:25:52.939693Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:25:52.942797Z] NODE: VISUALIZATION
+ACTION: skipped
+

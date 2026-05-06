@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/EnclosedFlame with input.2d-regt
+
+================================================================================
+
+[2026-05-06T16:40:04.694499Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 77 changes
+    - amr.n_cell = 512 512 32
+    - amr.max_level = 0
+    - peleLM.num_init_iter = 0
+
+[2026-05-06T16:40:12.684408Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:40:18.169906Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:40:18.183877Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:40:20.012921Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:40:20.020090Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:40:20.021894Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:40:20.026609Z] NODE: VISUALIZATION
+ACTION: skipped
+

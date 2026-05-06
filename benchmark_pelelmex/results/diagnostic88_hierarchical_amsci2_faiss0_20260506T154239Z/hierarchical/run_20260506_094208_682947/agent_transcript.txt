@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/EnclosedInjection with input.2d-regt
+
+================================================================================
+
+[2026-05-06T16:41:58.206563Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 87 changes
+    - geometry.is_periodic = 0 0
+    - geometry.prob_lo = -0.02 -0.02 0.0
+    - geometry.prob_hi = 0.02  0.02 0.016
+
+[2026-05-06T16:42:06.490336Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:42:08.672982Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:42:08.680767Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:42:10.937362Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:42:10.943172Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:42:10.947121Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:42:10.948926Z] NODE: VISUALIZATION
+ACTION: skipped
+

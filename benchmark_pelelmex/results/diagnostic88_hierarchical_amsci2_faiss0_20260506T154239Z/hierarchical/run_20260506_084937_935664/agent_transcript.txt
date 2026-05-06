@@ -1,0 +1,26 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Plasma/PremBunsen3DKuhl with input.3d_rich
+
+================================================================================
+
+[2026-05-06T15:49:37.878321Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 32 changes
+    - geometry.prob_lo = -0.025 -0.025 0.0
+    - geometry.prob_hi = 0.025  0.025 0.05
+    - peleLM.lo_bc = Outflow Outflow Inflow
+
+[2026-05-06T15:49:37.927703Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T15:49:44.859265Z] NODE: INPUT_WRITER
+ACTION: parameter_resolution_failed
+
+[2026-05-06T15:49:44.865719Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T15:49:44.869639Z] NODE: VISUALIZATION
+ACTION: skipped
+

@@ -1,0 +1,35 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/Production/DiffBunsen2D with input.2d-regt
+
+================================================================================
+
+[2026-05-06T16:01:14.218327Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 46 changes
+    - geometry.coord_sys = 0
+    - geometry.prob_lo = -0.025 0.0 0.0
+    - geometry.prob_hi = 0.025 0.05 0.016
+
+[2026-05-06T16:01:20.970134Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:01:27.359999Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:01:27.390204Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:01:29.199091Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:01:29.211375Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:01:29.214517Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:01:29.218244Z] NODE: VISUALIZATION
+ACTION: skipped
+

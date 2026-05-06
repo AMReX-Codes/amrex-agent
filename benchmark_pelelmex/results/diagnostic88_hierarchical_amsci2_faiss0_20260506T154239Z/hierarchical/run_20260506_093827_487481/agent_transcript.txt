@@ -1,0 +1,45 @@
+=== Agent Transcript ===
+
+User Prompt:
+Use PeleLMeX case Exec/RegTests/EB_PipeFlow with input.3d-Poiseuille
+
+================================================================================
+
+[2026-05-06T16:38:02.537735Z] NODE: ARCHITECT
+ACTION: plan_created
+  Planned Modifications: 61 changes
+    - geometry.is_periodic = 0 1
+    - geometry.prob_lo = -0.02 0.0 0.0
+    - geometry.prob_hi = 0.06 0.04 1.0
+
+[2026-05-06T16:38:12.617041Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:38:15.603483Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+  Planned Modifications: 17 changes
+    - turbinflow.lowZ.turb_file = TurbFileHIT/TurbTEST
+    - turbinflow.lowZ.dir = 2
+    - turbinflow.lowZ.side = low
+
+[2026-05-06T16:38:24.811832Z] NODE: REVIEWER
+ACTION: parameter_resolution_retry
+
+[2026-05-06T16:38:27.476857Z] NODE: ARCHITECT
+ACTION: plan_created_with_parameter_remapping
+
+[2026-05-06T16:38:27.485322Z] NODE: REVIEWER
+ACTION: validation_completed
+
+[2026-05-06T16:38:30.143645Z] NODE: INPUT_WRITER
+ACTION: inputs_generated
+
+[2026-05-06T16:38:30.151014Z] NODE: RUNNER
+ACTION: write_failed
+
+[2026-05-06T16:38:30.155235Z] NODE: ANALYSIS
+ACTION: analysis_skipped
+
+[2026-05-06T16:38:30.157751Z] NODE: VISUALIZATION
+ACTION: skipped
+
