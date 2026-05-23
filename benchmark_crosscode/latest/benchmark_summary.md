@@ -1,0 +1,10 @@
+| code | provider | run_dir | strategy | rows | case_match_hits | case_match_pct | inputs_match_hits | inputs_match_pct | row_score_mean |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ERF | amsci2 | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_amsci2_20260429T160959Z | hierarchical | 136 | 136 | 100.00 | 101 | 74.26 | 0.92 |
+| ERF | amsci2 | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_amsci2_20260429T160959Z | simple | 136 | 136 | 100.00 | 101 | 74.26 | 0.92 |
+| ERF | cborg | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_cborg_20260427T202152Z | hierarchical | 136 | 69 | 50.74 | 57 | 41.91 | 0.48 |
+| ERF | cborg | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_cborg_20260427T202152Z | simple | 136 | 64 | 47.06 | 51 | 37.50 | 0.44 |
+| PeleLMeX | amsci2_faiss0 | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_pelelmex/results/full_amsci2_faiss0_20260430T191652Z | hierarchical | 88 | 12 | 13.64 | 2 | 2.27 | 0.10 |
+| PeleLMeX | amsci2_faiss0 | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_pelelmex/results/full_amsci2_faiss0_20260430T191652Z | simple | 88 | 87 | 98.86 | 23 | 26.14 | 0.77 |
+| REMORA | amsci2_faiss0 | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z | hierarchical | 24 | 10 | 41.67 | 4 | 16.67 | 0.34 |
+| REMORA | amsci2_faiss0 | /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z | simple | 24 | 10 | 41.67 | 9 | 37.50 | 0.40 |

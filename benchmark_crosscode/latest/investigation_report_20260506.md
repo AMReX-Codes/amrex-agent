@@ -5756,3 +5756,12 @@ Recommended next actions per flag:
 - investigate but not blocking: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_remora/results/full_amsci2_faiss0_20260430T180635Z/results.jsonl: results.jsonl lacks explicit provenance columns for FAISS index/git SHA/run timestamp (faiss_db_path, faiss_index, retrieval_index, index_name, run_id, timestamp, git_sha, version absent).
 - investigate but not blocking: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_amsci2_20260429T160959Z/results.jsonl: results.jsonl lacks explicit provenance columns for FAISS index/git SHA/run timestamp (faiss_db_path, faiss_index, retrieval_index, index_name, run_id, timestamp, git_sha, version absent).
 - investigate but not blocking: /home/jmsexton/codes/worktree_sandbox/amrex-agent_wt-erf/benchmark_v2/results/full_cborg_20260427T202152Z/results.jsonl: results.jsonl lacks explicit provenance columns for FAISS index/git SHA/run timestamp (faiss_db_path, faiss_index, retrieval_index, index_name, run_id, timestamp, git_sha, version absent).
+## Update — 2026-05-06 Fix Confirmation (PeleLMeX Hierarchical)
+- Original hierarchical run: `benchmark_pelelmex/results/full_amsci2_faiss0_20260430T191652Z`
+  - `case_match=12/88 (13.6%)`
+- Fixed hierarchical run: `benchmark_pelelmex/results/diagnostic88_hierarchical_amsci2_faiss0_20260506T154239Z`
+  - `case_match=87/88 (98.9%)`
+  - `inputs_match=25/88 (28.4%)`
+  - `blank selected_inputs=0`
+  - per-row provenance columns present (`run_id`, `git_sha`, `faiss_index_path`, `frozen_input_file`)
+- Interpretation: case-drift behavior tied to `parameter_resolution_retry` no longer dominates hierarchical case selection after the retry-lock fix.

@@ -1,0 +1,20 @@
+{"prompt_id": "sanity_001", "solver": "PeleC", "prompt_text": "Run a premixed methane flame sheet reference case."}
+{"prompt_id": "sanity_002", "solver": "PeleC", "prompt_text": "Set up a shock-tube style compressible combustion test."}
+{"prompt_id": "sanity_003", "solver": "PeleC", "prompt_text": "Use a detonation-oriented PeleC regression baseline."}
+{"prompt_id": "sanity_004", "solver": "PeleC", "prompt_text": "Prepare an acoustic pulse style compressible hydro case."}
+{"prompt_id": "sanity_005", "solver": "PeleC", "prompt_text": "Configure a chemistry-enabled reacting flow with PeleC."}
+{"prompt_id": "sanity_006", "solver": "PeleLMeX", "prompt_text": "Initialize a low-Mach FlameSheet style reference setup."}
+{"prompt_id": "sanity_007", "solver": "PeleLMeX", "prompt_text": "Use a Taylor-Green vortex style PeleLMeX baseline."}
+{"prompt_id": "sanity_008", "solver": "PeleLMeX", "prompt_text": "Set up a jet-in-crossflow low-Mach combustion run."}
+{"prompt_id": "sanity_009", "solver": "PeleLMeX", "prompt_text": "Choose a PeleLMeX case for stratified reacting shear flow."}
+{"prompt_id": "sanity_010", "solver": "PeleLMeX", "prompt_text": "Prepare a low-Mach reacting baseline with AMR enabled."}
+{"prompt_id": "sanity_011", "solver": "REMORA", "prompt_text": "Run a wind-driven upwelling ocean baseline in REMORA."}
+{"prompt_id": "sanity_012", "solver": "REMORA", "prompt_text": "Configure a seamount circulation benchmark in REMORA."}
+{"prompt_id": "sanity_013", "solver": "REMORA", "prompt_text": "Use a coastal current REMORA case with stratification."}
+{"prompt_id": "sanity_014", "solver": "REMORA", "prompt_text": "Select an ocean mixing baseline from REMORA examples."}
+{"prompt_id": "sanity_015", "solver": "REMORA", "prompt_text": "Set up a baroclinic flow style REMORA configuration."}
+{"prompt_id": "sanity_016", "solver": "AMReX", "prompt_text": "Prepare an AMReX Advection_AmrCore tutorial run."}
+{"prompt_id": "sanity_017", "solver": "AMReX", "prompt_text": "Use a basic AMR advection tutorial baseline."}
+{"prompt_id": "sanity_018", "solver": "AMReX", "prompt_text": "Configure a scalar transport tutorial case in AMReX."}
+{"prompt_id": "sanity_019", "solver": "AMReX", "prompt_text": "Choose a simple AMReX hydro-style test setup."}
+{"prompt_id": "sanity_020", "solver": "AMReX", "prompt_text": "Run an AMReX tutorial case with moderate refinement."}
