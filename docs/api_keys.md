@@ -12,6 +12,7 @@ usage in the codebase.
 | OpenAI | supported | Direct OpenAI API |
 | PNNL | supported | OpenAI-compatible endpoint |
 | AmSC i2 | supported | OpenAI-compatible endpoint |
+| LiteLLM / self-hosted | supported | Any OpenAI-compatible endpoint (Ollama, vLLM, LiteLLM proxy, LM Studio, an HPC BYOK server, etc.) |
 | Anthropic | config only | Provider not implemented in get_llm_client |
 
 ## Environment variables
@@ -27,6 +28,9 @@ Provider specific:
 - `ALCF_API_KEY`
 - `ALCF_CLUSTER`
 - `ALCF_BASE_URL`
+- `LITELLM_API_KEY`
+- `LITELLM_BASE_URL`
+- `LITELLM_MODEL`
 - `AMSC_I2_API_KEY`
 - `AMSC_I2_BASE_URL`
 - `ANTHROPIC_API_KEY`
@@ -127,6 +131,49 @@ export LLM_API_KEY="pnnl-..."
 ```yaml
 llm_provider: pnnl
 llm_model: claude-haiku-4-5-20251001-v1-birthright
+```
+
+LiteLLM / self-hosted (any OpenAI-compatible endpoint — Ollama, vLLM, LiteLLM proxy, LM Studio, an HPC BYOK server):
+
+```bash
+export LITELLM_BASE_URL="http://localhost:<PORT>/v1"
+export LITELLM_API_KEY="<token if your endpoint requires one; else 'litellm'>"
+export LITELLM_MODEL="<model id your endpoint exposes>"
+```
+
+```yaml
+llm_provider: litellm
+llm_model: <model id your endpoint exposes>
+litellm_base_url: http://localhost:<PORT>/v1
+```
+
+`llm_provider` and `embedding_provider` are plain fields on `AMReXAgentConfig` with no env-var fallback, so the YAML must be supplied via the `--config` flag. `LITELLM_*` env vars above are honoured directly because those specific fields use `default_factory=lambda: os.getenv(...)`.
+
+```bash
+python amrex_agent.py --prompt "..." --config path/to/local.yaml
+```
+
+Unset any other provider key (e.g. `CBORG_API_KEY`) in your environment so `get_llm_client()` fails fast against the local endpoint instead of silently falling back. LangGraph flows require the endpoint to support OpenAI `tools`/`tool_choice` and emit well-formed `tool_calls` responses. If the endpoint does not expose `/v1/embeddings`, set `embedding_provider: huggingface` so `sentence-transformers` runs embeddings locally (`pip install sentence-transformers langchain-huggingface`).
+
+NLR Kestrel via the OnField Assistant (`ofa`) BYOK server ([onfield-assistant](https://github.com/nileshsawant/onfield-assistant)):
+
+```bash
+module load assistant
+ofa --serve --serve-enable-tools
+export LITELLM_BASE_URL="http://localhost:$(cat $OFA_SCRATCH/.ofa_serve_port)/v1"
+export LITELLM_API_KEY="$(cat $OFA_SCRATCH/.ofa_api_key)"
+export LITELLM_MODEL="ofa-code"
+unset CBORG_API_KEY
+```
+
+```yaml
+llm_provider: litellm
+llm_model: ofa-code
+embedding_provider: huggingface
+```
+
+```bash
+python amrex_agent.py --prompt "..." --config ~/.amrex_agent/kestrel-ofa.yaml
 ```
 
 AmSC i2 (American Science Cloud):
